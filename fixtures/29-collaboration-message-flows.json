@@ -1,0 +1,138 @@
+{
+  "id": "definitions_collab_msgflows",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collab-msgflows",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_request", "name": "请求消息" },
+    { "id": "msg_response", "name": "响应消息" }
+  ],
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "消息交互"
+      },
+      "children": [
+        {
+          "id": "pool_client",
+          "bpmn": {
+            "type": "participant",
+            "name": "客户端",
+            "processRef": "process_client"
+          },
+          "children": [
+            {
+              "id": "start_client",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "开始" },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "task_send_req",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "发送请求" },
+              "labels": [{ "text": "发送请求" }]
+            },
+            {
+              "id": "catch_response",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "等待响应",
+                "messageRef": "msg_response"
+              },
+              "labels": [{ "text": "等待响应" }]
+            },
+            {
+              "id": "end_client",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "结束" },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_c1", "sources": ["start_client"], "targets": ["task_send_req"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c2", "sources": ["task_send_req"], "targets": ["catch_response"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c3", "sources": ["catch_response"], "targets": ["end_client"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_server",
+          "bpmn": {
+            "type": "participant",
+            "name": "服务端",
+            "processRef": "process_server"
+          },
+          "children": [
+            {
+              "id": "start_server",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到请求",
+                "messageRef": "msg_request"
+              },
+              "labels": [{ "text": "收到请求" }]
+            },
+            {
+              "id": "task_process",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "处理请求" },
+              "labels": [{ "text": "处理请求" }]
+            },
+            {
+              "id": "throw_response",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "发送响应",
+                "messageRef": "msg_response"
+              },
+              "labels": [{ "text": "发送响应" }]
+            },
+            {
+              "id": "end_server",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "结束" },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_s1", "sources": ["start_server"], "targets": ["task_process"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s2", "sources": ["task_process"], "targets": ["throw_response"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s3", "sources": ["throw_response"], "targets": ["end_server"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_request",
+          "sources": ["task_send_req"],
+          "targets": ["start_server"],
+          "bpmn": { "type": "messageFlow", "name": "请求", "messageRef": "msg_request" },
+          "labels": [{ "text": "请求" }]
+        },
+        {
+          "id": "msgflow_response",
+          "sources": ["throw_response"],
+          "targets": ["catch_response"],
+          "bpmn": { "type": "messageFlow", "name": "响应", "messageRef": "msg_response" },
+          "labels": [{ "text": "响应" }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "id": "definitions_collab_blackbox",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collab-blackbox",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "黑盒池交互"
+      },
+      "children": [
+        {
+          "id": "pool_internal",
+          "bpmn": {
+            "type": "participant",
+            "name": "内部系统",
+            "processRef": "process_internal"
+          },
+          "children": [
+            {
+              "id": "start_1",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "开始" },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "task_call_api",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "调用外部API" },
+              "labels": [{ "text": "调用外部API" }]
+            },
+            {
+              "id": "task_receive",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "receiveTask", "name": "接收结果" },
+              "labels": [{ "text": "接收结果" }]
+            },
+            {
+              "id": "end_1",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "结束" },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_1"], "targets": ["task_call_api"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_call_api"], "targets": ["task_receive"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_receive"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_external",
+          "bpmn": {
+            "type": "participant",
+            "name": "外部服务",
+            "isBlackBox": true
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_req",
+          "sources": ["task_call_api"],
+          "targets": ["pool_external"],
+          "bpmn": { "type": "messageFlow", "name": "API请求" },
+          "labels": [{ "text": "API请求" }]
+        },
+        {
+          "id": "msgflow_resp",
+          "sources": ["pool_external"],
+          "targets": ["task_receive"],
+          "bpmn": { "type": "messageFlow", "name": "API响应" },
+          "labels": [{ "text": "API响应" }]
+        }
+      ]
+    }
+  ]
+}

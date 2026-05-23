@@ -1,0 +1,279 @@
+{
+  "id": "definitions_voc_processing",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_voc_main",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "VOC/VOP事件处理流程"
+      },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": {
+            "type": "participant",
+            "name": "公司",
+            "processRef": "process_voc"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_receiving_dept",
+              "bpmn": {
+                "type": "lane",
+                "name": "诉求接收部门"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 0
+              },
+              "children": [
+                {
+                  "id": "start_event",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "请求流入",
+                    "documentation": "来自流程：L3:5.1.1全渠道请求捕获，传递信息：诉求反馈记录/初始VOP记录"
+                  }
+                },
+                {
+                  "id": "task_create_form",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "5.1.2.1 创建事件表单",
+                    "documentation": "内容：根据分类规则，创建(外销/内销)VOC/VOP事件表单。填写客户或产品信息后，关联显示相关其他信息，生成事件单号。\\n岗位：诉求接收人"
+                  }
+                },
+                {
+                  "id": "task_supplement_info",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "补充事件信息",
+                    "documentation": "内容：接收人在事件中补齐信息和涉及的问题大类。\\n岗位：诉求接收人"
+                  }
+                },
+                {
+                  "id": "task_create_work_order",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "5.1.2.2 分类请求创建工单",
+                    "documentation": "内容：按问题大类和部门等拆分事件并创建问题工单。\\n岗位：诉求接收人"
+                  }
+                },
+                {
+                  "id": "task_associate_info",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "关联信息",
+                    "documentation": "内容：在拆分后的问题工单中，关联客户信息、事件单号等信息。\\n岗位：诉求接收人"
+                  }
+                },
+                {
+                  "id": "task_classify_level",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "分类定级",
+                    "documentation": "内容：接收人依据损失金额、升级规则等，结合经验初步判断每个问题大类的处理流程（快速/常规）、诉求等级及审批层级。\\n岗位：诉求接收人"
+                  }
+                },
+                {
+                  "id": "gateway_fast_path",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "判断快速流程"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "lane_management",
+              "bpmn": {
+                "type": "lane",
+                "name": "管理层"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 1
+              },
+              "children": [
+                {
+                  "id": "task_approval_confirm",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "审批确认",
+                    "documentation": "内容：接收部门主管/经理复核/审批。对于紧急重要问题工单抄送品管经理协同复核分类定级及内容，达特定标准需抄送CEO。\\n岗位：接收部门经理、CEO"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "lane_qc_dept",
+              "bpmn": {
+                "type": "lane",
+                "name": "品管部"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 2
+              },
+              "children": []
+            },
+            {
+              "id": "lane_sales_after_sales",
+              "bpmn": {
+                "type": "lane",
+                "name": "销售/售后部"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 3
+              },
+              "children": [
+                {
+                  "id": "task_match_personnel",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "5.1.2.3 匹配人员",
+                    "documentation": "内容：根据各部门人员技能矩阵、权责分工升级矩阵，为工单匹配处理人。\\n岗位：接收部门经理/售后团队负责人\\n输出至外部流程：L3:5.1.3快速解决，传递信息：已分派工单(含诉求等级)"
+                  }
+                },
+                {
+                  "id": "end_fast",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "远程处理完成"
+                  }
+                },
+                {
+                  "id": "end_normal",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "工单分派完成"
+                  }
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "flow_1",
+              "sources": ["start_event"],
+              "targets": ["task_create_form"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_2",
+              "sources": ["task_create_form"],
+              "targets": ["task_supplement_info"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_3",
+              "sources": ["task_supplement_info"],
+              "targets": ["task_create_work_order"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_4",
+              "sources": ["task_create_work_order"],
+              "targets": ["task_associate_info"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_5",
+              "sources": ["task_associate_info"],
+              "targets": ["task_classify_level"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_6",
+              "sources": ["task_classify_level"],
+              "targets": ["gateway_fast_path"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_fast",
+              "sources": ["gateway_fast_path"],
+              "targets": ["end_fast"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "是，远程解决",
+                "conditionExpression": {
+                  "body": "${isFastPath == true}"
+                }
+              }
+            },
+            {
+              "id": "flow_normal",
+              "sources": ["gateway_fast_path"],
+              "targets": ["task_approval_confirm"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "否，需审批分派"
+              }
+            },
+            {
+              "id": "flow_7",
+              "sources": ["task_approval_confirm"],
+              "targets": ["task_match_personnel"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_8",
+              "sources": ["task_match_personnel"],
+              "targets": ["end_normal"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

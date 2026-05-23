@@ -1,0 +1,591 @@
+{
+  "id": "definitions_crm_voc",
+  "bpmn": {
+    "targetNamespace": "http://example.com/crm-voc-process",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_crm",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "CRM客户VOC处理流程"
+      },
+      "children": [
+        {
+          "id": "pool_crm",
+          "bpmn": {
+            "type": "participant",
+            "name": "CRM系统",
+            "processRef": "process_crm"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_sales_support",
+              "bpmn": { "type": "lane", "name": "销售支持" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_voc",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "接收到VOC诉求"
+                  },
+                  "labels": [{ "text": "接收到VOC诉求" }]
+                },
+                {
+                  "id": "task_create_event",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "创建事件",
+                    "ioSpecification": {
+                      "dataOutputs": [
+                        { "id": "do_feedback_info", "name": "反馈信息" },
+                        { "id": "do_event_form_1", "name": "事件表单" }
+                      ],
+                      "outputSets": [
+                        { "id": "os_create_event", "dataOutputRefs": ["do_feedback_info", "do_event_form_1"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n创建事件" }]
+                },
+                {
+                  "id": "gateway_info_complete",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "关键信息是否完整",
+                    "gatewayDirection": "Diverging"
+                  },
+                  "labels": [{ "text": "关键信息是否完整" }]
+                },
+                {
+                  "id": "task_supplement_info",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "补充事件信息",
+                    "ioSpecification": {
+                      "dataOutputs": [
+                        { "id": "do_supplement_info", "name": "补充信息" },
+                        { "id": "do_event_form_2", "name": "事件表单" }
+                      ],
+                      "outputSets": [
+                        { "id": "os_supplement", "dataOutputRefs": ["do_supplement_info", "do_event_form_2"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n补充事件信息" }]
+                },
+                {
+                  "id": "task_split_create_issue",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "拆分事件创建问题工单",
+                    "ioSpecification": {
+                      "dataInputs": [
+                        { "id": "di_event_form", "name": "事件表单" }
+                      ],
+                      "dataOutputs": [
+                        { "id": "do_issue_ticket_1", "name": "问题工单" },
+                        { "id": "do_related_info", "name": "关联信息" },
+                        { "id": "do_issue_ticket_2", "name": "问题工单" }
+                      ],
+                      "inputSets": [
+                        { "id": "is_split", "dataInputRefs": ["di_event_form"] }
+                      ],
+                      "outputSets": [
+                        { "id": "os_split", "dataOutputRefs": ["do_issue_ticket_1", "do_related_info", "do_issue_ticket_2"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n拆分事件\n创建问题工单" }]
+                },
+                {
+                  "id": "task_auto_relate",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "问题工单自动关联相关信息"
+                  },
+                  "labels": [{ "text": "CRM\n问题工单自动\n关联相关信息" }]
+                },
+                {
+                  "id": "task_classify_level",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "问题分类定级",
+                    "ioSpecification": {
+                      "dataOutputs": [
+                        { "id": "do_issue_ticket_3", "name": "问题工单" },
+                        { "id": "do_initial_conclusion", "name": "初判结论" }
+                      ],
+                      "outputSets": [
+                        { "id": "os_classify", "dataOutputRefs": ["do_issue_ticket_3", "do_initial_conclusion"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n问题分类定级" }]
+                },
+                {
+                  "id": "task_approval_confirm",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "审批确认"
+                  },
+                  "labels": [{ "text": "CRM\nKCP\n审批确认" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_sales_director",
+              "bpmn": { "type": "lane", "name": "销售主管" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "gateway_review_issue",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "审核问题工单",
+                    "gatewayDirection": "Diverging"
+                  },
+                  "labels": [{ "text": "审核问题\n工单" }]
+                },
+                {
+                  "id": "event_receive_approval",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到销售经理批准的信息"
+                  },
+                  "labels": [{ "text": "收到销售经理\n批准的信息" }]
+                },
+                {
+                  "id": "task_match_person",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "匹配人员",
+                    "ioSpecification": {
+                      "dataInputs": [
+                        { "id": "di_skill_matrix", "name": "技能矩阵" }
+                      ],
+                      "dataOutputs": [
+                        { "id": "do_match_result", "name": "人员匹配结果" }
+                      ],
+                      "inputSets": [
+                        { "id": "is_match", "dataInputRefs": ["di_skill_matrix"] }
+                      ],
+                      "outputSets": [
+                        { "id": "os_match", "dataOutputRefs": ["do_match_result"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n匹配人员" }]
+                },
+                {
+                  "id": "task_dispatch_ticket",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "分派工单",
+                    "ioSpecification": {
+                      "dataOutputs": [
+                        { "id": "do_dispatch_notice", "name": "分派通知" }
+                      ],
+                      "outputSets": [
+                        { "id": "os_dispatch", "dataOutputRefs": ["do_dispatch_notice"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n分派工单" }]
+                },
+                {
+                  "id": "gateway_merge_director",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "gatewayDirection": "Converging"
+                  }
+                },
+                {
+                  "id": "end_fast_solution",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "执行快速解决方案"
+                  },
+                  "labels": [{ "text": "执行快速解决方案" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_sales_manager",
+              "bpmn": { "type": "lane", "name": "销售经理" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "gateway_approve_issue",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "审批问题工单",
+                    "gatewayDirection": "Diverging"
+                  },
+                  "labels": [{ "text": "审批问题\n工单" }]
+                },
+                {
+                  "id": "event_after_approval",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "intermediateThrowEvent",
+                    "eventDefinitionType": "none",
+                    "name": ""
+                  }
+                },
+                {
+                  "id": "task_notify_ceo",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "重要紧急问题抄送品管和CEO",
+                    "ioSpecification": {
+                      "dataOutputs": [
+                        { "id": "do_email", "name": "邮件" }
+                      ],
+                      "outputSets": [
+                        { "id": "os_notify", "dataOutputRefs": ["do_email"] }
+                      ]
+                    }
+                  },
+                  "labels": [{ "text": "CRM\n重要紧急问题\n抄送品管和CEO" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "flow_start_to_create",
+              "sources": ["start_voc"],
+              "targets": ["task_create_event"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_create_to_gateway",
+              "sources": ["task_create_event"],
+              "targets": ["gateway_info_complete"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_gateway_no",
+              "sources": ["gateway_info_complete"],
+              "targets": ["task_supplement_info"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "否"
+              },
+              "labels": [{ "text": "否" }]
+            },
+            {
+              "id": "flow_supplement_to_gateway",
+              "sources": ["task_supplement_info"],
+              "targets": ["gateway_info_complete"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_gateway_yes",
+              "sources": ["gateway_info_complete"],
+              "targets": ["task_split_create_issue"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "是"
+              },
+              "labels": [{ "text": "是" }]
+            },
+            {
+              "id": "flow_split_to_relate",
+              "sources": ["task_split_create_issue"],
+              "targets": ["task_auto_relate"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_relate_to_classify",
+              "sources": ["task_auto_relate"],
+              "targets": ["task_classify_level"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_classify_to_approval",
+              "sources": ["task_classify_level"],
+              "targets": ["task_approval_confirm"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_approval_to_review",
+              "sources": ["task_approval_confirm"],
+              "targets": ["gateway_review_issue"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_review_reject",
+              "sources": ["gateway_review_issue"],
+              "targets": ["task_create_event"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "拒绝"
+              },
+              "labels": [{ "text": "拒绝" }]
+            },
+            {
+              "id": "flow_review_approve",
+              "sources": ["gateway_review_issue"],
+              "targets": ["gateway_approve_issue"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "批准"
+              },
+              "labels": [{ "text": "批准" }]
+            },
+            {
+              "id": "flow_approve_reject",
+              "sources": ["gateway_approve_issue"],
+              "targets": ["gateway_review_issue"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "拒绝"
+              },
+              "labels": [{ "text": "拒绝" }]
+            },
+            {
+              "id": "flow_approve_pass",
+              "sources": ["gateway_approve_issue"],
+              "targets": ["event_after_approval"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "批准"
+              },
+              "labels": [{ "text": "批准" }]
+            },
+            {
+              "id": "flow_after_to_notify",
+              "sources": ["event_after_approval"],
+              "targets": ["task_notify_ceo"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_notify_to_receive",
+              "sources": ["task_notify_ceo"],
+              "targets": ["event_receive_approval"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_receive_to_match",
+              "sources": ["event_receive_approval"],
+              "targets": ["task_match_person"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_match_to_dispatch",
+              "sources": ["task_match_person"],
+              "targets": ["task_dispatch_ticket"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_dispatch_to_merge",
+              "sources": ["task_dispatch_ticket"],
+              "targets": ["gateway_merge_director"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "flow_merge_to_end",
+              "sources": ["gateway_merge_director"],
+              "targets": ["end_fast_solution"],
+              "bpmn": { "type": "sequenceFlow" }
+            }
+          ],
+          "artifacts": [
+            {
+              "id": "dataobj_feedback_info",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "反馈信息"
+              },
+              "labels": [{ "text": "反馈\n信息" }]
+            },
+            {
+              "id": "dataobj_event_form_1",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "事件表单"
+              },
+              "labels": [{ "text": "事件\n表单" }]
+            },
+            {
+              "id": "dataobj_supplement_info",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "补充信息"
+              },
+              "labels": [{ "text": "补充\n信息" }]
+            },
+            {
+              "id": "dataobj_event_form_2",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "事件表单"
+              },
+              "labels": [{ "text": "事件\n表单" }]
+            },
+            {
+              "id": "dataobj_event_form_split",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "事件表单"
+              },
+              "labels": [{ "text": "事件\n表单" }]
+            },
+            {
+              "id": "dataobj_issue_ticket_1",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "问题工单"
+              },
+              "labels": [{ "text": "问题\n工单" }]
+            },
+            {
+              "id": "dataobj_related_info",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "关联信息"
+              },
+              "labels": [{ "text": "关联\n信息" }]
+            },
+            {
+              "id": "dataobj_issue_ticket_2",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "问题工单"
+              },
+              "labels": [{ "text": "问题\n工单" }]
+            },
+            {
+              "id": "dataobj_issue_ticket_classify",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "问题工单"
+              },
+              "labels": [{ "text": "问题\n工单" }]
+            },
+            {
+              "id": "dataobj_initial_conclusion",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "初判结论"
+              },
+              "labels": [{ "text": "初判\n结论" }]
+            },
+            {
+              "id": "dataobj_skill_matrix",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "技能矩阵"
+              },
+              "labels": [{ "text": "技能\n矩阵" }]
+            },
+            {
+              "id": "dataobj_match_result",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "人员匹配结果"
+              },
+              "labels": [{ "text": "人员\n匹配\n结果" }]
+            },
+            {
+              "id": "dataobj_dispatch_notice",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "分派通知"
+              },
+              "labels": [{ "text": "分派\n通知" }]
+            },
+            {
+              "id": "dataobj_email",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "name": "邮件"
+              },
+              "labels": [{ "text": "邮件" }]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

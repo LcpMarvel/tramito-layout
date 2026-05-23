@@ -1,0 +1,437 @@
+{
+  "id": "definitions_employee_resignation",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.spacing.edgeNode": 30,
+    "elk.spacing.edgeEdge": 20,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80,
+    "elk.layered.spacing.edgeNodeBetweenLayers": 30,
+    "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+    "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+    "elk.edgeRouting": "ORTHOGONAL"
+  },
+  "messages": [
+    { "id": "msg_resignation_request", "name": "离职申请" },
+    { "id": "msg_approval_result", "name": "审批结果" },
+    { "id": "msg_check_request", "name": "设备检查请求" },
+    { "id": "msg_transfer_request", "name": "资产转移请求" },
+    { "id": "msg_damage_report", "name": "损坏报告" },
+    { "id": "msg_process_complete", "name": "流程完成通知" }
+  ],
+  "dataObjects": [
+    { "id": "data_resignation_manual", "bpmn": { "type": "dataObject", "name": "《离职手册程序单》" } },
+    { "id": "data_asset_transfer_form", "bpmn": { "type": "dataObject", "name": "OA《资产转移单》" } }
+  ],
+  "children": [
+    {
+      "id": "collaboration_resignation",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "员工离职IT资产与账号处理流程"
+      },
+      "children": [
+        {
+          "id": "pool_employee",
+          "bpmn": {
+            "type": "participant",
+            "name": "离职员工",
+            "processRef": "process_employee"
+          },
+          "children": [
+            {
+              "id": "start_employee",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "开始"
+              },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "task_submit_resignation",
+              "width": 100,
+              "height": 80,
+              "bpmn": {
+                "type": "sendTask",
+                "name": "提交离职申请",
+                "documentation": "员工申请离职，启动流程。\n输入：员工离职意向。\n输出：待审批的《离职手册程序单》。"
+              },
+              "labels": [{ "text": "提交离职申请" }]
+            },
+            {
+              "id": "catch_approval_result",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "等待审批结果",
+                "messageRef": "msg_approval_result"
+              },
+              "labels": [{ "text": "等待审批" }]
+            },
+            {
+              "id": "catch_process_complete",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "等待流程完成",
+                "messageRef": "msg_process_complete"
+              },
+              "labels": [{ "text": "等待完成" }]
+            },
+            {
+              "id": "end_employee",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            },
+            {
+              "id": "data_manual_ref",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "dataObjectRef": "data_resignation_manual",
+                "name": "《离职手册程序单》"
+              }
+            }
+          ],
+          "edges": [
+            { "id": "flow_e1", "sources": ["start_employee"], "targets": ["task_submit_resignation"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_e2", "sources": ["task_submit_resignation"], "targets": ["catch_approval_result"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_e3", "sources": ["catch_approval_result"], "targets": ["catch_process_complete"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_e4", "sources": ["catch_process_complete"], "targets": ["end_employee"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "data_flow_manual", "sources": ["data_manual_ref"], "targets": ["task_submit_resignation"], "bpmn": { "type": "dataInputAssociation" } }
+          ]
+        },
+        {
+          "id": "pool_it_manager",
+          "bpmn": {
+            "type": "participant",
+            "name": "IT部-IT经理",
+            "processRef": "process_it_manager"
+          },
+          "children": [
+            {
+              "id": "start_it_manager",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到申请",
+                "messageRef": "msg_resignation_request"
+              },
+              "labels": [{ "text": "收到申请" }]
+            },
+            {
+              "id": "task_approve",
+              "width": 100,
+              "height": 80,
+              "bpmn": {
+                "type": "userTask",
+                "name": "审批离职申请",
+                "documentation": "IT经理对《离职手册程序单》进行审批确认。"
+              },
+              "labels": [{ "text": "审批离职申请" }]
+            },
+            {
+              "id": "throw_approval_result",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "发送审批结果",
+                "messageRef": "msg_approval_result"
+              },
+              "labels": [{ "text": "发送结果" }]
+            },
+            {
+              "id": "throw_check_request",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "发送检查请求",
+                "messageRef": "msg_check_request"
+              },
+              "labels": [{ "text": "请求检查" }]
+            },
+            {
+              "id": "end_it_manager",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_m1", "sources": ["start_it_manager"], "targets": ["task_approve"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_m2", "sources": ["task_approve"], "targets": ["throw_approval_result"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_m3", "sources": ["throw_approval_result"], "targets": ["throw_check_request"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_m4", "sources": ["throw_check_request"], "targets": ["end_it_manager"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_it_engineer",
+          "bpmn": {
+            "type": "participant",
+            "name": "IT部-IT工程师",
+            "processRef": "process_it_engineer"
+          },
+          "children": [
+            {
+              "id": "start_it_engineer",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到检查请求",
+                "messageRef": "msg_check_request"
+              },
+              "labels": [{ "text": "收到请求" }]
+            },
+            {
+              "id": "task_check_equipment",
+              "width": 100,
+              "height": 80,
+              "bpmn": {
+                "type": "userTask",
+                "name": "检查电脑设备",
+                "documentation": "IT工程师检查离职员工的电脑及周边设备，评估是否有人为损坏。"
+              },
+              "labels": [{ "text": "检查设备" }]
+            },
+            {
+              "id": "gateway_damage",
+              "width": 50,
+              "height": 50,
+              "bpmn": {
+                "type": "exclusiveGateway",
+                "name": "人为损坏？",
+                "default": "flow_no_damage"
+              },
+              "labels": [{ "text": "人为损坏？" }]
+            },
+            {
+              "id": "throw_damage_report",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "报告损坏",
+                "messageRef": "msg_damage_report"
+              },
+              "labels": [{ "text": "报告损坏" }]
+            },
+            {
+              "id": "throw_transfer_request",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "请求资产转移",
+                "messageRef": "msg_transfer_request"
+              },
+              "labels": [{ "text": "请求转移" }]
+            },
+            {
+              "id": "task_handle_accounts",
+              "width": 100,
+              "height": 80,
+              "bpmn": {
+                "type": "serviceTask",
+                "name": "处理系统账号",
+                "documentation": "IT工程师收回并注销离职员工的所有个人账号。"
+              },
+              "labels": [{ "text": "处理账号" }]
+            },
+            {
+              "id": "throw_process_complete",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "intermediateThrowEvent",
+                "eventDefinitionType": "message",
+                "name": "通知完成",
+                "messageRef": "msg_process_complete"
+              },
+              "labels": [{ "text": "通知完成" }]
+            },
+            {
+              "id": "end_it_engineer",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_eng1", "sources": ["start_it_engineer"], "targets": ["task_check_equipment"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_eng2", "sources": ["task_check_equipment"], "targets": ["gateway_damage"], "bpmn": { "type": "sequenceFlow" } },
+            {
+              "id": "flow_has_damage",
+              "sources": ["gateway_damage"],
+              "targets": ["throw_damage_report"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "是",
+                "conditionExpression": { "type": "tFormalExpression", "body": "${equipmentDamaged == true}" }
+              },
+              "labels": [{ "text": "是" }]
+            },
+            {
+              "id": "flow_no_damage",
+              "sources": ["gateway_damage"],
+              "targets": ["throw_transfer_request"],
+              "bpmn": { "type": "sequenceFlow", "name": "否", "isDefault": true },
+              "labels": [{ "text": "否" }]
+            },
+            { "id": "flow_eng3", "sources": ["throw_damage_report"], "targets": ["throw_transfer_request"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_eng4", "sources": ["throw_transfer_request"], "targets": ["task_handle_accounts"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_eng5", "sources": ["task_handle_accounts"], "targets": ["throw_process_complete"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_eng6", "sources": ["throw_process_complete"], "targets": ["end_it_engineer"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_custodian",
+          "bpmn": {
+            "type": "participant",
+            "name": "资产保管人",
+            "processRef": "process_custodian"
+          },
+          "children": [
+            {
+              "id": "start_custodian",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到转移请求",
+                "messageRef": "msg_transfer_request"
+              },
+              "labels": [{ "text": "收到请求" }]
+            },
+            {
+              "id": "task_fill_transfer",
+              "width": 100,
+              "height": 80,
+              "bpmn": {
+                "type": "userTask",
+                "name": "填写资产转移单",
+                "documentation": "设备保管人在OA系统中填写《资产转移单》。"
+              },
+              "labels": [{ "text": "填写转移单" }]
+            },
+            {
+              "id": "end_custodian",
+              "width": 36,
+              "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            },
+            {
+              "id": "data_transfer_ref",
+              "width": 36,
+              "height": 50,
+              "bpmn": {
+                "type": "dataObjectReference",
+                "dataObjectRef": "data_asset_transfer_form",
+                "name": "OA《资产转移单》"
+              }
+            }
+          ],
+          "edges": [
+            { "id": "flow_c1", "sources": ["start_custodian"], "targets": ["task_fill_transfer"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c2", "sources": ["task_fill_transfer"], "targets": ["end_custodian"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "data_flow_transfer", "sources": ["task_fill_transfer"], "targets": ["data_transfer_ref"], "bpmn": { "type": "dataOutputAssociation" } }
+          ]
+        },
+        {
+          "id": "pool_hr",
+          "bpmn": {
+            "type": "participant",
+            "name": "人事部",
+            "processRef": "process_hr"
+          },
+          "children": [],
+          "edges": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_resignation_request",
+          "sources": ["task_submit_resignation"],
+          "targets": ["start_it_manager"],
+          "bpmn": { "type": "messageFlow", "name": "离职申请", "messageRef": "msg_resignation_request" },
+          "labels": [{ "text": "离职申请" }]
+        },
+        {
+          "id": "msgflow_approval_result",
+          "sources": ["throw_approval_result"],
+          "targets": ["catch_approval_result"],
+          "bpmn": { "type": "messageFlow", "name": "审批结果", "messageRef": "msg_approval_result" },
+          "labels": [{ "text": "审批结果" }]
+        },
+        {
+          "id": "msgflow_check_request",
+          "sources": ["throw_check_request"],
+          "targets": ["start_it_engineer"],
+          "bpmn": { "type": "messageFlow", "name": "检查请求", "messageRef": "msg_check_request" },
+          "labels": [{ "text": "检查请求" }]
+        },
+        {
+          "id": "msgflow_damage_report",
+          "sources": ["throw_damage_report"],
+          "targets": ["pool_hr"],
+          "bpmn": { "type": "messageFlow", "name": "损坏报告", "messageRef": "msg_damage_report" },
+          "labels": [{ "text": "损坏报告" }]
+        },
+        {
+          "id": "msgflow_transfer_request",
+          "sources": ["throw_transfer_request"],
+          "targets": ["start_custodian"],
+          "bpmn": { "type": "messageFlow", "name": "转移请求", "messageRef": "msg_transfer_request" },
+          "labels": [{ "text": "转移请求" }]
+        },
+        {
+          "id": "msgflow_process_complete",
+          "sources": ["throw_process_complete"],
+          "targets": ["catch_process_complete"],
+          "bpmn": { "type": "messageFlow", "name": "完成通知", "messageRef": "msg_process_complete" },
+          "labels": [{ "text": "完成通知" }]
+        }
+      ]
+    }
+  ]
+}

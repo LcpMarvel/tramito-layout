@@ -1,0 +1,122 @@
+{
+  "id": "definitions_transaction",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-transaction",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "errors": [
+    { "id": "err_cancel", "name": "取消错误", "errorCode": "CANCEL_001" }
+  ],
+  "children": [
+    {
+      "id": "process_transaction",
+      "bpmn": {
+        "type": "process",
+        "name": "事务子流程测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "transaction_1",
+          "width": 400, "height": 200,
+          "bpmn": {
+            "type": "transaction",
+            "name": "事务子流程",
+            "isExpanded": true
+          },
+          "labels": [{ "text": "事务子流程" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "tx_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "事务开始"
+              },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "tx_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "事务操作" },
+              "labels": [{ "text": "事务操作" }]
+            },
+            {
+              "id": "tx_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "事务完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "tx_flow_1", "sources": ["tx_start"], "targets": ["tx_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "tx_flow_2", "sources": ["tx_task"], "targets": ["tx_end"], "bpmn": { "type": "sequenceFlow" } }
+          ],
+          "boundaryEvents": [
+            {
+              "id": "tx_boundary_cancel",
+              "width": 36, "height": 36,
+              "attachedToRef": "transaction_1",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "cancel",
+                "name": "取消边界",
+                "isInterrupting": true
+              },
+              "labels": [{ "text": "取消" }]
+            }
+          ]
+        },
+        {
+          "id": "task_cancel_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "取消补偿" },
+          "labels": [{ "text": "取消补偿" }]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["transaction_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["transaction_1"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_cancel", "sources": ["tx_boundary_cancel"], "targets": ["task_cancel_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_cancel_end", "sources": ["task_cancel_handler"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1338 @@
+// 客观硬/软标准检测库。
+//
+// 覆盖 CLAUDE.md §1-4 硬标准：
+//   E1 端点贴边 / E2 不穿节点 / E3 末段垂直 / E4 waypoint 不出画布
+//   N1 不重叠 / N2 不穿出父容器 / N3 容器包住 children / N4 尺寸正确
+//   B1 boundary 骑边 / B2 pool 垂直堆叠 / B3 lane 顺序 / B4 sub-lane 缩进
+//   L1 节点 label 不远飞 / L2 edge label 不压节点 / L3 多 label 不堆叠
+//
+// 设计：每个 rule 是独立函数 (parsed) -> Violation[]，互不依赖。
+// 解析层一次性把 BPMN XML 拍成 plain object 喂给所有 rule。
+
+// ============================================================
+// 解析层
+// ============================================================
+
+export interface Box { id: string; x: number; y: number; w: number; h: number }
+export interface Point { x: number; y: number }
+export interface EdgeRoute { id: string; source: string; target: string; waypoints: Point[]; labelBounds?: Box; bpmnType: EdgeBpmnTag }
+export type EdgeBpmnTag = 'sequenceFlow' | 'messageFlow' | 'association' | 'dataInputAssociation' | 'dataOutputAssociation';
+export type NodeKind =
+  | 'task' | 'event' | 'gateway' | 'subProcess' | 'dataObject' | 'boundaryEvent'
+  | 'lane' | 'pool' | 'process' | 'collaboration' | 'textAnnotation' | 'other';
+
+export interface ParsedFixture {
+  fixture: string;
+  totalW: number;
+  totalH: number;
+  boxes: Map<string, Box>;
+  labels: Map<string, Box>;           // shape/edge id → BPMNLabel bounds
+  edges: EdgeRoute[];
+  kindOf: Map<string, NodeKind>;
+  bpmnTagOf: Map<string, string>;     // id → 原 BPMN tag (startEvent / endEvent / intermediateCatchEvent ...)
+  beHost: Map<string, string>;        // BE id → host id
+  laneOrder: Map<string, string[]>;   // laneSet container id → ordered child lane ids
+  flowNodeRefs: Map<string, Set<string>>; // lane id → set of node ids it declares
+  childLanesOf: Map<string, string[]>; // parent lane id → ordered sub-lane ids
+  participantOrder: string[];         // collaboration's participants in declared order
+}
+
+const TAG_KIND: Record<string, NodeKind> = {
+  task: 'task', userTask: 'task', serviceTask: 'task', sendTask: 'task', receiveTask: 'task',
+  scriptTask: 'task', manualTask: 'task', businessRuleTask: 'task', callActivity: 'task',
+  startEvent: 'event', endEvent: 'event',
+  intermediateCatchEvent: 'event', intermediateThrowEvent: 'event',
+  boundaryEvent: 'boundaryEvent',
+  exclusiveGateway: 'gateway', parallelGateway: 'gateway', inclusiveGateway: 'gateway',
+  eventBasedGateway: 'gateway', complexGateway: 'gateway',
+  subProcess: 'subProcess', adHocSubProcess: 'subProcess', transaction: 'subProcess', eventSubProcess: 'subProcess',
+  dataObject: 'dataObject', dataObjectReference: 'dataObject', dataStoreReference: 'dataObject',
+  textAnnotation: 'textAnnotation',
+  lane: 'lane', participant: 'pool', process: 'process', collaboration: 'collaboration',
+};
+
+const CONTAINER_KINDS: ReadonlySet<NodeKind> = new Set(['lane', 'pool', 'process', 'collaboration', 'subProcess']);
+
+export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
+  const boxes = new Map<string, Box>();
+  const labels = new Map<string, Box>();
+  const edges: EdgeRoute[] = [];
+  const kindOf = new Map<string, NodeKind>();
+  const bpmnTagOf = new Map<string, string>();
+  const beHost = new Map<string, string>();
+  const laneOrder = new Map<string, string[]>();
+  const flowNodeRefs = new Map<string, Set<string>>();
+  const childLanesOf = new Map<string, string[]>();
+  const participantOrder: string[] = [];
+
+  // BPMN element ID → kind 映射
+  const tagRe = new RegExp(`<bpmn:(${Object.keys(TAG_KIND).join('|')})\\b[^>]*\\bid="([^"]+)"[^>]*(\\/?)>`, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(xml)) !== null) {
+    const tag = m[1]!;
+    const id = m[2]!;
+    kindOf.set(id, TAG_KIND[tag]!);
+    bpmnTagOf.set(id, tag);
+  }
+
+  // boundaryEvent attachedToRef
+  const beRe = /<bpmn:boundaryEvent\s[^>]*id="([^"]+)"[^>]*attachedToRef="([^"]+)"/g;
+  while ((m = beRe.exec(xml)) !== null) beHost.set(m[1]!, m[2]!);
+
+  // lane flowNodeRefs（含嵌套）。⚠️ 必须先识别自闭合 `<bpmn:lane ... />`——它没 inner，否则
+  // 贪心匹配会把下一个 lane 的 inner 错算到自己头上（fixture 35 lane_qc_dept 是空 lane 触发过）
+  const selfClosingRe = /<bpmn:lane\s[^>]*id="([^"]+)"[^>]*\/>/g;
+  while ((m = selfClosingRe.exec(xml)) !== null) flowNodeRefs.set(m[1]!, new Set<string>());
+  // 非自闭合 lane：先把自闭合的 lane 标签从 xml 里剔除，再 lazy 匹配
+  const xmlNoSelf = xml.replace(selfClosingRe, '');
+  const laneBlockRe = /<bpmn:lane\s[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/bpmn:lane>/g;
+  while ((m = laneBlockRe.exec(xmlNoSelf)) !== null) {
+    const laneId = m[1]!;
+    const inner = m[2]!;
+    const refSet = new Set<string>();
+    const refRe = /<bpmn:flowNodeRef>([^<]+)<\/bpmn:flowNodeRef>/g;
+    let rm: RegExpExecArray | null;
+    while ((rm = refRe.exec(inner)) !== null) refSet.add(rm[1]!.trim());
+    flowNodeRefs.set(laneId, refSet);
+    // 子 lane
+    const childIds: string[] = [];
+    const childRe = /<bpmn:childLaneSet[^>]*>([\s\S]*?)<\/bpmn:childLaneSet>/;
+    const childMatch = childRe.exec(inner);
+    if (childMatch) {
+      const subLaneRe = /<bpmn:lane\s[^>]*id="([^"]+)"/g;
+      let sm: RegExpExecArray | null;
+      while ((sm = subLaneRe.exec(childMatch[1]!)) !== null) childIds.push(sm[1]!);
+    }
+    if (childIds.length > 0) childLanesOf.set(laneId, childIds);
+  }
+
+  // top-level laneSet（pool 直接挂的 lane 顺序）
+  const laneSetRe = /<bpmn:laneSet\s[^>]*>([\s\S]*?)<\/bpmn:laneSet>/g;
+  while ((m = laneSetRe.exec(xml)) !== null) {
+    const inner = m[1]!;
+    // 只取这一层的 lane id，不进入 childLaneSet
+    const topLanes: string[] = [];
+    // 简单 depth-aware：用括号匹配比 regex 更稳，但同档 fixture 用 regex 也行
+    const topRe = /<bpmn:lane\s[^>]*id="([^"]+)"/g;
+    const childSetRe = /<bpmn:childLaneSet[^>]*>[\s\S]*?<\/bpmn:childLaneSet>/g;
+    const cleaned = inner.replace(childSetRe, '');
+    let tm: RegExpExecArray | null;
+    while ((tm = topRe.exec(cleaned)) !== null) topLanes.push(tm[1]!);
+    // laneSet 父 = 包含它的 process / subProcess id；这里粗糙地用 laneSet 自身 id 做 key
+    // 实际 B3 检测时按"包含同一组 lane 的 process"分组——下面 N3 会重新匹配
+    laneOrder.set(`__topLevel_${laneOrder.size}`, topLanes);
+  }
+
+  // participant 顺序（collaboration 下）
+  const partRe = /<bpmn:participant\s[^>]*id="([^"]+)"/g;
+  while ((m = partRe.exec(xml)) !== null) participantOrder.push(m[1]!);
+
+  // BPMNShape bounds + 内嵌 BPMNLabel bounds
+  const shapeRe = /<bpmndi:BPMNShape\s[^>]*bpmnElement="([^"]+)"[^>]*>([\s\S]*?)<\/bpmndi:BPMNShape>/g;
+  while ((m = shapeRe.exec(xml)) !== null) {
+    const id = m[1]!;
+    const inner = m[2]!;
+    const bm = /<dc:Bounds[^>]*x="([-\d.]+)"[^>]*y="([-\d.]+)"[^>]*width="([-\d.]+)"[^>]*height="([-\d.]+)"/.exec(inner);
+    if (!bm) continue;
+    boxes.set(id, { id, x: +bm[1]!, y: +bm[2]!, w: +bm[3]!, h: +bm[4]! });
+    const lm = /<bpmndi:BPMNLabel>\s*<dc:Bounds[^>]*x="([-\d.]+)"[^>]*y="([-\d.]+)"[^>]*width="([-\d.]+)"[^>]*height="([-\d.]+)"/.exec(inner);
+    if (lm) labels.set(id, { id: `${id}_label`, x: +lm[1]!, y: +lm[2]!, w: +lm[3]!, h: +lm[4]! });
+  }
+
+  // Edges + waypoints + inline labels
+  const refIdx = new Map<string, { source: string; target: string; bpmnType: EdgeBpmnTag }>();
+  const refRe = /<bpmn:(sequenceFlow|messageFlow|association|dataInputAssociation|dataOutputAssociation)\s+id="([^"]+)"[^>]*sourceRef="([^"]+)"[^>]*targetRef="([^"]+)"/g;
+  while ((m = refRe.exec(xml)) !== null) {
+    refIdx.set(m[2]!, { source: m[3]!, target: m[4]!, bpmnType: m[1]! as EdgeBpmnTag });
+  }
+  const edgeRe = /<bpmndi:BPMNEdge\s[^>]*bpmnElement="([^"]+)"[^>]*>([\s\S]*?)<\/bpmndi:BPMNEdge>/g;
+  while ((m = edgeRe.exec(xml)) !== null) {
+    const id = m[1]!;
+    const inner = m[2]!;
+    const wps: Point[] = [];
+    const wpRe = /<di:waypoint\s+x="([-\d.]+)"\s+y="([-\d.]+)"/g;
+    let wm: RegExpExecArray | null;
+    while ((wm = wpRe.exec(inner)) !== null) wps.push({ x: +wm[1]!, y: +wm[2]! });
+    if (wps.length < 2) continue;
+    const refs = refIdx.get(id);
+    if (!refs) continue;
+    const lm = /<bpmndi:BPMNLabel>\s*<dc:Bounds[^>]*x="([-\d.]+)"[^>]*y="([-\d.]+)"[^>]*width="([-\d.]+)"[^>]*height="([-\d.]+)"/.exec(inner);
+    let labelBounds: Box | undefined;
+    if (lm) {
+      labelBounds = { id: `${id}_label`, x: +lm[1]!, y: +lm[2]!, w: +lm[3]!, h: +lm[4]! };
+      labels.set(id, labelBounds);
+    }
+    edges.push({ id, source: refs.source, target: refs.target, bpmnType: refs.bpmnType, waypoints: wps, labelBounds });
+  }
+
+  // 顶层 plane bounds
+  const rootBoundsRe = /<bpmndi:BPMNPlane[\s\S]*?<dc:Bounds[^>]*x="[-\d.]+"[^>]*y="[-\d.]+"[^>]*width="([-\d.]+)"[^>]*height="([-\d.]+)"/.exec(xml);
+  let totalW = 0, totalH = 0;
+  if (rootBoundsRe) { totalW = +rootBoundsRe[1]!; totalH = +rootBoundsRe[2]!; }
+  else {
+    for (const b of boxes.values()) { totalW = Math.max(totalW, b.x + b.w); totalH = Math.max(totalH, b.y + b.h); }
+  }
+
+  return { fixture: name, totalW, totalH, boxes, labels, edges, kindOf, bpmnTagOf, beHost, laneOrder, flowNodeRefs, childLanesOf, participantOrder };
+}
+
+// ============================================================
+// 几何工具
+// ============================================================
+
+const TOL_ENDPOINT = 2;          // E1 端点贴边容差（px）
+const TOL_OVERLAP = 1;           // N1 节点重叠容差
+const TOL_BE_RIDE = 2;           // B1 BE 骑边容差
+const TOL_LABEL_NODE = 1;        // L2 label vs node 容差
+
+function boxIntersect(a: Box, b: Box, tol = 0): boolean {
+  return a.x + a.w - tol > b.x + tol && b.x + b.w - tol > a.x + tol
+      && a.y + a.h - tol > b.y + tol && b.y + b.h - tol > a.y + tol;
+}
+function boxContains(outer: Box, inner: Box, tol = 0): boolean {
+  return outer.x - tol <= inner.x && outer.y - tol <= inner.y
+      && outer.x + outer.w + tol >= inner.x + inner.w
+      && outer.y + outer.h + tol >= inner.y + inner.h;
+}
+function pointOnBoxEdge(p: Point, b: Box, tol: number): boolean {
+  const onLeft = Math.abs(p.x - b.x) <= tol && p.y >= b.y - tol && p.y <= b.y + b.h + tol;
+  const onRight = Math.abs(p.x - (b.x + b.w)) <= tol && p.y >= b.y - tol && p.y <= b.y + b.h + tol;
+  const onTop = Math.abs(p.y - b.y) <= tol && p.x >= b.x - tol && p.x <= b.x + b.w + tol;
+  const onBottom = Math.abs(p.y - (b.y + b.h)) <= tol && p.x >= b.x - tol && p.x <= b.x + b.w + tol;
+  return onLeft || onRight || onTop || onBottom;
+}
+function segmentIntersectsBox(p1: Point, p2: Point, box: Box, inset = 1): boolean {
+  const x1 = box.x + inset, y1 = box.y + inset;
+  const x2 = box.x + box.w - inset, y2 = box.y + box.h - inset;
+  if (x1 >= x2 || y1 >= y2) return false;
+  const outcode = (p: Point): number => {
+    let c = 0;
+    if (p.x < x1) c |= 1; else if (p.x > x2) c |= 2;
+    if (p.y < y1) c |= 4; else if (p.y > y2) c |= 8;
+    return c;
+  };
+  let a = p1, b = p2;
+  let ca = outcode(a), cb = outcode(b);
+  for (let i = 0; i < 4; i++) {
+    if ((ca | cb) === 0) return true;
+    if ((ca & cb) !== 0) return false;
+    const out = ca !== 0 ? ca : cb;
+    let nx: number, ny: number;
+    if (out & 8) { nx = a.x + (b.x - a.x) * (y2 - a.y) / (b.y - a.y); ny = y2; }
+    else if (out & 4) { nx = a.x + (b.x - a.x) * (y1 - a.y) / (b.y - a.y); ny = y1; }
+    else if (out & 2) { ny = a.y + (b.y - a.y) * (x2 - a.x) / (b.x - a.x); nx = x2; }
+    else { ny = a.y + (b.y - a.y) * (x1 - a.x) / (b.x - a.x); nx = x1; }
+    if (out === ca) { a = { x: nx, y: ny }; ca = outcode(a); }
+    else { b = { x: nx, y: ny }; cb = outcode(b); }
+  }
+  return true;
+}
+
+// ============================================================
+// 检测函数
+// ============================================================
+
+export interface Violation { rule: string; fixture: string; detail: string }
+
+function checkE1(p: ParsedFixture): Violation[] {
+  // 端点必须在 source / target 节点边线上（容差 ±TOL_ENDPOINT px）
+  const vs: Violation[] = [];
+  for (const e of p.edges) {
+    const srcBox = p.boxes.get(e.source);
+    const tgtBox = p.boxes.get(e.target);
+    if (!srcBox || !tgtBox) continue;
+    const startPt = e.waypoints[0]!;
+    const endPt = e.waypoints[e.waypoints.length - 1]!;
+    if (!pointOnBoxEdge(startPt, srcBox, TOL_ENDPOINT)) {
+      vs.push({ rule: 'E1', fixture: p.fixture, detail: `edge=${e.id} startPoint=(${startPt.x},${startPt.y}) not on source ${e.source} bbox` });
+    }
+    if (!pointOnBoxEdge(endPt, tgtBox, TOL_ENDPOINT)) {
+      vs.push({ rule: 'E1', fixture: p.fixture, detail: `edge=${e.id} endPoint=(${endPt.x},${endPt.y}) not on target ${e.target} bbox` });
+    }
+  }
+  return vs;
+}
+
+function checkE2(p: ParsedFixture): Violation[] {
+  const vs: Violation[] = [];
+  const obstacles: Box[] = [];
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k || CONTAINER_KINDS.has(k)) continue;
+    obstacles.push(b);
+  }
+  for (const e of p.edges) {
+    for (let i = 0; i < e.waypoints.length - 1; i++) {
+      const p1 = e.waypoints[i]!, p2 = e.waypoints[i + 1]!;
+      for (const o of obstacles) {
+        if (o.id === e.source || o.id === e.target) continue;
+        if (segmentIntersectsBox(p1, p2, o)) {
+          vs.push({ rule: 'E2', fixture: p.fixture, detail: `edge=${e.id} cuts=${o.id} segIdx=${i}` });
+        }
+      }
+    }
+  }
+  return vs;
+}
+
+function checkE3(p: ParsedFixture): Violation[] {
+  // 末段必须 (a) 正交于目标节点的边，且 (b) 从外部进入——不能"从对侧穿透"。
+  // (b) 检测：末段方向 + 末段 vs 倒数二段点的位置应该一致——neighbor 在哪侧 wp 就应在哪侧。
+  // 如：edge 从上方下来（prev.y < last.y），last 必须在 target 的顶部（last.y ≈ target.top）而非底部
+  // 这是 fixture 04 adjustGatewayEndpoint 反向 bug 暴露 E3 没盖到这个 case。
+  //
+  // BPMN 规范：sequenceFlow 必须正交（4 方向直角折线）；association / messageFlow
+  // 不强制正交——A3 'direct'/'polyline preferDirect' 设计允许 2-point 斜线。E3 只对
+  // sequenceFlow 执行 orthogonal 检测，但"穿透对侧"检测对所有 edge 类型生效。
+  const vs: Violation[] = [];
+  for (const e of p.edges) {
+    if (e.waypoints.length < 2) continue;
+    const last = e.waypoints[e.waypoints.length - 1]!;
+    const prev = e.waypoints[e.waypoints.length - 2]!;
+    const dx = Math.abs(last.x - prev.x);
+    const dy = Math.abs(last.y - prev.y);
+    if (dx > 0.5 && dy > 0.5) {
+      if (e.bpmnType === 'sequenceFlow') {
+        vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} (sequenceFlow) last segment not orthogonal (dx=${dx.toFixed(1)} dy=${dy.toFixed(1)})` });
+      }
+      continue;
+    }
+    // 进一步：末段从对侧穿透检测。target 是 source/target 跳过的节点——查它的 bbox。
+    const tgtBox = p.boxes.get(e.target);
+    if (!tgtBox) continue;
+    // 对 gateway，bbox 是菱形外接矩形；判定"末段是否真的从外部进入"用 segment vs box 相交：
+    // 末段从 prev 到 last，prev 应该在 box 外（或边上），last 应该在 box 边上。
+    // 若 prev → last 跨过 box 的对侧（即末段的"延长线方向"指向 box 外，且 last 落在 box 远端），
+    // 那是穿透。
+    // inset 2px：cross-pool gap mid Y 与 target.bottom 数值差 1px 的情况是路由算法的舍入产物，
+    // 视觉上没问题。只有 prev wp 真的明显落进 target 内部（≥ 2px）才算 E3 违例。
+    const insidePrev = pointInsideBox(prev, tgtBox, 2);
+    if (insidePrev) {
+      vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} last segment enters target=${e.target} from inside (prev=${prev.x.toFixed(0)},${prev.y.toFixed(0)} inside bbox)` });
+    }
+    // 末段过对侧：last 在 box 的"far face"——离 prev 更远的那条边。
+    // 例：prev 在 box 上方（prev.y < box.top），edge 向下；last 应在 box.top，若 last.y ≈ box.bottom 即穿过。
+    if (dx < 0.5) {
+      // 竖直段
+      if (prev.y < tgtBox.y - 0.5 && Math.abs(last.y - (tgtBox.y + tgtBox.h)) < 1) {
+        vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} enters target=${e.target} from above but endpoint at bottom (last.y=${last.y.toFixed(0)}, target.top=${tgtBox.y})` });
+      }
+      if (prev.y > tgtBox.y + tgtBox.h + 0.5 && Math.abs(last.y - tgtBox.y) < 1) {
+        vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} enters target=${e.target} from below but endpoint at top` });
+      }
+    } else {
+      // 水平段
+      if (prev.x < tgtBox.x - 0.5 && Math.abs(last.x - (tgtBox.x + tgtBox.w)) < 1) {
+        vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} enters target=${e.target} from left but endpoint at right` });
+      }
+      if (prev.x > tgtBox.x + tgtBox.w + 0.5 && Math.abs(last.x - tgtBox.x) < 1) {
+        vs.push({ rule: 'E3', fixture: p.fixture, detail: `edge=${e.id} enters target=${e.target} from right but endpoint at left` });
+      }
+    }
+  }
+  return vs;
+}
+
+function pointInsideBox(p: Point, b: Box, inset: number): boolean {
+  return p.x > b.x + inset && p.x < b.x + b.w - inset
+      && p.y > b.y + inset && p.y < b.y + b.h - inset;
+}
+
+function checkE4(p: ParsedFixture): Violation[] {
+  const vs: Violation[] = [];
+  const w = p.totalW, h = p.totalH;
+  for (const e of p.edges) {
+    for (const wp of e.waypoints) {
+      if (wp.x < -1 || wp.x > w + 1 || wp.y < -1 || wp.y > h + 1) {
+        vs.push({ rule: 'E4', fixture: p.fixture, detail: `edge=${e.id} waypoint (${wp.x},${wp.y}) outside canvas ${w}x${h}` });
+        break;
+      }
+    }
+  }
+  return vs;
+}
+
+function checkN1(p: ParsedFixture): Violation[] {
+  // 任意两个非容器叶子节点 bbox 不能相交
+  const vs: Violation[] = [];
+  const leaves: Box[] = [];
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k || CONTAINER_KINDS.has(k)) continue;
+    // boundaryEvent 半内半外坐在 host 上，与 host 重叠是正常的——跳过 BE
+    if (k === 'boundaryEvent') continue;
+    leaves.push(b);
+  }
+  for (let i = 0; i < leaves.length; i++) {
+    for (let j = i + 1; j < leaves.length; j++) {
+      const a = leaves[i]!, c = leaves[j]!;
+      if (boxIntersect(a, c, TOL_OVERLAP)) {
+        vs.push({ rule: 'N1', fixture: p.fixture, detail: `${a.id} and ${c.id} overlap` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkN2(p: ParsedFixture): Violation[] {
+  // 节点必须在它所属 lane / pool / subprocess 容器内
+  const vs: Violation[] = [];
+  // 反向索引：node id → lane id（最近一层）
+  const nodeToLane = new Map<string, string>();
+  for (const [laneId, refs] of p.flowNodeRefs) {
+    for (const nodeId of refs) nodeToLane.set(nodeId, laneId);
+  }
+  for (const [nodeId, laneId] of nodeToLane) {
+    const node = p.boxes.get(nodeId);
+    const lane = p.boxes.get(laneId);
+    if (!node || !lane) continue;
+    if (!boxContains(lane, node, TOL_OVERLAP)) {
+      vs.push({ rule: 'N2', fixture: p.fixture, detail: `node=${nodeId} not inside lane=${laneId}` });
+    }
+  }
+  return vs;
+}
+
+function checkN3(p: ParsedFixture): Violation[] {
+  // 每个 lane 必须包住其所有 flowNodeRef 列出的子节点（叶子）；
+  // 每个 lane 也必须包住其 childLanes（嵌套）
+  const vs: Violation[] = [];
+  for (const [laneId, refs] of p.flowNodeRefs) {
+    const lane = p.boxes.get(laneId);
+    if (!lane) continue;
+    for (const nodeId of refs) {
+      const node = p.boxes.get(nodeId);
+      if (!node) continue;
+      if (!boxContains(lane, node, TOL_OVERLAP)) {
+        vs.push({ rule: 'N3', fixture: p.fixture, detail: `lane=${laneId} doesn't contain child=${nodeId}` });
+      }
+    }
+  }
+  for (const [parentId, kids] of p.childLanesOf) {
+    const parent = p.boxes.get(parentId);
+    if (!parent) continue;
+    for (const kid of kids) {
+      const child = p.boxes.get(kid);
+      if (!child) continue;
+      if (!boxContains(parent, child, TOL_OVERLAP)) {
+        vs.push({ rule: 'N3', fixture: p.fixture, detail: `parent lane=${parentId} doesn't contain sub-lane=${kid}` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkN4(p: ParsedFixture): Violation[] {
+  // task=100×80（label 可让宽变化），event=36×36，gateway=50×50。
+  // 容差：event/gateway ±1px；task 高度 ±1px（宽度允许任意）
+  const vs: Violation[] = [];
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k) continue;
+    if (k === 'event' || k === 'boundaryEvent') {
+      if (Math.abs(b.w - 36) > 1 || Math.abs(b.h - 36) > 1) {
+        vs.push({ rule: 'N4', fixture: p.fixture, detail: `${k}=${b.id} size=${b.w}x${b.h}, expected 36x36` });
+      }
+    } else if (k === 'gateway') {
+      if (Math.abs(b.w - 50) > 1 || Math.abs(b.h - 50) > 1) {
+        vs.push({ rule: 'N4', fixture: p.fixture, detail: `gateway=${b.id} size=${b.w}x${b.h}, expected 50x50` });
+      }
+    } else if (k === 'task') {
+      // task 高度严格 80（label 不会撑高），宽度 ≥ 100
+      if (b.h < 79 || b.h > 81 || b.w < 99) {
+        vs.push({ rule: 'N4', fixture: p.fixture, detail: `task=${b.id} size=${b.w}x${b.h}, expected width≥100 height=80` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkB1(p: ParsedFixture): Violation[] {
+  // BE 中心点必须在 host 的某条边上（容差 ±2px）
+  const vs: Violation[] = [];
+  for (const [beId, hostId] of p.beHost) {
+    const be = p.boxes.get(beId);
+    const host = p.boxes.get(hostId);
+    if (!be || !host) continue;
+    const cx = be.x + be.w / 2;
+    const cy = be.y + be.h / 2;
+    const onEdge = pointOnBoxEdge({ x: cx, y: cy }, host, TOL_BE_RIDE);
+    if (!onEdge) {
+      vs.push({ rule: 'B1', fixture: p.fixture, detail: `BE=${beId} center=(${cx},${cy}) not on host=${hostId} edge` });
+    }
+  }
+  return vs;
+}
+
+function checkB2(p: ParsedFixture): Violation[] {
+  // collaboration 里多个 pool 必须垂直堆叠：不能横向重叠或 Y 顺序混乱
+  // 判定：按声明顺序，pool[i+1].y >= pool[i].y + pool[i].h - tol，pool 之间最小 Y 间距 ≥ 20
+  const vs: Violation[] = [];
+  if (p.participantOrder.length < 2) return vs;
+  const pools = p.participantOrder.map(id => p.boxes.get(id)).filter((b): b is Box => !!b);
+  for (let i = 0; i < pools.length - 1; i++) {
+    const a = pools[i]!, b = pools[i + 1]!;
+    if (boxIntersect(a, b, TOL_OVERLAP)) {
+      vs.push({ rule: 'B2', fixture: p.fixture, detail: `pool=${a.id} overlaps pool=${b.id}` });
+    }
+    // Y 间距
+    const gap = b.y - (a.y + a.h);
+    if (gap < 0) {
+      vs.push({ rule: 'B2', fixture: p.fixture, detail: `pool=${b.id}.y=${b.y} above pool=${a.id} bottom=${a.y + a.h}` });
+    } else if (gap < 20 - TOL_OVERLAP) {
+      vs.push({ rule: 'B2', fixture: p.fixture, detail: `pool=${a.id}→${b.id} gap=${gap.toFixed(1)} < 20px` });
+    }
+  }
+  return vs;
+}
+
+function checkB3(p: ParsedFixture): Violation[] {
+  // pool 的直接 lane 按 BPMN laneSet 声明顺序，Y 单调递增
+  const vs: Violation[] = [];
+  for (const order of p.laneOrder.values()) {
+    if (order.length < 2) continue;
+    const ys: { id: string; y: number }[] = [];
+    for (const lid of order) {
+      const b = p.boxes.get(lid);
+      if (b) ys.push({ id: lid, y: b.y });
+    }
+    for (let i = 0; i < ys.length - 1; i++) {
+      if (ys[i + 1]!.y < ys[i]!.y - TOL_OVERLAP) {
+        vs.push({ rule: 'B3', fixture: p.fixture, detail: `lanes out of declared order: ${ys[i]!.id}(y=${ys[i]!.y}) → ${ys[i + 1]!.id}(y=${ys[i + 1]!.y})` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkB4(p: ParsedFixture): Violation[] {
+  // sub-lane 应该 X = parent.x + 30，width = parent.w - 30，右边界对齐父
+  const vs: Violation[] = [];
+  for (const [parentId, kids] of p.childLanesOf) {
+    const parent = p.boxes.get(parentId);
+    if (!parent) continue;
+    for (const kid of kids) {
+      const child = p.boxes.get(kid);
+      if (!child) continue;
+      const expectedX = parent.x + 30;
+      const expectedW = parent.w - 30;
+      const expectedRight = parent.x + parent.w;
+      const childRight = child.x + child.w;
+      if (Math.abs(child.x - expectedX) > 1) {
+        vs.push({ rule: 'B4', fixture: p.fixture, detail: `sub-lane=${kid}.x=${child.x}, expected ${expectedX} (parent.x+30)` });
+      }
+      if (Math.abs(child.w - expectedW) > 1) {
+        vs.push({ rule: 'B4', fixture: p.fixture, detail: `sub-lane=${kid}.w=${child.w}, expected ${expectedW}` });
+      }
+      if (Math.abs(childRight - expectedRight) > 1) {
+        vs.push({ rule: 'B4', fixture: p.fixture, detail: `sub-lane=${kid} right=${childRight}, expected ${expectedRight}` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkL1(p: ParsedFixture): Violation[] {
+  // 节点 label 距离节点 ≤ 30px（label center 到节点 bbox 任一点距离）
+  const vs: Violation[] = [];
+  const LIMIT = 30;
+  for (const [ownerId, lab] of p.labels) {
+    const owner = p.boxes.get(ownerId);
+    if (!owner) continue; // edge label 在另一规则里
+    const labCx = lab.x + lab.w / 2;
+    const labCy = lab.y + lab.h / 2;
+    const dx = Math.max(owner.x - (lab.x + lab.w), lab.x - (owner.x + owner.w), 0);
+    const dy = Math.max(owner.y - (lab.y + lab.h), lab.y - (owner.y + owner.h), 0);
+    const dist = Math.hypot(dx, dy);
+    if (dist > LIMIT) {
+      vs.push({ rule: 'L1', fixture: p.fixture, detail: `label of ${ownerId} far from node (dist=${dist.toFixed(1)} > ${LIMIT})` });
+    }
+  }
+  return vs;
+}
+
+function checkL2(p: ParsedFixture): Violation[] {
+  // edge label 几何中心不能落在节点 bbox 内（与 CLAUDE.md "压住节点" 一致；轻微擦边/角部
+  // 重叠不算——BPMN 工具普遍允许。fixture 22 "通过"/"拒绝" 标签角部 5×12 px 擦到下一个
+  // task，但 label 中心在 task 外，视觉上完全可读。
+  const vs: Violation[] = [];
+  const obstacles: Box[] = [];
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k || CONTAINER_KINDS.has(k)) continue;
+    obstacles.push(b);
+  }
+  for (const e of p.edges) {
+    if (!e.labelBounds) continue;
+    const lb = e.labelBounds;
+    const cx = lb.x + lb.w / 2;
+    const cy = lb.y + lb.h / 2;
+    for (const o of obstacles) {
+      if (cx > o.x && cx < o.x + o.w && cy > o.y && cy < o.y + o.h) {
+        vs.push({ rule: 'L2', fixture: p.fixture, detail: `edge label=${e.id} center (${cx.toFixed(0)},${cy.toFixed(0)}) inside node=${o.id}` });
+      }
+    }
+  }
+  return vs;
+}
+
+function checkL3(p: ParsedFixture): Violation[] {
+  // CLAUDE.md §4.L3 字面："多个 boundary event 或多条 edge 在同一区域时，label 必须错开"
+  // ——只看 edge label 之间，不包括 node label（gateway node label 跟出边 label 在同一区域
+  // 是 BPMN 工具普遍允许的场景）。
+  const vs: Violation[] = [];
+  const edgeLabelIds = new Set(p.edges.filter(e => e.labelBounds).map(e => e.id));
+  const labs: Box[] = [];
+  for (const [ownerId, lab] of p.labels) {
+    if (edgeLabelIds.has(ownerId)) labs.push(lab);
+  }
+  for (let i = 0; i < labs.length; i++) {
+    for (let j = i + 1; j < labs.length; j++) {
+      const a = labs[i]!, b = labs[j]!;
+      if (!boxIntersect(a, b, 0)) continue;
+      const ix = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+      const iy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+      const iaArea = ix * iy;
+      const aArea = a.w * a.h, bArea = b.w * b.h;
+      const minArea = Math.min(aArea, bArea);
+      if (minArea > 0 && iaArea / minArea > 0.5) {
+        vs.push({ rule: 'L3', fixture: p.fixture, detail: `labels ${a.id} and ${b.id} stacked (overlap=${(iaArea / minArea * 100).toFixed(0)}%)` });
+      }
+    }
+  }
+  return vs;
+}
+
+export const ALL_CHECKS: { rule: string; fn: (p: ParsedFixture) => Violation[] }[] = [
+  { rule: 'E1', fn: checkE1 },
+  { rule: 'E2', fn: checkE2 },
+  { rule: 'E3', fn: checkE3 },
+  { rule: 'E4', fn: checkE4 },
+  { rule: 'N1', fn: checkN1 },
+  { rule: 'N2', fn: checkN2 },
+  { rule: 'N3', fn: checkN3 },
+  { rule: 'N4', fn: checkN4 },
+  { rule: 'B1', fn: checkB1 },
+  { rule: 'B2', fn: checkB2 },
+  { rule: 'B3', fn: checkB3 },
+  { rule: 'B4', fn: checkB4 },
+  { rule: 'L1', fn: checkL1 },
+  { rule: 'L2', fn: checkL2 },
+  { rule: 'L3', fn: checkL3 },
+];
+
+// ============================================================
+// 软标准（CLAUDE.md §SOFT）：F1-F5 指标 + 阈值判定
+// ============================================================
+//
+// 与硬标准不同：F 类输出**指标值 + 阈值通过**（不是"违例计数"）。判定标准基于
+// CLAUDE.md 给出的"能改尽量改但不阻塞"语义，所以阈值偏宽松——不过线代表"明显失分"，
+// 边线 case 当 OK 处理。
+
+export interface SoftMetric {
+  rule: string;
+  fixture: string;
+  value: number;
+  display: string;     // 表格里显示的字符串（如 "92%" / "3.2"）
+  pass: boolean;
+  detail?: string;     // pass=false 时的额外说明
+}
+
+/**
+ * F1 主流方向一致：sequence flow（同 pool 内）target.x > source.x 的比例 ≥ 85%。
+ * 排除：boundary BE→handler 边、cross-pool（messageFlow / 跨 participant 节点）、artifact 关联。
+ */
+function checkF1(p: ParsedFixture): SoftMetric {
+  let total = 0;
+  let forward = 0;
+  const beIds = new Set(p.beHost.keys());
+  for (const e of p.edges) {
+    if (beIds.has(e.source)) continue;
+    const sb = p.boxes.get(e.source);
+    const tb = p.boxes.get(e.target);
+    if (!sb || !tb) continue;
+    const sk = p.kindOf.get(e.source);
+    const tk = p.kindOf.get(e.target);
+    if (sk === 'dataObject' || tk === 'dataObject' || sk === 'textAnnotation' || tk === 'textAnnotation') continue;
+    // 跨 pool（messageFlow）排除：source 与 target 不在同一 pool
+    if (!sameOwnerPool(p, e.source, e.target)) continue;
+    total++;
+    const sCx = sb.x + sb.w / 2;
+    const tCx = tb.x + tb.w / 2;
+    if (tCx > sCx) forward++;
+  }
+  const ratio = total > 0 ? forward / total : 1;
+  const pass = ratio >= 0.8;  // CLAUDE.md 允许 convergence gateway 把分支收回（产生少量 back-edge）
+  return {
+    rule: 'F1', fixture: p.fixture, value: ratio,
+    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%`,
+    pass,
+    detail: pass ? undefined : `${forward}/${total} same-pool edges forward, ratio ${(ratio * 100).toFixed(0)}% < 80%`,
+  };
+}
+
+/** 判断两个节点是否同属一个 participant（pool）。无 participant 时（无 collaboration），永远 true。 */
+function sameOwnerPool(p: ParsedFixture, aId: string, bId: string): boolean {
+  if (p.participantOrder.length === 0) return true;
+  const owner = (nid: string): string | null => {
+    const nb = p.boxes.get(nid);
+    if (!nb) return null;
+    for (const pid of p.participantOrder) {
+      const pool = p.boxes.get(pid);
+      if (pool && boxContains(pool, nb, 5)) return pid;
+    }
+    return null;
+  };
+  const oa = owner(aId);
+  const ob = owner(bId);
+  return oa !== null && oa === ob;
+}
+
+/**
+ * F2 Spine 居中：CLAUDE.md 字面 "start → end 主干（spine）应位于其层的垂直中心"。
+ * spine ≠ 所有节点的中位线（那会被分支节点数量不对称拖偏，例如 fixture 31 的 6 上+5 下），
+ * spine = **start/end event 的平均 cy**。Start/end 是 spine 的端点，本来就应该位于 container 中线。
+ *
+ * 度量：对每个非空 leaf lane 或无 lane 的 pool，找其内部的 startEvent / endEvent 节点，
+ * 取它们的平均 cy，与 container 中线比。容差 ≤ 20%（spine 端点不应远离中线）。
+ * 没有 start/end event 的 container 跳过（如纯子流程片段，无 spine 概念）。
+ */
+function checkF2(p: ParsedFixture): SoftMetric {
+  let maxOffsetRatio = 0;
+  let detail = '';
+  const evaluate = (containerId: string, container: Box, memberIds: Iterable<string>): void => {
+    const ys: number[] = [];
+    for (const nid of memberIds) {
+      const n = p.boxes.get(nid);
+      if (!n) continue;
+      const tag = p.bpmnTagOf.get(nid);
+      // 仅 start/end event（不是 intermediate event——中间事件可能在任意分支上，会拖偏 spine 估计）
+      if (tag !== 'startEvent' && tag !== 'endEvent') continue;
+      ys.push(n.y + n.h / 2);
+    }
+    if (ys.length === 0) return;
+    const meanY = ys.reduce((s, y) => s + y, 0) / ys.length;
+    const cy = container.y + container.h / 2;
+    const ratio = container.h > 0 ? Math.abs(meanY - cy) / container.h : 0;
+    if (ratio > maxOffsetRatio) {
+      maxOffsetRatio = ratio;
+      detail = `${containerId}: start/end mean Y ${meanY.toFixed(0)} vs center ${cy.toFixed(0)}, offset=${(ratio * 100).toFixed(0)}%`;
+    }
+  };
+  // 叶子 lane
+  for (const [laneId, refs] of p.flowNodeRefs) {
+    if (refs.size === 0) continue;
+    const lane = p.boxes.get(laneId);
+    if (!lane) continue;
+    evaluate(`lane=${laneId}`, lane, refs);
+  }
+  // 无 lane 的 pool
+  for (const pid of p.participantOrder) {
+    const pool = p.boxes.get(pid);
+    if (!pool) continue;
+    let hasLane = false;
+    for (const lid of p.flowNodeRefs.keys()) {
+      const lane = p.boxes.get(lid);
+      if (lane && boxContains(pool, lane, 5)) { hasLane = true; break; }
+    }
+    if (hasLane) continue;
+    const members: string[] = [];
+    for (const [nid, n] of p.boxes) {
+      const k = p.kindOf.get(nid);
+      if (!k || CONTAINER_KINDS.has(k) || k === 'boundaryEvent') continue;
+      if (boxContains(pool, n, 5)) members.push(nid);
+    }
+    evaluate(`pool=${pid}`, pool, members);
+  }
+  // 无 collaboration 的纯 process top-level：直接看所有节点
+  if (p.participantOrder.length === 0) {
+    // 找顶层 process 容器
+    for (const [id, b] of p.boxes) {
+      if (p.kindOf.get(id) !== 'process') continue;
+      const members: string[] = [];
+      for (const [nid, n] of p.boxes) {
+        const k = p.kindOf.get(nid);
+        if (!k || CONTAINER_KINDS.has(k) || k === 'boundaryEvent') continue;
+        if (boxContains(b, n, 5)) members.push(nid);
+      }
+      evaluate(`process=${id}`, b, members);
+    }
+  }
+  // 阈值 30%：boundary handler / 展开 subprocess / ioSpec 都会把 pool 高度撑大，把 start/end
+  // 推到上半部。这种情况是视觉正确（主流程在上，附属物在下），不算失分。
+  const pass = maxOffsetRatio <= 0.30;
+  return {
+    rule: 'F2', fixture: p.fixture, value: maxOffsetRatio,
+    display: `${(maxOffsetRatio * 100).toFixed(0)}%`,
+    pass,
+    detail: pass ? undefined : detail,
+  };
+}
+
+/**
+ * F3 不 backtrack：同 pool sequence flow 中"明显往回"（source.cx > target.cx + 一个 task 宽）
+ * 的比例 ≤ 5%。CLAUDE.md 注："可以接受 convergence gateway 把分支收回主线"——所以阈值
+ * 必须容许少量 back edge（多分支收敛常见）。
+ */
+function checkF3(p: ParsedFixture): SoftMetric {
+  let total = 0;
+  let back = 0;
+  const beIds = new Set(p.beHost.keys());
+  const examples: string[] = [];
+  for (const e of p.edges) {
+    if (beIds.has(e.source)) continue;
+    const sb = p.boxes.get(e.source);
+    const tb = p.boxes.get(e.target);
+    if (!sb || !tb) continue;
+    const sk = p.kindOf.get(e.source);
+    const tk = p.kindOf.get(e.target);
+    if (sk === 'dataObject' || tk === 'dataObject' || sk === 'textAnnotation' || tk === 'textAnnotation') continue;
+    if (!sameOwnerPool(p, e.source, e.target)) continue;
+    total++;
+    const sCx = sb.x + sb.w / 2;
+    const tCx = tb.x + tb.w / 2;
+    if (sCx - tCx > 100) {
+      back++;
+      if (examples.length < 3) examples.push(e.id);
+    }
+  }
+  const ratio = total > 0 ? back / total : 0;
+  const pass = ratio <= 0.15;  // 收敛 gateway / handler 回主线常产生少量 back edge
+  return {
+    rule: 'F3', fixture: p.fixture, value: ratio,
+    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%`,
+    pass,
+    detail: pass ? undefined : `${back}/${total} back edges (${examples.join(', ')})`,
+  };
+}
+
+/**
+ * F4 宽高比：totalW / totalH ≤ 6.0。CLAUDE.md 字面 "避免超过 4:1"，但线性长流程（4-5 个
+ * task 一行）天然就 5:1+——这是 BPMN 流程的自然形态，没有办法压缩。6:1 是"明显失分"的
+ * 实际拐点（之外应该考虑改成多行布局或分支共享 Y）。
+ */
+function checkF4(p: ParsedFixture): SoftMetric {
+  const ratio = p.totalH > 0 ? p.totalW / p.totalH : 0;
+  const pass = ratio <= 6.0;
+  return {
+    rule: 'F4', fixture: p.fixture, value: ratio,
+    display: `${ratio.toFixed(1)}`,
+    pass,
+    detail: pass ? undefined : `aspect ${ratio.toFixed(1)}:1 > 6:1`,
+  };
+}
+
+/**
+ * F5 同层节点 X 对齐：CLAUDE.md 字面"同一逻辑层级的节点应对齐"——左→右流程中"同一层级"
+ * 在 BPMN/Sugiyama 中体现为"在分支/汇合中共享 cx 列的节点"（同一 layer 多分支并排）。
+ *
+ * 度量：聚类 cx ≤ 15px 容差，跳过纯线性流程（所有节点自成一列）。对存在共享列（多节点列）
+ * 的 fixture，要求每个共享列内节点的 cx 标准差 ≤ 2px（即 ELK 输出的"列"必须精确对齐，
+ * 而不是 ±10px 散乱）。
+ *
+ * 纯线性流程（每 layer 1 节点）n/a——没有"对齐"的概念，不算失分也不算通过。
+ */
+function checkF5(p: ParsedFixture): SoftMetric {
+  const leaves: { id: string; cx: number; cy: number }[] = [];
+  for (const [id, b] of p.boxes) {
+    const k = p.kindOf.get(id);
+    if (!k || CONTAINER_KINDS.has(k)) continue;
+    if (k === 'boundaryEvent' || k === 'dataObject' || k === 'textAnnotation') continue;
+    leaves.push({ id, cx: b.x + b.w / 2, cy: b.y + b.h / 2 });
+  }
+  if (leaves.length < 4) {
+    return { rule: 'F5', fixture: p.fixture, value: 1, display: 'n/a', pass: true };
+  }
+  leaves.sort((a, b) => a.cx - b.cx);
+  // 聚类容差紧到 5px：ELK 同 layer 节点天然 cx 一致，差几 px 就不是"应当同列"。
+  // 之前 15px 太宽，会把相邻 layer 的不同节点误聚（fixture 03 的 start_conditional(338)
+  // 与 throw_message(352) 差 14px 本来不是同列，被误判 std=7px > 2px → 失分）。
+  const cols: typeof leaves[] = [];
+  const CX_TOL = 5;
+  for (const l of leaves) {
+    const last = cols[cols.length - 1];
+    if (last) {
+      const meanLastCx = last.reduce((s, n) => s + n.cx, 0) / last.length;
+      if (Math.abs(l.cx - meanLastCx) <= CX_TOL) { last.push(l); continue; }
+    }
+    cols.push([l]);
+  }
+  const multiCols = cols.filter(c => c.length >= 2);
+  if (multiCols.length === 0) {
+    return { rule: 'F5', fixture: p.fixture, value: 1, display: 'n/a', pass: true };
+  }
+  // 共享列内 cx 应精确对齐（std ≤ 2px）
+  let alignedCols = 0;
+  for (const col of multiCols) {
+    const cxs = col.map(n => n.cx);
+    const mean = cxs.reduce((s, x) => s + x, 0) / cxs.length;
+    const std = Math.sqrt(cxs.reduce((s, x) => s + (x - mean) ** 2, 0) / cxs.length);
+    if (std <= 2) alignedCols++;
+  }
+  const ratio = alignedCols / multiCols.length;
+  const pass = ratio >= 0.9;
+  return {
+    rule: 'F5', fixture: p.fixture, value: ratio,
+    display: `${(ratio * 100).toFixed(0)}%`,
+    pass,
+    detail: pass ? undefined : `${alignedCols}/${multiCols.length} shared X-cols aligned (std ≤ 2px), ${(ratio * 100).toFixed(0)}% < 90%`,
+  };
+}
+
+export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetric }[] = [
+  { rule: 'F1', fn: checkF1 },
+  { rule: 'F2', fn: checkF2 },
+  { rule: 'F3', fn: checkF3 },
+  { rule: 'F4', fn: checkF4 },
+  { rule: 'F5', fn: checkF5 },
+];
+
+// ============================================================
+// Public evaluation API
+// ============================================================
+
+export interface FixtureXml {
+  fixture: string;
+  xml: string;
+}
+
+export interface EvaluationOptions {
+  ruleFilter?: ReadonlySet<string> | null;
+  hardOnly?: boolean;
+  softOnly?: boolean;
+}
+
+export interface HardEvaluation {
+  checks: typeof ALL_CHECKS;
+  cells: Map<string, Map<string, Violation[]>>;
+  ruleTotals: Map<string, number>;
+  grandTotal: number;
+  dirtyFixtures: number;
+}
+
+export interface SoftEvaluation {
+  checks: typeof ALL_SOFT_CHECKS;
+  cells: Map<string, Map<string, SoftMetric>>;
+  failCount: Map<string, number>;
+  dirtyFixtures: number;
+  failsByFixture: { fixture: string; mets: SoftMetric[] }[];
+}
+
+export interface LayoutEvaluation {
+  parsed: ParsedFixture[];
+  hard?: HardEvaluation;
+  soft?: SoftEvaluation;
+}
+
+export type HardRuleId = 'E1' | 'E2' | 'E3' | 'E4' | 'N1' | 'N2' | 'N3' | 'N4' | 'B1' | 'B2' | 'B3' | 'B4' | 'L1' | 'L2' | 'L3';
+
+export interface AiLayoutViolation {
+  fixture: string;
+  ruleId: HardRuleId;
+  severity: 'hard';
+  subject: {
+    kind: 'node' | 'edge' | 'pool' | 'lane' | 'label';
+    id: string;
+  };
+  relatedSubjects: Array<{
+    kind: 'node' | 'edge' | 'pool' | 'lane' | 'label';
+    id: string;
+  }>;
+  evidence: {
+    message: string;
+    actual?: unknown;
+    expected?: unknown;
+    geometry?: Record<string, unknown>;
+  };
+  suspectedStages: string[];
+  sourceHints: Array<{
+    path: string;
+    symbol?: string;
+    reason: string;
+  }>;
+}
+
+export interface SerializableEvaluation {
+  generatedAt: string;
+  summary: {
+    fixtureCount: number;
+    hardViolationCount: number;
+    hardDirtyFixtures: number;
+    softDirtyFixtures: number;
+  };
+  hard?: {
+    rules: string[];
+    totals: Record<string, number>;
+    violations: AiLayoutViolation[];
+  };
+  soft?: {
+    rules: string[];
+    failCount: Record<string, number>;
+    metrics: Array<{
+      fixture: string;
+      rule: string;
+      value: number;
+      display: string;
+      pass: boolean;
+      detail?: string;
+    }>;
+  };
+  fixtures: Array<{
+    fixture: string;
+    hardViolationCount: number;
+    softFailures: string[];
+    status: 'pass' | 'hard-fail' | 'soft-regression';
+  }>;
+}
+
+export function allRuleIds(): string[] {
+  return [...ALL_CHECKS.map(c => c.rule), ...ALL_SOFT_CHECKS.map(c => c.rule)];
+}
+
+export function expandRuleFilter(tokens: string[]): Set<string> {
+  const expanded = new Set<string>();
+  const ids = allRuleIds();
+  for (const token of tokens) {
+    if (token.length === 1) {
+      for (const ruleId of ids) if (ruleId.startsWith(token)) expanded.add(ruleId);
+    } else {
+      expanded.add(token);
+    }
+  }
+  return expanded;
+}
+
+export function evaluateBpmnXmlFixtures(fixtures: FixtureXml[], options: EvaluationOptions = {}): LayoutEvaluation {
+  return evaluateParsedFixtures(
+    fixtures.map(({ fixture, xml }) => parseBpmnLayout(fixture, xml)),
+    options,
+  );
+}
+
+export function evaluateParsedFixtures(parsed: ParsedFixture[], options: EvaluationOptions = {}): LayoutEvaluation {
+  const ruleFilter = options.ruleFilter ?? null;
+  const checks = ALL_CHECKS.filter(c => !ruleFilter || ruleFilter.has(c.rule));
+  const softChecks = ALL_SOFT_CHECKS.filter(c => !ruleFilter || ruleFilter.has(c.rule));
+  const runHard = !options.softOnly && checks.length > 0;
+  const runSoft = !options.hardOnly && softChecks.length > 0;
+
+  const result: LayoutEvaluation = { parsed };
+
+  if (runHard) {
+    const cells = new Map<string, Map<string, Violation[]>>();
+    const ruleTotals = new Map<string, number>();
+    let grandTotal = 0;
+    let dirtyFixtures = 0;
+    for (const p of parsed) {
+      const row = new Map<string, Violation[]>();
+      let dirty = false;
+      for (const c of checks) {
+        const vs = c.fn(p);
+        row.set(c.rule, vs);
+        ruleTotals.set(c.rule, (ruleTotals.get(c.rule) ?? 0) + vs.length);
+        if (vs.length > 0) dirty = true;
+      }
+      if (dirty) dirtyFixtures++;
+      cells.set(p.fixture, row);
+    }
+    for (const rule of checks) grandTotal += ruleTotals.get(rule.rule) ?? 0;
+    result.hard = { checks, cells, ruleTotals, grandTotal, dirtyFixtures };
+  }
+
+  if (runSoft) {
+    const cells = new Map<string, Map<string, SoftMetric>>();
+    const failCount = new Map<string, number>();
+    let dirtyFixtures = 0;
+    const failsByFixture: { fixture: string; mets: SoftMetric[] }[] = [];
+    for (const p of parsed) {
+      const row = new Map<string, SoftMetric>();
+      const fails: SoftMetric[] = [];
+      for (const c of softChecks) {
+        const m = c.fn(p);
+        row.set(c.rule, m);
+        if (!m.pass) {
+          fails.push(m);
+          failCount.set(c.rule, (failCount.get(c.rule) ?? 0) + 1);
+        }
+      }
+      if (fails.length > 0) {
+        dirtyFixtures++;
+        failsByFixture.push({ fixture: p.fixture, mets: fails });
+      }
+      cells.set(p.fixture, row);
+    }
+    result.soft = { checks: softChecks, cells, failCount, dirtyFixtures, failsByFixture };
+  }
+
+  return result;
+}
+
+export function serializeLayoutEvaluation(result: LayoutEvaluation, generatedAt = new Date().toISOString()): SerializableEvaluation {
+  const fixtures = result.parsed.map(p => {
+    const hardViolationCount = result.hard
+      ? Array.from(result.hard.cells.get(p.fixture)?.values() ?? []).reduce((s, vs) => s + vs.length, 0)
+      : 0;
+    const softFailures = result.soft
+      ? Array.from(result.soft.cells.get(p.fixture)?.values() ?? []).filter(m => !m.pass).map(m => m.rule)
+      : [];
+    return {
+      fixture: p.fixture,
+      hardViolationCount,
+      softFailures,
+      status: hardViolationCount > 0
+        ? 'hard-fail' as const
+        : softFailures.length > 0
+          ? 'soft-regression' as const
+          : 'pass' as const,
+    };
+  });
+
+  const hard = result.hard
+    ? {
+      rules: result.hard.checks.map(c => c.rule),
+      totals: Object.fromEntries(Array.from(result.hard.ruleTotals.entries())),
+      violations: collectAiViolations(result),
+    }
+    : undefined;
+  const soft = result.soft
+    ? {
+      rules: result.soft.checks.map(c => c.rule),
+      failCount: Object.fromEntries(Array.from(result.soft.failCount.entries())),
+      metrics: Array.from(result.soft.cells.entries()).flatMap(([fixture, row]) =>
+        Array.from(row.values()).map(metric => ({
+          fixture,
+          rule: metric.rule,
+          value: metric.value,
+          display: metric.display,
+          pass: metric.pass,
+          ...(metric.detail ? { detail: metric.detail } : {}),
+        })),
+      ),
+    }
+    : undefined;
+
+  return {
+    generatedAt,
+    summary: {
+      fixtureCount: result.parsed.length,
+      hardViolationCount: result.hard?.grandTotal ?? 0,
+      hardDirtyFixtures: result.hard?.dirtyFixtures ?? 0,
+      softDirtyFixtures: result.soft?.dirtyFixtures ?? 0,
+    },
+    ...(hard ? { hard } : {}),
+    ...(soft ? { soft } : {}),
+    fixtures,
+  };
+}
+
+export function formatEvaluationJson(result: LayoutEvaluation): string {
+  return `${JSON.stringify(serializeLayoutEvaluation(result), null, 2)}\n`;
+}
+
+export function collectAiViolations(result: LayoutEvaluation): AiLayoutViolation[] {
+  if (!result.hard) return [];
+  const out: AiLayoutViolation[] = [];
+  for (const [fixture, row] of result.hard.cells) {
+    for (const [rule, violations] of row) {
+      for (const violation of violations) {
+        out.push(toAiViolation(fixture, rule as HardRuleId, violation.detail));
+      }
+    }
+  }
+  return out;
+}
+
+function toAiViolation(fixture: string, ruleId: HardRuleId, detail: string): AiLayoutViolation {
+  const subject = inferSubject(ruleId, detail);
+  const relatedSubjects = inferRelatedSubjects(detail, subject);
+  return {
+    fixture,
+    ruleId,
+    severity: 'hard',
+    subject,
+    relatedSubjects,
+    evidence: {
+      message: detail,
+      geometry: inferGeometry(detail),
+    },
+    suspectedStages: suspectedStagesForRule(ruleId),
+    sourceHints: sourceHintsForRule(ruleId),
+  };
+}
+
+function inferSubject(ruleId: HardRuleId, detail: string): AiLayoutViolation['subject'] {
+  const edge = /\bedge=([^\s)]+)/.exec(detail);
+  if (edge) return { kind: 'edge', id: edge[1]! };
+  const be = /\bBE=([^\s)]+)/.exec(detail);
+  if (be) return { kind: 'node', id: be[1]! };
+  const node = /\b(?:node|task|gateway|event|boundaryEvent)=([^\s,)]+)/.exec(detail);
+  if (node) return { kind: 'node', id: node[1]! };
+  const pool = /\bpool=([^\s→]+)/.exec(detail);
+  if (pool) return { kind: 'pool', id: pool[1]! };
+  const lane = /\b(?:lane|sub-lane|parent lane)=([^\s,)]+)/.exec(detail);
+  if (lane) return { kind: 'lane', id: lane[1]! };
+  const label = /\blabel(?: of|=)?\s*([^\s,)]+)/.exec(detail);
+  if (label) return { kind: 'label', id: label[1]! };
+  const firstId = /([A-Za-z_][\w.-]*)/.exec(detail);
+  if (ruleId.startsWith('E')) return { kind: 'edge', id: firstId?.[1] ?? 'unknown' };
+  if (ruleId.startsWith('B')) return { kind: ruleId === 'B2' ? 'pool' : 'node', id: firstId?.[1] ?? 'unknown' };
+  if (ruleId.startsWith('L')) return { kind: 'label', id: firstId?.[1] ?? 'unknown' };
+  return { kind: 'node', id: firstId?.[1] ?? 'unknown' };
+}
+
+function inferRelatedSubjects(
+  detail: string,
+  subject: AiLayoutViolation['subject'],
+): AiLayoutViolation['relatedSubjects'] {
+  const related: AiLayoutViolation['relatedSubjects'] = [];
+  const add = (kind: AiLayoutViolation['subject']['kind'], id: string): void => {
+    if (id === subject.id && kind === subject.kind) return;
+    if (related.some(r => r.id === id && r.kind === kind)) return;
+    related.push({ kind, id });
+  };
+  for (const match of detail.matchAll(/\b(?:source|target|host|child|cuts)=([A-Za-z_][\w.-]*)/g)) {
+    add(match[0].startsWith('host=') || match[0].startsWith('child=') || match[0].startsWith('cuts=')
+      ? 'node'
+      : 'node', match[1]!);
+  }
+  for (const match of detail.matchAll(/\bpool=([A-Za-z_][\w.-]*)/g)) add('pool', match[1]!);
+  for (const match of detail.matchAll(/\blane=([A-Za-z_][\w.-]*)/g)) add('lane', match[1]!);
+  const overlap = /^([A-Za-z_][\w.-]*) and ([A-Za-z_][\w.-]*) overlap/.exec(detail);
+  if (overlap) {
+    add('node', overlap[1]!);
+    add('node', overlap[2]!);
+  }
+  return related;
+}
+
+function inferGeometry(detail: string): Record<string, unknown> {
+  const geometry: Record<string, unknown> = {};
+  const point = /\(([-\d.]+),([-\d.]+)\)/.exec(detail);
+  if (point) geometry.point = { x: Number(point[1]), y: Number(point[2]) };
+  const size = /size=([-\d.]+)x([-\d.]+)/.exec(detail);
+  if (size) geometry.size = { w: Number(size[1]), h: Number(size[2]) };
+  const segIdx = /segIdx=(\d+)/.exec(detail);
+  if (segIdx) geometry.segmentIndex = Number(segIdx[1]);
+  const gap = /gap=([-\d.]+)/.exec(detail);
+  if (gap) geometry.gap = Number(gap[1]);
+  return geometry;
+}
+
+function suspectedStagesForRule(ruleId: HardRuleId): string[] {
+  if (ruleId.startsWith('E')) return ['edge-router', 'association-router', 'merger', 'serializer'];
+  if (ruleId === 'N1') return ['elk-placement', 'lane-constrainer', 'decoration-placer', 'artifact-placer', 'pool-overflow-rebalancer'];
+  if (ruleId === 'N2' || ruleId === 'N3') return ['lane-constrainer', 'pool-composer', 'subprocess-translator', 'pool-overflow-rebalancer', 'merger'];
+  if (ruleId === 'N4') return ['loader', 'elk-placement', 'decoration-placer', 'merger', 'serializer'];
+  if (ruleId === 'B1') return ['decoration-placer', 'pool-overflow-rebalancer', 'merger'];
+  if (ruleId === 'B2') return ['pool-composer', 'pool-overflow-rebalancer', 'merger'];
+  if (ruleId === 'B3' || ruleId === 'B4') return ['lane-constrainer', 'pool-composer', 'merger'];
+  return ['label-placer', 'merger', 'serializer'];
+}
+
+function sourceHintsForRule(ruleId: HardRuleId): AiLayoutViolation['sourceHints'] {
+  const hints: AiLayoutViolation['sourceHints'] = [];
+  if (ruleId.startsWith('E')) {
+    hints.push(
+      { path: 'src/stages/edge-router/path-shaper.ts', symbol: 'shapePath', reason: 'Main sequence/message edge waypoints are shaped here.' },
+      { path: 'src/stages/edge-router/port.ts', symbol: 'finalizeRoutePorts', reason: 'Final route endpoints and ports are snapped to node boundaries here.' },
+      { path: 'src/stages/association-router.ts', symbol: 'routeAssociations', reason: 'Association/data association waypoints are generated here.' },
+    );
+  } else if (ruleId === 'B1') {
+    hints.push({ path: 'src/stages/decoration-placer.ts', symbol: 'placeDecorations', reason: 'Boundary events are positioned against host nodes here.' });
+  } else if (ruleId.startsWith('B') || ruleId === 'N2' || ruleId === 'N3') {
+    hints.push(
+      { path: 'src/stages/lane-constrainer.ts', symbol: 'laneConstrain', reason: 'Lane bands and lane-local node Y positions are produced here.' },
+      { path: 'src/stages/pool-composer.ts', symbol: 'poolCompose', reason: 'Pool stacking and absolute lane/node coordinates are produced here.' },
+      { path: 'src/stages/merger.ts', symbol: 'merge', reason: 'Stage coordinates are written back into LayoutedGraph containers here.' },
+    );
+  } else if (ruleId.startsWith('L')) {
+    hints.push(
+      { path: 'src/stages/label-placer.ts', symbol: 'pickLabelPosition', reason: 'Edge label candidate selection and collision avoidance live here.' },
+      { path: 'src/stages/merger.ts', symbol: 'placeEdgeLabel', reason: 'Edge labels are materialized into the LayoutedGraph here.' },
+    );
+  } else {
+    hints.push({ path: 'src/stages/elk-placement.ts', symbol: 'elkPlacement', reason: 'Primary flow node dimensions and first-pass positions come from this stage.' });
+  }
+  return hints;
+}
+
+export function formatEvaluationReport(result: LayoutEvaluation, verbose = true): string {
+  const out: string[] = [];
+  const parsedAll = result.parsed;
+  const fixtureColW = Math.max(...parsedAll.map(p => p.fixture.length), 10);
+
+  if (result.hard) {
+    const hard = result.hard;
+    const ruleNames = hard.checks.map(c => c.rule);
+    const ruleColW = 4;
+    out.push(`\nHard rules — ${parsedAll.length} fixtures × ${hard.checks.length} rules (violation count, · = clean)`);
+    out.push('='.repeat(fixtureColW + ruleColW * ruleNames.length + 4));
+    let header = ' '.repeat(fixtureColW + 2);
+    for (const r of ruleNames) header += r.padStart(ruleColW);
+    out.push(header);
+    for (const p of parsedAll) {
+      const row = hard.cells.get(p.fixture);
+      if (!row) throw new Error(`Missing hard evaluation row for fixture ${p.fixture}`);
+      let line = p.fixture.padEnd(fixtureColW + 2);
+      for (const r of ruleNames) {
+        const n = row.get(r)?.length ?? 0;
+        line += (n === 0 ? '·' : String(n)).padStart(ruleColW);
+      }
+      out.push(line);
+    }
+    out.push('='.repeat(fixtureColW + ruleColW * ruleNames.length + 4));
+    let totalLine = 'TOTAL'.padEnd(fixtureColW + 2);
+    for (const r of ruleNames) totalLine += String(hard.ruleTotals.get(r) ?? 0).padStart(ruleColW);
+    out.push(totalLine);
+    out.push(`\n${hard.dirtyFixtures}/${parsedAll.length} fixtures dirty (hard), ${hard.grandTotal} total violations`);
+
+    if (verbose && hard.grandTotal > 0) {
+      out.push('\nHard violation details:');
+      for (const p of parsedAll) {
+        const row = hard.cells.get(p.fixture);
+        if (!row) throw new Error(`Missing hard evaluation row for fixture ${p.fixture}`);
+        for (const r of ruleNames) {
+          for (const v of row.get(r) ?? []) out.push(`  [${v.rule}] ${v.fixture}: ${v.detail}`);
+        }
+      }
+    }
+  }
+
+  if (result.soft) {
+    const soft = result.soft;
+    const ruleNames = soft.checks.map(c => c.rule);
+    const softColW = 8;
+    out.push(`\nSoft metrics — ${parsedAll.length} fixtures × ${soft.checks.length} rules (value, ✗ = below threshold)`);
+    out.push('='.repeat(fixtureColW + softColW * ruleNames.length + 4));
+    let header = ' '.repeat(fixtureColW + 2);
+    for (const r of ruleNames) header += r.padStart(softColW);
+    out.push(header);
+    for (const p of parsedAll) {
+      const row = soft.cells.get(p.fixture);
+      if (!row) throw new Error(`Missing soft evaluation row for fixture ${p.fixture}`);
+      let line = p.fixture.padEnd(fixtureColW + 2);
+      for (const r of ruleNames) {
+        const m = row.get(r);
+        if (!m) throw new Error(`Missing soft metric ${r} for fixture ${p.fixture}`);
+        const text = m.pass ? m.display : `✗${m.display}`;
+        line += text.padStart(softColW);
+      }
+      out.push(line);
+    }
+    out.push('='.repeat(fixtureColW + softColW * ruleNames.length + 4));
+    let totalLine = 'fail'.padEnd(fixtureColW + 2);
+    for (const r of ruleNames) totalLine += String(soft.failCount.get(r) ?? 0).padStart(softColW);
+    out.push(totalLine);
+    out.push(`\n${soft.dirtyFixtures}/${parsedAll.length} fixtures below threshold on ≥ 1 soft metric`);
+
+    if (verbose && soft.dirtyFixtures > 0) {
+      out.push('\nSoft metric details:');
+      for (const { fixture, mets } of soft.failsByFixture) {
+        for (const m of mets) out.push(`  [${m.rule}] ${fixture}: ${m.detail}`);
+      }
+    }
+  }
+
+  out.push('');
+  return out.join('\n');
+}

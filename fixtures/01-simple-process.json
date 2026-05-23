@@ -1,0 +1,75 @@
+{
+  "id": "definitions_simple_process",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-simple-process",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_simple",
+      "bpmn": {
+        "type": "process",
+        "name": "简单流程测试",
+        "isExecutable": true,
+        "processType": "Private",
+        "isClosed": false
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_1",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "任务1"
+          },
+          "labels": [{ "text": "任务1" }]
+        },
+        {
+          "id": "task_2",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "任务2"
+          },
+          "labels": [{ "text": "任务2" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_1"], "targets": ["task_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_2"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

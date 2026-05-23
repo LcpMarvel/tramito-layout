@@ -1,0 +1,345 @@
+{
+  "id": "definitions_event_subprocess_variants",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-event-subprocess-variants",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_incoming", "name": "外部消息" }
+  ],
+  "signals": [
+    { "id": "sig_alert", "name": "警报信号" }
+  ],
+  "errors": [
+    { "id": "err_system", "name": "系统错误", "errorCode": "SYS_ERR_001" }
+  ],
+  "escalations": [
+    { "id": "esc_timeout", "name": "超时升级", "escalationCode": "ESC_TIMEOUT" }
+  ],
+  "children": [
+    {
+      "id": "process_event_subprocess_variants",
+      "bpmn": {
+        "type": "process",
+        "name": "事件子流程变体测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "event_subprocess_message",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "消息事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "消息触发 (非中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_msg_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "消息触发",
+                "isInterrupting": false,
+                "messageRef": "msg_incoming"
+              },
+              "labels": [{ "text": "消息" }]
+            },
+            {
+              "id": "evtsub_msg_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "处理消息" },
+              "labels": [{ "text": "处理消息" }]
+            },
+            {
+              "id": "evtsub_msg_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "消息处理完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_msg_flow_1", "sources": ["evtsub_msg_start"], "targets": ["evtsub_msg_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_msg_flow_2", "sources": ["evtsub_msg_task"], "targets": ["evtsub_msg_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "event_subprocess_timer",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "定时事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "定时触发 (非中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_timer_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "timer",
+                "name": "定时触发",
+                "isInterrupting": false,
+                "timerEventDefinition": {
+                  "timeCycle": "R/PT5M"
+                }
+              },
+              "labels": [{ "text": "每5分钟" }]
+            },
+            {
+              "id": "evtsub_timer_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "定时检查" },
+              "labels": [{ "text": "定时检查" }]
+            },
+            {
+              "id": "evtsub_timer_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "检查完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_timer_flow_1", "sources": ["evtsub_timer_start"], "targets": ["evtsub_timer_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_timer_flow_2", "sources": ["evtsub_timer_task"], "targets": ["evtsub_timer_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "event_subprocess_signal",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "信号事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "信号触发 (中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_signal_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "signal",
+                "name": "信号触发",
+                "isInterrupting": true,
+                "signalRef": "sig_alert"
+              },
+              "labels": [{ "text": "警报" }]
+            },
+            {
+              "id": "evtsub_signal_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "处理警报" },
+              "labels": [{ "text": "处理警报" }]
+            },
+            {
+              "id": "evtsub_signal_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "警报处理完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_signal_flow_1", "sources": ["evtsub_signal_start"], "targets": ["evtsub_signal_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_signal_flow_2", "sources": ["evtsub_signal_task"], "targets": ["evtsub_signal_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "event_subprocess_escalation",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "升级事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "升级触发 (中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_escalation_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "escalation",
+                "name": "升级触发",
+                "isInterrupting": true,
+                "escalationRef": "esc_timeout"
+              },
+              "labels": [{ "text": "升级" }]
+            },
+            {
+              "id": "evtsub_escalation_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "人工介入" },
+              "labels": [{ "text": "人工介入" }]
+            },
+            {
+              "id": "evtsub_escalation_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "介入完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_escalation_flow_1", "sources": ["evtsub_escalation_start"], "targets": ["evtsub_escalation_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_escalation_flow_2", "sources": ["evtsub_escalation_task"], "targets": ["evtsub_escalation_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "event_subprocess_conditional",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "条件事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "条件触发 (非中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_conditional_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "conditional",
+                "name": "条件触发",
+                "isInterrupting": false,
+                "conditionalEventDefinition": {
+                  "condition": {
+                    "type": "tFormalExpression",
+                    "body": "${stockLevel < 10}"
+                  }
+                }
+              },
+              "labels": [{ "text": "库存低" }]
+            },
+            {
+              "id": "evtsub_conditional_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "自动补货" },
+              "labels": [{ "text": "自动补货" }]
+            },
+            {
+              "id": "evtsub_conditional_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "补货完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_conditional_flow_1", "sources": ["evtsub_conditional_start"], "targets": ["evtsub_conditional_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_conditional_flow_2", "sources": ["evtsub_conditional_task"], "targets": ["evtsub_conditional_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "event_subprocess_error",
+          "width": 300, "height": 120,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "错误事件子流程",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "错误触发 (中断)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "evtsub_error_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "error",
+                "name": "错误触发",
+                "isInterrupting": true,
+                "errorRef": "err_system"
+              },
+              "labels": [{ "text": "系统错误" }]
+            },
+            {
+              "id": "evtsub_error_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "错误处理" },
+              "labels": [{ "text": "错误处理" }]
+            },
+            {
+              "id": "evtsub_error_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "错误处理完成"
+              },
+              "labels": [{ "text": "完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "evtsub_error_flow_1", "sources": ["evtsub_error_start"], "targets": ["evtsub_error_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "evtsub_error_flow_2", "sources": ["evtsub_error_task"], "targets": ["evtsub_error_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

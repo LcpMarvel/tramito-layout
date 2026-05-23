@@ -1,0 +1,303 @@
+{
+  "id": "definitions_timer_variants",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-timer-variants",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_timer_variants",
+      "bpmn": {
+        "type": "process",
+        "name": "定时器变体测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_timer_date",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "timer",
+            "name": "指定日期启动",
+            "timerEventDefinition": {
+              "timeDate": "2025-01-15T09:00:00Z"
+            }
+          },
+          "labels": [{ "text": "2025-01-15 09:00" }]
+        },
+        {
+          "id": "start_timer_cycle",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "timer",
+            "name": "周期启动",
+            "timerEventDefinition": {
+              "timeCycle": "R5/PT1H"
+            }
+          },
+          "labels": [{ "text": "每小时×5次" }]
+        },
+        {
+          "id": "start_timer_duration",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "timer",
+            "name": "延迟启动",
+            "timerEventDefinition": {
+              "timeDuration": "PT30M"
+            }
+          },
+          "labels": [{ "text": "延迟30分钟" }]
+        },
+        {
+          "id": "gateway_merge_starts",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "合并启动",
+            "gatewayDirection": "Converging"
+          }
+        },
+        {
+          "id": "task_init",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "初始化任务" },
+          "labels": [{ "text": "初始化" }]
+        },
+        {
+          "id": "catch_timer_date",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待到指定时间",
+            "timerEventDefinition": {
+              "timeDate": "2025-06-01T12:00:00+08:00"
+            }
+          },
+          "labels": [{ "text": "等到6月1日" }]
+        },
+        {
+          "id": "task_after_date",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "日期后任务" },
+          "labels": [{ "text": "日期后任务" }]
+        },
+        {
+          "id": "catch_timer_duration",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待一段时间",
+            "timerEventDefinition": {
+              "timeDuration": "P1DT2H30M"
+            }
+          },
+          "labels": [{ "text": "等待1天2.5小时" }]
+        },
+        {
+          "id": "task_after_duration",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "延时后任务" },
+          "labels": [{ "text": "延时后任务" }]
+        },
+        {
+          "id": "catch_timer_cycle",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "周期等待",
+            "timerEventDefinition": {
+              "timeCycle": "R3/PT15M"
+            }
+          },
+          "labels": [{ "text": "每15分钟×3次" }]
+        },
+        {
+          "id": "task_after_cycle",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "周期任务" },
+          "labels": [{ "text": "周期任务" }]
+        },
+        {
+          "id": "task_main_with_boundary",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "主任务" },
+          "labels": [{ "text": "主任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_timer_date",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_main_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "截止日期",
+                "isInterrupting": true,
+                "timerEventDefinition": {
+                  "timeDate": "2025-12-31T23:59:59Z"
+                }
+              },
+              "labels": [{ "text": "年底截止" }]
+            },
+            {
+              "id": "boundary_timer_duration",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_main_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "超时",
+                "isInterrupting": true,
+                "timerEventDefinition": {
+                  "timeDuration": "PT2H"
+                }
+              },
+              "labels": [{ "text": "2小时超时" }]
+            },
+            {
+              "id": "boundary_timer_cycle_non_int",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_main_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "周期提醒",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "timerEventDefinition": {
+                  "timeCycle": "R/PT30M"
+                }
+              },
+              "labels": [{ "text": "每30分钟提醒" }]
+            }
+          ]
+        },
+        {
+          "id": "task_deadline_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "截止处理" },
+          "labels": [{ "text": "截止处理" }]
+        },
+        {
+          "id": "task_timeout_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "超时处理" },
+          "labels": [{ "text": "超时处理" }]
+        },
+        {
+          "id": "task_reminder",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "发送提醒" },
+          "labels": [{ "text": "发送提醒" }]
+        },
+        {
+          "id": "gateway_final",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "最终合并",
+            "gatewayDirection": "Converging"
+          }
+        },
+        {
+          "id": "end_normal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "正常结束"
+          },
+          "labels": [{ "text": "正常结束" }]
+        },
+        {
+          "id": "end_deadline",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "截止结束"
+          },
+          "labels": [{ "text": "截止结束" }]
+        },
+        {
+          "id": "end_timeout",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "超时结束"
+          },
+          "labels": [{ "text": "超时结束" }]
+        },
+        {
+          "id": "start_timer_cron",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "timer",
+            "name": "Cron表达式启动",
+            "timerEventDefinition": {
+              "timeCycle": "0 0 9 * * MON-FRI"
+            }
+          },
+          "labels": [{ "text": "工作日9点" }]
+        },
+        {
+          "id": "catch_timer_iso_interval",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "ISO间隔",
+            "timerEventDefinition": {
+              "timeCycle": "R10/2025-01-01T00:00:00Z/P1M"
+            }
+          },
+          "labels": [{ "text": "每月×10次" }]
+        },
+        {
+          "id": "task_monthly",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "月度任务" },
+          "labels": [{ "text": "月度任务" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_date_start", "sources": ["start_timer_date"], "targets": ["gateway_merge_starts"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cycle_start", "sources": ["start_timer_cycle"], "targets": ["gateway_merge_starts"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_duration_start", "sources": ["start_timer_duration"], "targets": ["gateway_merge_starts"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cron_start", "sources": ["start_timer_cron"], "targets": ["gateway_merge_starts"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_init", "sources": ["gateway_merge_starts"], "targets": ["task_init"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_init_to_date", "sources": ["task_init"], "targets": ["catch_timer_date"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_date_to_task", "sources": ["catch_timer_date"], "targets": ["task_after_date"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_date_task_to_duration", "sources": ["task_after_date"], "targets": ["catch_timer_duration"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_duration_to_task", "sources": ["catch_timer_duration"], "targets": ["task_after_duration"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_duration_task_to_cycle", "sources": ["task_after_duration"], "targets": ["catch_timer_cycle"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cycle_to_task", "sources": ["catch_timer_cycle"], "targets": ["task_after_cycle"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cycle_task_to_main", "sources": ["task_after_cycle"], "targets": ["task_main_with_boundary"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_main_to_iso", "sources": ["task_main_with_boundary"], "targets": ["catch_timer_iso_interval"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_iso_to_monthly", "sources": ["catch_timer_iso_interval"], "targets": ["task_monthly"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_monthly_to_final", "sources": ["task_monthly"], "targets": ["gateway_final"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_final_to_end", "sources": ["gateway_final"], "targets": ["end_normal"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_deadline_boundary", "sources": ["boundary_timer_date"], "targets": ["task_deadline_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_deadline_to_end", "sources": ["task_deadline_handler"], "targets": ["end_deadline"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timeout_boundary", "sources": ["boundary_timer_duration"], "targets": ["task_timeout_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timeout_to_end", "sources": ["task_timeout_handler"], "targets": ["end_timeout"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_reminder_boundary", "sources": ["boundary_timer_cycle_non_int"], "targets": ["task_reminder"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

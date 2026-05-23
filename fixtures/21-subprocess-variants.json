@@ -1,0 +1,388 @@
+{
+  "id": "definitions_subprocess_variants",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-subprocess-variants",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "errors": [
+    { "id": "err_subprocess", "name": "子流程错误", "errorCode": "SUB_ERR_001" }
+  ],
+  "children": [
+    {
+      "id": "process_subprocess_variants",
+      "bpmn": {
+        "type": "process",
+        "name": "子流程变体测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "subprocess_collapsed",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "折叠子流程",
+            "isExpanded": false
+          },
+          "labels": [{ "text": "折叠子流程" }],
+          "children": [
+            {
+              "id": "collapsed_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "子开始"
+              }
+            },
+            {
+              "id": "collapsed_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "折叠内任务" }
+            },
+            {
+              "id": "collapsed_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "子结束"
+              }
+            }
+          ],
+          "edges": [
+            { "id": "collapsed_flow_1", "sources": ["collapsed_start"], "targets": ["collapsed_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "collapsed_flow_2", "sources": ["collapsed_task"], "targets": ["collapsed_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "subprocess_with_boundary",
+          "width": 350, "height": 150,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "带边界事件的子流程",
+            "isExpanded": true
+          },
+          "labels": [{ "text": "带边界事件的子流程" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "boundaryEvents": [
+            {
+              "id": "boundary_timer_subprocess",
+              "width": 36, "height": 36,
+              "attachedToRef": "subprocess_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "超时",
+                "isInterrupting": true,
+                "timerEventDefinition": {
+                  "timeDuration": "PT1H"
+                }
+              },
+              "labels": [{ "text": "1小时超时" }]
+            },
+            {
+              "id": "boundary_message_subprocess",
+              "width": 36, "height": 36,
+              "attachedToRef": "subprocess_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "message",
+                "name": "取消消息",
+                "isInterrupting": false
+              },
+              "labels": [{ "text": "取消" }]
+            },
+            {
+              "id": "boundary_error_subprocess",
+              "width": 36, "height": 36,
+              "attachedToRef": "subprocess_with_boundary",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "错误捕获",
+                "isInterrupting": true,
+                "errorRef": "err_subprocess"
+              },
+              "labels": [{ "text": "错误" }]
+            }
+          ],
+          "children": [
+            {
+              "id": "sub_boundary_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "开始"
+              },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "sub_boundary_task1",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "用户审批" },
+              "labels": [{ "text": "用户审批" }]
+            },
+            {
+              "id": "sub_boundary_task2",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "系统处理" },
+              "labels": [{ "text": "系统处理" }]
+            },
+            {
+              "id": "sub_boundary_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_boundary_flow_1", "sources": ["sub_boundary_start"], "targets": ["sub_boundary_task1"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_boundary_flow_2", "sources": ["sub_boundary_task1"], "targets": ["sub_boundary_task2"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_boundary_flow_3", "sources": ["sub_boundary_task2"], "targets": ["sub_boundary_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "task_timeout_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "超时处理" },
+          "labels": [{ "text": "超时处理" }]
+        },
+        {
+          "id": "task_error_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "错误处理" },
+          "labels": [{ "text": "错误处理" }]
+        },
+        {
+          "id": "task_cancel_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "取消处理" },
+          "labels": [{ "text": "取消处理" }]
+        },
+        {
+          "id": "subprocess_nested_level1",
+          "width": 600, "height": 400,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "嵌套子流程 - 第1层",
+            "isExpanded": true
+          },
+          "labels": [{ "text": "嵌套子流程 - 第1层" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "level1_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "L1开始"
+              },
+              "labels": [{ "text": "L1开始" }]
+            },
+            {
+              "id": "level1_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "L1任务" },
+              "labels": [{ "text": "L1任务" }]
+            },
+            {
+              "id": "subprocess_nested_level2",
+              "width": 400, "height": 250,
+              "bpmn": {
+                "type": "subProcess",
+                "name": "嵌套子流程 - 第2层",
+                "isExpanded": true
+              },
+              "labels": [{ "text": "嵌套子流程 - 第2层" }],
+              "layoutOptions": {
+                "elk.algorithm": "layered",
+                "elk.direction": "RIGHT",
+                "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+              },
+              "children": [
+                {
+                  "id": "level2_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "none",
+                    "name": "L2开始"
+                  },
+                  "labels": [{ "text": "L2开始" }]
+                },
+                {
+                  "id": "level2_task",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "task", "name": "L2任务" },
+                  "labels": [{ "text": "L2任务" }]
+                },
+                {
+                  "id": "subprocess_nested_level3",
+                  "width": 200, "height": 120,
+                  "bpmn": {
+                    "type": "subProcess",
+                    "name": "嵌套子流程 - 第3层",
+                    "isExpanded": true
+                  },
+                  "labels": [{ "text": "嵌套子流程 - 第3层" }],
+                  "layoutOptions": {
+                    "elk.algorithm": "layered",
+                    "elk.direction": "RIGHT",
+                    "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+                  },
+                  "children": [
+                    {
+                      "id": "level3_start",
+                      "width": 36, "height": 36,
+                      "bpmn": {
+                        "type": "startEvent",
+                        "eventDefinitionType": "none",
+                        "name": "L3开始"
+                      },
+                      "labels": [{ "text": "L3开始" }]
+                    },
+                    {
+                      "id": "level3_task",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "L3核心任务" },
+                      "labels": [{ "text": "L3核心任务" }]
+                    },
+                    {
+                      "id": "level3_end",
+                      "width": 36, "height": 36,
+                      "bpmn": {
+                        "type": "endEvent",
+                        "eventDefinitionType": "none",
+                        "name": "L3结束"
+                      },
+                      "labels": [{ "text": "L3结束" }]
+                    }
+                  ],
+                  "edges": [
+                    { "id": "level3_flow_1", "sources": ["level3_start"], "targets": ["level3_task"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "level3_flow_2", "sources": ["level3_task"], "targets": ["level3_end"], "bpmn": { "type": "sequenceFlow" } }
+                  ]
+                },
+                {
+                  "id": "level2_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "L2结束"
+                  },
+                  "labels": [{ "text": "L2结束" }]
+                }
+              ],
+              "edges": [
+                { "id": "level2_flow_1", "sources": ["level2_start"], "targets": ["level2_task"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "level2_flow_2", "sources": ["level2_task"], "targets": ["subprocess_nested_level3"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "level2_flow_3", "sources": ["subprocess_nested_level3"], "targets": ["level2_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            },
+            {
+              "id": "level1_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "L1结束"
+              },
+              "labels": [{ "text": "L1结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "level1_flow_1", "sources": ["level1_start"], "targets": ["level1_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "level1_flow_2", "sources": ["level1_task"], "targets": ["subprocess_nested_level2"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "level1_flow_3", "sources": ["subprocess_nested_level2"], "targets": ["level1_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        },
+        {
+          "id": "end_timeout",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "超时结束"
+          },
+          "labels": [{ "text": "超时结束" }]
+        },
+        {
+          "id": "end_error",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "error",
+            "name": "错误结束",
+            "errorRef": "err_subprocess"
+          },
+          "labels": [{ "text": "错误结束" }]
+        },
+        {
+          "id": "end_cancel",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "取消结束"
+          },
+          "labels": [{ "text": "取消结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["subprocess_collapsed"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["subprocess_collapsed"], "targets": ["subprocess_with_boundary"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["subprocess_with_boundary"], "targets": ["subprocess_nested_level1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_4", "sources": ["subprocess_nested_level1"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timeout", "sources": ["boundary_timer_subprocess"], "targets": ["task_timeout_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timeout_end", "sources": ["task_timeout_handler"], "targets": ["end_timeout"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_error", "sources": ["boundary_error_subprocess"], "targets": ["task_error_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_error_end", "sources": ["task_error_handler"], "targets": ["end_error"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cancel", "sources": ["boundary_message_subprocess"], "targets": ["task_cancel_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cancel_end", "sources": ["task_cancel_handler"], "targets": ["end_cancel"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,234 @@
+{
+  "id": "definitions_event_gateway_parallel",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-event-gateway-parallel",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "messages": [
+    { "id": "msg_order", "name": "订单消息" },
+    { "id": "msg_payment", "name": "支付消息" }
+  ],
+  "signals": [
+    { "id": "sig_cancel", "name": "取消信号" }
+  ],
+  "children": [
+    {
+      "id": "process_event_gateway_parallel",
+      "bpmn": {
+        "type": "process",
+        "name": "并行事件网关测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_init",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "初始化订单" },
+          "labels": [{ "text": "初始化订单" }]
+        },
+        {
+          "id": "gateway_event_parallel",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "eventBasedGateway",
+            "name": "并行事件网关",
+            "gatewayDirection": "Diverging",
+            "eventGatewayType": "Parallel",
+            "instantiate": false
+          },
+          "labels": [{ "text": "并行等待" }]
+        },
+        {
+          "id": "catch_message_order",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "等待订单确认",
+            "messageRef": "msg_order"
+          },
+          "labels": [{ "text": "订单确认" }]
+        },
+        {
+          "id": "catch_message_payment",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "等待支付确认",
+            "messageRef": "msg_payment"
+          },
+          "labels": [{ "text": "支付确认" }]
+        },
+        {
+          "id": "catch_timer",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待超时",
+            "timerEventDefinition": {
+              "timeDuration": "PT30M"
+            }
+          },
+          "labels": [{ "text": "30分钟超时" }]
+        },
+        {
+          "id": "task_process_order",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "处理订单" },
+          "labels": [{ "text": "处理订单" }]
+        },
+        {
+          "id": "task_process_payment",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "处理支付" },
+          "labels": [{ "text": "处理支付" }]
+        },
+        {
+          "id": "task_timeout_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "超时处理" },
+          "labels": [{ "text": "超时处理" }]
+        },
+        {
+          "id": "gateway_parallel_join",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "汇合" }]
+        },
+        {
+          "id": "task_complete",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "完成订单" },
+          "labels": [{ "text": "完成订单" }]
+        },
+        {
+          "id": "end_success",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "成功结束"
+          },
+          "labels": [{ "text": "成功" }]
+        },
+        {
+          "id": "end_timeout",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "超时结束"
+          },
+          "labels": [{ "text": "超时" }]
+        },
+        {
+          "id": "gateway_event_exclusive",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "eventBasedGateway",
+            "name": "排他事件网关",
+            "gatewayDirection": "Diverging",
+            "eventGatewayType": "Exclusive",
+            "instantiate": false
+          },
+          "labels": [{ "text": "排他等待" }]
+        },
+        {
+          "id": "catch_signal_cancel",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "signal",
+            "name": "等待取消",
+            "signalRef": "sig_cancel"
+          },
+          "labels": [{ "text": "取消信号" }]
+        },
+        {
+          "id": "catch_timer_continue",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待继续",
+            "timerEventDefinition": {
+              "timeDuration": "PT10M"
+            }
+          },
+          "labels": [{ "text": "10分钟后继续" }]
+        },
+        {
+          "id": "task_cancel",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "取消订单" },
+          "labels": [{ "text": "取消订单" }]
+        },
+        {
+          "id": "end_cancelled",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "已取消"
+          },
+          "labels": [{ "text": "已取消" }]
+        },
+        {
+          "id": "gateway_instantiate",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "eventBasedGateway",
+            "name": "实例化事件网关",
+            "gatewayDirection": "Diverging",
+            "eventGatewayType": "Exclusive",
+            "instantiate": true
+          },
+          "labels": [{ "text": "实例化网关" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_init"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_parallel_gateway", "sources": ["task_init"], "targets": ["gateway_event_parallel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_order", "sources": ["gateway_event_parallel"], "targets": ["catch_message_order"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_payment", "sources": ["gateway_event_parallel"], "targets": ["catch_message_payment"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_timer", "sources": ["gateway_event_parallel"], "targets": ["catch_timer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_process", "sources": ["catch_message_order"], "targets": ["task_process_order"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_process", "sources": ["catch_message_payment"], "targets": ["task_process_payment"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timer_process", "sources": ["catch_timer"], "targets": ["task_timeout_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_to_join", "sources": ["task_process_order"], "targets": ["gateway_parallel_join"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_to_join", "sources": ["task_process_payment"], "targets": ["gateway_parallel_join"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_join_to_exclusive", "sources": ["gateway_parallel_join"], "targets": ["gateway_event_exclusive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_exclusive_cancel", "sources": ["gateway_event_exclusive"], "targets": ["catch_signal_cancel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_exclusive_continue", "sources": ["gateway_event_exclusive"], "targets": ["catch_timer_continue"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_continue_complete", "sources": ["catch_timer_continue"], "targets": ["task_complete"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_complete_end", "sources": ["task_complete"], "targets": ["end_success"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cancel_task", "sources": ["catch_signal_cancel"], "targets": ["task_cancel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cancel_end", "sources": ["task_cancel"], "targets": ["end_cancelled"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timeout_end", "sources": ["task_timeout_handler"], "targets": ["end_timeout"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "id": "definitions_all_tasks",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-tasks",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "messages": [
+    { "id": "msg_task", "name": "任务消息" }
+  ],
+  "children": [
+    {
+      "id": "process_all_tasks",
+      "bpmn": {
+        "type": "process",
+        "name": "所有任务类型测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_generic",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "通用任务",
+            "documentation": "这是一个通用任务"
+          },
+          "labels": [{ "text": "通用任务" }]
+        },
+        {
+          "id": "task_user",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "用户任务",
+            "assignee": "${initiator}",
+            "candidateUsers": ["user1", "user2"],
+            "candidateGroups": ["managers", "admins"],
+            "dueDate": "${now() + 'P3D'}",
+            "priority": "50",
+            "formKey": "forms/approval-form"
+          },
+          "labels": [{ "text": "用户任务" }]
+        },
+        {
+          "id": "task_service",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "服务任务",
+            "implementation": "${orderService.process()}",
+            "documentation": "调用后端服务处理订单"
+          },
+          "labels": [{ "text": "服务任务" }]
+        },
+        {
+          "id": "task_script",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "scriptTask",
+            "name": "脚本任务",
+            "script": {
+              "scriptFormat": "javascript",
+              "script": "var result = input * 2; execution.setVariable('output', result);",
+              "resultVariable": "calculationResult"
+            }
+          },
+          "labels": [{ "text": "脚本任务" }]
+        },
+        {
+          "id": "task_business_rule",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "businessRuleTask",
+            "name": "业务规则任务",
+            "implementation": "dmn:decision_pricing"
+          },
+          "labels": [{ "text": "业务规则" }]
+        },
+        {
+          "id": "task_send",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "sendTask",
+            "name": "发送任务",
+            "messageRef": "msg_task",
+            "implementation": "${emailService.send()}"
+          },
+          "labels": [{ "text": "发送任务" }]
+        },
+        {
+          "id": "task_receive",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "receiveTask",
+            "name": "接收任务",
+            "messageRef": "msg_task",
+            "instantiate": false
+          },
+          "labels": [{ "text": "接收任务" }]
+        },
+        {
+          "id": "task_manual",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "manualTask",
+            "name": "手动任务",
+            "documentation": "需要人工线下完成的任务"
+          },
+          "labels": [{ "text": "手动任务" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_generic"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_generic"], "targets": ["task_user"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_user"], "targets": ["task_service"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_service"], "targets": ["task_script"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["task_script"], "targets": ["task_business_rule"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["task_business_rule"], "targets": ["task_send"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_7", "sources": ["task_send"], "targets": ["task_receive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_8", "sources": ["task_receive"], "targets": ["task_manual"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_9", "sources": ["task_manual"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

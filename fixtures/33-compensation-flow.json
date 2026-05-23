@@ -1,0 +1,388 @@
+{
+  "id": "definitions_compensation_flow",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-compensation",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_compensation",
+      "bpmn": {
+        "type": "process",
+        "name": "补偿流程测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [
+            {
+              "text": "开始"
+            }
+          ]
+        },
+        {
+          "id": "task_book_flight",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "预订机票",
+            "isForCompensation": false
+          },
+          "labels": [
+            {
+              "text": "预订机票"
+            }
+          ],
+          "boundaryEvents": [
+            {
+              "id": "boundary_comp_flight",
+              "width": 36,
+              "height": 36,
+              "attachedToRef": "task_book_flight",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "compensation",
+                "name": "补偿触发"
+              },
+              "labels": [
+                {
+                  "text": "补偿"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "task_cancel_flight",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "取消机票",
+            "isForCompensation": true
+          },
+          "labels": [
+            {
+              "text": "取消机票"
+            }
+          ]
+        },
+        {
+          "id": "task_book_hotel",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "预订酒店",
+            "isForCompensation": false
+          },
+          "labels": [
+            {
+              "text": "预订酒店"
+            }
+          ],
+          "boundaryEvents": [
+            {
+              "id": "boundary_comp_hotel",
+              "width": 36,
+              "height": 36,
+              "attachedToRef": "task_book_hotel",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "compensation",
+                "name": "补偿触发"
+              },
+              "labels": [
+                {
+                  "text": "补偿"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "task_cancel_hotel",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "取消酒店",
+            "isForCompensation": true
+          },
+          "labels": [
+            {
+              "text": "取消酒店"
+            }
+          ]
+        },
+        {
+          "id": "task_charge_card",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "信用卡扣款",
+            "isForCompensation": false
+          },
+          "labels": [
+            {
+              "text": "信用卡扣款"
+            }
+          ],
+          "boundaryEvents": [
+            {
+              "id": "boundary_comp_charge",
+              "width": 36,
+              "height": 36,
+              "attachedToRef": "task_charge_card",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "compensation",
+                "name": "补偿触发"
+              },
+              "labels": [
+                {
+                  "text": "补偿"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "task_refund",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "退款",
+            "isForCompensation": true
+          },
+          "labels": [
+            {
+              "text": "退款"
+            }
+          ]
+        },
+        {
+          "id": "gateway_check",
+          "width": 50,
+          "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "检查结果",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [
+            {
+              "text": "检查结果"
+            }
+          ]
+        },
+        {
+          "id": "throw_compensation",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "compensation",
+            "name": "触发全部补偿"
+          },
+          "labels": [
+            {
+              "text": "触发补偿"
+            }
+          ]
+        },
+        {
+          "id": "end_success",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "预订成功"
+          },
+          "labels": [
+            {
+              "text": "成功"
+            }
+          ]
+        },
+        {
+          "id": "end_cancelled",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "已取消"
+          },
+          "labels": [
+            {
+              "text": "已取消"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": [
+            "start_1"
+          ],
+          "targets": [
+            "task_book_flight"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_2",
+          "sources": [
+            "task_book_flight"
+          ],
+          "targets": [
+            "task_book_hotel"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_3",
+          "sources": [
+            "task_book_hotel"
+          ],
+          "targets": [
+            "task_charge_card"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_4",
+          "sources": [
+            "task_charge_card"
+          ],
+          "targets": [
+            "gateway_check"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_success",
+          "sources": [
+            "gateway_check"
+          ],
+          "targets": [
+            "end_success"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "成功",
+            "conditionExpression": {
+              "body": "${success == true}"
+            }
+          },
+          "labels": [
+            {
+              "text": "成功"
+            }
+          ]
+        },
+        {
+          "id": "flow_fail",
+          "sources": [
+            "gateway_check"
+          ],
+          "targets": [
+            "throw_compensation"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "失败",
+            "conditionExpression": {
+              "body": "${success == false}"
+            }
+          },
+          "labels": [
+            {
+              "text": "失败"
+            }
+          ]
+        },
+        {
+          "id": "flow_to_end_cancel",
+          "sources": [
+            "throw_compensation"
+          ],
+          "targets": [
+            "end_cancelled"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "assoc_comp_flight",
+          "sources": [
+            "boundary_comp_flight"
+          ],
+          "targets": [
+            "task_cancel_flight"
+          ],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "One"
+          }
+        },
+        {
+          "id": "assoc_comp_hotel",
+          "sources": [
+            "boundary_comp_hotel"
+          ],
+          "targets": [
+            "task_cancel_hotel"
+          ],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "One"
+          }
+        },
+        {
+          "id": "assoc_comp_charge",
+          "sources": [
+            "boundary_comp_charge"
+          ],
+          "targets": [
+            "task_refund"
+          ],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "One"
+          }
+        }
+      ]
+    }
+  ]
+}

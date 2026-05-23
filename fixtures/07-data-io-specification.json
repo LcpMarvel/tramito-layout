@@ -1,0 +1,161 @@
+{
+  "id": "definitions_data_io_specification",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-data-io",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_data_io",
+      "bpmn": {
+        "type": "process",
+        "name": "任务IO规范测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_create_event",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "创建事件",
+            "ioSpecification": {
+              "dataInputs": [
+                { "id": "input_feedback", "name": "反馈信息" }
+              ],
+              "dataOutputs": [
+                { "id": "output_form", "name": "事件表单" }
+              ]
+            }
+          },
+          "labels": [{ "text": "创建事件" }]
+        },
+        {
+          "id": "gateway_complete",
+          "width": 50,
+          "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "信息是否完整",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "信息是否完整" }]
+        },
+        {
+          "id": "task_supplement",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "补充信息",
+            "ioSpecification": {
+              "dataInputs": [
+                { "id": "input_original", "name": "原始表单" },
+                { "id": "input_extra", "name": "补充资料" }
+              ],
+              "dataOutputs": [
+                { "id": "output_updated", "name": "更新表单" }
+              ]
+            }
+          },
+          "labels": [{ "text": "补充信息" }]
+        },
+        {
+          "id": "task_process",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "处理事件",
+            "ioSpecification": {
+              "dataInputs": [
+                { "id": "input_event_form", "name": "事件表单" }
+              ],
+              "dataOutputs": [
+                { "id": "output_result", "name": "处理结果" },
+                { "id": "output_log", "name": "处理日志" }
+              ]
+            }
+          },
+          "labels": [{ "text": "处理事件" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": ["start_1"],
+          "targets": ["task_create_event"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_2",
+          "sources": ["task_create_event"],
+          "targets": ["gateway_complete"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_3_no",
+          "sources": ["gateway_complete"],
+          "targets": ["task_supplement"],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "否"
+          },
+          "labels": [{ "text": "否" }]
+        },
+        {
+          "id": "flow_4",
+          "sources": ["task_supplement"],
+          "targets": ["task_process"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_5_yes",
+          "sources": ["gateway_complete"],
+          "targets": ["task_process"],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "是"
+          },
+          "labels": [{ "text": "是" }]
+        },
+        {
+          "id": "flow_6",
+          "sources": ["task_process"],
+          "targets": ["end_1"],
+          "bpmn": { "type": "sequenceFlow" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "tramito-layout",
+  "version": "2.2.0",
+  "description": "ELK-BPMN JSON → laid-out BPMN 2.0 XML. ELK 摆位 + 自研 EdgeRouter.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "bun run clean && bun build ./src/index.ts --target=bun --format=esm --packages=external --outdir=dist && bunx tsc -p tsconfig.build.json && find dist -type f -name '*.d.ts' ! -path 'dist/index.d.ts' -delete",
+    "test": "bun test",
+    "fixtures:xml": "bun run scripts/run-xml.ts",
+    "fixtures:png": "bun run scripts/render-bpmn.ts",
+    "check:layout": "bun run scripts/check-layout.ts",
+    "check:layout:json": "bun run scripts/check-layout.ts --json",
+    "debug:ai": "bun run scripts/export-ai-debug-bundle.ts",
+    "ai:optimize": "bun run scripts/ai-optimize-layout.ts",
+    "diagnose:aspect": "bun run scripts/diagnose-aspect.ts",
+    "prepack": "bun run build",
+    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout"
+  },
+  "dependencies": {
+    "elkjs": "^0.11.1",
+    "web-worker": "^1.5.0",
+    "bpmn-moddle": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bpmn-js": "^18.16.1",
+    "knip": "^6.14.2",
+    "puppeteer-core": "^25.0.4",
+    "typescript": "^5.6.3"
+  }
+}

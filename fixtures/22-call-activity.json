@@ -1,0 +1,255 @@
+{
+  "id": "definitions_call_activity",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-call-activity",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_main",
+      "bpmn": {
+        "type": "process",
+        "name": "调用活动主流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "准备数据"
+          },
+          "labels": [{ "text": "准备数据" }]
+        },
+        {
+          "id": "call_subprocess_latest",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用子流程(最新)",
+            "calledElement": "process_reusable_approval",
+            "calledElementBinding": "latest",
+            "inheritBusinessKey": true,
+            "inMappings": [
+              { "source": "orderId", "target": "requestId" },
+              { "sourceExpression": "${execution.getVariable('amount')}", "target": "totalAmount" }
+            ],
+            "outMappings": [
+              { "source": "approvalResult", "target": "isApproved" },
+              { "source": "approverName", "target": "approvedBy" }
+            ]
+          },
+          "labels": [{ "text": "审批子流程" }]
+        },
+        {
+          "id": "gateway_check_result",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "审批结果?",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "审批结果?" }]
+        },
+        {
+          "id": "call_subprocess_version",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用指定版本",
+            "calledElement": "process_payment",
+            "calledElementBinding": "version",
+            "calledElementVersion": "2",
+            "inheritBusinessKey": false,
+            "inMappings": [
+              { "source": "orderId", "target": "orderId" },
+              { "source": "amount", "target": "paymentAmount" }
+            ],
+            "outMappings": [
+              { "source": "transactionId", "target": "paymentTransactionId" }
+            ]
+          },
+          "labels": [{ "text": "支付流程v2" }]
+        },
+        {
+          "id": "call_subprocess_deployment",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用部署版本",
+            "calledElement": "process_notification",
+            "calledElementBinding": "deployment",
+            "inMappings": [
+              { "source": "customerEmail", "target": "recipientEmail" },
+              { "sourceExpression": "'订单 ' + orderId + ' 已完成'", "target": "subject" }
+            ]
+          },
+          "labels": [{ "text": "通知流程" }]
+        },
+        {
+          "id": "call_mi_parallel",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "并行调用多实例",
+            "calledElement": "process_item_processing",
+            "calledElementBinding": "latest",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopDataInputRef": "orderItems",
+              "inputDataItem": "item",
+              "loopDataOutputRef": "processedItems",
+              "outputDataItem": "processedItem"
+            },
+            "inMappings": [
+              { "source": "item", "target": "itemToProcess" }
+            ],
+            "outMappings": [
+              { "source": "result", "target": "processedItem" }
+            ]
+          },
+          "labels": [{ "text": "处理订单项(并行)" }]
+        },
+        {
+          "id": "call_mi_sequential",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "顺序调用多实例",
+            "calledElement": "process_approval_step",
+            "calledElementBinding": "latest",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": true,
+              "loopDataInputRef": "approvers",
+              "inputDataItem": "approver",
+              "completionCondition": "${rejected == true}"
+            },
+            "inMappings": [
+              { "source": "approver", "target": "currentApprover" },
+              { "source": "requestData", "target": "requestData" }
+            ],
+            "outMappings": [
+              { "source": "decision", "target": "latestDecision" }
+            ]
+          },
+          "labels": [{ "text": "多级审批(顺序)" }]
+        },
+        {
+          "id": "task_rejected_handler",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "sendTask",
+            "name": "发送拒绝通知"
+          },
+          "labels": [{ "text": "发送拒绝通知" }]
+        },
+        {
+          "id": "task_finalize",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "完成处理"
+          },
+          "labels": [{ "text": "完成处理" }]
+        },
+        {
+          "id": "end_success",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "成功结束"
+          },
+          "labels": [{ "text": "成功" }]
+        },
+        {
+          "id": "end_rejected",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "拒绝结束"
+          },
+          "labels": [{ "text": "拒绝" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_main"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_prepare"], "targets": ["call_subprocess_latest"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["call_subprocess_latest"], "targets": ["gateway_check_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_approved", "sources": ["gateway_check_result"], "targets": ["call_subprocess_version"], "bpmn": { "type": "sequenceFlow", "name": "通过", "conditionExpression": { "body": "${isApproved == true}" } }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_rejected", "sources": ["gateway_check_result"], "targets": ["task_rejected_handler"], "bpmn": { "type": "sequenceFlow", "name": "拒绝", "conditionExpression": { "body": "${isApproved == false}" } }, "labels": [{ "text": "拒绝" }] },
+        { "id": "flow_4", "sources": ["call_subprocess_version"], "targets": ["call_subprocess_deployment"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["call_subprocess_deployment"], "targets": ["call_mi_parallel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["call_mi_parallel"], "targets": ["call_mi_sequential"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_7", "sources": ["call_mi_sequential"], "targets": ["task_finalize"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_8", "sources": ["task_finalize"], "targets": ["end_success"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_9", "sources": ["task_rejected_handler"], "targets": ["end_rejected"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    },
+    {
+      "id": "process_reusable_approval",
+      "bpmn": {
+        "type": "process",
+        "name": "可复用审批子流程",
+        "isExecutable": true,
+        "processType": "Public"
+      },
+      "children": [
+        {
+          "id": "sub_start",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "sub_task_review",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "审批"
+          },
+          "labels": [{ "text": "审批" }]
+        },
+        {
+          "id": "sub_end",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "sub_flow_1", "sources": ["sub_start"], "targets": ["sub_task_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "sub_flow_2", "sources": ["sub_task_review"], "targets": ["sub_end"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

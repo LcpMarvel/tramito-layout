@@ -1,0 +1,288 @@
+{
+  "id": "definitions_link_events",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-link-events",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_link_events",
+      "bpmn": {
+        "type": "process",
+        "name": "Link事件测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_receive_order",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "receiveTask", "name": "接收订单" },
+          "labels": [{ "text": "接收订单" }]
+        },
+        {
+          "id": "gateway_order_type",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "订单类型",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "订单类型" }]
+        },
+        {
+          "id": "task_standard_process",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "标准处理" },
+          "labels": [{ "text": "标准处理" }]
+        },
+        {
+          "id": "throw_link_to_approval",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "跳转到审批",
+            "linkEventDefinition": {
+              "name": "link_approval"
+            }
+          },
+          "labels": [{ "text": "→审批" }]
+        },
+        {
+          "id": "task_express_process",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "加急处理" },
+          "labels": [{ "text": "加急处理" }]
+        },
+        {
+          "id": "throw_link_to_shipping",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "跳转到发货",
+            "linkEventDefinition": {
+              "name": "link_shipping"
+            }
+          },
+          "labels": [{ "text": "→发货" }]
+        },
+        {
+          "id": "task_vip_process",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "VIP处理" },
+          "labels": [{ "text": "VIP处理" }]
+        },
+        {
+          "id": "throw_link_to_complete",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "跳转到完成",
+            "linkEventDefinition": {
+              "name": "link_complete"
+            }
+          },
+          "labels": [{ "text": "→完成" }]
+        },
+        {
+          "id": "catch_link_approval",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "link",
+            "name": "审批入口",
+            "linkEventDefinition": {
+              "name": "link_approval"
+            }
+          },
+          "labels": [{ "text": "审批入口" }]
+        },
+        {
+          "id": "task_approval",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "人工审批" },
+          "labels": [{ "text": "人工审批" }]
+        },
+        {
+          "id": "throw_link_from_approval",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "审批后跳转发货",
+            "linkEventDefinition": {
+              "name": "link_shipping"
+            }
+          },
+          "labels": [{ "text": "→发货" }]
+        },
+        {
+          "id": "catch_link_shipping",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "link",
+            "name": "发货入口",
+            "linkEventDefinition": {
+              "name": "link_shipping"
+            }
+          },
+          "labels": [{ "text": "发货入口" }]
+        },
+        {
+          "id": "task_shipping",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "安排发货" },
+          "labels": [{ "text": "安排发货" }]
+        },
+        {
+          "id": "task_notify",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "发送通知" },
+          "labels": [{ "text": "发送通知" }]
+        },
+        {
+          "id": "throw_link_to_complete_2",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "跳转到完成",
+            "linkEventDefinition": {
+              "name": "link_complete"
+            }
+          },
+          "labels": [{ "text": "→完成" }]
+        },
+        {
+          "id": "catch_link_complete",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "link",
+            "name": "完成入口",
+            "linkEventDefinition": {
+              "name": "link_complete"
+            }
+          },
+          "labels": [{ "text": "完成入口" }]
+        },
+        {
+          "id": "task_finalize",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "最终处理" },
+          "labels": [{ "text": "最终处理" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        },
+        {
+          "id": "throw_link_multi_target_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "多目标链接A",
+            "linkEventDefinition": {
+              "name": "link_multi_target"
+            }
+          },
+          "labels": [{ "text": "链接A" }]
+        },
+        {
+          "id": "catch_link_multi_target",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "link",
+            "name": "多源链接接收",
+            "linkEventDefinition": {
+              "name": "link_multi_target"
+            }
+          },
+          "labels": [{ "text": "多源接收" }]
+        },
+        {
+          "id": "task_multi_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "统一处理" },
+          "labels": [{ "text": "统一处理" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_receive_order"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_gateway", "sources": ["task_receive_order"], "targets": ["gateway_order_type"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "flow_standard",
+          "sources": ["gateway_order_type"],
+          "targets": ["task_standard_process"],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "标准",
+            "conditionExpression": { "body": "${orderType == 'standard'}" }
+          },
+          "labels": [{ "text": "标准" }]
+        },
+        {
+          "id": "flow_express",
+          "sources": ["gateway_order_type"],
+          "targets": ["task_express_process"],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "加急",
+            "conditionExpression": { "body": "${orderType == 'express'}" }
+          },
+          "labels": [{ "text": "加急" }]
+        },
+        {
+          "id": "flow_vip",
+          "sources": ["gateway_order_type"],
+          "targets": ["task_vip_process"],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "VIP",
+            "conditionExpression": { "body": "${orderType == 'vip'}" }
+          },
+          "labels": [{ "text": "VIP" }]
+        },
+        { "id": "flow_standard_to_link", "sources": ["task_standard_process"], "targets": ["throw_link_to_approval"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_express_to_link", "sources": ["task_express_process"], "targets": ["throw_link_to_shipping"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_vip_to_link", "sources": ["task_vip_process"], "targets": ["throw_link_to_complete"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_catch_approval", "sources": ["catch_link_approval"], "targets": ["task_approval"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_approval_to_link", "sources": ["task_approval"], "targets": ["throw_link_from_approval"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_catch_shipping", "sources": ["catch_link_shipping"], "targets": ["task_shipping"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_shipping_notify", "sources": ["task_shipping"], "targets": ["task_notify"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_notify_to_link", "sources": ["task_notify"], "targets": ["throw_link_to_complete_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_catch_complete", "sources": ["catch_link_complete"], "targets": ["task_finalize"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_finalize_end", "sources": ["task_finalize"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_catch_multi", "sources": ["catch_link_multi_target"], "targets": ["task_multi_handler"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,548 @@
+{
+  "id": "definitions_cross_pool_patterns",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-cross-pool-patterns",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "messages": [
+    { "id": "msg_order_request", "name": "订单请求" },
+    { "id": "msg_order_response", "name": "订单响应" },
+    { "id": "msg_payment_request", "name": "支付请求" },
+    { "id": "msg_payment_confirmation", "name": "支付确认" },
+    { "id": "msg_shipping_request", "name": "发货请求" },
+    { "id": "msg_shipping_status", "name": "发货状态" },
+    { "id": "msg_notification", "name": "通知消息" }
+  ],
+  "children": [
+    {
+      "id": "collaboration_cross_pool",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "跨池通信模式"
+      },
+      "children": [
+        {
+          "id": "participant_customer",
+          "width": 800, "height": 200,
+          "bpmn": {
+            "type": "participant",
+            "name": "客户",
+            "processRef": "process_customer"
+          },
+          "labels": [{ "text": "客户" }],
+          "children": [
+            {
+              "id": "process_customer",
+              "bpmn": {
+                "type": "process",
+                "name": "客户流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "customer_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "none",
+                    "name": "开始购物"
+                  },
+                  "labels": [{ "text": "开始" }]
+                },
+                {
+                  "id": "customer_send_order",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送订单",
+                    "messageRef": "msg_order_request"
+                  },
+                  "labels": [{ "text": "发送订单" }]
+                },
+                {
+                  "id": "customer_wait_confirmation",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待订单确认",
+                    "messageRef": "msg_order_response"
+                  },
+                  "labels": [{ "text": "等待确认" }]
+                },
+                {
+                  "id": "customer_send_payment",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送支付",
+                    "messageRef": "msg_payment_request"
+                  },
+                  "labels": [{ "text": "支付" }]
+                },
+                {
+                  "id": "customer_wait_payment_confirm",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待支付确认",
+                    "messageRef": "msg_payment_confirmation"
+                  },
+                  "labels": [{ "text": "支付确认" }]
+                },
+                {
+                  "id": "customer_wait_shipping",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待发货通知",
+                    "messageRef": "msg_shipping_status"
+                  },
+                  "labels": [{ "text": "发货通知" }]
+                },
+                {
+                  "id": "customer_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "购物完成"
+                  },
+                  "labels": [{ "text": "完成" }]
+                }
+              ],
+              "edges": [
+                { "id": "customer_flow_1", "sources": ["customer_start"], "targets": ["customer_send_order"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "customer_flow_2", "sources": ["customer_send_order"], "targets": ["customer_wait_confirmation"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "customer_flow_3", "sources": ["customer_wait_confirmation"], "targets": ["customer_send_payment"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "customer_flow_4", "sources": ["customer_send_payment"], "targets": ["customer_wait_payment_confirm"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "customer_flow_5", "sources": ["customer_wait_payment_confirm"], "targets": ["customer_wait_shipping"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "customer_flow_6", "sources": ["customer_wait_shipping"], "targets": ["customer_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_order_system",
+          "width": 800, "height": 250,
+          "bpmn": {
+            "type": "participant",
+            "name": "订单系统",
+            "processRef": "process_order_system"
+          },
+          "labels": [{ "text": "订单系统" }],
+          "children": [
+            {
+              "id": "process_order_system",
+              "bpmn": {
+                "type": "process",
+                "name": "订单处理流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "order_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到订单",
+                    "messageRef": "msg_order_request"
+                  },
+                  "labels": [{ "text": "收到订单" }]
+                },
+                {
+                  "id": "order_validate",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "验证订单"
+                  },
+                  "labels": [{ "text": "验证订单" }]
+                },
+                {
+                  "id": "order_send_confirmation",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送确认",
+                    "messageRef": "msg_order_response"
+                  },
+                  "labels": [{ "text": "发送确认" }]
+                },
+                {
+                  "id": "order_wait_payment",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待支付",
+                    "messageRef": "msg_payment_request"
+                  },
+                  "labels": [{ "text": "等待支付" }]
+                },
+                {
+                  "id": "order_send_to_payment",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "转发支付",
+                    "messageRef": "msg_payment_request"
+                  },
+                  "labels": [{ "text": "转发支付" }]
+                },
+                {
+                  "id": "order_wait_payment_result",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待支付结果",
+                    "messageRef": "msg_payment_confirmation"
+                  },
+                  "labels": [{ "text": "支付结果" }]
+                },
+                {
+                  "id": "order_send_payment_confirm",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "确认支付",
+                    "messageRef": "msg_payment_confirmation"
+                  },
+                  "labels": [{ "text": "确认支付" }]
+                },
+                {
+                  "id": "order_send_shipping_request",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "请求发货",
+                    "messageRef": "msg_shipping_request"
+                  },
+                  "labels": [{ "text": "请求发货" }]
+                },
+                {
+                  "id": "order_wait_shipping",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待发货状态",
+                    "messageRef": "msg_shipping_status"
+                  },
+                  "labels": [{ "text": "发货状态" }]
+                },
+                {
+                  "id": "order_notify_customer",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "通知客户",
+                    "messageRef": "msg_shipping_status"
+                  },
+                  "labels": [{ "text": "通知客户" }]
+                },
+                {
+                  "id": "order_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "订单完成"
+                  },
+                  "labels": [{ "text": "完成" }]
+                }
+              ],
+              "edges": [
+                { "id": "order_flow_1", "sources": ["order_start"], "targets": ["order_validate"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_2", "sources": ["order_validate"], "targets": ["order_send_confirmation"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_3", "sources": ["order_send_confirmation"], "targets": ["order_wait_payment"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_4", "sources": ["order_wait_payment"], "targets": ["order_send_to_payment"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_5", "sources": ["order_send_to_payment"], "targets": ["order_wait_payment_result"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_6", "sources": ["order_wait_payment_result"], "targets": ["order_send_payment_confirm"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_7", "sources": ["order_send_payment_confirm"], "targets": ["order_send_shipping_request"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_8", "sources": ["order_send_shipping_request"], "targets": ["order_wait_shipping"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_9", "sources": ["order_wait_shipping"], "targets": ["order_notify_customer"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "order_flow_10", "sources": ["order_notify_customer"], "targets": ["order_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_payment_system",
+          "width": 400, "height": 180,
+          "bpmn": {
+            "type": "participant",
+            "name": "支付系统",
+            "processRef": "process_payment_system"
+          },
+          "labels": [{ "text": "支付系统" }],
+          "children": [
+            {
+              "id": "process_payment_system",
+              "bpmn": {
+                "type": "process",
+                "name": "支付处理流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "payment_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到支付",
+                    "messageRef": "msg_payment_request"
+                  },
+                  "labels": [{ "text": "收到支付" }]
+                },
+                {
+                  "id": "payment_process",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "处理支付"
+                  },
+                  "labels": [{ "text": "处理支付" }]
+                },
+                {
+                  "id": "payment_send_confirmation",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送确认",
+                    "messageRef": "msg_payment_confirmation"
+                  },
+                  "labels": [{ "text": "发送确认" }]
+                },
+                {
+                  "id": "payment_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "支付完成"
+                  },
+                  "labels": [{ "text": "完成" }]
+                }
+              ],
+              "edges": [
+                { "id": "payment_flow_1", "sources": ["payment_start"], "targets": ["payment_process"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "payment_flow_2", "sources": ["payment_process"], "targets": ["payment_send_confirmation"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "payment_flow_3", "sources": ["payment_send_confirmation"], "targets": ["payment_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_shipping_system",
+          "width": 400, "height": 180,
+          "bpmn": {
+            "type": "participant",
+            "name": "物流系统",
+            "processRef": "process_shipping_system"
+          },
+          "labels": [{ "text": "物流系统" }],
+          "children": [
+            {
+              "id": "process_shipping_system",
+              "bpmn": {
+                "type": "process",
+                "name": "物流处理流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "shipping_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到发货请求",
+                    "messageRef": "msg_shipping_request"
+                  },
+                  "labels": [{ "text": "收到请求" }]
+                },
+                {
+                  "id": "shipping_process",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "serviceTask",
+                    "name": "处理发货"
+                  },
+                  "labels": [{ "text": "处理发货" }]
+                },
+                {
+                  "id": "shipping_send_status",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送状态",
+                    "messageRef": "msg_shipping_status"
+                  },
+                  "labels": [{ "text": "发送状态" }]
+                },
+                {
+                  "id": "shipping_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "发货完成"
+                  },
+                  "labels": [{ "text": "完成" }]
+                }
+              ],
+              "edges": [
+                { "id": "shipping_flow_1", "sources": ["shipping_start"], "targets": ["shipping_process"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "shipping_flow_2", "sources": ["shipping_process"], "targets": ["shipping_send_status"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "shipping_flow_3", "sources": ["shipping_send_status"], "targets": ["shipping_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_blackbox_external",
+          "width": 200, "height": 80,
+          "bpmn": {
+            "type": "participant",
+            "name": "外部系统 (黑盒)"
+          },
+          "labels": [{ "text": "外部系统" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_order_request",
+          "sources": ["customer_send_order"],
+          "targets": ["order_start"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "订单请求",
+            "messageRef": "msg_order_request"
+          },
+          "labels": [{ "text": "订单请求" }]
+        },
+        {
+          "id": "msgflow_order_response",
+          "sources": ["order_send_confirmation"],
+          "targets": ["customer_wait_confirmation"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "订单确认",
+            "messageRef": "msg_order_response"
+          },
+          "labels": [{ "text": "订单确认" }]
+        },
+        {
+          "id": "msgflow_payment_to_order",
+          "sources": ["customer_send_payment"],
+          "targets": ["order_wait_payment"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "支付请求",
+            "messageRef": "msg_payment_request"
+          },
+          "labels": [{ "text": "支付请求" }]
+        },
+        {
+          "id": "msgflow_order_to_payment",
+          "sources": ["order_send_to_payment"],
+          "targets": ["payment_start"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "转发支付",
+            "messageRef": "msg_payment_request"
+          },
+          "labels": [{ "text": "转发支付" }]
+        },
+        {
+          "id": "msgflow_payment_confirmation",
+          "sources": ["payment_send_confirmation"],
+          "targets": ["order_wait_payment_result"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "支付确认",
+            "messageRef": "msg_payment_confirmation"
+          },
+          "labels": [{ "text": "支付确认" }]
+        },
+        {
+          "id": "msgflow_payment_to_customer",
+          "sources": ["order_send_payment_confirm"],
+          "targets": ["customer_wait_payment_confirm"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "支付确认给客户",
+            "messageRef": "msg_payment_confirmation"
+          },
+          "labels": [{ "text": "支付确认" }]
+        },
+        {
+          "id": "msgflow_shipping_request",
+          "sources": ["order_send_shipping_request"],
+          "targets": ["shipping_start"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "发货请求",
+            "messageRef": "msg_shipping_request"
+          },
+          "labels": [{ "text": "发货请求" }]
+        },
+        {
+          "id": "msgflow_shipping_status",
+          "sources": ["shipping_send_status"],
+          "targets": ["order_wait_shipping"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "发货状态",
+            "messageRef": "msg_shipping_status"
+          },
+          "labels": [{ "text": "发货状态" }]
+        },
+        {
+          "id": "msgflow_shipping_to_customer",
+          "sources": ["order_notify_customer"],
+          "targets": ["customer_wait_shipping"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "发货通知",
+            "messageRef": "msg_shipping_status"
+          },
+          "labels": [{ "text": "发货通知" }]
+        },
+        {
+          "id": "msgflow_to_external",
+          "sources": ["order_validate"],
+          "targets": ["participant_blackbox_external"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "外部验证"
+          },
+          "labels": [{ "text": "外部验证" }]
+        },
+        {
+          "id": "msgflow_from_external",
+          "sources": ["participant_blackbox_external"],
+          "targets": ["order_validate"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "验证结果"
+          },
+          "labels": [{ "text": "验证结果" }]
+        }
+      ]
+    }
+  ]
+}

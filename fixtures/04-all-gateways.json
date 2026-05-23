@@ -1,0 +1,303 @@
+{
+  "id": "definitions_all_gateways",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-gateways",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 120
+  },
+  "messages": [
+    { "id": "msg_a", "name": "消息A" },
+    { "id": "msg_b", "name": "消息B" }
+  ],
+  "signals": [
+    { "id": "sig_timeout", "name": "超时信号" }
+  ],
+  "children": [
+    {
+      "id": "process_all_gateways",
+      "bpmn": {
+        "type": "process",
+        "name": "所有网关类型测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "gateway_exclusive_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "排他分支",
+            "gatewayDirection": "Diverging",
+            "default": "flow_exclusive_default"
+          },
+          "labels": [{ "text": "排他分支" }]
+        },
+        {
+          "id": "task_path_a",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "路径A" },
+          "labels": [{ "text": "路径A" }]
+        },
+        {
+          "id": "task_path_b",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "路径B" },
+          "labels": [{ "text": "路径B" }]
+        },
+        {
+          "id": "task_path_default",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "默认路径" },
+          "labels": [{ "text": "默认路径" }]
+        },
+        {
+          "id": "gateway_exclusive_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "排他合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "排他合并" }]
+        },
+        {
+          "id": "gateway_parallel_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行分支",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "并行分支" }]
+        },
+        {
+          "id": "task_parallel_1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "并行任务1" },
+          "labels": [{ "text": "并行任务1" }]
+        },
+        {
+          "id": "task_parallel_2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "并行任务2" },
+          "labels": [{ "text": "并行任务2" }]
+        },
+        {
+          "id": "task_parallel_3",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "并行任务3" },
+          "labels": [{ "text": "并行任务3" }]
+        },
+        {
+          "id": "gateway_parallel_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "并行合并" }]
+        },
+        {
+          "id": "gateway_inclusive_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "包容分支",
+            "gatewayDirection": "Diverging",
+            "default": "flow_inclusive_default"
+          },
+          "labels": [{ "text": "包容分支" }]
+        },
+        {
+          "id": "task_inclusive_1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "包容路径1" },
+          "labels": [{ "text": "包容路径1" }]
+        },
+        {
+          "id": "task_inclusive_2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "包容路径2" },
+          "labels": [{ "text": "包容路径2" }]
+        },
+        {
+          "id": "task_inclusive_default",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "包容默认" },
+          "labels": [{ "text": "包容默认" }]
+        },
+        {
+          "id": "gateway_inclusive_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "包容合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "包容合并" }]
+        },
+        {
+          "id": "gateway_event_based",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "eventBasedGateway",
+            "name": "事件网关",
+            "gatewayDirection": "Diverging",
+            "eventGatewayType": "Exclusive",
+            "instantiate": false
+          },
+          "labels": [{ "text": "事件网关" }]
+        },
+        {
+          "id": "catch_event_msg",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "等待消息",
+            "messageRef": "msg_a"
+          },
+          "labels": [{ "text": "等待消息" }]
+        },
+        {
+          "id": "catch_event_timer",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待超时",
+            "timerEventDefinition": {
+              "timeDuration": "PT1H"
+            }
+          },
+          "labels": [{ "text": "等待超时" }]
+        },
+        {
+          "id": "catch_event_signal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "signal",
+            "name": "等待信号",
+            "signalRef": "sig_timeout"
+          },
+          "labels": [{ "text": "等待信号" }]
+        },
+        {
+          "id": "task_after_msg",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "消息后处理" },
+          "labels": [{ "text": "消息后处理" }]
+        },
+        {
+          "id": "task_after_timer",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "超时后处理" },
+          "labels": [{ "text": "超时后处理" }]
+        },
+        {
+          "id": "task_after_signal",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "信号后处理" },
+          "labels": [{ "text": "信号后处理" }]
+        },
+        {
+          "id": "gateway_event_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "gatewayDirection": "Converging"
+          }
+        },
+        {
+          "id": "gateway_complex",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "complexGateway",
+            "name": "复杂网关",
+            "gatewayDirection": "Mixed",
+            "activationCondition": "${completed >= 2}"
+          },
+          "labels": [{ "text": "复杂网关" }]
+        },
+        {
+          "id": "task_complex_1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "复杂路径1" },
+          "labels": [{ "text": "复杂路径1" }]
+        },
+        {
+          "id": "task_complex_2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "复杂路径2" },
+          "labels": [{ "text": "复杂路径2" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gateway_exclusive_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_exclusive_a", "sources": ["gateway_exclusive_div"], "targets": ["task_path_a"], "bpmn": { "type": "sequenceFlow", "name": "条件A", "conditionExpression": { "body": "${type == 'A'}" } }, "labels": [{ "text": "条件A" }] },
+        { "id": "flow_exclusive_b", "sources": ["gateway_exclusive_div"], "targets": ["task_path_b"], "bpmn": { "type": "sequenceFlow", "name": "条件B", "conditionExpression": { "body": "${type == 'B'}" } }, "labels": [{ "text": "条件B" }] },
+        { "id": "flow_exclusive_default", "sources": ["gateway_exclusive_div"], "targets": ["task_path_default"], "bpmn": { "type": "sequenceFlow", "name": "默认", "isDefault": true }, "labels": [{ "text": "默认" }] },
+        { "id": "flow_to_exc_conv_1", "sources": ["task_path_a"], "targets": ["gateway_exclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_exc_conv_2", "sources": ["task_path_b"], "targets": ["gateway_exclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_exc_conv_3", "sources": ["task_path_default"], "targets": ["gateway_exclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_parallel", "sources": ["gateway_exclusive_conv"], "targets": ["gateway_parallel_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_1", "sources": ["gateway_parallel_div"], "targets": ["task_parallel_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_2", "sources": ["gateway_parallel_div"], "targets": ["task_parallel_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_parallel_3", "sources": ["gateway_parallel_div"], "targets": ["task_parallel_3"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_par_conv_1", "sources": ["task_parallel_1"], "targets": ["gateway_parallel_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_par_conv_2", "sources": ["task_parallel_2"], "targets": ["gateway_parallel_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_par_conv_3", "sources": ["task_parallel_3"], "targets": ["gateway_parallel_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_inclusive", "sources": ["gateway_parallel_conv"], "targets": ["gateway_inclusive_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_inclusive_1", "sources": ["gateway_inclusive_div"], "targets": ["task_inclusive_1"], "bpmn": { "type": "sequenceFlow", "name": "大于100", "conditionExpression": { "body": "${amount > 100}" } }, "labels": [{ "text": ">100" }] },
+        { "id": "flow_inclusive_2", "sources": ["gateway_inclusive_div"], "targets": ["task_inclusive_2"], "bpmn": { "type": "sequenceFlow", "name": "VIP客户", "conditionExpression": { "body": "${isVip == true}" } }, "labels": [{ "text": "VIP" }] },
+        { "id": "flow_inclusive_default", "sources": ["gateway_inclusive_div"], "targets": ["task_inclusive_default"], "bpmn": { "type": "sequenceFlow", "isDefault": true }, "labels": [{ "text": "默认" }] },
+        { "id": "flow_to_inc_conv_1", "sources": ["task_inclusive_1"], "targets": ["gateway_inclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_inc_conv_2", "sources": ["task_inclusive_2"], "targets": ["gateway_inclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_inc_conv_3", "sources": ["task_inclusive_default"], "targets": ["gateway_inclusive_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_event", "sources": ["gateway_inclusive_conv"], "targets": ["gateway_event_based"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_event_msg", "sources": ["gateway_event_based"], "targets": ["catch_event_msg"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_event_timer", "sources": ["gateway_event_based"], "targets": ["catch_event_timer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_event_signal", "sources": ["gateway_event_based"], "targets": ["catch_event_signal"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_after_msg", "sources": ["catch_event_msg"], "targets": ["task_after_msg"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_after_timer", "sources": ["catch_event_timer"], "targets": ["task_after_timer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_after_signal", "sources": ["catch_event_signal"], "targets": ["task_after_signal"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_event_conv_1", "sources": ["task_after_msg"], "targets": ["gateway_event_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_event_conv_2", "sources": ["task_after_timer"], "targets": ["gateway_event_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_event_conv_3", "sources": ["task_after_signal"], "targets": ["gateway_event_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_complex", "sources": ["gateway_event_conv"], "targets": ["gateway_complex"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_complex_1", "sources": ["gateway_complex"], "targets": ["task_complex_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_complex_2", "sources": ["gateway_complex"], "targets": ["task_complex_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end_1", "sources": ["task_complex_1"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end_2", "sources": ["task_complex_2"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

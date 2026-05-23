@@ -1,0 +1,269 @@
+{
+  "id": "definitions_artifacts_extended",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-artifacts-extended",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_artifacts_extended",
+      "bpmn": {
+        "type": "process",
+        "name": "扩展工件测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_receive_data",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "receiveTask",
+            "name": "接收数据"
+          },
+          "labels": [{ "text": "接收数据" }]
+        },
+        {
+          "id": "task_process_data",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "处理数据"
+          },
+          "labels": [{ "text": "处理数据" }]
+        },
+        {
+          "id": "task_validate",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "businessRuleTask",
+            "name": "验证规则"
+          },
+          "labels": [{ "text": "验证规则" }]
+        },
+        {
+          "id": "task_approve",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "人工审批"
+          },
+          "labels": [{ "text": "人工审批" }]
+        },
+        {
+          "id": "task_send_result",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "sendTask",
+            "name": "发送结果"
+          },
+          "labels": [{ "text": "发送结果" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        },
+        {
+          "id": "group_data_handling",
+          "bpmn": {
+            "type": "group",
+            "name": "数据处理阶段",
+            "categoryValueRef": "cat_data_handling",
+            "groupedElements": ["task_receive_data", "task_process_data", "task_validate"],
+            "padding": 25
+          },
+          "labels": [{ "text": "数据处理阶段" }]
+        },
+        {
+          "id": "group_approval",
+          "bpmn": {
+            "type": "group",
+            "name": "审批阶段",
+            "categoryValueRef": "cat_approval",
+            "groupedElements": ["task_approve"],
+            "padding": 25
+          },
+          "labels": [{ "text": "审批阶段" }]
+        },
+        {
+          "id": "data_input_raw",
+          "width": 36, "height": 50,
+          "bpmn": {
+            "type": "dataObjectReference",
+            "name": "原始数据",
+            "dataObjectRef": "dataObject_raw",
+            "dataState": {
+              "name": "未处理"
+            }
+          },
+          "labels": [{ "text": "原始数据" }]
+        },
+        {
+          "id": "data_output_processed",
+          "width": 36, "height": 50,
+          "bpmn": {
+            "type": "dataObjectReference",
+            "name": "处理后数据",
+            "dataObjectRef": "dataObject_processed",
+            "dataState": {
+              "name": "已处理"
+            }
+          },
+          "labels": [{ "text": "处理后数据" }]
+        },
+        {
+          "id": "data_store_main",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "dataStoreReference",
+            "name": "主数据库"
+          },
+          "labels": [{ "text": "主数据库" }]
+        },
+        {
+          "id": "data_store_archive",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "dataStoreReference",
+            "name": "归档数据库"
+          },
+          "labels": [{ "text": "归档数据库" }]
+        },
+        {
+          "id": "annotation_data_format",
+          "width": 120, "height": 50,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "数据格式必须符合JSON Schema v1.2规范"
+          }
+        },
+        {
+          "id": "annotation_sla",
+          "width": 100, "height": 40,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "SLA: 24小时内完成审批"
+          }
+        },
+        {
+          "id": "annotation_bidirectional",
+          "width": 100, "height": 40,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "双向数据同步"
+          }
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_receive_data"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_receive_data"], "targets": ["task_process_data"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_process_data"], "targets": ["task_validate"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_validate"], "targets": ["task_approve"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["task_approve"], "targets": ["task_send_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["task_send_result"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "data_assoc_raw_to_receive",
+          "sources": ["data_input_raw"],
+          "targets": ["task_receive_data"],
+          "bpmn": { "type": "dataInputAssociation" }
+        },
+        {
+          "id": "data_assoc_process_to_output",
+          "sources": ["task_process_data"],
+          "targets": ["data_output_processed"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "data_assoc_output_to_validate",
+          "sources": ["data_output_processed"],
+          "targets": ["task_validate"],
+          "bpmn": { "type": "dataInputAssociation" }
+        },
+        {
+          "id": "data_assoc_process_to_store",
+          "sources": ["task_process_data"],
+          "targets": ["data_store_main"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "data_assoc_send_to_archive",
+          "sources": ["task_send_result"],
+          "targets": ["data_store_archive"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "assoc_annotation_format_none",
+          "sources": ["annotation_data_format"],
+          "targets": ["task_receive_data"],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "None"
+          }
+        },
+        {
+          "id": "assoc_annotation_sla_one",
+          "sources": ["annotation_sla"],
+          "targets": ["task_approve"],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "One"
+          }
+        },
+        {
+          "id": "assoc_stores_both",
+          "sources": ["data_store_main"],
+          "targets": ["data_store_archive"],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "Both"
+          }
+        },
+        {
+          "id": "assoc_annotation_bidirectional",
+          "sources": ["annotation_bidirectional"],
+          "targets": ["data_store_main"],
+          "bpmn": {
+            "type": "association",
+            "associationDirection": "One"
+          }
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "category_data",
+      "name": "数据处理类别",
+      "categoryValues": [
+        { "id": "cat_data_handling", "value": "数据处理" },
+        { "id": "cat_approval", "value": "审批流程" }
+      ]
+    }
+  ],
+  "dataObjects": [
+    { "id": "dataObject_raw", "name": "原始数据对象" },
+    { "id": "dataObject_processed", "name": "已处理数据对象" }
+  ]
+}

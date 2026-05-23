@@ -1,0 +1,294 @@
+{
+  "id": "definitions_call_activity_boundary",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-call-activity-boundary",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "errors": [
+    { "id": "err_call_failure", "name": "调用失败", "errorCode": "CALL_ERR_001" },
+    { "id": "err_validation", "name": "验证错误", "errorCode": "VAL_ERR_001" }
+  ],
+  "escalations": [
+    { "id": "esc_timeout", "name": "超时升级", "escalationCode": "ESC_TIMEOUT" }
+  ],
+  "signals": [
+    { "id": "sig_cancel", "name": "取消信号" }
+  ],
+  "children": [
+    {
+      "id": "process_call_activity_boundary",
+      "bpmn": {
+        "type": "process",
+        "name": "调用活动边界事件测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "准备数据" },
+          "labels": [{ "text": "准备数据" }]
+        },
+        {
+          "id": "call_activity_order",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用订单处理",
+            "calledElement": "process_order_handling"
+          },
+          "labels": [{ "text": "调用订单处理" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_error_call_order",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_order",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "订单错误",
+                "isInterrupting": true,
+                "errorRef": "err_call_failure"
+              },
+              "labels": [{ "text": "订单错误" }]
+            },
+            {
+              "id": "boundary_timer_call_order",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_order",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "订单超时",
+                "isInterrupting": true,
+                "timerEventDefinition": {
+                  "timeDuration": "PT30M"
+                }
+              },
+              "labels": [{ "text": "30分钟超时" }]
+            }
+          ]
+        },
+        {
+          "id": "task_order_error_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "订单错误处理" },
+          "labels": [{ "text": "订单错误处理" }]
+        },
+        {
+          "id": "task_order_timeout_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "订单超时处理" },
+          "labels": [{ "text": "订单超时处理" }]
+        },
+        {
+          "id": "call_activity_payment",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用支付处理",
+            "calledElement": "process_payment_handling"
+          },
+          "labels": [{ "text": "调用支付处理" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_error_call_payment",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_payment",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "支付错误",
+                "isInterrupting": true,
+                "errorRef": "err_call_failure"
+              },
+              "labels": [{ "text": "支付错误" }]
+            },
+            {
+              "id": "boundary_escalation_call_payment",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_payment",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "escalation",
+                "name": "支付升级",
+                "isInterrupting": false,
+                "escalationRef": "esc_timeout"
+              },
+              "labels": [{ "text": "支付升级" }]
+            },
+            {
+              "id": "boundary_signal_call_payment",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_payment",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "signal",
+                "name": "取消支付",
+                "isInterrupting": true,
+                "signalRef": "sig_cancel"
+              },
+              "labels": [{ "text": "取消" }]
+            }
+          ]
+        },
+        {
+          "id": "task_payment_error_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "支付错误处理" },
+          "labels": [{ "text": "支付错误处理" }]
+        },
+        {
+          "id": "task_escalation_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "升级处理" },
+          "labels": [{ "text": "升级处理" }]
+        },
+        {
+          "id": "task_cancel_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "取消处理" },
+          "labels": [{ "text": "取消处理" }]
+        },
+        {
+          "id": "call_activity_shipping",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用发货处理",
+            "calledElement": "process_shipping_handling"
+          },
+          "labels": [{ "text": "调用发货处理" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_message_call_shipping",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_shipping",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "message",
+                "name": "发货消息",
+                "isInterrupting": false
+              },
+              "labels": [{ "text": "状态更新" }]
+            },
+            {
+              "id": "boundary_conditional_call_shipping",
+              "width": 36, "height": 36,
+              "attachedToRef": "call_activity_shipping",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "conditional",
+                "name": "库存不足",
+                "isInterrupting": true,
+                "conditionalEventDefinition": {
+                  "condition": {
+                    "type": "tFormalExpression",
+                    "body": "${inventory < requiredQuantity}"
+                  }
+                }
+              },
+              "labels": [{ "text": "库存不足" }]
+            }
+          ]
+        },
+        {
+          "id": "task_shipping_status_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "更新发货状态" },
+          "labels": [{ "text": "更新状态" }]
+        },
+        {
+          "id": "task_inventory_handler",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "库存不足处理" },
+          "labels": [{ "text": "库存不足处理" }]
+        },
+        {
+          "id": "gateway_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "合并",
+            "gatewayDirection": "Converging"
+          }
+        },
+        {
+          "id": "task_finalize",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "最终处理" },
+          "labels": [{ "text": "最终处理" }]
+        },
+        {
+          "id": "end_success",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "成功结束"
+          },
+          "labels": [{ "text": "成功" }]
+        },
+        {
+          "id": "end_error",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "error",
+            "name": "错误结束",
+            "errorRef": "err_call_failure"
+          },
+          "labels": [{ "text": "错误" }]
+        },
+        {
+          "id": "end_cancelled",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "已取消"
+          },
+          "labels": [{ "text": "已取消" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_call_order", "sources": ["task_prepare"], "targets": ["call_activity_order"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_call_order_to_payment", "sources": ["call_activity_order"], "targets": ["call_activity_payment"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_call_payment_to_shipping", "sources": ["call_activity_payment"], "targets": ["call_activity_shipping"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_call_shipping_to_merge", "sources": ["call_activity_shipping"], "targets": ["gateway_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_merge_to_finalize", "sources": ["gateway_merge"], "targets": ["task_finalize"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_finalize_to_end", "sources": ["task_finalize"], "targets": ["end_success"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_error", "sources": ["boundary_error_call_order"], "targets": ["task_order_error_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_error_to_end", "sources": ["task_order_error_handler"], "targets": ["end_error"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_timeout", "sources": ["boundary_timer_call_order"], "targets": ["task_order_timeout_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_timeout_to_merge", "sources": ["task_order_timeout_handler"], "targets": ["gateway_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_error", "sources": ["boundary_error_call_payment"], "targets": ["task_payment_error_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_error_to_end", "sources": ["task_payment_error_handler"], "targets": ["end_error"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_escalation", "sources": ["boundary_escalation_call_payment"], "targets": ["task_escalation_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_payment_cancel", "sources": ["boundary_signal_call_payment"], "targets": ["task_cancel_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_cancel_to_end", "sources": ["task_cancel_handler"], "targets": ["end_cancelled"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_shipping_status", "sources": ["boundary_message_call_shipping"], "targets": ["task_shipping_status_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_inventory", "sources": ["boundary_conditional_call_shipping"], "targets": ["task_inventory_handler"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_inventory_to_merge", "sources": ["task_inventory_handler"], "targets": ["gateway_merge"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

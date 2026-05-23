@@ -1,0 +1,276 @@
+{
+  "id": "definitions_participant_options",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-participant-options",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "messages": [
+    { "id": "msg_request", "name": "服务请求" },
+    { "id": "msg_response", "name": "服务响应" }
+  ],
+  "children": [
+    {
+      "id": "collaboration_participant_options",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "参与者选项测试"
+      },
+      "children": [
+        {
+          "id": "participant_client",
+          "width": 600, "height": 180,
+          "bpmn": {
+            "type": "participant",
+            "name": "客户端",
+            "processRef": "process_client",
+            "participantMultiplicity": {
+              "minimum": 1,
+              "maximum": 10
+            }
+          },
+          "labels": [{ "text": "客户端 (1..10)" }],
+          "children": [
+            {
+              "id": "process_client",
+              "bpmn": {
+                "type": "process",
+                "name": "客户端流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "client_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "none",
+                    "name": "开始"
+                  },
+                  "labels": [{ "text": "开始" }]
+                },
+                {
+                  "id": "client_send_request",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送请求",
+                    "messageRef": "msg_request"
+                  },
+                  "labels": [{ "text": "发送请求" }]
+                },
+                {
+                  "id": "client_wait_response",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "等待响应",
+                    "messageRef": "msg_response"
+                  },
+                  "labels": [{ "text": "等待响应" }]
+                },
+                {
+                  "id": "client_process_response",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "task", "name": "处理响应" },
+                  "labels": [{ "text": "处理响应" }]
+                },
+                {
+                  "id": "client_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "结束"
+                  },
+                  "labels": [{ "text": "结束" }]
+                }
+              ],
+              "edges": [
+                { "id": "client_flow_1", "sources": ["client_start"], "targets": ["client_send_request"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "client_flow_2", "sources": ["client_send_request"], "targets": ["client_wait_response"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "client_flow_3", "sources": ["client_wait_response"], "targets": ["client_process_response"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "client_flow_4", "sources": ["client_process_response"], "targets": ["client_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_server",
+          "width": 600, "height": 180,
+          "bpmn": {
+            "type": "participant",
+            "name": "服务器",
+            "processRef": "process_server",
+            "participantMultiplicity": {
+              "minimum": 3,
+              "maximum": 3
+            }
+          },
+          "labels": [{ "text": "服务器 (3实例)" }],
+          "children": [
+            {
+              "id": "process_server",
+              "bpmn": {
+                "type": "process",
+                "name": "服务器流程",
+                "isExecutable": true
+              },
+              "children": [
+                {
+                  "id": "server_start",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到请求",
+                    "messageRef": "msg_request"
+                  },
+                  "labels": [{ "text": "收到请求" }]
+                },
+                {
+                  "id": "server_process",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "处理请求" },
+                  "labels": [{ "text": "处理请求" }]
+                },
+                {
+                  "id": "server_send_response",
+                  "width": 100, "height": 80,
+                  "bpmn": {
+                    "type": "sendTask",
+                    "name": "发送响应",
+                    "messageRef": "msg_response"
+                  },
+                  "labels": [{ "text": "发送响应" }]
+                },
+                {
+                  "id": "server_end",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "结束"
+                  },
+                  "labels": [{ "text": "结束" }]
+                }
+              ],
+              "edges": [
+                { "id": "server_flow_1", "sources": ["server_start"], "targets": ["server_process"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "server_flow_2", "sources": ["server_process"], "targets": ["server_send_response"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "server_flow_3", "sources": ["server_send_response"], "targets": ["server_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "participant_external_closed",
+          "width": 200, "height": 80,
+          "bpmn": {
+            "type": "participant",
+            "name": "外部系统 (封闭)",
+            "isClosed": true
+          },
+          "labels": [{ "text": "外部系统 (封闭)" }]
+        },
+        {
+          "id": "participant_partner_open",
+          "width": 200, "height": 80,
+          "bpmn": {
+            "type": "participant",
+            "name": "合作伙伴 (开放)",
+            "isClosed": false
+          },
+          "labels": [{ "text": "合作伙伴 (开放)" }]
+        },
+        {
+          "id": "participant_multi_unlimited",
+          "width": 200, "height": 80,
+          "bpmn": {
+            "type": "participant",
+            "name": "无限实例池",
+            "participantMultiplicity": {
+              "minimum": 0,
+              "maximum": -1
+            }
+          },
+          "labels": [{ "text": "无限实例池 (0..*)" }]
+        },
+        {
+          "id": "participant_single_instance",
+          "width": 200, "height": 80,
+          "bpmn": {
+            "type": "participant",
+            "name": "单实例池",
+            "participantMultiplicity": {
+              "minimum": 1,
+              "maximum": 1
+            }
+          },
+          "labels": [{ "text": "单实例池" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_request",
+          "sources": ["client_send_request"],
+          "targets": ["server_start"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "服务请求",
+            "messageRef": "msg_request"
+          },
+          "labels": [{ "text": "请求" }]
+        },
+        {
+          "id": "msgflow_response",
+          "sources": ["server_send_response"],
+          "targets": ["client_wait_response"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "服务响应",
+            "messageRef": "msg_response"
+          },
+          "labels": [{ "text": "响应" }]
+        },
+        {
+          "id": "msgflow_to_external",
+          "sources": ["server_process"],
+          "targets": ["participant_external_closed"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "外部调用"
+          },
+          "labels": [{ "text": "外部调用" }]
+        },
+        {
+          "id": "msgflow_from_external",
+          "sources": ["participant_external_closed"],
+          "targets": ["server_process"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "外部响应"
+          },
+          "labels": [{ "text": "外部响应" }]
+        },
+        {
+          "id": "msgflow_to_partner",
+          "sources": ["client_process_response"],
+          "targets": ["participant_partner_open"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "通知合作伙伴"
+          },
+          "labels": [{ "text": "通知" }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "id": "definitions_multiinstance_tasks",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-multiinstance-tasks",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_multiinstance_tasks",
+      "bpmn": {
+        "type": "process",
+        "name": "多实例任务测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_mi_parallel",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "并行多实例",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopCardinality": "${items.size()}",
+              "loopDataInputRef": "items",
+              "inputDataItem": "item",
+              "completionCondition": "${nrOfCompletedInstances >= 3}"
+            }
+          },
+          "labels": [{ "text": "并行多实例" }]
+        },
+        {
+          "id": "task_mi_sequential",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "顺序多实例",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": true,
+              "loopCardinality": "5",
+              "loopDataInputRef": "approvers",
+              "loopDataOutputRef": "approvalResults",
+              "inputDataItem": "approver",
+              "outputDataItem": "result"
+            }
+          },
+          "labels": [{ "text": "顺序多实例" }]
+        },
+        {
+          "id": "task_mi_cardinality",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "固定次数多实例",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopCardinality": "3"
+            }
+          },
+          "labels": [{ "text": "固定次数(3)" }]
+        },
+        {
+          "id": "task_mi_collection",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "集合驱动多实例",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopDataInputRef": "orderItems",
+              "inputDataItem": "orderItem"
+            }
+          },
+          "labels": [{ "text": "集合驱动" }]
+        },
+        {
+          "id": "task_mi_with_completion",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "带完成条件",
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopCardinality": "10",
+              "completionCondition": "${nrOfCompletedInstances/nrOfInstances >= 0.6}"
+            }
+          },
+          "labels": [{ "text": "60%完成即可" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_mi_parallel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_mi_parallel"], "targets": ["task_mi_sequential"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_mi_sequential"], "targets": ["task_mi_cardinality"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_mi_cardinality"], "targets": ["task_mi_collection"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["task_mi_collection"], "targets": ["task_mi_with_completion"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["task_mi_with_completion"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

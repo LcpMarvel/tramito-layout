@@ -1,0 +1,152 @@
+{
+  "id": "definitions_mi_subprocess",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-mi-subprocess",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_mi_subprocess",
+      "bpmn": {
+        "type": "process",
+        "name": "多实例子流程测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "subprocess_mi_parallel",
+          "width": 300, "height": 150,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "并行多实例子流程",
+            "isExpanded": true,
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": false,
+              "loopDataInputRef": "departments",
+              "inputDataItem": "department"
+            }
+          },
+          "labels": [{ "text": "并行多实例子流程" }],
+          "children": [
+            {
+              "id": "sub_mi_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "开始"
+              },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "sub_mi_task",
+              "width": 100, "height": 80,
+              "bpmn": {
+                "type": "task",
+                "name": "部门审批"
+              },
+              "labels": [{ "text": "部门审批" }]
+            },
+            {
+              "id": "sub_mi_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_mi_flow_1", "sources": ["sub_mi_start"], "targets": ["sub_mi_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_mi_flow_2", "sources": ["sub_mi_task"], "targets": ["sub_mi_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "subprocess_mi_sequential",
+          "width": 300, "height": 150,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "顺序多实例子流程",
+            "isExpanded": true,
+            "loopCharacteristics": {
+              "loopType": "multiInstance",
+              "isSequential": true,
+              "loopCardinality": "3"
+            }
+          },
+          "labels": [{ "text": "顺序多实例子流程" }],
+          "children": [
+            {
+              "id": "sub_seq_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "none",
+                "name": "开始"
+              },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "sub_seq_task",
+              "width": 100, "height": 80,
+              "bpmn": {
+                "type": "task",
+                "name": "顺序处理"
+              },
+              "labels": [{ "text": "顺序处理" }]
+            },
+            {
+              "id": "sub_seq_end",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "endEvent",
+                "eventDefinitionType": "none",
+                "name": "结束"
+              },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_seq_flow_1", "sources": ["sub_seq_start"], "targets": ["sub_seq_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_seq_flow_2", "sources": ["sub_seq_task"], "targets": ["sub_seq_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["subprocess_mi_parallel"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["subprocess_mi_parallel"], "targets": ["subprocess_mi_sequential"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["subprocess_mi_sequential"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

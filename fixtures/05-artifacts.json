@@ -1,0 +1,130 @@
+{
+  "id": "definitions_artifacts",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-artifacts",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_artifacts",
+      "bpmn": {
+        "type": "process",
+        "name": "Artifacts测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_1",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "读取数据"
+          },
+          "labels": [{ "text": "读取数据" }]
+        },
+        {
+          "id": "task_2",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "处理数据"
+          },
+          "labels": [{ "text": "处理数据" }]
+        },
+        {
+          "id": "task_3",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "审核"
+          },
+          "labels": [{ "text": "审核" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        },
+        {
+          "id": "data_input",
+          "width": 36, "height": 50,
+          "layoutOptions": {
+            "elk.layered.layering.layerConstraint": "FIRST"
+          },
+          "bpmn": {
+            "type": "dataObjectReference",
+            "name": "输入数据"
+          },
+          "labels": [{ "text": "输入数据" }]
+        },
+        {
+          "id": "data_store",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "dataStoreReference",
+            "name": "数据库"
+          },
+          "labels": [{ "text": "数据库" }]
+        },
+        {
+          "id": "annotation_1",
+          "width": 100, "height": 40,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "这里需要验证数据"
+          }
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_1"], "targets": ["task_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_2"], "targets": ["task_3"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_3"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "data_assoc_1",
+          "sources": ["data_input"],
+          "targets": ["task_1"],
+          "bpmn": { "type": "dataInputAssociation" }
+        },
+        {
+          "id": "data_assoc_2",
+          "sources": ["task_2"],
+          "targets": ["data_store"],
+          "layoutOptions": {
+            "elk.layered.priority.direction": 0
+          },
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "assoc_1",
+          "sources": ["annotation_1"],
+          "targets": ["task_2"],
+          "layoutOptions": {
+            "elk.layered.priority.direction": 0
+          },
+          "bpmn": { "type": "association", "associationDirection": "None" }
+        }
+      ]
+    }
+  ]
+}

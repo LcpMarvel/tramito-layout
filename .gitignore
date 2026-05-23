@@ -1,0 +1,36 @@
+# Dependencies and package manager cache
+/node_modules/
+/node_modules/.cache/
+
+# Build output
+/dist/
+/build/
+
+# Generated fixture/debug artifacts. Keep only directory placeholders.
+/out/
+/out-*/
+!/out-xml/
+/out-xml/**
+!/out-xml/.keep
+!/out-bpmn-png/
+/out-bpmn-png/**
+!/out-bpmn-png/.keep
+!/out-ai-debug/
+/out-ai-debug/**
+!/out-ai-debug/.keep
+
+# Local planning scratch files should stay out of the package docs.
+/docs/plans/
+
+# Logs and local OS/editor noise
+.DS_Store
+*.log
+bun.lockb
+
+# Legacy JVM/archive leftovers should not be part of the Bun/TypeScript package.
+/tramito-layout/
+/tramito-layout-archive/
+/.gradle/
+/.kotlin/
+*.class
+*.jar

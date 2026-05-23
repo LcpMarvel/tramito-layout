@@ -1,0 +1,417 @@
+{
+  "id": "definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_voc_vop",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "客户之声(VOC)与流程之声(VOP)捕获流程"
+      },
+      "children": [
+        {
+          "id": "pool_external",
+          "bpmn": {
+            "type": "participant",
+            "name": "外部实体 (客户)",
+            "isBlackBox": true
+          }
+        },
+        {
+          "id": "pool_company",
+          "bpmn": {
+            "type": "participant",
+            "name": "公司",
+            "processRef": "process_company"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_marketing",
+              "bpmn": {
+                "type": "lane",
+                "name": "营销部"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 0
+              },
+              "children": [
+                {
+                  "id": "start_1",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "startEvent",
+                    "eventDefinitionType": "none",
+                    "name": "开始"
+                  }
+                },
+                {
+                  "id": "gateway_parallel_fork",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "parallelGateway",
+                    "name": "信息源并行分叉"
+                  }
+                },
+                {
+                  "id": "task_receive_voc",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "receiveTask",
+                    "name": "接收VOC诉求",
+                    "documentation": "输入：客户诉求（邮件/口头/书面）\\n输出：诉求反馈记录"
+                  }
+                },
+                {
+                  "id": "gateway_customer_type",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "客户类型判断"
+                  }
+                },
+                {
+                  "id": "gateway_related",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "是否为关联客户？"
+                  }
+                },
+                {
+                  "id": "gateway_department",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "exclusiveGateway",
+                    "name": "关联客户是否为德、美质量/研发部门？",
+                    "default": "flow_department_no"
+                  }
+                },
+                {
+                  "id": "task_marketing_after_sales",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "营销部售后团队接收",
+                    "documentation": "处理内销客户VOC"
+                  }
+                },
+                {
+                  "id": "task_marketing_receive",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "营销部接收",
+                    "documentation": "处理外销非关联客户或非德、美质量/研发的关联客户VOC"
+                  }
+                },
+                {
+                  "id": "gateway_parallel_join",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "parallelGateway",
+                    "name": "信息源并行汇合"
+                  }
+                },
+                {
+                  "id": "end_1",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "结束"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "lane_quality",
+              "bpmn": {
+                "type": "lane",
+                "name": "品管部"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 1
+              },
+              "children": [
+                {
+                  "id": "task_quality_receive",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "品管部接收",
+                    "documentation": "处理外销关联客户（德、美质量/研发部门）VOC"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "lane_business_depts",
+              "bpmn": {
+                "type": "lane",
+                "name": "各业务部门"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 2
+              },
+              "children": [
+                {
+                  "id": "task_receive_vop",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "receiveTask",
+                    "name": "接收VOP事件",
+                    "documentation": "输入：流程异常信息\\n输出：初始VOP记录"
+                  }
+                },
+                {
+                  "id": "gateway_vop_fork",
+                  "width": 50,
+                  "height": 50,
+                  "bpmn": {
+                    "type": "parallelGateway",
+                    "name": "VOP分叉"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "lane_process_mgmt",
+              "bpmn": {
+                "type": "lane",
+                "name": "流程管理部门"
+              },
+              "layoutOptions": {
+                "elk.partitioning.partition": 3
+              },
+              "children": [
+                {
+                  "id": "task_vop_copy",
+                  "width": 100,
+                  "height": 80,
+                  "bpmn": {
+                    "type": "userTask",
+                    "name": "接收VOP抄送",
+                    "documentation": "接收各业务部门抄送的VOP记录"
+                  }
+                },
+                {
+                  "id": "end_vop_copy",
+                  "width": 36,
+                  "height": 36,
+                  "bpmn": {
+                    "type": "endEvent",
+                    "eventDefinitionType": "none",
+                    "name": "抄送结束"
+                  }
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "flow_start_to_fork",
+              "sources": ["start_1"],
+              "targets": ["gateway_parallel_fork"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_fork_to_voc",
+              "sources": ["gateway_parallel_fork"],
+              "targets": ["task_receive_voc"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "VOC路径"
+              }
+            },
+            {
+              "id": "flow_fork_to_vop",
+              "sources": ["gateway_parallel_fork"],
+              "targets": ["task_receive_vop"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "VOP路径"
+              }
+            },
+            {
+              "id": "flow_voc_to_customer_type",
+              "sources": ["task_receive_voc"],
+              "targets": ["gateway_customer_type"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_customer_type_to_export",
+              "sources": ["gateway_customer_type"],
+              "targets": ["gateway_related"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "外销客户",
+                "conditionExpression": {
+                  "body": "${customerType == 'export'}"
+                }
+              }
+            },
+            {
+              "id": "flow_customer_type_to_internal",
+              "sources": ["gateway_customer_type"],
+              "targets": ["task_marketing_after_sales"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "内销客户",
+                "conditionExpression": {
+                  "body": "${customerType == 'internal'}"
+                }
+              }
+            },
+            {
+              "id": "flow_related_to_yes",
+              "sources": ["gateway_related"],
+              "targets": ["gateway_department"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "是",
+                "conditionExpression": {
+                  "body": "${isRelated == true}"
+                }
+              }
+            },
+            {
+              "id": "flow_related_to_no",
+              "sources": ["gateway_related"],
+              "targets": ["task_marketing_receive"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "否",
+                "conditionExpression": {
+                  "body": "${isRelated == false}"
+                }
+              }
+            },
+            {
+              "id": "flow_department_to_yes",
+              "sources": ["gateway_department"],
+              "targets": ["task_quality_receive"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "是",
+                "conditionExpression": {
+                  "body": "${relatedDept == 'german_us_quality'}"
+                }
+              }
+            },
+            {
+              "id": "flow_department_no",
+              "sources": ["gateway_department"],
+              "targets": ["task_marketing_receive"],
+              "bpmn": {
+                "type": "sequenceFlow",
+                "name": "否",
+                "isDefault": true
+              }
+            },
+            {
+              "id": "flow_internal_to_join",
+              "sources": ["task_marketing_after_sales"],
+              "targets": ["gateway_parallel_join"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_marketing_to_join",
+              "sources": ["task_marketing_receive"],
+              "targets": ["gateway_parallel_join"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_quality_to_join",
+              "sources": ["task_quality_receive"],
+              "targets": ["gateway_parallel_join"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_vop_to_fork",
+              "sources": ["task_receive_vop"],
+              "targets": ["gateway_vop_fork"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_fork_to_join",
+              "sources": ["gateway_vop_fork"],
+              "targets": ["gateway_parallel_join"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_fork_to_copy",
+              "sources": ["gateway_vop_fork"],
+              "targets": ["task_vop_copy"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_copy_to_end",
+              "sources": ["task_vop_copy"],
+              "targets": ["end_vop_copy"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            },
+            {
+              "id": "flow_join_to_end",
+              "sources": ["gateway_parallel_join"],
+              "targets": ["end_1"],
+              "bpmn": {
+                "type": "sequenceFlow"
+              }
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_voc",
+          "sources": ["pool_external"],
+          "targets": ["task_receive_voc"],
+          "bpmn": {
+            "type": "messageFlow",
+            "name": "客户诉求"
+          }
+        }
+      ]
+    }
+  ]
+}

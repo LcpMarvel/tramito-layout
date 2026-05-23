@@ -1,0 +1,102 @@
+{
+  "id": "definitions_collab_simple",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collab-simple",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "简单协作"
+      },
+      "children": [
+        {
+          "id": "pool_customer",
+          "bpmn": {
+            "type": "participant",
+            "name": "客户",
+            "processRef": "process_customer"
+          },
+          "children": [
+            {
+              "id": "start_customer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "开始" },
+              "labels": [{ "text": "开始" }]
+            },
+            {
+              "id": "task_submit",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "提交订单" },
+              "labels": [{ "text": "提交订单" }]
+            },
+            {
+              "id": "end_customer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "结束" },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_c1", "sources": ["start_customer"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c2", "sources": ["task_submit"], "targets": ["end_customer"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_supplier",
+          "bpmn": {
+            "type": "participant",
+            "name": "供应商",
+            "processRef": "process_supplier"
+          },
+          "children": [
+            {
+              "id": "start_supplier",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到订单"
+              },
+              "labels": [{ "text": "收到订单" }]
+            },
+            {
+              "id": "task_process",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "处理订单" },
+              "labels": [{ "text": "处理订单" }]
+            },
+            {
+              "id": "end_supplier",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "结束" },
+              "labels": [{ "text": "结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_s1", "sources": ["start_supplier"], "targets": ["task_process"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s2", "sources": ["task_process"], "targets": ["end_supplier"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_order",
+          "sources": ["task_submit"],
+          "targets": ["start_supplier"],
+          "bpmn": { "type": "messageFlow", "name": "订单" },
+          "labels": [{ "text": "订单" }]
+        }
+      ]
+    }
+  ]
+}

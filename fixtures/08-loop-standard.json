@@ -1,0 +1,99 @@
+{
+  "id": "definitions_loop_standard",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-loop-standard",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "children": [
+    {
+      "id": "process_loop_standard",
+      "bpmn": {
+        "type": "process",
+        "name": "标准循环测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_standard_loop",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "标准循环",
+            "loopCharacteristics": {
+              "loopType": "standard",
+              "loopCondition": "${counter < 10}",
+              "loopMaximum": 10,
+              "testBefore": true
+            }
+          },
+          "labels": [{ "text": "标准循环" }]
+        },
+        {
+          "id": "task_standard_loop_after",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "后测循环",
+            "loopCharacteristics": {
+              "loopType": "standard",
+              "loopCondition": "${hasMore == true}",
+              "testBefore": false
+            }
+          },
+          "labels": [{ "text": "后测循环" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": ["start_1"],
+          "targets": ["task_standard_loop"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_2",
+          "sources": ["task_standard_loop"],
+          "targets": ["task_standard_loop_after"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_3",
+          "sources": ["task_standard_loop_after"],
+          "targets": ["end_1"],
+          "bpmn": { "type": "sequenceFlow" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "id": "definitions_collab_nested_lanes",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collab-nested-lanes",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "嵌套泳道示例"
+      },
+      "children": [
+        {
+          "id": "pool_org",
+          "bpmn": {
+            "type": "participant",
+            "name": "组织",
+            "processRef": "process_org"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_management",
+              "bpmn": { "type": "lane", "name": "管理层" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "发起" },
+                  "labels": [{ "text": "发起" }]
+                },
+                {
+                  "id": "task_assign",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "分配任务" },
+                  "labels": [{ "text": "分配任务" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_execution",
+              "bpmn": { "type": "lane", "name": "执行层" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "lane_team_a",
+                  "bpmn": { "type": "lane", "name": "A组" },
+                  "children": [
+                    {
+                      "id": "task_exec_a",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "task", "name": "A组执行" },
+                      "labels": [{ "text": "A组执行" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "lane_team_b",
+                  "bpmn": { "type": "lane", "name": "B组" },
+                  "children": [
+                    {
+                      "id": "task_exec_b",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "task", "name": "B组执行" },
+                      "labels": [{ "text": "B组执行" }]
+                    },
+                    {
+                      "id": "end_1",
+                      "width": 36, "height": 36,
+                      "bpmn": { "type": "endEvent", "name": "完成" },
+                      "labels": [{ "text": "完成" }]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_1"], "targets": ["task_assign"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_assign"], "targets": ["task_exec_a"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_exec_a"], "targets": ["task_exec_b"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_exec_b"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

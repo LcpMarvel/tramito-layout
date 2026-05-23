@@ -1,0 +1,88 @@
+{
+  "id": "definitions_adhoc",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-adhoc",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_adhoc",
+      "bpmn": {
+        "type": "process",
+        "name": "临时子流程测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "adhoc_subprocess",
+          "width": 350, "height": 180,
+          "bpmn": {
+            "type": "adHocSubProcess",
+            "name": "临时子流程",
+            "isExpanded": true,
+            "adHocOrdering": "Parallel",
+            "adHocCompletionCondition": "${nrOfCompletedInstances >= 2}",
+            "cancelRemainingInstances": true
+          },
+          "labels": [{ "text": "临时子流程 (Ad-Hoc)" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "adhoc_task_1",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "可选任务1" },
+              "labels": [{ "text": "可选任务1" }]
+            },
+            {
+              "id": "adhoc_task_2",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "可选任务2" },
+              "labels": [{ "text": "可选任务2" }]
+            },
+            {
+              "id": "adhoc_task_3",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "可选任务3" },
+              "labels": [{ "text": "可选任务3" }]
+            }
+          ]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["adhoc_subprocess"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["adhoc_subprocess"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

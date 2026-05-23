@@ -1,0 +1,228 @@
+{
+  "id": "definitions_global_task",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-global-task",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "globalTasks": [
+    {
+      "id": "global_user_task_approval",
+      "bpmn": {
+        "type": "globalUserTask",
+        "name": "通用审批任务",
+        "implementation": "##unspecified"
+      }
+    },
+    {
+      "id": "global_manual_task_verification",
+      "bpmn": {
+        "type": "globalManualTask",
+        "name": "通用人工核验"
+      }
+    },
+    {
+      "id": "global_script_task_validation",
+      "bpmn": {
+        "type": "globalScriptTask",
+        "name": "通用脚本校验",
+        "scriptFormat": "javascript",
+        "script": "return data.isValid;"
+      }
+    },
+    {
+      "id": "global_business_rule_task_pricing",
+      "bpmn": {
+        "type": "globalBusinessRuleTask",
+        "name": "通用定价规则",
+        "implementation": "DMN"
+      }
+    }
+  ],
+  "children": [
+    {
+      "id": "process_using_global_tasks",
+      "bpmn": {
+        "type": "process",
+        "name": "使用全局任务的流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "准备数据"
+          },
+          "labels": [{ "text": "准备数据" }]
+        },
+        {
+          "id": "call_global_user_task",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用审批",
+            "calledElement": "global_user_task_approval"
+          },
+          "labels": [{ "text": "调用审批" }]
+        },
+        {
+          "id": "gateway_split",
+          "width": 50,
+          "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行分支",
+            "gatewayDirection": "Diverging"
+          }
+        },
+        {
+          "id": "call_global_manual_task",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用核验",
+            "calledElement": "global_manual_task_verification"
+          },
+          "labels": [{ "text": "调用核验" }]
+        },
+        {
+          "id": "call_global_script_task",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用校验",
+            "calledElement": "global_script_task_validation"
+          },
+          "labels": [{ "text": "调用校验" }]
+        },
+        {
+          "id": "gateway_join",
+          "width": 50,
+          "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行汇聚",
+            "gatewayDirection": "Converging"
+          }
+        },
+        {
+          "id": "call_global_business_rule",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "callActivity",
+            "name": "调用定价",
+            "calledElement": "global_business_rule_task_pricing"
+          },
+          "labels": [{ "text": "调用定价" }]
+        },
+        {
+          "id": "task_finalize",
+          "width": 100,
+          "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "完成处理"
+          },
+          "labels": [{ "text": "完成处理" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36,
+          "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": ["start_1"],
+          "targets": ["task_prepare"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_2",
+          "sources": ["task_prepare"],
+          "targets": ["call_global_user_task"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_3",
+          "sources": ["call_global_user_task"],
+          "targets": ["gateway_split"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_4a",
+          "sources": ["gateway_split"],
+          "targets": ["call_global_manual_task"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_4b",
+          "sources": ["gateway_split"],
+          "targets": ["call_global_script_task"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_5a",
+          "sources": ["call_global_manual_task"],
+          "targets": ["gateway_join"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_5b",
+          "sources": ["call_global_script_task"],
+          "targets": ["gateway_join"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_6",
+          "sources": ["gateway_join"],
+          "targets": ["call_global_business_rule"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_7",
+          "sources": ["call_global_business_rule"],
+          "targets": ["task_finalize"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_8",
+          "sources": ["task_finalize"],
+          "targets": ["end_1"],
+          "bpmn": { "type": "sequenceFlow" }
+        }
+      ]
+    }
+  ]
+}

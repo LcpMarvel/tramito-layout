@@ -1,0 +1,352 @@
+{
+  "id": "definitions_all_events",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-events",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 100
+  },
+  "messages": [
+    { "id": "msg_1", "name": "测试消息" }
+  ],
+  "signals": [
+    { "id": "sig_1", "name": "测试信号" }
+  ],
+  "errors": [
+    { "id": "err_1", "name": "测试错误", "errorCode": "ERR_001" }
+  ],
+  "escalations": [
+    { "id": "esc_1", "name": "测试升级", "escalationCode": "ESC_001" }
+  ],
+  "children": [
+    {
+      "id": "process_all_events",
+      "bpmn": {
+        "type": "process",
+        "name": "所有事件类型测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "DOWN"
+      },
+      "children": [
+        {
+          "id": "start_none",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "空启动"
+          },
+          "labels": [{ "text": "空启动" }]
+        },
+        {
+          "id": "start_message",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "message",
+            "name": "消息启动",
+            "messageRef": "msg_1"
+          },
+          "labels": [{ "text": "消息启动" }]
+        },
+        {
+          "id": "start_timer",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "timer",
+            "name": "定时启动",
+            "timerEventDefinition": {
+              "timeCycle": "R/PT1H"
+            }
+          },
+          "labels": [{ "text": "定时启动" }]
+        },
+        {
+          "id": "start_signal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "signal",
+            "name": "信号启动",
+            "signalRef": "sig_1"
+          },
+          "labels": [{ "text": "信号启动" }]
+        },
+        {
+          "id": "start_conditional",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "conditional",
+            "name": "条件启动",
+            "conditionalEventDefinition": {
+              "condition": {
+                "type": "tFormalExpression",
+                "body": "${amount > 1000}"
+              }
+            }
+          },
+          "labels": [{ "text": "条件启动" }]
+        },
+        {
+          "id": "start_multiple",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "multiple",
+            "name": "多重启动"
+          },
+          "labels": [{ "text": "多重启动" }]
+        },
+        {
+          "id": "start_parallel_multiple",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "parallelMultiple",
+            "name": "并行多重启动",
+            "parallelMultiple": true
+          },
+          "labels": [{ "text": "并行多重启动" }]
+        },
+        {
+          "id": "catch_message",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "接收消息",
+            "messageRef": "msg_1"
+          },
+          "labels": [{ "text": "接收消息" }]
+        },
+        {
+          "id": "catch_timer",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "等待定时",
+            "timerEventDefinition": {
+              "timeDuration": "PT30M"
+            }
+          },
+          "labels": [{ "text": "等待定时" }]
+        },
+        {
+          "id": "catch_signal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "signal",
+            "name": "接收信号",
+            "signalRef": "sig_1"
+          },
+          "labels": [{ "text": "接收信号" }]
+        },
+        {
+          "id": "catch_conditional",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "conditional",
+            "name": "等待条件",
+            "conditionalEventDefinition": {
+              "condition": {
+                "body": "${status == 'ready'}"
+              }
+            }
+          },
+          "labels": [{ "text": "等待条件" }]
+        },
+        {
+          "id": "catch_link",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "link",
+            "name": "链接接收",
+            "linkEventDefinition": {
+              "name": "link_point_A"
+            }
+          },
+          "labels": [{ "text": "链接接收" }]
+        },
+        {
+          "id": "throw_none",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "none",
+            "name": "空抛出"
+          },
+          "labels": [{ "text": "空抛出" }]
+        },
+        {
+          "id": "throw_message",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "message",
+            "name": "发送消息",
+            "messageRef": "msg_1"
+          },
+          "labels": [{ "text": "发送消息" }]
+        },
+        {
+          "id": "throw_signal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "signal",
+            "name": "发送信号",
+            "signalRef": "sig_1"
+          },
+          "labels": [{ "text": "发送信号" }]
+        },
+        {
+          "id": "throw_escalation",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "escalation",
+            "name": "升级",
+            "escalationRef": "esc_1"
+          },
+          "labels": [{ "text": "升级" }]
+        },
+        {
+          "id": "throw_compensation",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "compensation",
+            "name": "触发补偿"
+          },
+          "labels": [{ "text": "触发补偿" }]
+        },
+        {
+          "id": "throw_link",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateThrowEvent",
+            "eventDefinitionType": "link",
+            "name": "链接抛出",
+            "linkEventDefinition": {
+              "name": "link_point_A"
+            }
+          },
+          "labels": [{ "text": "链接抛出" }]
+        },
+        {
+          "id": "end_none",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "正常结束"
+          },
+          "labels": [{ "text": "正常结束" }]
+        },
+        {
+          "id": "end_message",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "message",
+            "name": "消息结束",
+            "messageRef": "msg_1"
+          },
+          "labels": [{ "text": "消息结束" }]
+        },
+        {
+          "id": "end_error",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "error",
+            "name": "错误结束",
+            "errorRef": "err_1"
+          },
+          "labels": [{ "text": "错误结束" }]
+        },
+        {
+          "id": "end_escalation",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "escalation",
+            "name": "升级结束",
+            "escalationRef": "esc_1"
+          },
+          "labels": [{ "text": "升级结束" }]
+        },
+        {
+          "id": "end_cancel",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "cancel",
+            "name": "取消结束"
+          },
+          "labels": [{ "text": "取消结束" }]
+        },
+        {
+          "id": "end_compensation",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "compensation",
+            "name": "补偿结束"
+          },
+          "labels": [{ "text": "补偿结束" }]
+        },
+        {
+          "id": "end_signal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "signal",
+            "name": "信号结束",
+            "signalRef": "sig_1"
+          },
+          "labels": [{ "text": "信号结束" }]
+        },
+        {
+          "id": "end_terminate",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "terminate",
+            "name": "终止结束"
+          },
+          "labels": [{ "text": "终止结束" }]
+        },
+        {
+          "id": "end_multiple",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "multiple",
+            "name": "多重结束"
+          },
+          "labels": [{ "text": "多重结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_none"], "targets": ["catch_message"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["catch_message"], "targets": ["throw_message"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["throw_message"], "targets": ["end_none"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

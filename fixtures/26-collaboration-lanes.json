@@ -1,0 +1,83 @@
+{
+  "id": "definitions_collab_lanes",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collab-lanes",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "泳道示例"
+      },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": {
+            "type": "participant",
+            "name": "公司",
+            "processRef": "process_company"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_sales",
+              "bpmn": { "type": "lane", "name": "销售部" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "收到需求" },
+                  "labels": [{ "text": "收到需求" }]
+                },
+                {
+                  "id": "task_quote",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "制作报价" },
+                  "labels": [{ "text": "制作报价" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务部" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "审核报价" },
+                  "labels": [{ "text": "审核报价" }]
+                },
+                {
+                  "id": "end_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "完成" },
+                  "labels": [{ "text": "完成" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_1"], "targets": ["task_quote"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_quote"], "targets": ["task_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_review"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

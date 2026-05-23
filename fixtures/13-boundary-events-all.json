@@ -1,0 +1,482 @@
+{
+  "id": "definitions_boundary_events",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-events",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 120
+  },
+  "messages": [
+    { "id": "msg_interrupt", "name": "中断消息" }
+  ],
+  "signals": [
+    { "id": "sig_notify", "name": "通知信号" }
+  ],
+  "errors": [
+    { "id": "err_business", "name": "业务错误", "errorCode": "BIZ_001" }
+  ],
+  "escalations": [
+    { "id": "esc_warning", "name": "警告升级", "escalationCode": "WARN_001" }
+  ],
+  "children": [
+    {
+      "id": "process_boundary_events",
+      "bpmn": {
+        "type": "process",
+        "name": "所有边界事件类型测试",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_with_timer_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "定时中断任务",
+            "assignee": "${user}"
+          },
+          "labels": [{ "text": "定时中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_timer_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_timer_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "超时中断",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "timerEventDefinition": {
+                  "timeDuration": "PT1H"
+                }
+              },
+              "labels": [{ "text": "1小时超时" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_timer_non_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "定时非中断任务"
+          },
+          "labels": [{ "text": "定时非中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_timer_non_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_timer_non_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "定时提醒",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "timerEventDefinition": {
+                  "timeCycle": "R3/PT30M"
+                }
+              },
+              "labels": [{ "text": "每30分钟提醒" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_message_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "消息中断任务"
+          },
+          "labels": [{ "text": "消息中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_message_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_message_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "message",
+                "name": "消息中断",
+                "isInterrupting": true,
+                "messageRef": "msg_interrupt"
+              },
+              "labels": [{ "text": "消息中断" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_message_non_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "消息非中断任务"
+          },
+          "labels": [{ "text": "消息非中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_message_non_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_message_non_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "message",
+                "name": "消息通知",
+                "isInterrupting": false,
+                "messageRef": "msg_interrupt"
+              },
+              "labels": [{ "text": "消息通知" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_error",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "错误边界任务",
+            "implementation": "${riskyService.execute()}"
+          },
+          "labels": [{ "text": "错误边界任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_error",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "捕获错误",
+                "isInterrupting": true,
+                "errorRef": "err_business"
+              },
+              "labels": [{ "text": "业务错误" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_signal_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "信号中断任务"
+          },
+          "labels": [{ "text": "信号中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_signal_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_signal_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "signal",
+                "name": "信号中断",
+                "isInterrupting": true,
+                "signalRef": "sig_notify"
+              },
+              "labels": [{ "text": "信号中断" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_signal_non_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "信号非中断任务"
+          },
+          "labels": [{ "text": "信号非中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_signal_non_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_signal_non_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "signal",
+                "name": "信号通知",
+                "isInterrupting": false,
+                "signalRef": "sig_notify"
+              },
+              "labels": [{ "text": "信号通知" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_escalation_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "升级中断任务"
+          },
+          "labels": [{ "text": "升级中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_escalation_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_escalation_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "escalation",
+                "name": "升级中断",
+                "isInterrupting": true,
+                "escalationRef": "esc_warning"
+              },
+              "labels": [{ "text": "升级中断" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_escalation_non_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "升级非中断任务"
+          },
+          "labels": [{ "text": "升级非中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_escalation_non_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_escalation_non_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "escalation",
+                "name": "升级通知",
+                "isInterrupting": false,
+                "escalationRef": "esc_warning"
+              },
+              "labels": [{ "text": "升级通知" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_conditional_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "条件中断任务"
+          },
+          "labels": [{ "text": "条件中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_conditional_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_conditional_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "conditional",
+                "name": "条件中断",
+                "isInterrupting": true,
+                "conditionalEventDefinition": {
+                  "condition": {
+                    "body": "${status == 'critical'}"
+                  }
+                }
+              },
+              "labels": [{ "text": "条件中断" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_conditional_non_int",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "条件非中断任务"
+          },
+          "labels": [{ "text": "条件非中断任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_conditional_non_interrupting",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_conditional_non_int",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "conditional",
+                "name": "条件检查",
+                "isInterrupting": false,
+                "conditionalEventDefinition": {
+                  "condition": {
+                    "body": "${temperature > 80}"
+                  }
+                }
+              },
+              "labels": [{ "text": "温度检查" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_compensation",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "补偿任务"
+          },
+          "labels": [{ "text": "补偿任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_compensation",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_compensation",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "compensation",
+                "name": "补偿触发"
+              },
+              "labels": [{ "text": "补偿" }]
+            }
+          ]
+        },
+        {
+          "id": "task_compensation_handler",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "补偿处理"
+          },
+          "labels": [{ "text": "补偿处理" }]
+        },
+        {
+          "id": "task_with_multiple",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "多重边界任务"
+          },
+          "labels": [{ "text": "多重边界任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_multiple",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_multiple",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "multiple",
+                "name": "多重事件",
+                "isInterrupting": true
+              },
+              "labels": [{ "text": "多重" }]
+            }
+          ]
+        },
+        {
+          "id": "task_with_parallel_multiple",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "并行多重边界任务"
+          },
+          "labels": [{ "text": "并行多重任务" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_parallel_multiple",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_with_parallel_multiple",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "parallelMultiple",
+                "name": "并行多重",
+                "isInterrupting": true
+              },
+              "labels": [{ "text": "并行多重" }]
+            }
+          ]
+        },
+        {
+          "id": "task_handler_timer",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "超时处理" },
+          "labels": [{ "text": "超时处理" }]
+        },
+        {
+          "id": "task_handler_reminder",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "发送提醒" },
+          "labels": [{ "text": "发送提醒" }]
+        },
+        {
+          "id": "task_handler_error",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "错误处理" },
+          "labels": [{ "text": "错误处理" }]
+        },
+        {
+          "id": "end_normal",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "正常结束"
+          },
+          "labels": [{ "text": "正常结束" }]
+        },
+        {
+          "id": "end_timeout",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "超时结束"
+          },
+          "labels": [{ "text": "超时结束" }]
+        },
+        {
+          "id": "end_error",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "error",
+            "name": "错误结束",
+            "errorRef": "err_business"
+          },
+          "labels": [{ "text": "错误结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_with_timer_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_1", "sources": ["task_with_timer_int"], "targets": ["task_with_timer_non_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_with_timer_non_int"], "targets": ["task_with_message_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_with_message_int"], "targets": ["task_with_message_non_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_with_message_non_int"], "targets": ["task_with_error"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["task_with_error"], "targets": ["task_with_signal_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["task_with_signal_int"], "targets": ["task_with_signal_non_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_7", "sources": ["task_with_signal_non_int"], "targets": ["task_with_escalation_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_8", "sources": ["task_with_escalation_int"], "targets": ["task_with_escalation_non_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_9", "sources": ["task_with_escalation_non_int"], "targets": ["task_with_conditional_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_10", "sources": ["task_with_conditional_int"], "targets": ["task_with_conditional_non_int"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_11", "sources": ["task_with_conditional_non_int"], "targets": ["task_with_compensation"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_12", "sources": ["task_with_compensation"], "targets": ["task_with_multiple"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_13", "sources": ["task_with_multiple"], "targets": ["task_with_parallel_multiple"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_14", "sources": ["task_with_parallel_multiple"], "targets": ["end_normal"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timer_int", "sources": ["boundary_timer_interrupting"], "targets": ["task_handler_timer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_timer_non_int", "sources": ["boundary_timer_non_interrupting"], "targets": ["task_handler_reminder"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_error_handler", "sources": ["boundary_error"], "targets": ["task_handler_error"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_timeout_end", "sources": ["task_handler_timer"], "targets": ["end_timeout"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_error_end", "sources": ["task_handler_error"], "targets": ["end_error"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "assoc_compensation",
+          "sources": ["boundary_compensation"],
+          "targets": ["task_compensation_handler"],
+          "bpmn": { "type": "association", "associationDirection": "One" }
+        }
+      ]
+    }
+  ]
+}
