@@ -31,7 +31,9 @@
     "ai:optimize": "bun run scripts/ai-optimize-layout.ts",
     "diagnose:aspect": "bun run scripts/diagnose-aspect.ts",
     "prepack": "bun run build",
-    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout"
+    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout",
+    "publish:cnb:dry-run": "bash scripts/publish-cnb.sh --dry-run",
+    "publish:cnb": "bash scripts/publish-cnb.sh --publish"
   },
   "dependencies": {
     "elkjs": "^0.11.1",

@@ -1,8 +1,8 @@
 # tramito-layout
 
-把 ELK-BPMN JSON（无坐标）转换成带视觉布局的 BPMN 2.0 XML。
+tramito-layout 用于把无坐标的 ELK-BPMN JSON 自动排版成带 BPMN DI 的 BPMN 2.0 XML。
 
-当前交付形态是 **Bun/TypeScript npm 包**。调用方直接引入 `layoutBpmnXml()`，本仓库不再维护独立 HTTP server、Docker Compose 或 JVM 入口。
+它适合接入流程建模、审批流、编排平台等场景：业务侧只需要提供流程结构，布局计算由本库完成。
 
 ## 使用
 
@@ -87,7 +87,7 @@ scripts/
   check-layout.ts          # E/N/B/L 硬标准 + F 软指标
   export-ai-debug-bundle.ts
 fixtures/                  # 34 个覆盖用例
-docs/layout-lessons.md     # 历史教训与长期工程原则
+docs/layout-lessons.md     # 布局历史经验与长期工程原则
 ```
 
 生成目录只保留 `.keep` 占位：`out-xml/`、`out-bpmn-png/`、`out-ai-debug/`。内容都是本地生成产物，不提交。
@@ -102,6 +102,20 @@ bun run build
 bun run fixtures:xml
 bun run fixtures:png
 bun run check:layout
+```
+
+## 发布到 CNB npm 制品库
+
+`.npmrc` 已配置 CNB npm 制品库地址，并通过 `CNB_TOKEN` 读取令牌。先做 dry-run 检查包内容：
+
+```bash
+bun run publish:cnb:dry-run
+```
+
+确认无误后发布：
+
+```bash
+bun run publish:cnb
 ```
 
 布局相关改动必须至少跑：
@@ -126,13 +140,3 @@ bun run ai:optimize --fixture 13-boundary-events-all --dry-run
 ```
 
 产物落在 `out-ai-debug/`，只作本地分析。`docs/prompts/layout-critic.md` 是 AI 读取 bundle 时使用的 prompt。
-
-## 不再保留的东西
-
-- Kotlin / Java / Gradle 旧工程
-- 独立 HTTP server / docker compose 入口
-- RPST / SESE template 布局路线
-- 多套 runtime engine 分叉
-- 开发期设计稿、Phase 计划、迁移路线图
-
-历史教训已经沉淀在 `docs/layout-lessons.md`，避免后续继续绕旧路。
