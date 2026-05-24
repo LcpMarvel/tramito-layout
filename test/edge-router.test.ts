@@ -7,7 +7,6 @@ import { routeEdges, type RouteInput } from '../src/stages/edge-router/index.ts'
 import { finalizeRoutePorts } from '../src/stages/edge-router/port.ts';
 import { detourAroundLocalObstacles } from '../src/stages/edge-router/local-obstacle-detour.ts';
 import type { NodeBox } from '../src/stages/types.ts';
-import { CROSS_LANE_UP_MIN_START_STUB } from '../src/stages/bpmn-rules.ts';
 
 const box = (x: number, y: number, w = 100, h = 80): NodeBox => ({ x, y, w, h });
 
@@ -23,6 +22,17 @@ function nodeMap(spec: Record<string, { box: NodeBox; type?: any; pool?: string;
     });
   }
   return m;
+}
+
+function hasImmediateBacktracking(points: { x: number; y: number }[]): boolean {
+  for (let i = 1; i < points.length - 1; i++) {
+    const a = points[i - 1]!;
+    const b = points[i]!;
+    const c = points[i + 1]!;
+    if (Math.abs(a.x - b.x) <= 0.5 && Math.abs(b.x - c.x) <= 0.5 && (b.y - a.y) * (c.y - b.y) < -0.25) return true;
+    if (Math.abs(a.y - b.y) <= 0.5 && Math.abs(b.y - c.y) <= 0.5 && (b.x - a.x) * (c.x - b.x) < -0.25) return true;
+  }
+  return false;
 }
 
 describe('Stage 4a — Classifier', () => {
@@ -330,6 +340,7 @@ describe('Stage 4 — routeEdges integration', () => {
     expect(route.sourcePort.side).toBe('bottom');
     expect(route.targetPort.side).toBe('left');
     expect(route.targetPort.point).toEqual({ x: 260, y: 280 });
+    expect(route.waypoints[1]!.y).toBeLessThanOrEqual(176);
     expect(route.waypoints.at(-2)!.y).toBe(280);
   });
 
@@ -346,7 +357,7 @@ describe('Stage 4 — routeEdges integration', () => {
     };
 
     const route = routeEdges(input).routes.get('f1')!;
-    expect(route.waypoints.length).toBe(4);
+    expect(route.waypoints.length).toBeGreaterThanOrEqual(4);
     expect(route.waypoints[1]!.y).toBeLessThan(120);
     expect(route.waypoints[2]!.y).toBeLessThan(120);
   });
@@ -369,7 +380,55 @@ describe('Stage 4 — routeEdges integration', () => {
     expect(route.edgeType).toBe('cross-lane-up');
     expect(route.sourcePort.side).toBe('top');
     expect(route.waypoints[1]!.x).toBe(route.waypoints[0]!.x);
-    expect(route.waypoints[1]!.y).toBeLessThanOrEqual(route.waypoints[0]!.y - CROSS_LANE_UP_MIN_START_STUB);
+    expect(route.waypoints[1]!.y).toBeLessThanOrEqual(route.waypoints[0]!.y - 4);
+    expect(Math.abs(route.waypoints[1]!.y - 602)).toBeGreaterThanOrEqual(15);
+  });
+
+  it('keeps adjacent cross-lane-up corridors off the lane divider when the source is near the divider', () => {
+    const input: RouteInput = {
+      nodes: nodeMap({
+        merge: { box: box(1400, 438, 50, 50), type: 'parallelGateway', lane: 'lower', laneIdx: 1 },
+        flavor: { box: box(300, 172, 100, 80), type: 'userTask', lane: 'upper', laneIdx: 0 },
+      }),
+      edges: [{ id: 'merge-to-flavor', source: 'merge', target: 'flavor', bpmnType: 'sequenceFlow' }],
+      laneBoxes: new Map([
+        ['upper', { top: 20, bottom: 404, centerY: 212, height: 384, poolId: 'p1' }],
+        ['lower', { top: 404, bottom: 643, centerY: 523.5, height: 239, poolId: 'p1' }],
+      ]),
+      poolBoxes: new Map(),
+    };
+
+    const route = routeEdges(input).routes.get('merge-to-flavor')!;
+    expect(route.edgeType).toBe('cross-lane-up');
+    expect(route.waypoints[1]!.y).toBeGreaterThanOrEqual(428);
+  });
+
+  it('keeps the target arrow tail on the final segment axis', () => {
+    const input: RouteInput = {
+      nodes: nodeMap({
+        merge: { box: box(1400, 438, 50, 50), type: 'parallelGateway', lane: 'lower', laneIdx: 1 },
+        flavor: { box: box(178, 36, 100, 80), type: 'userTask', lane: 'upper', laneIdx: 0 },
+      }),
+      edges: [{ id: 'merge-to-flavor', source: 'merge', target: 'flavor', bpmnType: 'sequenceFlow' }],
+      laneBoxes: new Map([
+        ['upper', { top: 20, bottom: 404, centerY: 212, height: 384, poolId: 'p1' }],
+        ['lower', { top: 404, bottom: 643, centerY: 523.5, height: 239, poolId: 'p1' }],
+      ]),
+      poolBoxes: new Map(),
+    };
+
+    const route = routeEdges(input).routes.get('merge-to-flavor')!;
+    const end = route.waypoints.at(-1)!;
+    const beforeEnd = route.waypoints.at(-2)!;
+    expect(route.targetPort.side).toBe('bottom');
+    expect(beforeEnd.x).toBe(end.x);
+    expect(beforeEnd.y - end.y).toBeGreaterThanOrEqual(20);
+    for (let i = 0; i < route.waypoints.length - 1; i++) {
+      const a = route.waypoints[i]!;
+      const b = route.waypoints[i + 1]!;
+      expect(Math.abs(a.x - b.x) <= 0.5 || Math.abs(a.y - b.y) <= 0.5).toBe(true);
+    }
+    expect(hasImmediateBacktracking(route.waypoints)).toBe(false);
   });
 
   it('keeps the final segment perpendicular when detouring near a target', () => {

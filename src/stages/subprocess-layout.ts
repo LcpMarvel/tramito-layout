@@ -55,7 +55,14 @@ export async function collectSubprocessLayouts(
       sizeOverrides.set(innerFn.id, {
         w: child.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
         h,
-        layoutH: layoutHeightWithIoSpec(h, innerFn.ioInputCount, innerFn.ioOutputCount),
+        layoutH: layoutHeightWithIoSpec(
+          h,
+          innerFn.ioInputCount,
+          innerFn.ioOutputCount,
+          innerFn.ioInputNames,
+          innerFn.ioOutputNames,
+          child.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
+        ),
       });
     }
 
@@ -69,7 +76,7 @@ export async function collectSubprocessLayouts(
           id: n.id,
           type: n.type,
           ...size,
-          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
         };
       });
     const innerNodeIds = new Set(elkNodes.map(n => n.id));

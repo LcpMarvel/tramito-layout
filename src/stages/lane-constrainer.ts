@@ -1,6 +1,6 @@
 // LaneConstrainer
 //
-// 职责：把 Stage 1 给的节点 Y 重写为所属 lane 的中线 Y。X 完全不动。
+// 职责：把 Stage 1 给的节点 Y 重写进所属 lane。简单 lane 居中；分支 lane 保留多行。
 //      算 leaf lane 的 Y band（top, bottom, centerY, height）一并输出。
 //
 // lane partitioning 只能作为 ELK hint，最终 Y band 仍由这里显式计算和 snap。
@@ -15,6 +15,8 @@ export interface LaneNodeMeta {
   name?: string;
   ioInputCount?: number;
   ioOutputCount?: number;
+  ioInputNames?: readonly string[];
+  ioOutputNames?: readonly string[];
 }
 
 export interface LaneEdgeInfo {
@@ -38,7 +40,7 @@ export interface LaneConstrainInput {
 }
 
 export interface LaneConstrainOutput {
-  /** node id → 新 NodeBox（X 不变；Y snap 到所属 lane 中线） */
+  /** node id → 新 NodeBox（Y snap 到所属 lane 内部；必要时修复同 lane 内重叠） */
   nodes: Map<string, NodeBox>;
   /** lane id（含中间层）→ Y band。中间 lane = 其叶子后代的 union */
   laneBoxes: Map<string, LaneBox>;
@@ -78,6 +80,10 @@ const ARCH_CLEAR_MARGIN = 16;
 const ARCH_BASE_OFFSET = 24;
 const CHANNEL_GAP = 18;
 const EDGE_LABEL_ABOVE_GAP = 5;
+const MULTI_ROW_CENTER_GAP = 90;
+const MULTI_ROW_MIN_MEMBERS = 3;
+const LANE_ROW_GAP = 56;
+const MIN_X_GAP = 30;
 
 function isEventType(t: FlowNodeType): boolean {
   return t === 'startEvent' || t === 'endEvent'
@@ -94,7 +100,13 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
       poolHeight = 0;
       for (const [nodeId, b] of nodes) {
         const meta = nodeMeta?.get(nodeId);
-        poolHeight = Math.max(poolHeight, b.y + b.h + ioSpecExtraBelow(meta?.ioInputCount ?? 0, meta?.ioOutputCount ?? 0));
+        poolHeight = Math.max(poolHeight, b.y + b.h + ioSpecExtraBelow(
+          meta?.ioInputCount ?? 0,
+          meta?.ioOutputCount ?? 0,
+          meta?.ioInputNames,
+          meta?.ioOutputNames,
+          b.w,
+        ));
       }
     }
     return {
@@ -117,103 +129,31 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
   //   3) 同 lane 内 forward-skip arch 上凸需要的 headroom（含 arch 上方的 edge label）
   // 节点摆在每条 lane 的 content center；center 不一定等于几何中线，因为 ioSpec 只向
   // task 下方伸展，强行上下对称会把 lane 撑得过高。
-  const laneMetrics = new Map<string, { height: number; centerOffset: number }>();
+  const laneMembers = new Map<string, string[]>();
   for (const laneId of leafOrder) {
     const memberIds: string[] = [];
     for (const [nodeId] of nodes) {
       if (nodeLeaf.get(nodeId) === laneId) memberIds.push(nodeId);
     }
-    let above = 0;
-    let below = 0;
-    for (const id of memberIds) {
-      const box = nodes.get(id)!;
-      const meta = nodeMeta?.get(id);
-      const hHalf = box.h / 2;
-      // 默认上下各占一半 h
-      let nodeAbove = hHalf;
-      let nodeBelow = hHalf;
-      if (meta?.name && meta.name.length > 0) {
-        const lines = estimateLabelLines(meta.name, LABEL_W);
-        const labelH = lines * LABEL_LINE_H;
-        if (isGatewayType(meta.type)) {
-          // gateway label 摆在节点上方
-          nodeAbove = hHalf + LABEL_NODE_GAP + labelH;
-        } else if (isEventType(meta.type)) {
-          // event label 摆在节点下方
-          nodeBelow = hHalf + LABEL_NODE_GAP + labelH;
-        }
-      }
-      const ioBelow = ioSpecExtraBelow(meta?.ioInputCount ?? 0, meta?.ioOutputCount ?? 0);
-      if (ioBelow > 0) nodeBelow = Math.max(nodeBelow, hHalf + ioBelow);
-      above = Math.max(above, nodeAbove);
-      below = Math.max(below, nodeBelow);
-    }
+    laneMembers.set(laneId, memberIds);
+  }
 
-    // forward-skip arch：source、target 都在本 lane，t.x > s.x，
-    // 中间有"非 src/tgt"的成员节点 X 区间挡道 → 走 arch 上凸。
-    // arch 顶点 y = obstacleTop - ARCH_CLEAR_MARGIN
-    // 因为节点都 snap 到 laneCenter，相对 laneCenter：obstacleTop = -obstacle.h/2
-    //   → arch 离 laneCenter = obstacle.h/2 + ARCH_CLEAR_MARGIN
-    //   再加上 arch 上方的 edge label（默认 1 行 14 + 5 gap）
-    //   多条 arch 共用同一 X 区间会按 channel 错峰，每多一条 + CHANNEL_GAP
-    if (edges && edges.length > 0) {
-      // 按 X 区间分桶找平行 arch
-      const archesAbove: { left: number; right: number; obsMaxH: number }[] = [];
-      const memberSet = new Set(memberIds);
-      for (const e of edges) {
-        if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
-        const s = nodes.get(e.source)!;
-        const t = nodes.get(e.target)!;
-        if (t.x <= s.x) continue; // back / loop 走 back-edge，不在这里处理
-        const sRight = s.x + s.w;
-        const tLeft = t.x;
-        // 中间障碍：其他成员节点的 X 区间 [n.x, n.x+n.w] 与 [sRight, tLeft] 有交
-        let obsMaxH = 0;
-        for (const otherId of memberIds) {
-          if (otherId === e.source || otherId === e.target) continue;
-          const o = nodes.get(otherId)!;
-          if (o.x + o.w <= sRight || o.x >= tLeft) continue;
-          if (o.h > obsMaxH) obsMaxH = o.h;
-        }
-        if (obsMaxH === 0) continue;
-        archesAbove.push({ left: sRight, right: tLeft, obsMaxH });
-      }
-      // 估算同一 X 区间内并行 arch 数（粗略：两个 arch X 区间相交即视为同 channel bucket）
-      for (let i = 0; i < archesAbove.length; i++) {
-        let parallel = 1;
-        for (let j = 0; j < archesAbove.length; j++) {
-          if (j === i) continue;
-          const a = archesAbove[i]!, b = archesAbove[j]!;
-          if (a.left < b.right && b.left < a.right) parallel++;
-        }
-        const a = archesAbove[i]!;
-        const archAbove = a.obsMaxH / 2 + ARCH_CLEAR_MARGIN
-          + Math.max(0, parallel - 1) * CHANNEL_GAP;
-        const labelAbove = LABEL_LINE_H + EDGE_LABEL_ABOVE_GAP;
-        const need = Math.max(ARCH_BASE_OFFSET, archAbove) + labelAbove;
-        if (need > above) above = need;
-      }
-    }
-
-    const contentH = above + below + LANE_PAD * 2;
-    const h = Math.max(LANE_MIN_H, contentH);
-    const extra = h - contentH;
-    laneMetrics.set(laneId, {
-      height: h,
-      centerOffset: LANE_PAD + extra / 2 + above,
-    });
+  const laneMetrics = new Map<string, LaneMetric>();
+  for (const laneId of leafOrder) {
+    const memberIds = laneMembers.get(laneId) ?? [];
+    laneMetrics.set(laneId, buildLaneMetric(memberIds, nodes, nodeMeta, edges));
   }
 
   // Lane Y band：从 y=0 顺序累加（仅叶子）
   const laneBoxes = new Map<string, LaneBox>();
   let cursorY = 0;
   for (const laneId of leafOrder) {
-    const metrics = laneMetrics.get(laneId)!;
-    const h = metrics.height;
+    const metric = laneMetrics.get(laneId)!;
+    const h = metric.height;
     laneBoxes.set(laneId, {
       top: cursorY,
       bottom: cursorY + h,
-      centerY: cursorY + metrics.centerOffset,
+      centerY: cursorY + metric.centerOffset,
       height: h,
     });
     cursorY += h;
@@ -249,7 +189,7 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
   }
   for (const id of allLanes) if (!leafSet.has(id)) computeIntermediate(id);
 
-  // 节点 Y snap 到所属 lane 中线。无 lane 归属的节点（不应有，但保险）Y 不动。
+  // 节点 Y snap 到所属 lane 的内部行。简单泳道只有一行；分支型泳道会保留 ELK 的多行顺序。
   const outNodes = new Map<string, NodeBox>();
   for (const [nodeId, box] of nodes) {
     const laneId = nodeLeaf.get(nodeId);
@@ -262,35 +202,17 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
       outNodes.set(nodeId, { ...box });
       continue;
     }
+    const metric = laneMetrics.get(laneId);
+    const rowCenter = metric?.nodeCenterOffset.get(nodeId) ?? metric?.centerOffset ?? (band.height / 2);
     outNodes.set(nodeId, {
       x: box.x,
-      y: band.centerY - box.h / 2,
+      y: band.top + rowCenter - box.h / 2,
       w: box.w,
       h: box.h,
     });
   }
 
-  // Y snap 之后：ELK 把同一 lane 内的节点放在不同 Y（不同层），其 X 间距可能小于宽度
-  // 之和。snap 到 lane 中线后，X 投影上互相重叠（破坏 N1）。这里按 lane 分组、按 X
-  // 升序扫一遍，把右侧节点的 X 顺序推开，保证相邻节点 [x, x+w] 区间互不重叠。
-  // 重叠是 ELK 没拿到 lane 信息的硬伤，必须早早检测、当场修复；不留给 EdgeRouter 兜底。
-  const MIN_X_GAP = 30;
-  const byLane = new Map<string, string[]>();
-  for (const [nodeId, ] of outNodes) {
-    const laneId = nodeLeaf.get(nodeId);
-    if (!laneId) continue;
-    if (!byLane.has(laneId)) byLane.set(laneId, []);
-    byLane.get(laneId)!.push(nodeId);
-  }
-  for (const ids of byLane.values()) {
-    ids.sort((a, b) => outNodes.get(a)!.x - outNodes.get(b)!.x);
-    for (let i = 1; i < ids.length; i++) {
-      const prev = outNodes.get(ids[i - 1]!)!;
-      const cur = outNodes.get(ids[i]!)!;
-      const minX = prev.x + prev.w + MIN_X_GAP;
-      if (cur.x < minX) cur.x = minX;
-    }
-  }
+  resolveLaneOverlaps(outNodes, laneMembers);
 
   return {
     nodes: outNodes,
@@ -300,4 +222,205 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
     poolHeight,
     poolWidth: width,
   };
+}
+
+interface NodeVerticalExtent {
+  above: number;
+  below: number;
+}
+
+interface LaneRow {
+  cy: number;
+  ids: string[];
+  above: number;
+  below: number;
+}
+
+interface LaneMetric {
+  height: number;
+  centerOffset: number;
+  nodeCenterOffset: Map<string, number>;
+}
+
+function buildLaneMetric(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  nodeMeta: Map<string, LaneNodeMeta> | undefined,
+  edges: LaneEdgeInfo[] | undefined,
+): LaneMetric {
+  if (memberIds.length === 0) {
+    return { height: LANE_MIN_H, centerOffset: LANE_MIN_H / 2, nodeCenterOffset: new Map() };
+  }
+
+  const extents = new Map<string, NodeVerticalExtent>();
+  for (const id of memberIds) {
+    extents.set(id, nodeVerticalExtent(nodes.get(id)!, nodeMeta?.get(id)));
+  }
+
+  const rows = groupLaneRows(memberIds, nodes, extents);
+  const archReserveAbove = estimateForwardArchReserveAbove(memberIds, nodes, edges);
+  if (rows[0]) rows[0].above = Math.max(rows[0].above, archReserveAbove);
+
+  const shouldKeepRows = rows.length > 1 && memberIds.length >= MULTI_ROW_MIN_MEMBERS;
+  return shouldKeepRows
+    ? buildMultiRowMetric(rows)
+    : buildFlatMetric(memberIds, extents, archReserveAbove);
+}
+
+function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {
+  const hHalf = box.h / 2;
+  let above = hHalf;
+  let below = hHalf;
+  if (meta?.name && meta.name.length > 0) {
+    const lines = estimateLabelLines(meta.name, LABEL_W);
+    const labelH = lines * LABEL_LINE_H;
+    if (isGatewayType(meta.type)) {
+      above = hHalf + LABEL_NODE_GAP + labelH;
+    } else if (isEventType(meta.type)) {
+      below = hHalf + LABEL_NODE_GAP + labelH;
+    }
+  }
+  const ioBelow = ioSpecExtraBelow(
+    meta?.ioInputCount ?? 0,
+    meta?.ioOutputCount ?? 0,
+    meta?.ioInputNames,
+    meta?.ioOutputNames,
+    box.w,
+  );
+  if (ioBelow > 0) below = Math.max(below, hHalf + ioBelow);
+  return { above, below };
+}
+
+function groupLaneRows(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  extents: Map<string, NodeVerticalExtent>,
+): LaneRow[] {
+  const sorted = memberIds.slice().sort((a, b) => centerY(nodes.get(a)!) - centerY(nodes.get(b)!));
+  const rows: LaneRow[] = [];
+  for (const id of sorted) {
+    const box = nodes.get(id)!;
+    const cy = centerY(box);
+    const extent = extents.get(id)!;
+    const last = rows[rows.length - 1];
+    if (last && Math.abs(cy - last.cy) <= MULTI_ROW_CENTER_GAP) {
+      last.ids.push(id);
+      last.cy = (last.cy * (last.ids.length - 1) + cy) / last.ids.length;
+      last.above = Math.max(last.above, extent.above);
+      last.below = Math.max(last.below, extent.below);
+    } else {
+      rows.push({ cy, ids: [id], above: extent.above, below: extent.below });
+    }
+  }
+  return rows;
+}
+
+function buildMultiRowMetric(rows: LaneRow[]): LaneMetric {
+  let contentH = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]!;
+    contentH += row.above + row.below;
+    if (i < rows.length - 1) contentH += LANE_ROW_GAP;
+  }
+  const baseH = contentH + LANE_PAD * 2;
+  const h = Math.max(LANE_MIN_H, baseH);
+  const extra = h - baseH;
+  let cursor = LANE_PAD + extra / 2;
+  const nodeCenterOffset = new Map<string, number>();
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]!;
+    const rowCenter = cursor + row.above;
+    for (const id of row.ids) nodeCenterOffset.set(id, rowCenter);
+    cursor += row.above + row.below + (i < rows.length - 1 ? LANE_ROW_GAP : 0);
+  }
+  return { height: h, centerOffset: h / 2, nodeCenterOffset };
+}
+
+function buildFlatMetric(
+  memberIds: string[],
+  extents: Map<string, NodeVerticalExtent>,
+  archReserveAbove: number,
+): LaneMetric {
+  let above = archReserveAbove;
+  let below = 0;
+  for (const id of memberIds) {
+    const extent = extents.get(id)!;
+    above = Math.max(above, extent.above);
+    below = Math.max(below, extent.below);
+  }
+  const contentH = above + below + LANE_PAD * 2;
+  const h = Math.max(LANE_MIN_H, contentH);
+  const extra = h - contentH;
+  const rowCenter = LANE_PAD + extra / 2 + above;
+  const nodeCenterOffset = new Map<string, number>();
+  for (const id of memberIds) nodeCenterOffset.set(id, rowCenter);
+  return { height: h, centerOffset: rowCenter, nodeCenterOffset };
+}
+
+function estimateForwardArchReserveAbove(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+): number {
+  if (!edges || edges.length === 0) return 0;
+  const archesAbove: { left: number; right: number; obsMaxH: number }[] = [];
+  const memberSet = new Set(memberIds);
+  for (const e of edges) {
+    if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
+    const s = nodes.get(e.source)!;
+    const t = nodes.get(e.target)!;
+    if (t.x <= s.x) continue;
+    const sRight = s.x + s.w;
+    const tLeft = t.x;
+    let obsMaxH = 0;
+    for (const otherId of memberIds) {
+      if (otherId === e.source || otherId === e.target) continue;
+      const o = nodes.get(otherId)!;
+      if (o.x + o.w <= sRight || o.x >= tLeft) continue;
+      if (o.h > obsMaxH) obsMaxH = o.h;
+    }
+    if (obsMaxH === 0) continue;
+    archesAbove.push({ left: sRight, right: tLeft, obsMaxH });
+  }
+
+  let reserve = 0;
+  for (let i = 0; i < archesAbove.length; i++) {
+    let parallel = 1;
+    for (let j = 0; j < archesAbove.length; j++) {
+      if (j === i) continue;
+      const a = archesAbove[i]!, b = archesAbove[j]!;
+      if (a.left < b.right && b.left < a.right) parallel++;
+    }
+    const a = archesAbove[i]!;
+    const archAbove = a.obsMaxH / 2 + ARCH_CLEAR_MARGIN
+      + Math.max(0, parallel - 1) * CHANNEL_GAP;
+    const labelAbove = LABEL_LINE_H + EDGE_LABEL_ABOVE_GAP;
+    const need = Math.max(ARCH_BASE_OFFSET, archAbove) + labelAbove;
+    if (need > reserve) reserve = need;
+  }
+  return reserve;
+}
+
+function resolveLaneOverlaps(outNodes: Map<string, NodeBox>, laneMembers: Map<string, string[]>): void {
+  for (const ids of laneMembers.values()) {
+    const ordered = ids.slice().sort((a, b) => outNodes.get(a)!.x - outNodes.get(b)!.x);
+    for (let i = 0; i < ordered.length; i++) {
+      const cur = outNodes.get(ordered[i]!)!;
+      let minX = cur.x;
+      for (let j = 0; j < i; j++) {
+        const prev = outNodes.get(ordered[j]!)!;
+        if (!overlapsY(prev, cur)) continue;
+        minX = Math.max(minX, prev.x + prev.w + MIN_X_GAP);
+      }
+      if (cur.x < minX) cur.x = minX;
+    }
+  }
+}
+
+function centerY(box: NodeBox): number {
+  return box.y + box.h / 2;
+}
+
+function overlapsY(a: NodeBox, b: NodeBox): boolean {
+  return a.y < b.y + b.h && b.y < a.y + a.h;
 }

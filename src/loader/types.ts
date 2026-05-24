@@ -37,6 +37,8 @@ export interface FlowNode {
    *  layout 时需要预留垂直空间，否则 lane/pool 兜不住它们。 */
   ioInputCount: number;
   ioOutputCount: number;
+  ioInputNames?: string[];
+  ioOutputNames?: string[];
 }
 
 export type FlowNodeType =

@@ -12,6 +12,9 @@ import {
   type RouterStyle,
 } from '../bpmn-rules.ts';
 
+const LANE_BOUNDARY_CLEARANCE = 24;
+const LANE_BOUNDARY_MIN_STUB = 4;
+
 export interface PathShapeInput {
   edgeType: EdgeType;
   sourceAnchor: Anchor;
@@ -131,7 +134,7 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     // 中段 Y：若给了 gap，走 gap 中线；否则 (start+end)/2
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
-      midY = input.gap.top + (input.gap.bottom - input.gap.top) * 0.5 + channel * CHANNEL_GAP - (channelCount(input) - 1) * CHANNEL_GAP / 2;
+      midY = gapCorridorY(input, start, sourceAnchor);
     } else if (input.edgeType === 'boundary-to-handler' && (input.channelTotal ?? 1) > 1) {
       // BE→handler corridor 多条平行；按 channel 在 [start.y, end.y] 范围内居中分布
       const total = input.channelTotal!;
@@ -142,12 +145,15 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
   if (sourceAnchor === 'top' && targetAnchor === 'bottom') {
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
-      midY = input.gap.top + (input.gap.bottom - input.gap.top) * 0.5 + channel * CHANNEL_GAP - (channelCount(input) - 1) * CHANNEL_GAP / 2;
+      midY = gapCorridorY(input, start, sourceAnchor);
     }
     if (input.edgeType === 'cross-lane-up') {
+      const minStartStub = shouldRelaxCrossLaneUpStub(input, start)
+        ? LANE_BOUNDARY_MIN_STUB
+        : CROSS_LANE_UP_MIN_START_STUB;
       midY = Math.max(
         end.y + VERTICAL_STUB,
-        Math.min(midY, start.y - CROSS_LANE_UP_MIN_START_STUB),
+        Math.min(midY, start.y - minStartStub),
       );
     }
     return [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
@@ -156,7 +162,7 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
   if ((sourceAnchor === 'bottom' || sourceAnchor === 'top') && targetAnchor === 'left') {
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
-      midY = input.gap.top + (input.gap.bottom - input.gap.top) * 0.5 + channel * CHANNEL_GAP - (channelCount(input) - 1) * CHANNEL_GAP / 2;
+      midY = gapCorridorY(input, start, sourceAnchor);
     }
     const approachX = end.x - VERTICAL_STUB;
     return [start, { x: start.x, y: midY }, { x: approachX, y: midY }, { x: approachX, y: end.y }, end];
@@ -213,6 +219,42 @@ function hasObstacleInForwardPath(
 // 内部（fixture 26 flow_2 的怪线就是这个原因）。
 function channelCount(input: PathShapeInput): number {
   return input.channelTotal ?? 1;
+}
+
+function gapCorridorY(input: PathShapeInput, start: Waypoint, sourceAnchor: Anchor): number {
+  if (!input.gap) return start.y;
+  const centered = input.gap.top + (input.gap.bottom - input.gap.top) * 0.5
+    + input.channel * CHANNEL_GAP
+    - (channelCount(input) - 1) * CHANNEL_GAP / 2;
+  if (!input.edgeType.startsWith('cross-lane')) return centered;
+
+  const gapH = input.gap.bottom - input.gap.top;
+  if (gapH > LANE_BOUNDARY_CLEARANCE * 2) return centered;
+
+  const dividerY = (input.gap.top + input.gap.bottom) / 2;
+  const distance = LANE_BOUNDARY_CLEARANCE + input.channel * CHANNEL_GAP;
+  if (sourceAnchor === 'bottom') {
+    const sourceSideY = dividerY - distance;
+    return sourceSideY >= start.y + LANE_BOUNDARY_MIN_STUB
+      ? sourceSideY
+      : dividerY + distance;
+  }
+
+  if (sourceAnchor === 'top') {
+    const fullStubY = start.y - CROSS_LANE_UP_MIN_START_STUB;
+    if (Math.abs(fullStubY - dividerY) >= LANE_BOUNDARY_CLEARANCE) return fullStubY;
+    return dividerY + distance;
+  }
+
+  return centered;
+}
+
+function shouldRelaxCrossLaneUpStub(input: PathShapeInput, start: Waypoint): boolean {
+  if (!input.gap || input.edgeType !== 'cross-lane-up') return false;
+  if (input.gap.bottom - input.gap.top > LANE_BOUNDARY_CLEARANCE * 2) return false;
+  const dividerY = (input.gap.top + input.gap.bottom) / 2;
+  const fullStubY = start.y - CROSS_LANE_UP_MIN_START_STUB;
+  return Math.abs(fullStubY - dividerY) < LANE_BOUNDARY_CLEARANCE;
 }
 
 /** archY 取所有 X 区间内的 obstacle bottom 的最大值 + margin */

@@ -222,7 +222,104 @@ function finalizeRoutePortsForRoutes(routes: Map<string, EdgeRoute>, input: Rout
     route.waypoints = finalized.waypoints;
     route.sourcePort = finalized.sourcePort;
     route.targetPort = finalized.targetPort;
+    ensureTargetArrowTailStub(route);
   }
+}
+
+const TARGET_ARROW_TAIL_STUB = 20;
+
+function ensureTargetArrowTailStub(route: EdgeRoute): void {
+  if (route.waypoints.length < 2) return;
+  const endIdx = route.waypoints.length - 1;
+  const end = route.waypoints[endIdx]!;
+  const prev = route.waypoints[endIdx - 1]!;
+  const beforePrev = route.waypoints[endIdx - 2];
+  let tailStart: Waypoint;
+  let spliceStart = Math.max(1, endIdx - 1);
+
+  switch (route.targetPort.side) {
+    case 'top':
+      tailStart = { x: end.x, y: Math.min(prev.y, end.y - TARGET_ARROW_TAIL_STUB) };
+      break;
+    case 'bottom':
+      tailStart = { x: end.x, y: Math.max(prev.y, end.y + TARGET_ARROW_TAIL_STUB) };
+      break;
+    case 'left':
+      tailStart = { x: Math.min(prev.x, end.x - TARGET_ARROW_TAIL_STUB), y: end.y };
+      break;
+    case 'right':
+      tailStart = { x: Math.max(prev.x, end.x + TARGET_ARROW_TAIL_STUB), y: end.y };
+      break;
+  }
+
+  if (beforePrev && pointLiesInsideTailStub(beforePrev, tailStart, end, route.targetPort.side)) {
+    spliceStart = Math.max(1, endIdx - 2);
+  }
+
+  const replacement: Waypoint[] = [];
+  const prefix = route.waypoints[spliceStart - 1];
+  if (prefix && !isOrthogonalSegment(prefix, tailStart)) {
+    const elbow = elbowIntoTail(prefix, tailStart, route.targetPort.side);
+    const prePrefix = route.waypoints[spliceStart - 2];
+    if (prePrefix && pointLiesOnOrthogonalSegment(elbow, prePrefix, prefix)) {
+      spliceStart = Math.max(1, spliceStart - 1);
+    }
+    replacement.push(elbow);
+  }
+  replacement.push(tailStart, end);
+  route.waypoints.splice(spliceStart, route.waypoints.length - spliceStart, ...dedupeWaypoints(replacement));
+  route.waypoints = dedupeWaypoints(route.waypoints);
+}
+
+function isOrthogonalSegment(a: Waypoint, b: Waypoint): boolean {
+  return Math.abs(a.x - b.x) <= 0.5 || Math.abs(a.y - b.y) <= 0.5;
+}
+
+function pointLiesInsideTailStub(point: Waypoint, tailStart: Waypoint, end: Waypoint, side: Anchor): boolean {
+  const TOL = 0.5;
+  switch (side) {
+    case 'top':
+    case 'bottom':
+      return Math.abs(point.x - end.x) <= TOL
+        && point.y >= Math.min(tailStart.y, end.y) - TOL
+        && point.y <= Math.max(tailStart.y, end.y) + TOL;
+    case 'left':
+    case 'right':
+      return Math.abs(point.y - end.y) <= TOL
+        && point.x >= Math.min(tailStart.x, end.x) - TOL
+        && point.x <= Math.max(tailStart.x, end.x) + TOL;
+  }
+}
+
+function elbowIntoTail(prefix: Waypoint, tailStart: Waypoint, side: Anchor): Waypoint {
+  return side === 'top' || side === 'bottom'
+    ? { x: prefix.x, y: tailStart.y }
+    : { x: tailStart.x, y: prefix.y };
+}
+
+function pointLiesOnOrthogonalSegment(point: Waypoint, a: Waypoint, b: Waypoint): boolean {
+  const TOL = 0.5;
+  if (Math.abs(a.x - b.x) <= TOL) {
+    return Math.abs(point.x - a.x) <= TOL
+      && point.y >= Math.min(a.y, b.y) - TOL
+      && point.y <= Math.max(a.y, b.y) + TOL;
+  }
+  if (Math.abs(a.y - b.y) <= TOL) {
+    return Math.abs(point.y - a.y) <= TOL
+      && point.x >= Math.min(a.x, b.x) - TOL
+      && point.x <= Math.max(a.x, b.x) + TOL;
+  }
+  return false;
+}
+
+function dedupeWaypoints(points: Waypoint[]): Waypoint[] {
+  const out: Waypoint[] = [];
+  for (const point of points) {
+    const last = out[out.length - 1];
+    if (last && Math.abs(last.x - point.x) <= 0.5 && Math.abs(last.y - point.y) <= 0.5) continue;
+    out.push(point);
+  }
+  return out;
 }
 
 function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input: RouteInput): void {
@@ -240,9 +337,113 @@ function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input:
       obstacles,
       sourceSelf: src.box,
       targetSelf: tgt.box,
+      sourceEndpointCanSlide: !isGatewayNode(src),
+      targetEndpointCanSlide: !isGatewayNode(tgt),
     });
     route.waypoints = detoured.waypoints;
+    keepCrossLaneRouteOffDivider(route, src, tgt, input.laneBoxes, obstacles);
   }
+}
+
+const LANE_DIVIDER_ROUTE_CLEARANCE = 24;
+
+function keepCrossLaneRouteOffDivider(
+  route: EdgeRoute,
+  src: RouteInputNode,
+  tgt: RouteInputNode,
+  laneBoxes: Map<string, LaneBox & { poolId: string }>,
+  obstacles: NodeBox[],
+): void {
+  if (!(route.edgeType === 'cross-lane-down' || route.edgeType === 'cross-lane-up')) return;
+  if (!src.laneId || !tgt.laneId) return;
+  const srcLane = laneBoxes.get(src.laneId);
+  const tgtLane = laneBoxes.get(tgt.laneId);
+  if (!srcLane || !tgtLane) return;
+
+  const top = route.edgeType === 'cross-lane-down'
+    ? srcLane.bottom
+    : tgtLane.bottom;
+  const bottom = route.edgeType === 'cross-lane-down'
+    ? tgtLane.top
+    : srcLane.top;
+  if (bottom - top > LANE_DIVIDER_ROUTE_CLEARANCE * 2) return;
+
+  const dividerY = (top + bottom) / 2;
+  const closeIndexes: number[] = [];
+  for (let i = 1; i < route.waypoints.length - 1; i++) {
+    if (Math.abs(route.waypoints[i]!.y - dividerY) < LANE_DIVIDER_ROUTE_CLEARANCE) closeIndexes.push(i);
+  }
+  if (closeIndexes.length === 0) return;
+
+  const firstCloseY = route.waypoints[closeIndexes[0]!]!.y;
+  const preferredSign = firstCloseY < dividerY
+    ? -1
+    : firstCloseY > dividerY
+      ? 1
+      : route.edgeType === 'cross-lane-down' ? -1 : 1;
+  const preferred = candidateCrossLaneDividerRoute(route, closeIndexes, dividerY, preferredSign);
+  if (!routeCrossesObstacles(preferred, obstacles)) {
+    route.waypoints = preferred;
+    return;
+  }
+
+  const alternate = candidateCrossLaneDividerRoute(route, closeIndexes, dividerY, -preferredSign);
+  route.waypoints = routeCrossesObstacles(alternate, obstacles) ? preferred : alternate;
+}
+
+function candidateCrossLaneDividerRoute(
+  route: EdgeRoute,
+  closeIndexes: number[],
+  dividerY: number,
+  sign: number,
+): Waypoint[] {
+  const waypoints = route.waypoints.map(p => ({ ...p }));
+  const sourcePoint = waypoints[0]!;
+  const minSourceStub = 4;
+  for (const idx of closeIndexes) {
+    const point = waypoints[idx]!;
+    point.y = dividerY + sign * LANE_DIVIDER_ROUTE_CLEARANCE;
+    if (route.sourcePort.side === 'top' && point.y > sourcePoint.y - minSourceStub) {
+      point.y = sourcePoint.y - minSourceStub;
+    } else if (route.sourcePort.side === 'bottom' && point.y < sourcePoint.y + minSourceStub) {
+      point.y = sourcePoint.y + minSourceStub;
+    }
+  }
+  return waypoints;
+}
+
+function routeCrossesObstacles(waypoints: Waypoint[], obstacles: NodeBox[]): boolean {
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const a = waypoints[i]!;
+    const b = waypoints[i + 1]!;
+    for (const obstacle of obstacles) {
+      if (segmentCrossesBoxInterior(a, b, obstacle)) return true;
+    }
+  }
+  return false;
+}
+
+function segmentCrossesBoxInterior(a: Waypoint, b: Waypoint, box: NodeBox): boolean {
+  const inset = 1;
+  const left = box.x + inset;
+  const right = box.x + box.w - inset;
+  const top = box.y + inset;
+  const bottom = box.y + box.h - inset;
+  if (left >= right || top >= bottom) return false;
+
+  if (Math.abs(a.y - b.y) <= 1) {
+    const y = a.y;
+    if (y <= top || y >= bottom) return false;
+    return Math.max(a.x, b.x) > left && Math.min(a.x, b.x) < right;
+  }
+
+  if (Math.abs(a.x - b.x) <= 1) {
+    const x = a.x;
+    if (x <= left || x >= right) return false;
+    return Math.max(a.y, b.y) > top && Math.min(a.y, b.y) < bottom;
+  }
+
+  return false;
 }
 
 function busifyForwardStep(routes: Map<string, EdgeRoute>, input: RouteInput): void {

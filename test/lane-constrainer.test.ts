@@ -6,6 +6,7 @@ import { elkPlacement } from '../src/stages/elk-placement.ts';
 import { laneConstrain } from '../src/stages/lane-constrainer.ts';
 import { ioSpecExtraBelow, layoutHeightWithIoSpec, nodeSizeOf, LANE_MIN_H } from '../src/layout/node-sizes.ts';
 import { warmup } from '../src/layout/elk-singleton.ts';
+import { leafLaneOrder, nodeToLeafLane } from '../src/layout/lane-resolver.ts';
 
 const FIX = (n: string) =>
   JSON.parse(readFileSync(resolve(import.meta.dir, '../fixtures', `${n}.json`), 'utf-8'));
@@ -14,8 +15,13 @@ async function runStage1And2(fixtureName: string, opts?: { processFilter?: (p: a
   const m = loadFixture(fixtureName, FIX(fixtureName));
   const filter = opts?.processFilter ?? ((p: any) => !p.isBlackBox && p.flowNodes.length > 0);
   const proc = m.processes.find(filter)!;
+  const leafOrder = leafLaneOrder(proc.lanes);
+  const leafIndex = new Map(leafOrder.map((id, index) => [id, index]));
+  const nodeLeaf = nodeToLeafLane(proc.lanes, leafOrder);
   const placement = await elkPlacement({
     processId: proc.id,
+    hasLanes: proc.lanes.length > 0,
+    hasBoundaryHandlers: proc.decorations.some((d: any) => d.kind === 'boundaryEvent'),
     nodes: proc.flowNodes
       .filter(n => n.type !== 'boundaryEvent')
       .map(n => {
@@ -24,7 +30,8 @@ async function runStage1And2(fixtureName: string, opts?: { processFilter?: (p: a
           id: n.id,
           type: n.type,
           ...size,
-          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
+          laneIndex: leafIndex.get(nodeLeaf.get(n.id) ?? ''),
         };
       }),
     edges: proc.sequenceFlows.map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),
@@ -39,7 +46,10 @@ async function runStage1And2(fixtureName: string, opts?: { processFilter?: (p: a
       name: n.name,
       ioInputCount: n.ioInputCount,
       ioOutputCount: n.ioOutputCount,
+      ioInputNames: n.ioInputNames,
+      ioOutputNames: n.ioOutputNames,
     }])),
+    edges: proc.sequenceFlows.map(sf => ({ source: sf.source, target: sf.target })),
   });
   return { proc, placement, constrain };
 }
@@ -140,9 +150,31 @@ describe('Stage 2 — LaneConstrainer', () => {
     const task = proc.flowNodes.find(n => n.id === 'task_split_create_issue')!;
     const box = constrain.nodes.get(task.id)!;
     const lane = constrain.laneBoxes.get('lane_sales_support')!;
-    const reservedBottom = box.y + box.h + ioSpecExtraBelow(task.ioInputCount, task.ioOutputCount);
+    const reservedBottom = box.y + box.h + ioSpecExtraBelow(
+      task.ioInputCount,
+      task.ioOutputCount,
+      task.ioInputNames,
+      task.ioOutputNames,
+      box.w,
+    );
 
     expect(task.ioOutputCount).toBe(3);
     expect(reservedBottom).toBeLessThanOrEqual(lane.bottom);
   });
+
+  it('keeps obvious ELK rows inside a busy lane instead of forcing one centered row (new)', async () => {
+    const { constrain } = await runStage1And2('new');
+    const helperLane = constrain.laneBoxes.get('lane_5')!;
+    const task10 = constrain.nodes.get('task_10')!;
+    const task9 = constrain.nodes.get('task_9')!;
+    const task7 = constrain.nodes.get('task_7')!;
+
+    expect(helperLane.height).toBeGreaterThan(LANE_MIN_H * 2);
+    expect(centerY(task9) - centerY(task10)).toBeGreaterThan(40);
+    expect(centerY(task7) - centerY(task9)).toBeGreaterThan(40);
+  });
 });
+
+function centerY(box: { y: number; h: number }): number {
+  return box.y + box.h / 2;
+}

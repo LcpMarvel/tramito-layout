@@ -52,57 +52,134 @@ export function isGatewayType(type: FlowNodeType): boolean {
     || type === 'complexGateway';
 }
 
-const IO_SPEC_DATA_WIDTH = 36;
-const IO_SPEC_DATA_HEIGHT = 50;
-const IO_SPEC_GAP_BELOW = 20;
-const IO_SPEC_VERTICAL_SPACING = 24;
-const IO_SPEC_LABEL_HEIGHT = 14;
-const IO_SPEC_LABEL_GAP = 4;
+export const IO_SPEC_DATA_WIDTH = 36;
+export const IO_SPEC_DATA_HEIGHT = 50;
+export const IO_SPEC_GAP_BELOW = 20;
+export const IO_SPEC_LABEL_GAP = 4;
+export const IO_SPEC_LABEL_LINE_HEIGHT = 14;
+export const IO_SPEC_LABEL_MAX_WIDTH = 100;
+export const IO_SPEC_ROW_GAP = 6;
 
 export interface IoSpecBox { x: number; y: number; w: number; h: number }
 
 // serializer/diagram-builder 把 ioSpec dataInput/dataOutput 摆在 task 下方：
 //   y0 = taskY + taskH + 20 (gapBelow)
-//   每行高度 = 50 (dataHeight) + 24 (verticalSpacing)
-//   末行还要 + 14 (label) + 4 (label gap)
+//   每行高度 = 50 (dataHeight) + label gap + 自动换行后的 label 高度
+//   如果同一行 input/output label 横向相交，output label 会向下错开。
 // 这里返回 task 下方需要预留多少额外像素（与 visualH 无关）。
-export function ioSpecExtraBelow(ioInputCount: number, ioOutputCount: number): number {
+export function ioSpecLabelMaxWidth(hostWidth = TASK_W): number {
+  return Math.max(IO_SPEC_DATA_WIDTH, Math.min(IO_SPEC_LABEL_MAX_WIDTH, hostWidth));
+}
+
+function estimateIoSpecTextWidth(text: string, maxWidth = IO_SPEC_LABEL_MAX_WIDTH): number {
+  let width = 0;
+  for (const char of text) {
+    width += char.charCodeAt(0) > 255 ? 14 : 7;
+  }
+  return Math.max(IO_SPEC_DATA_WIDTH, Math.min(width, maxWidth));
+}
+
+export function estimateIoSpecLabelHeight(text: string | undefined, maxWidth = IO_SPEC_LABEL_MAX_WIDTH): number {
+  if (!text) return 0;
+  const width = estimateIoSpecTextWidth(text, maxWidth);
+  let currentLineWidth = 0;
+  let lines = 1;
+  for (const char of text) {
+    const charWidth = char.charCodeAt(0) > 255 ? 14 : 7;
+    if (currentLineWidth + charWidth > width) {
+      lines++;
+      currentLineWidth = charWidth;
+    } else {
+      currentLineWidth += charWidth;
+    }
+  }
+  return lines * IO_SPEC_LABEL_LINE_HEIGHT;
+}
+
+function ioSpecLabelsOverlap(inputName: string | undefined, outputName: string | undefined, hostWidth: number): boolean {
+  if (!inputName || !outputName) return false;
+  const maxWidth = ioSpecLabelMaxWidth(hostWidth);
+  const inputWidth = estimateIoSpecTextWidth(inputName, maxWidth);
+  const outputWidth = estimateIoSpecTextWidth(outputName, maxWidth);
+  const inputX = (IO_SPEC_DATA_WIDTH - inputWidth) / 2;
+  const outputX = hostWidth - IO_SPEC_DATA_WIDTH + (IO_SPEC_DATA_WIDTH - outputWidth) / 2;
+  return inputX < outputX + outputWidth && outputX < inputX + inputWidth;
+}
+
+function ioSpecRowLabelHeight(inputName: string | undefined, outputName: string | undefined, hostWidth: number): number {
+  const maxWidth = ioSpecLabelMaxWidth(hostWidth);
+  const inputHeight = estimateIoSpecLabelHeight(inputName, maxWidth);
+  const outputHeight = estimateIoSpecLabelHeight(outputName, maxWidth);
+  if (inputHeight <= 0) return outputHeight;
+  if (outputHeight <= 0) return inputHeight;
+
+  if (ioSpecLabelsOverlap(inputName, outputName, hostWidth)) {
+    return inputHeight + IO_SPEC_ROW_GAP + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + outputHeight;
+  }
+  return Math.max(inputHeight, outputHeight);
+}
+
+export function ioSpecExtraBelow(
+  ioInputCount: number,
+  ioOutputCount: number,
+  ioInputNames: readonly string[] = [],
+  ioOutputNames: readonly string[] = [],
+  hostWidth = TASK_W,
+): number {
   const n = Math.max(ioInputCount, ioOutputCount);
   if (n <= 0) return 0;
-  return IO_SPEC_GAP_BELOW
-    + n * IO_SPEC_DATA_HEIGHT
-    + (n - 1) * IO_SPEC_VERTICAL_SPACING
-    + IO_SPEC_LABEL_GAP
-    + IO_SPEC_LABEL_HEIGHT;
+  let below = IO_SPEC_GAP_BELOW;
+  for (let i = 0; i < n; i++) {
+    below += IO_SPEC_DATA_HEIGHT
+      + IO_SPEC_LABEL_GAP
+      + ioSpecRowLabelHeight(ioInputNames[i], ioOutputNames[i], hostWidth);
+    if (i < n - 1) below += IO_SPEC_ROW_GAP;
+  }
+  return below;
 }
 
 export function layoutHeightWithIoSpec(
   visibleHeight: number,
   ioInputCount: number,
   ioOutputCount: number,
+  ioInputNames?: readonly string[],
+  ioOutputNames?: readonly string[],
+  hostWidth?: number,
 ): number {
-  const below = ioSpecExtraBelow(ioInputCount, ioOutputCount);
+  const below = ioSpecExtraBelow(ioInputCount, ioOutputCount, ioInputNames, ioOutputNames, hostWidth);
   // ELK 按 layout box 的中心对齐；上方配同等空白，才能既保持 task 视觉中心齐平，又包住下方 ioSpec。
   return visibleHeight + below * 2;
 }
 
-export function ioSpecDataObjectBoxes(host: IoSpecBox, ioInputCount: number, ioOutputCount: number): IoSpecBox[] {
+export function ioSpecDataObjectBoxes(
+  host: IoSpecBox,
+  ioInputCount: number,
+  ioOutputCount: number,
+  ioInputNames: readonly string[] = [],
+  ioOutputNames: readonly string[] = [],
+): IoSpecBox[] {
   const boxes: IoSpecBox[] = [];
-  for (let i = 0; i < ioInputCount; i++) {
-    boxes.push({
-      x: host.x,
-      y: host.y + host.h + IO_SPEC_GAP_BELOW + i * (IO_SPEC_DATA_HEIGHT + IO_SPEC_VERTICAL_SPACING),
-      w: IO_SPEC_DATA_WIDTH,
-      h: IO_SPEC_DATA_HEIGHT,
-    });
-  }
-  for (let i = 0; i < ioOutputCount; i++) {
-    boxes.push({
-      x: host.x + host.w - IO_SPEC_DATA_WIDTH,
-      y: host.y + host.h + IO_SPEC_GAP_BELOW + i * (IO_SPEC_DATA_HEIGHT + IO_SPEC_VERTICAL_SPACING),
-      w: IO_SPEC_DATA_WIDTH,
-      h: IO_SPEC_DATA_HEIGHT,
-    });
+  const n = Math.max(ioInputCount, ioOutputCount);
+  let y = host.y + host.h + IO_SPEC_GAP_BELOW;
+  for (let i = 0; i < n; i++) {
+    const inputName = ioInputNames[i];
+    const outputName = ioOutputNames[i];
+    const maxWidth = ioSpecLabelMaxWidth(host.w);
+    const inputLabelHeight = estimateIoSpecLabelHeight(inputName, maxWidth);
+    const stackedOutput = i < ioInputCount && i < ioOutputCount && ioSpecLabelsOverlap(inputName, outputName, host.w);
+    if (i < ioInputCount) {
+      boxes.push({ x: host.x, y, w: IO_SPEC_DATA_WIDTH, h: IO_SPEC_DATA_HEIGHT });
+    }
+    if (i < ioOutputCount) {
+      const outputY = stackedOutput
+        ? y + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + inputLabelHeight + IO_SPEC_ROW_GAP
+        : y;
+      boxes.push({ x: host.x + host.w - IO_SPEC_DATA_WIDTH, y: outputY, w: IO_SPEC_DATA_WIDTH, h: IO_SPEC_DATA_HEIGHT });
+    }
+    y += IO_SPEC_DATA_HEIGHT
+      + IO_SPEC_LABEL_GAP
+      + ioSpecRowLabelHeight(ioInputNames[i], ioOutputNames[i], host.w)
+      + IO_SPEC_ROW_GAP;
   }
   return boxes;
 }

@@ -6,6 +6,8 @@ export interface LocalObstacleDetourInput {
   obstacles: NodeBox[];
   sourceSelf?: NodeBox;
   targetSelf?: NodeBox;
+  sourceEndpointCanSlide?: boolean;
+  targetEndpointCanSlide?: boolean;
   margin?: number;
 }
 
@@ -107,7 +109,11 @@ export function detourAroundLocalObstacles(input: LocalObstacleDetourInput): Loc
 
     if (isFirstSeg && isLastSeg) return false;
     if (isFirstSeg) {
-      if (input.sourceSelf && canMoveEndpointAlongTargetSide(a, slide, newVal, input.sourceSelf)) {
+      if (
+        input.sourceSelf
+        && input.sourceEndpointCanSlide !== false
+        && canMoveEndpointAlongTargetSide(a, slide, newVal, input.sourceSelf)
+      ) {
         a[slide] = newVal;
         b[slide] = newVal;
       } else {
@@ -124,7 +130,11 @@ export function detourAroundLocalObstacles(input: LocalObstacleDetourInput): Loc
         }
       }
     } else if (isLastSeg) {
-      if (input.targetSelf && canMoveEndpointAlongTargetSide(b, slide, newVal, input.targetSelf)) {
+      if (
+        input.targetSelf
+        && input.targetEndpointCanSlide !== false
+        && canMoveEndpointAlongTargetSide(b, slide, newVal, input.targetSelf)
+      ) {
         a[slide] = newVal;
         b[slide] = newVal;
       } else {

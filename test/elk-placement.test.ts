@@ -22,7 +22,7 @@ function inputFromFirstProcess(fixtureName: string): PlacementInput {
           id: n.id,
           type: n.type,
           ...size,
-          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
         };
       }),
     edges: proc.sequenceFlows.map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),

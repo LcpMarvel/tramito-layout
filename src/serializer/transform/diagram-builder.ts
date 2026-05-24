@@ -7,6 +7,15 @@
 
 import type { LayoutedGraph } from '../types/elk-output';
 import type { IoSpecification } from '../types/elk-bpmn';
+import {
+  IO_SPEC_DATA_HEIGHT,
+  IO_SPEC_DATA_WIDTH,
+  IO_SPEC_GAP_BELOW,
+  IO_SPEC_LABEL_GAP,
+  IO_SPEC_LABEL_LINE_HEIGHT,
+  IO_SPEC_ROW_GAP,
+  ioSpecLabelMaxWidth,
+} from '../../layout/node-sizes.ts';
 import type {
   DiagramModel,
   ShapeModel,
@@ -40,6 +49,10 @@ function collectCalledProcessIds(graph: LayoutedGraph): Set<string> {
   }
   for (const child of graph.children ?? []) walk(child as Parameters<typeof walk>[0]);
   return ids;
+}
+
+function rangesOverlap(aX: number, aW: number, bX: number, bW: number): boolean {
+  return aX < bX + bW && bX < aX + aW;
 }
 
 // ============================================================================
@@ -319,150 +332,176 @@ export class DiagramBuilder {
     taskWidth: number,
     taskHeight: number
   ): void {
-    // Data object dimensions (same as dataObjectReference)
-    const dataWidth = 36;
-    const dataHeight = 50;
-    const gapBelow = 20; // Gap between task and first data object (vertical)
-    const verticalSpacing = 24; // Spacing between stacked data objects (includes label space)
-    const labelHeight = 14;
-
     // Position dataInputs below the task, aligned to the left side, stacked vertically
     const dataInputs = ioSpec.dataInputs ?? [];
     const inputStartX = taskX; // Start from task's left edge
+    const dataOutputs = ioSpec.dataOutputs ?? [];
+    const outputStartX = taskX + taskWidth - IO_SPEC_DATA_WIDTH; // Align to right edge
+    const labelMaxWidth = ioSpecLabelMaxWidth(taskWidth);
+    let rowY = taskY + taskHeight + IO_SPEC_GAP_BELOW;
+    const rowCount = Math.max(dataInputs.length, dataOutputs.length);
 
-    dataInputs.forEach((dataInput, index) => {
-      const inputId = dataInput.id ?? `${node.id}_input_${index}`;
-      const inputX = inputStartX;
-      const inputY = taskY + taskHeight + gapBelow + index * (dataHeight + verticalSpacing);
+    for (let index = 0; index < rowCount; index++) {
+      const dataInput = dataInputs[index];
+      const dataOutput = dataOutputs[index];
+      let inputLabelHeight = 0;
+      let outputLabelHeight = 0;
+      let labelsOverlap = false;
+      if (dataInput?.name) {
+        const inputLabelWidth = this.estimateTextWidth(dataInput.name, labelMaxWidth);
+        inputLabelHeight = this.estimateLabelLines(dataInput.name, inputLabelWidth) * IO_SPEC_LABEL_LINE_HEIGHT;
+        if (dataOutput?.name) {
+          const outputLabelWidth = this.estimateTextWidth(dataOutput.name, labelMaxWidth);
+          outputLabelHeight = this.estimateLabelLines(dataOutput.name, outputLabelWidth) * IO_SPEC_LABEL_LINE_HEIGHT;
+          const inputLabelX = inputStartX + (IO_SPEC_DATA_WIDTH - inputLabelWidth) / 2;
+          const outputLabelX = outputStartX + (IO_SPEC_DATA_WIDTH - outputLabelWidth) / 2;
+          labelsOverlap = rangesOverlap(inputLabelX, inputLabelWidth, outputLabelX, outputLabelWidth);
+        }
+      } else if (dataOutput?.name) {
+        const outputLabelWidth = this.estimateTextWidth(dataOutput.name, labelMaxWidth);
+        outputLabelHeight = this.estimateLabelLines(dataOutput.name, outputLabelWidth) * IO_SPEC_LABEL_LINE_HEIGHT;
+      }
 
-      this.dataObjectOwners.set(inputId, node.id);
+      if (dataInput) {
+        const inputId = dataInput.id ?? `${node.id}_input_${index}`;
+        const inputX = inputStartX;
+        const inputY = rowY;
 
-      // Store position for edge routing
-      this.nodePositions.set(inputId, {
-        x: inputX,
-        y: inputY,
-        width: dataWidth,
-        height: dataHeight,
-      });
+        this.dataObjectOwners.set(inputId, node.id);
 
-      const shape: ShapeModel = {
-        id: `${inputId}_di`,
-        bpmnElement: inputId,
-        bounds: {
+        // Store position for edge routing
+        this.nodePositions.set(inputId, {
           x: inputX,
           y: inputY,
-          width: dataWidth,
-          height: dataHeight,
-        },
-      };
+          width: IO_SPEC_DATA_WIDTH,
+          height: IO_SPEC_DATA_HEIGHT,
+        });
 
-      // Add label below the data object
-      if (dataInput.name) {
-        const labelWidth = Math.max(dataWidth, this.estimateTextWidth(dataInput.name));
-        shape.label = {
+        const shape: ShapeModel = {
+          id: `${inputId}_di`,
+          bpmnElement: inputId,
           bounds: {
-            x: inputX + (dataWidth - labelWidth) / 2,
-            y: inputY + dataHeight + 4,
-            width: labelWidth,
-            height: labelHeight,
+            x: inputX,
+            y: inputY,
+            width: IO_SPEC_DATA_WIDTH,
+            height: IO_SPEC_DATA_HEIGHT,
           },
         };
+
+        // Add label below the data object
+        if (dataInput.name) {
+          const labelWidth = this.estimateTextWidth(dataInput.name, labelMaxWidth);
+          const centeredX = inputX + (IO_SPEC_DATA_WIDTH - labelWidth) / 2;
+          shape.label = {
+            bounds: {
+              x: centeredX,
+              y: inputY + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP,
+              width: labelWidth,
+              height: inputLabelHeight,
+            },
+          };
+        }
+
+        shapes.push(shape);
+
+        // Only the first (topmost) dataInput gets an edge to the task
+        if (index === 0) {
+          // Create dashed edge from dataInput to task (arrow pointing to task)
+          // bpmnElement references the auto-generated dataInputAssociation
+          const assocId = `${inputId}_assoc`;
+          const inputCenterX = inputX + IO_SPEC_DATA_WIDTH / 2;
+          const inputTopY = inputY;
+          const taskBottomY = taskY + taskHeight;
+
+          // Simple vertical connection from data object top to task bottom
+          edges.push({
+            id: `${assocId}_di`,
+            bpmnElement: assocId,
+            waypoints: [
+              { x: inputCenterX, y: inputTopY },
+              { x: inputCenterX, y: taskBottomY },
+            ],
+          });
+        }
       }
 
-      shapes.push(shape);
+      // Position dataOutputs below the task, aligned to the right side, stacked vertically
+      if (dataOutput) {
+        const outputId = dataOutput.id ?? `${node.id}_output_${index}`;
+        const outputX = outputStartX;
+        const outputY = labelsOverlap
+          ? rowY + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + inputLabelHeight + IO_SPEC_ROW_GAP
+          : rowY;
 
-      // Only the first (topmost) dataInput gets an edge to the task
-      if (index === 0) {
-        // Create dashed edge from dataInput to task (arrow pointing to task)
-        // bpmnElement references the auto-generated dataInputAssociation
-        const assocId = `${inputId}_assoc`;
-        const inputCenterX = inputX + dataWidth / 2;
-        const inputTopY = inputY;
-        const taskBottomY = taskY + taskHeight;
+        this.dataObjectOwners.set(outputId, node.id);
 
-        // Simple vertical connection from data object top to task bottom
-        edges.push({
-          id: `${assocId}_di`,
-          bpmnElement: assocId,
-          waypoints: [
-            { x: inputCenterX, y: inputTopY },
-            { x: inputCenterX, y: taskBottomY },
-          ],
-        });
-      }
-    });
-
-    // Position dataOutputs below the task, aligned to the right side, stacked vertically
-    const dataOutputs = ioSpec.dataOutputs ?? [];
-    const outputStartX = taskX + taskWidth - dataWidth; // Align to right edge
-
-    dataOutputs.forEach((dataOutput, index) => {
-      const outputId = dataOutput.id ?? `${node.id}_output_${index}`;
-      const outputX = outputStartX;
-      const outputY = taskY + taskHeight + gapBelow + index * (dataHeight + verticalSpacing);
-
-      this.dataObjectOwners.set(outputId, node.id);
-
-      // Store position for edge routing
-      this.nodePositions.set(outputId, {
-        x: outputX,
-        y: outputY,
-        width: dataWidth,
-        height: dataHeight,
-      });
-
-      const shape: ShapeModel = {
-        id: `${outputId}_di`,
-        bpmnElement: outputId,
-        bounds: {
+        // Store position for edge routing
+        this.nodePositions.set(outputId, {
           x: outputX,
           y: outputY,
-          width: dataWidth,
-          height: dataHeight,
-        },
-      };
+          width: IO_SPEC_DATA_WIDTH,
+          height: IO_SPEC_DATA_HEIGHT,
+        });
 
-      // Add label below the data object
-      if (dataOutput.name) {
-        const labelWidth = Math.max(dataWidth, this.estimateTextWidth(dataOutput.name));
-        shape.label = {
+        const shape: ShapeModel = {
+          id: `${outputId}_di`,
+          bpmnElement: outputId,
           bounds: {
-            x: outputX + (dataWidth - labelWidth) / 2,
-            y: outputY + dataHeight + 4,
-            width: labelWidth,
-            height: labelHeight,
+            x: outputX,
+            y: outputY,
+            width: IO_SPEC_DATA_WIDTH,
+            height: IO_SPEC_DATA_HEIGHT,
           },
         };
+
+        // Add label below the data object
+        if (dataOutput.name) {
+          const labelWidth = this.estimateTextWidth(dataOutput.name, labelMaxWidth);
+          const centeredX = outputX + (IO_SPEC_DATA_WIDTH - labelWidth) / 2;
+          shape.label = {
+            bounds: {
+              x: centeredX,
+              y: outputY + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP,
+              width: labelWidth,
+              height: outputLabelHeight,
+            },
+          };
+        }
+
+        shapes.push(shape);
+
+        // Only the first (topmost) dataOutput gets an edge from the task
+        if (index === 0) {
+          // Create dashed edge from task to dataOutput (arrow pointing to dataOutput)
+          // bpmnElement references the auto-generated dataOutputAssociation
+          const assocId = `${outputId}_assoc`;
+          const outputCenterX = outputX + IO_SPEC_DATA_WIDTH / 2;
+          const outputTopY = outputY;
+          const taskBottomY = taskY + taskHeight;
+
+          // Simple vertical connection from task bottom to data object top
+          edges.push({
+            id: `${assocId}_di`,
+            bpmnElement: assocId,
+            waypoints: [
+              { x: outputCenterX, y: taskBottomY },
+              { x: outputCenterX, y: outputTopY },
+            ],
+          });
+        }
       }
 
-      shapes.push(shape);
-
-      // Only the first (topmost) dataOutput gets an edge from the task
-      if (index === 0) {
-        // Create dashed edge from task to dataOutput (arrow pointing to dataOutput)
-        // bpmnElement references the auto-generated dataOutputAssociation
-        const assocId = `${outputId}_assoc`;
-        const outputCenterX = outputX + dataWidth / 2;
-        const outputTopY = outputY;
-        const taskBottomY = taskY + taskHeight;
-
-        // Simple vertical connection from task bottom to data object top
-        edges.push({
-          id: `${assocId}_di`,
-          bpmnElement: assocId,
-          waypoints: [
-            { x: outputCenterX, y: taskBottomY },
-            { x: outputCenterX, y: outputTopY },
-          ],
-        });
-      }
-    });
+      const rowLabelHeight = labelsOverlap
+        ? inputLabelHeight + IO_SPEC_ROW_GAP + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + outputLabelHeight
+        : Math.max(inputLabelHeight, outputLabelHeight);
+      rowY += IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + rowLabelHeight + IO_SPEC_ROW_GAP;
+    }
   }
 
   /**
    * Estimate text width for label sizing (simplified)
    */
-  private estimateTextWidth(text: string): number {
+  private estimateTextWidth(text: string, maxWidth = 150): number {
     let width = 0;
     for (const char of text) {
       // CJK characters are wider
@@ -472,7 +511,7 @@ export class DiagramBuilder {
         width += 7;
       }
     }
-    return Math.max(36, Math.min(width, 150));
+    return Math.max(IO_SPEC_DATA_WIDTH, Math.min(width, maxWidth));
   }
 
   /**

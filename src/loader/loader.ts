@@ -287,6 +287,12 @@ function walkChildren(
 
 function makeFlowNode(raw: RawNode, type: FlowNodeType): FlowNode {
   const ioSpec = raw.bpmn?.ioSpecification;
+  const dataInputs = Array.isArray(ioSpec?.dataInputs)
+    ? ioSpec.dataInputs as Array<{ name?: string }>
+    : [];
+  const dataOutputs = Array.isArray(ioSpec?.dataOutputs)
+    ? ioSpec.dataOutputs as Array<{ name?: string }>
+    : [];
   return {
     id: raw.id,
     type,
@@ -294,8 +300,10 @@ function makeFlowNode(raw: RawNode, type: FlowNodeType): FlowNode {
     subProcessId: null,
     boundaryEventIds: (raw.boundaryEvents ?? []).map(b => b.id),
     isExpanded: raw.bpmn?.isExpanded === true,
-    ioInputCount: Array.isArray(ioSpec?.dataInputs) ? ioSpec.dataInputs.length : 0,
-    ioOutputCount: Array.isArray(ioSpec?.dataOutputs) ? ioSpec.dataOutputs.length : 0,
+    ioInputCount: dataInputs.length,
+    ioOutputCount: dataOutputs.length,
+    ioInputNames: dataInputs.map((d) => d.name ?? ''),
+    ioOutputNames: dataOutputs.map((d) => d.name ?? ''),
   };
 }
 

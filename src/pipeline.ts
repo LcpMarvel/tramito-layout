@@ -338,7 +338,14 @@ export async function runPipeline(
               id: n.id, type: n.type,
               w: inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
               h,
-              layoutH: layoutHeightWithIoSpec(h, n.ioInputCount, n.ioOutputCount),
+              layoutH: layoutHeightWithIoSpec(
+                h,
+                n.ioInputCount,
+                n.ioOutputCount,
+                n.ioInputNames,
+                n.ioOutputNames,
+                inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
+              ),
               laneIndex, layerConstraint,
             };
           }
@@ -348,7 +355,7 @@ export async function runPipeline(
           id: n.id,
           type: n.type,
           ...size,
-          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
           laneIndex,
           layerConstraint,
         };
@@ -377,6 +384,8 @@ export async function runPipeline(
       name?: string;
       ioInputCount?: number;
       ioOutputCount?: number;
+      ioInputNames?: readonly string[];
+      ioOutputNames?: readonly string[];
     }>();
     for (const fn of proc.flowNodes) {
       nodeMetaForLane.set(fn.id, {
@@ -384,6 +393,8 @@ export async function runPipeline(
         name: fn.name,
         ioInputCount: fn.ioInputCount,
         ioOutputCount: fn.ioOutputCount,
+        ioInputNames: fn.ioInputNames,
+        ioOutputNames: fn.ioOutputNames,
       });
     }
     const edgesForLane = proc.sequenceFlows
@@ -579,7 +590,14 @@ export async function runPipeline(
                 type: n.type,
                 w: inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
                 h,
-                layoutH: layoutHeightWithIoSpec(h, n.ioInputCount, n.ioOutputCount),
+                layoutH: layoutHeightWithIoSpec(
+                  h,
+                  n.ioInputCount,
+                  n.ioOutputCount,
+                  n.ioInputNames,
+                  n.ioOutputNames,
+                  inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
+                ),
               };
             }
           }
@@ -588,7 +606,7 @@ export async function runPipeline(
             id: n.id,
             type: n.type,
             ...size,
-            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
           };
         });
       const handlerEdges = sg.edges
@@ -702,10 +720,10 @@ export async function runPipeline(
   const nodeLayoutBoxes = new Map<string, NodeLayoutBox>();
   for (const proc of model.processes) {
     for (const fn of proc.flowNodes) {
-      const extra = ioSpecExtraBelow(fn.ioInputCount, fn.ioOutputCount);
-      if (extra <= 0) continue;
       const visualBox = compose.nodes.get(fn.id);
       if (!visualBox) continue;
+      const extra = ioSpecExtraBelow(fn.ioInputCount, fn.ioOutputCount, fn.ioInputNames, fn.ioOutputNames, visualBox.w);
+      if (extra <= 0) continue;
       nodeLayoutBoxes.set(fn.id, {
         visualBox,
         layoutBox: { ...visualBox, y: visualBox.y - extra, h: visualBox.h + extra * 2 },
@@ -918,7 +936,7 @@ export async function runPipeline(
         if (!hostBox) continue;
         const poolId = compose.nodeToPool.get(fn.id) ?? innerNodeOwnerPool.get(fn.id);
         if (!poolId) continue;
-        for (const box of ioSpecDataObjectBoxes(hostBox, fn.ioInputCount, fn.ioOutputCount)) {
+        for (const box of ioSpecDataObjectBoxes(hostBox, fn.ioInputCount, fn.ioOutputCount, fn.ioInputNames, fn.ioOutputNames)) {
           routeObstacles.push({ box, poolId });
         }
       }
