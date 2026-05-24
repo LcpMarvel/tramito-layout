@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadFixture } from '../src/loader/loader.ts';
 import { elkPlacement, type PlacementInput } from '../src/stages/elk-placement.ts';
-import { nodeSizeOf } from '../src/layout/node-sizes.ts';
+import { layoutHeightWithIoSpec, nodeSizeOf } from '../src/layout/node-sizes.ts';
 import { warmup } from '../src/layout/elk-singleton.ts';
 
 const FIX = (n: string) =>
@@ -16,7 +16,15 @@ function inputFromFirstProcess(fixtureName: string): PlacementInput {
     processId: proc.id,
     nodes: proc.flowNodes
       .filter(n => n.type !== 'boundaryEvent') // boundary events 由 Stage 5 处理
-      .map(n => ({ id: n.id, type: n.type, ...nodeSizeOf(n.type) })),
+      .map(n => {
+        const size = nodeSizeOf(n.type);
+        return {
+          id: n.id,
+          type: n.type,
+          ...size,
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+        };
+      }),
     edges: proc.sequenceFlows.map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),
   };
 }
@@ -76,6 +84,22 @@ describe('Stage 1 — ElkPlacement', () => {
     const input = inputFromFirstProcess('37-crm-voice-process');
     const output = await elkPlacement(input);
     expect(output.nodes.size).toBeGreaterThan(0);
+  });
+
+  it('uses layout-only height without changing the visible node box', async () => {
+    const output = await elkPlacement({
+      processId: 'io-spec',
+      nodes: [
+        { id: 'task_with_io', type: 'task', w: 100, h: 80, layoutH: 180 },
+      ],
+      edges: [],
+    });
+    const task = output.nodes.get('task_with_io')!;
+    const layoutPad = (180 - 80) / 2;
+
+    expect(task.h).toBe(80);
+    expect(task.y).toBeGreaterThanOrEqual(layoutPad - 1);
+    expect(task.y + task.h + layoutPad).toBeLessThanOrEqual(output.bounds.height + 1);
   });
 
   it('returns empty output for empty input', async () => {

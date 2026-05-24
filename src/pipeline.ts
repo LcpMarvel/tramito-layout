@@ -20,7 +20,7 @@
 
 import { loadFixture } from './loader/loader.ts';
 import type { BpmnModel, ProcessUnit, SequenceFlow, Decoration } from './loader/types.ts';
-import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow } from './layout/node-sizes.ts';
+import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow, layoutHeightWithIoSpec } from './layout/node-sizes.ts';
 import { leafLaneOrder, nodeToLeafLane } from './layout/lane-resolver.ts';
 import {
   createStageSnapshot,
@@ -333,15 +333,25 @@ export async function runPipeline(
         if (n.isExpanded) {
           const inner = subprocessLayouts.get(n.id);
           if (inner) {
+            const h = inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
             return {
               id: n.id, type: n.type,
               w: inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
-              h: inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM,
+              h,
+              layoutH: layoutHeightWithIoSpec(h, n.ioInputCount, n.ioOutputCount),
               laneIndex, layerConstraint,
             };
           }
         }
-        return { id: n.id, type: n.type, ...nodeSizeOf(n.type), laneIndex, layerConstraint };
+        const size = nodeSizeOf(n.type);
+        return {
+          id: n.id,
+          type: n.type,
+          ...size,
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          laneIndex,
+          layerConstraint,
+        };
       }),
       edges: proc.sequenceFlows
         .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target))
@@ -380,7 +390,7 @@ export async function runPipeline(
       .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target))
       .map(sf => ({ source: sf.source, target: sf.target }));
     const constrain = laneConstrain({
-      nodes: placement.nodes, width: placement.bounds.width, lanes: proc.lanes,
+      nodes: placement.nodes, width: placement.bounds.width, height: placement.bounds.height, lanes: proc.lanes,
       nodeMeta: nodeMetaForLane,
       edges: edgesForLane,
     });
@@ -559,7 +569,28 @@ export async function runPipeline(
       // mini ElkPlacement
       const handlerNodes = proc.flowNodes
         .filter(n => sg.nodes.has(n.id))
-        .map(n => ({ id: n.id, type: n.type, ...nodeSizeOf(n.type) }));
+        .map(n => {
+          if (n.isExpanded) {
+            const inner = subprocessLayouts.get(n.id);
+            if (inner) {
+              const h = inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
+              return {
+                id: n.id,
+                type: n.type,
+                w: inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
+                h,
+                layoutH: layoutHeightWithIoSpec(h, n.ioInputCount, n.ioOutputCount),
+              };
+            }
+          }
+          const size = nodeSizeOf(n.type);
+          return {
+            id: n.id,
+            type: n.type,
+            ...size,
+            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+          };
+        });
       const handlerEdges = sg.edges
         .filter(e => sg.nodes.has(e.source) && sg.nodes.has(e.target))
         .map(e => ({ id: e.id, source: e.source, target: e.target }));
@@ -677,7 +708,7 @@ export async function runPipeline(
       if (!visualBox) continue;
       nodeLayoutBoxes.set(fn.id, {
         visualBox,
-        layoutBox: { ...visualBox, h: visualBox.h + extra },
+        layoutBox: { ...visualBox, y: visualBox.y - extra, h: visualBox.h + extra * 2 },
       });
     }
   }

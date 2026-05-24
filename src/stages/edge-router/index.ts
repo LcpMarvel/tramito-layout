@@ -235,6 +235,7 @@ function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input:
     const isCrossPool = src.poolId !== tgt.poolId;
     const obstacles = collectObstacles(input, edge, src, tgt, isCrossPool, true);
     const detoured = detourAroundLocalObstacles({
+      edgeId: edge.id,
       waypoints: route.waypoints,
       obstacles,
       sourceSelf: src.box,

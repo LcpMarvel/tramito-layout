@@ -390,6 +390,38 @@ describe('Stage 4 — routeEdges integration', () => {
     expect(out.waypoints.length).toBe(4);
   });
 
+  it('keeps a source-side stub when detouring between endpoint obstacles', () => {
+    const out = detourAroundLocalObstacles({
+      waypoints: [
+        { x: 358, y: 312 },
+        { x: 358, y: 289.5 },
+        { x: 513, y: 289.5 },
+        { x: 513, y: 267 },
+      ],
+      obstacles: [
+        box(308, 32),
+        box(308, 172),
+        box(308, 452),
+        box(308, 132, 36, 50),
+        box(372, 132, 36, 50),
+        box(308, 272, 36, 50),
+        box(372, 272, 36, 50),
+      ],
+      sourceSelf: box(308, 312),
+      targetSelf: box(488, 217, 50, 50),
+    });
+
+    expect(out.changed).toBe(true);
+    expect(out.waypoints).toEqual([
+      { x: 358, y: 312 },
+      { x: 358, y: 270 },
+      { x: 298, y: 270 },
+      { x: 298, y: 332 },
+      { x: 513, y: 332 },
+      { x: 513, y: 267 },
+    ]);
+  });
+
   it('finalizes gateway ports on the diamond boundary', () => {
     const out = finalizeRoutePorts({
       sourceId: 'task',

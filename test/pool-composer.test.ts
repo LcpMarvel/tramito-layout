@@ -38,7 +38,10 @@ async function runStages1To3(fixtureName: string) {
       edges: proc.sequenceFlows.map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),
     });
     const constrain = laneConstrain({
-      nodes: placement.nodes, width: placement.bounds.width, lanes: proc.lanes,
+      nodes: placement.nodes,
+      width: placement.bounds.width,
+      height: placement.bounds.height,
+      lanes: proc.lanes,
     });
     inputs.push({
       id: proc.id,

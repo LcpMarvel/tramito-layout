@@ -65,7 +65,7 @@ export interface IoSpecBox { x: number; y: number; w: number; h: number }
 //   y0 = taskY + taskH + 20 (gapBelow)
 //   每行高度 = 50 (dataHeight) + 24 (verticalSpacing)
 //   末行还要 + 14 (label) + 4 (label gap)
-// 这里返回 task 下方需要预留多少额外像素（与 visualH 无关，ELK 用 visualH+extra 摆位）。
+// 这里返回 task 下方需要预留多少额外像素（与 visualH 无关）。
 export function ioSpecExtraBelow(ioInputCount: number, ioOutputCount: number): number {
   const n = Math.max(ioInputCount, ioOutputCount);
   if (n <= 0) return 0;
@@ -74,6 +74,16 @@ export function ioSpecExtraBelow(ioInputCount: number, ioOutputCount: number): n
     + (n - 1) * IO_SPEC_VERTICAL_SPACING
     + IO_SPEC_LABEL_GAP
     + IO_SPEC_LABEL_HEIGHT;
+}
+
+export function layoutHeightWithIoSpec(
+  visibleHeight: number,
+  ioInputCount: number,
+  ioOutputCount: number,
+): number {
+  const below = ioSpecExtraBelow(ioInputCount, ioOutputCount);
+  // ELK 按 layout box 的中心对齐；上方配同等空白，才能既保持 task 视觉中心齐平，又包住下方 ioSpec。
+  return visibleHeight + below * 2;
 }
 
 export function ioSpecDataObjectBoxes(host: IoSpecBox, ioInputCount: number, ioOutputCount: number): IoSpecBox[] {

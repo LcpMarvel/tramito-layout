@@ -14,8 +14,14 @@ import type { ElkShape, NodeBox } from './types.ts';
 export interface PlacementInputNode {
   id: string;
   type: FlowNodeType;
+  /** Visible BPMN shape width. */
   w: number;
+  /** Visible BPMN shape height. */
   h: number;
+  /** Optional layout-only width reserved in ELK while keeping the visible shape size unchanged. */
+  layoutW?: number;
+  /** Optional layout-only height reserved in ELK while keeping the visible shape size unchanged. */
+  layoutH?: number;
   /**
    * leaf lane index（0=最上 lane）。仅 hasLanes 时有意义。
    * 用于给 ELK 传 partitioning.partition hint，让 ELK 在 layer 排序与 crossing minimization 时
@@ -127,6 +133,7 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
     ? { ...baseOptions, 'elk.partitioning.activate': 'true' }
     : baseOptions;
 
+  const inputNodeById = new Map(input.nodes.map(n => [n.id, n]));
   const elkGraph = {
     id: input.processId || 'root',
     layoutOptions,
@@ -143,7 +150,11 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
           childLayoutOptions['elk.layered.layering.layerConstraint'] = 'LAST';
         }
       }
-      const child: any = { id: n.id, width: n.w, height: n.h };
+      const child: any = {
+        id: n.id,
+        width: n.layoutW ?? n.w,
+        height: n.layoutH ?? n.h,
+      };
       if (Object.keys(childLayoutOptions).length > 0) {
         child.layoutOptions = childLayoutOptions;
       }
@@ -160,11 +171,14 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
 
   const nodes = new Map<string, NodeBox>();
   for (const c of result.children ?? []) {
+    const inputNode = inputNodeById.get(c.id);
+    const visibleH = inputNode?.h ?? c.height ?? 0;
+    const layoutH = inputNode?.layoutH ?? visibleH;
     nodes.set(c.id, {
       x: c.x ?? 0,
-      y: c.y ?? 0,
-      w: c.width ?? 0,
-      h: c.height ?? 0,
+      y: (c.y ?? 0) + Math.max(0, (layoutH - visibleH) / 2),
+      w: inputNode?.w ?? c.width ?? 0,
+      h: visibleH,
     });
   }
 

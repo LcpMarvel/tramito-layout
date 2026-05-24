@@ -9,7 +9,7 @@
 // 顶层 process 不出现在结果里 —— 它的 layout 由主 pipeline 处理。
 
 import type { ProcessUnit } from '../loader/types.ts';
-import { nodeSizeOf } from '../layout/node-sizes.ts';
+import { layoutHeightWithIoSpec, nodeSizeOf } from '../layout/node-sizes.ts';
 import { elkPlacement } from './elk-placement.ts';
 import type { NodeBox } from './types.ts';
 
@@ -46,14 +46,16 @@ export async function collectSubprocessLayouts(
     await collectSubprocessLayouts(sub, out);
 
     // 用已 layout 的嵌套展开 subprocess 尺寸作为 size override
-    const sizeOverrides = new Map<string, { w: number; h: number }>();
+    const sizeOverrides = new Map<string, { w: number; h: number; layoutH: number }>();
     for (const innerFn of sub.flowNodes) {
       if (!innerFn.isExpanded) continue;
       const child = out.get(innerFn.id);
       if (!child) continue;
+      const h = child.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
       sizeOverrides.set(innerFn.id, {
         w: child.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
-        h: child.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM,
+        h,
+        layoutH: layoutHeightWithIoSpec(h, innerFn.ioInputCount, innerFn.ioOutputCount),
       });
     }
 
@@ -61,7 +63,14 @@ export async function collectSubprocessLayouts(
       .filter(n => n.type !== 'boundaryEvent') // BE 由 DecorationPlacer 处理
       .map(n => {
         const ov = sizeOverrides.get(n.id);
-        return { id: n.id, type: n.type, ...(ov ?? nodeSizeOf(n.type)) };
+        if (ov) return { id: n.id, type: n.type, ...ov };
+        const size = nodeSizeOf(n.type);
+        return {
+          id: n.id,
+          type: n.type,
+          ...size,
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+        };
       });
     const innerNodeIds = new Set(elkNodes.map(n => n.id));
     const elkEdges = sub.sequenceFlows

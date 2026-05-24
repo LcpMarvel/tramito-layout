@@ -45,6 +45,7 @@ export function routeAssociations(input: AssociationRouteInput): AssociationRout
 
     const waypoints = buildWaypoints(start, end, srcAnchor, tgtAnchor);
     const detoured = detourAroundLocalObstacles({
+      edgeId: e.id,
       waypoints,
       obstacles: (input.obstacles ?? []).filter(
         (box) => !sameBox(box, e.sourceBox) && !sameBox(box, e.targetBox),

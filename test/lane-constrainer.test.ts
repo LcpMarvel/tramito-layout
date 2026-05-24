@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { loadFixture } from '../src/loader/loader.ts';
 import { elkPlacement } from '../src/stages/elk-placement.ts';
 import { laneConstrain } from '../src/stages/lane-constrainer.ts';
-import { ioSpecExtraBelow, nodeSizeOf, LANE_MIN_H } from '../src/layout/node-sizes.ts';
+import { ioSpecExtraBelow, layoutHeightWithIoSpec, nodeSizeOf, LANE_MIN_H } from '../src/layout/node-sizes.ts';
 import { warmup } from '../src/layout/elk-singleton.ts';
 
 const FIX = (n: string) =>
@@ -18,12 +18,21 @@ async function runStage1And2(fixtureName: string, opts?: { processFilter?: (p: a
     processId: proc.id,
     nodes: proc.flowNodes
       .filter(n => n.type !== 'boundaryEvent')
-      .map(n => ({ id: n.id, type: n.type, ...nodeSizeOf(n.type) })),
+      .map(n => {
+        const size = nodeSizeOf(n.type);
+        return {
+          id: n.id,
+          type: n.type,
+          ...size,
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount),
+        };
+      }),
     edges: proc.sequenceFlows.map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),
   });
   const constrain = laneConstrain({
     nodes: placement.nodes,
     width: placement.bounds.width,
+    height: placement.bounds.height,
     lanes: proc.lanes,
     nodeMeta: new Map(proc.flowNodes.map(n => [n.id, {
       type: n.type,
@@ -46,6 +55,24 @@ describe('Stage 2 — LaneConstrainer', () => {
     for (const [id, box] of placement.nodes) {
       expect(constrain.nodes.get(id)?.y).toBe(box.y); // Y not changed
     }
+  });
+
+  it('uses Stage 1 bounds for no-lane pool height', () => {
+    const nodes = new Map([['task_with_io', { x: 50, y: 40, w: 100, h: 80 }]]);
+    const constrain = laneConstrain({
+      nodes,
+      width: 200,
+      height: 260,
+      lanes: [],
+      nodeMeta: new Map([['task_with_io', {
+        type: 'task',
+        ioInputCount: 0,
+        ioOutputCount: 2,
+      }]]),
+    });
+
+    expect(constrain.nodes.get('task_with_io')!.h).toBe(80);
+    expect(constrain.poolHeight).toBe(260);
   });
 
   it('snaps each node Y into its assigned leaf lane band (26-lanes, flat)', async () => {

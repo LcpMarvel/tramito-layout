@@ -27,6 +27,8 @@ export interface LaneConstrainInput {
   nodes: Map<string, NodeBox>;
   /** Stage 1 输出的 pool 宽度（X 不变；用来确定 pool 宽度） */
   width: number;
+  /** Stage 1 输出的 pool 高度；无 lane 时直接作为 pool 高度，避免重复估算 layout-only reserve。 */
+  height?: number;
   /** Loader 给的扁平 lane 列表（可能嵌套） */
   lanes: Lane[];
   /** 节点元信息：用于预测节点 label（gateway 上方、event 下方）占用空间 */
@@ -87,14 +89,20 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
 
   // 没有 lane 的 pool：原样返回，poolHeight 由节点决定。
   if (lanes.length === 0) {
-    let maxY = 0;
-    for (const b of nodes.values()) maxY = Math.max(maxY, b.y + b.h);
+    let poolHeight = input.height;
+    if (poolHeight === undefined) {
+      poolHeight = 0;
+      for (const [nodeId, b] of nodes) {
+        const meta = nodeMeta?.get(nodeId);
+        poolHeight = Math.max(poolHeight, b.y + b.h + ioSpecExtraBelow(meta?.ioInputCount ?? 0, meta?.ioOutputCount ?? 0));
+      }
+    }
     return {
       nodes: new Map(nodes),
       laneBoxes: new Map(),
       leafOrder: [],
       allLanes: [],
-      poolHeight: maxY,
+      poolHeight,
       poolWidth: width,
     };
   }
