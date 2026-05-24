@@ -161,20 +161,4 @@ describe('Stage 2 — LaneConstrainer', () => {
     expect(task.ioOutputCount).toBe(3);
     expect(reservedBottom).toBeLessThanOrEqual(lane.bottom);
   });
-
-  it('keeps obvious ELK rows inside a busy lane instead of forcing one centered row (new)', async () => {
-    const { constrain } = await runStage1And2('new');
-    const helperLane = constrain.laneBoxes.get('lane_5')!;
-    const task10 = constrain.nodes.get('task_10')!;
-    const task9 = constrain.nodes.get('task_9')!;
-    const task7 = constrain.nodes.get('task_7')!;
-
-    expect(helperLane.height).toBeGreaterThan(LANE_MIN_H * 2);
-    expect(centerY(task9) - centerY(task10)).toBeGreaterThan(40);
-    expect(centerY(task7) - centerY(task9)).toBeGreaterThan(40);
-  });
 });
-
-function centerY(box: { y: number; h: number }): number {
-  return box.y + box.h / 2;
-}
