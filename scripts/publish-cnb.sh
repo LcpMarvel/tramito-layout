@@ -4,6 +4,15 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# bun run 调 bash 脚本时不会把 .env 注入子进程；这里显式加载，
+# 让 .npmrc 里的 ${CNB_TOKEN} 能解析到。
+if [[ -f "$ROOT_DIR/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$ROOT_DIR/.env"
+  set +a
+fi
+
 usage() {
   cat <<'EOF'
 Usage: scripts/publish-cnb.sh [--dry-run|--publish] [--skip-verify]
