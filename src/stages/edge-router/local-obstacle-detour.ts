@@ -125,6 +125,13 @@ export function detourAroundLocalObstacles(input: LocalObstacleDetourInput): Loc
           const bend: Waypoint = slide === 'x'
             ? { x: newVal, y: a.y }
             : { x: a.x, y: newVal };
+          // 单 bend 兜底默认沿 a 的 span 轴走到 newVal，再回到 b。如果 newVal 在 source 节点的
+          // 另一侧，这条横段会直接横穿 source 自身。endpointPreservingBendsFromStart 在 span 差
+          // 太小（≤ENDPOINT_STUB+1）时会返回 null，正好命中这种情况——此时宁可放弃这次滑动，
+          // 让外层迭代换轴或换段，也别留一条穿过源节点的 edge。
+          if (input.sourceSelf && segmentCrossesBoxInterior(a, bend, input.sourceSelf)) {
+            return false;
+          }
           waypoints.splice(i + 1, 0, bend);
           b[slide] = newVal;
         }

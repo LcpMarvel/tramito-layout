@@ -29,6 +29,18 @@ import type {
   NodeBpmnInfo,
 } from './model-types';
 
+interface ExplicitDataInputAssociation {
+  id: string;
+  sourceRefs: string[];
+  targetRef?: string;
+}
+
+interface ExplicitDataOutputAssociation {
+  id: string;
+  sourceRefs: string[];
+  targetRef?: string;
+}
+
 // ============================================================================
 // 工具：扫描 graph 找所有被 callActivity 引用的 process id
 // ============================================================================
@@ -340,6 +352,12 @@ export class DiagramBuilder {
     const labelMaxWidth = ioSpecLabelMaxWidth(taskWidth);
     let rowY = taskY + taskHeight + IO_SPEC_GAP_BELOW;
     const rowCount = Math.max(dataInputs.length, dataOutputs.length);
+    const explicitInputAssociations = this.getExplicitDataInputAssociations(node);
+    const explicitOutputAssociations = this.getExplicitDataOutputAssociations(node);
+    const hasExplicitInputAssociations = explicitInputAssociations !== undefined;
+    const hasExplicitOutputAssociations = explicitOutputAssociations !== undefined;
+    const renderedInputAssociations = new Set<string>();
+    const renderedOutputAssociations = new Set<string>();
 
     for (let index = 0; index < rowCount; index++) {
       const dataInput = dataInputs[index];
@@ -404,24 +422,17 @@ export class DiagramBuilder {
 
         shapes.push(shape);
 
-        // Only the first (topmost) dataInput gets an edge to the task
-        if (index === 0) {
-          // Create dashed edge from dataInput to task (arrow pointing to task)
-          // bpmnElement references the auto-generated dataInputAssociation
-          const assocId = `${inputId}_assoc`;
-          const inputCenterX = inputX + IO_SPEC_DATA_WIDTH / 2;
-          const inputTopY = inputY;
-          const taskBottomY = taskY + taskHeight;
-
-          // Simple vertical connection from data object top to task bottom
-          edges.push({
-            id: `${assocId}_di`,
-            bpmnElement: assocId,
-            waypoints: [
-              { x: inputCenterX, y: inputTopY },
-              { x: inputCenterX, y: taskBottomY },
-            ],
-          });
+        const associations = explicitInputAssociations?.filter((association) =>
+          association.sourceRefs.includes(inputId) && (!association.targetRef || association.targetRef === node.id),
+        ) ?? [];
+        if (hasExplicitInputAssociations) {
+          for (const association of associations) {
+            if (renderedInputAssociations.has(association.id)) continue;
+            renderedInputAssociations.add(association.id);
+            edges.push(this.buildIoAssociationEdge(association.id, inputX, inputY, taskY + taskHeight, 'input'));
+          }
+        } else if (index === 0) {
+          edges.push(this.buildIoAssociationEdge(`${inputId}_assoc`, inputX, inputY, taskY + taskHeight, 'input'));
         }
       }
 
@@ -470,24 +481,17 @@ export class DiagramBuilder {
 
         shapes.push(shape);
 
-        // Only the first (topmost) dataOutput gets an edge from the task
-        if (index === 0) {
-          // Create dashed edge from task to dataOutput (arrow pointing to dataOutput)
-          // bpmnElement references the auto-generated dataOutputAssociation
-          const assocId = `${outputId}_assoc`;
-          const outputCenterX = outputX + IO_SPEC_DATA_WIDTH / 2;
-          const outputTopY = outputY;
-          const taskBottomY = taskY + taskHeight;
-
-          // Simple vertical connection from task bottom to data object top
-          edges.push({
-            id: `${assocId}_di`,
-            bpmnElement: assocId,
-            waypoints: [
-              { x: outputCenterX, y: taskBottomY },
-              { x: outputCenterX, y: outputTopY },
-            ],
-          });
+        const associations = explicitOutputAssociations?.filter((association) =>
+          association.targetRef === outputId && (association.sourceRefs.length === 0 || association.sourceRefs.includes(node.id)),
+        ) ?? [];
+        if (hasExplicitOutputAssociations) {
+          for (const association of associations) {
+            if (renderedOutputAssociations.has(association.id)) continue;
+            renderedOutputAssociations.add(association.id);
+            edges.push(this.buildIoAssociationEdge(association.id, outputX, outputY, taskY + taskHeight, 'output'));
+          }
+        } else if (index === 0) {
+          edges.push(this.buildIoAssociationEdge(`${outputId}_assoc`, outputX, outputY, taskY + taskHeight, 'output'));
         }
       }
 
@@ -496,6 +500,61 @@ export class DiagramBuilder {
         : Math.max(inputLabelHeight, outputLabelHeight);
       rowY += IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + rowLabelHeight + IO_SPEC_ROW_GAP;
     }
+  }
+
+  private buildIoAssociationEdge(
+    associationId: string,
+    dataX: number,
+    dataY: number,
+    taskBottomY: number,
+    direction: 'input' | 'output',
+  ): EdgeModel {
+    const dataCenterX = dataX + IO_SPEC_DATA_WIDTH / 2;
+    const dataTopY = dataY;
+    return {
+      id: `${associationId}_di`,
+      bpmnElement: associationId,
+      waypoints: direction === 'input'
+        ? [
+          { x: dataCenterX, y: dataTopY },
+          { x: dataCenterX, y: taskBottomY },
+        ]
+        : [
+          { x: dataCenterX, y: taskBottomY },
+          { x: dataCenterX, y: dataTopY },
+        ],
+    };
+  }
+
+  private getExplicitDataInputAssociations(node: LayoutedNode): ExplicitDataInputAssociation[] | undefined {
+    const bpmn = node.bpmn as { dataInputAssociations?: unknown } | undefined;
+    if (!bpmn || !Array.isArray(bpmn.dataInputAssociations)) return undefined;
+    return bpmn.dataInputAssociations
+      .map((association) => this.normalizeDataAssociation(association))
+      .filter((association): association is ExplicitDataInputAssociation => association !== undefined);
+  }
+
+  private getExplicitDataOutputAssociations(node: LayoutedNode): ExplicitDataOutputAssociation[] | undefined {
+    const bpmn = node.bpmn as { dataOutputAssociations?: unknown } | undefined;
+    if (!bpmn || !Array.isArray(bpmn.dataOutputAssociations)) return undefined;
+    return bpmn.dataOutputAssociations
+      .map((association) => this.normalizeDataAssociation(association))
+      .filter((association): association is ExplicitDataOutputAssociation => association !== undefined);
+  }
+
+  private normalizeDataAssociation(value: unknown): ExplicitDataInputAssociation | undefined {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+    const record = value as Record<string, unknown>;
+    const id = typeof record.id === 'string' ? record.id : undefined;
+    if (!id) return undefined;
+    const sourceRefsValue = record.sourceRefs;
+    const sourceRefs = Array.isArray(sourceRefsValue)
+      ? sourceRefsValue.filter((ref): ref is string => typeof ref === 'string' && ref.length > 0)
+      : [];
+    const targetRef = typeof record.targetRef === 'string' && record.targetRef.length > 0
+      ? record.targetRef
+      : undefined;
+    return { id, sourceRefs, targetRef };
   }
 
   /**

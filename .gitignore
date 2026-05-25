@@ -22,6 +22,11 @@
 # Local planning scratch files should stay out of the package docs.
 /docs/plans/
 
+# Local environment / credentials. Never commit.
+.env
+.env.*
+!.env.example
+
 # Logs and local OS/editor noise
 .DS_Store
 *.log

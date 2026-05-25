@@ -257,7 +257,6 @@ function shouldRelaxCrossLaneUpStub(input: PathShapeInput, start: Waypoint): boo
   return Math.abs(fullStubY - dividerY) < LANE_BOUNDARY_CLEARANCE;
 }
 
-/** archY 取所有 X 区间内的 obstacle bottom 的最大值 + margin */
 function clearObstaclesBelow(
   archY: number,
   x1: number, x2: number,
@@ -267,15 +266,7 @@ function clearObstaclesBelow(
   if (!obstacles || obstacles.length === 0) return archY;
   const lo = Math.min(x1, x2);
   const hi = Math.max(x1, x2);
-  let need = archY;
-  for (const o of obstacles) {
-    if (o === src || o === tgt) continue;
-    // X 区间不交 → 不挡
-    if (o.x + o.w <= lo || o.x >= hi) continue;
-    const bottom = o.y + o.h + ARCH_CLEAR_MARGIN;
-    if (bottom > need) need = bottom;
-  }
-  return need;
+  return clearHorizontalArchY(archY, lo, hi, obstacles, src, tgt, 'below');
 }
 
 /**
@@ -333,14 +324,32 @@ function clearObstaclesAbove(
   if (!obstacles || obstacles.length === 0) return archY;
   const lo = Math.min(x1, x2);
   const hi = Math.max(x1, x2);
-  let need = archY;
-  for (const o of obstacles) {
-    if (o === src || o === tgt) continue;
-    if (o.x + o.w <= lo || o.x >= hi) continue;
-    const top = o.y - ARCH_CLEAR_MARGIN;
-    if (top < need) need = top;
+  return clearHorizontalArchY(archY, lo, hi, obstacles, src, tgt, 'above');
+}
+
+function clearHorizontalArchY(
+  archY: number,
+  lo: number,
+  hi: number,
+  obstacles: NodeBox[],
+  src: NodeBox,
+  tgt: NodeBox,
+  side: 'above' | 'below',
+): number {
+  for (let iter = 0; iter <= obstacles.length; iter++) {
+    let moved = false;
+    for (const o of obstacles) {
+      if (o === src || o === tgt) continue;
+      if (o.x + o.w <= lo || o.x >= hi) continue;
+      if (archY <= o.y || archY >= o.y + o.h) continue;
+      archY = side === 'above'
+        ? o.y - ARCH_CLEAR_MARGIN
+        : o.y + o.h + ARCH_CLEAR_MARGIN;
+      moved = true;
+    }
+    if (!moved) return archY;
   }
-  return need;
+  throw new Error('[path-shaper] horizontal arch obstacle clearance did not converge');
 }
 
 /**

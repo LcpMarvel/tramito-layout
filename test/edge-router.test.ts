@@ -197,6 +197,34 @@ describe('Stage 4c — PathShaper', () => {
     });
     expect(w1[1]!.y).toBeGreaterThan(w0[1]!.y);
   });
+
+  it('does not lift back-edge arches above obstacles they do not cross', () => {
+    const wps = shapePath({
+      edgeType: 'back-edge-down-left',
+      sourceAnchor: 'top', targetAnchor: 'top',
+      source: box(1382, 542, 100, 80),
+      target: box(1252, 628, 50, 50),
+      channel: 1,
+      obstacles: [box(1320, 156, 100, 80)],
+    });
+
+    expect(wps[1]!.y).toBe(500);
+    expect(wps[2]!.y).toBe(500);
+  });
+
+  it('lifts back-edge arches above obstacles they would cross', () => {
+    const wps = shapePath({
+      edgeType: 'back-edge-down-left',
+      sourceAnchor: 'top', targetAnchor: 'top',
+      source: box(1382, 542, 100, 80),
+      target: box(1252, 628, 50, 50),
+      channel: 1,
+      obstacles: [box(1320, 480, 100, 80)],
+    });
+
+    expect(wps[1]!.y).toBe(464);
+    expect(wps[2]!.y).toBe(464);
+  });
 });
 
 describe('Stage 4d — ChannelAllocator', () => {

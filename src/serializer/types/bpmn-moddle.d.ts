@@ -9,6 +9,11 @@ declare module 'bpmn-moddle' {
     xml: string;
   }
 
+  interface FromXMLResult {
+    rootElement: ModdleElement;
+    warnings: Error[];
+  }
+
   interface ToXMLOptions {
     format?: boolean;
     preamble?: boolean;
@@ -17,6 +22,7 @@ declare module 'bpmn-moddle' {
   class BpmnModdle {
     constructor();
     create(type: string, attrs?: Record<string, unknown>): ModdleElement;
+    fromXML(xml: string): Promise<FromXMLResult>;
     toXML(element: ModdleElement, options?: ToXMLOptions): Promise<ToXMLResult>;
   }
 

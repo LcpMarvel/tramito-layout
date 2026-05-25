@@ -21,6 +21,7 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson, 'request', {
 | API | 作用 |
 | --- | --- |
 | `layoutBpmnXml(rawJson, fixtureLabel?, options?)` | 返回 `{ xml, trace }`，用于业务集成 |
+| `relayoutBpmnXml(xml, options?)` / `layoutBpmnXmlFromXml(xml, options?)` | 从已有 BPMN XML 全量重算 BPMNDI，保留原语义 XML |
 | `layoutBpmnGraph(rawJson, fixtureLabel?, options?)` | 返回 `{ graph, trace }`，用于调试布局中间结果 |
 | `warmupLayoutEngine()` | 预热 elkjs 单例 |
 | `isLayoutEngineReady()` | 查询 elkjs 是否已预热 |
@@ -88,6 +89,7 @@ scripts/
   export-ai-debug-bundle.ts
 fixtures/                  # 34 个覆盖用例
 docs/layout-lessons.md     # 布局历史经验与长期工程原则
+docs/layout-fix-workflow.md # 用户 JSON 问题 → fixture → 复现 → 修复流程
 ```
 
 生成目录只保留 `.keep` 占位：`out-xml/`、`out-bpmn-png/`、`out-ai-debug/`。内容都是本地生成产物，不提交。

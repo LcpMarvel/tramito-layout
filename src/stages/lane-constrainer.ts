@@ -258,13 +258,20 @@ function buildLaneMetric(
   }
 
   const rows = groupLaneRows(memberIds, nodes, extents);
-  const archReserveAbove = estimateForwardArchReserveAbove(memberIds, nodes, edges);
-  if (rows[0]) rows[0].above = Math.max(rows[0].above, archReserveAbove);
-
   const shouldKeepRows = rows.length > 1 && memberIds.length >= MULTI_ROW_MIN_MEMBERS;
-  return shouldKeepRows
-    ? buildMultiRowMetric(rows)
-    : buildFlatMetric(memberIds, extents, archReserveAbove);
+
+  if (shouldKeepRows) {
+    // arch 是同行 src/tgt 之间的"凸"，必须按该行实际成员预留。原先只给 rows[0] 加 above，
+    // 第 2 行以下的 forward-skip arch 会顶出 lane 边界或挤到上一行的 label 上。
+    for (const row of rows) {
+      const reserve = estimateForwardArchReserveAbove(row.ids, nodes, edges);
+      if (reserve > row.above) row.above = reserve;
+    }
+    return buildMultiRowMetric(rows);
+  }
+
+  const archReserveAbove = estimateForwardArchReserveAbove(memberIds, nodes, edges);
+  return buildFlatMetric(memberIds, extents, archReserveAbove);
 }
 
 function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {

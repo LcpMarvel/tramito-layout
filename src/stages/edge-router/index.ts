@@ -222,14 +222,20 @@ function finalizeRoutePortsForRoutes(routes: Map<string, EdgeRoute>, input: Rout
     route.waypoints = finalized.waypoints;
     route.sourcePort = finalized.sourcePort;
     route.targetPort = finalized.targetPort;
-    ensureTargetArrowTailStub(route);
+
+    // 同 detour 阶段一致的障碍集合；stub 强直可能把 waypoint 推回障碍里，必须能回滚。
+    const isCrossPool = src.poolId !== tgt.poolId;
+    const stubObstacles = collectObstacles(input, edge, src, tgt, isCrossPool, true);
+    ensureTargetArrowTailStub(route, stubObstacles);
   }
 }
 
 const TARGET_ARROW_TAIL_STUB = 20;
 
-function ensureTargetArrowTailStub(route: EdgeRoute): void {
+function ensureTargetArrowTailStub(route: EdgeRoute, obstacles: NodeBox[] = []): void {
   if (route.waypoints.length < 2) return;
+  const originalWaypoints = route.waypoints.map((p) => ({ ...p }));
+  const originalCrosses = obstacles.length > 0 && routeCrossesObstacles(originalWaypoints, obstacles);
   const endIdx = route.waypoints.length - 1;
   const end = route.waypoints[endIdx]!;
   const prev = route.waypoints[endIdx - 1]!;
@@ -269,6 +275,11 @@ function ensureTargetArrowTailStub(route: EdgeRoute): void {
   replacement.push(tailStart, end);
   route.waypoints.splice(spliceStart, route.waypoints.length - spliceStart, ...dedupeWaypoints(replacement));
   route.waypoints = dedupeWaypoints(route.waypoints);
+
+  // tail stub 至多挪 20px，但有时刚好把刚被 detour 推开的拐点推回障碍里。若原路径不撞而新路径撞，回滚。
+  if (!originalCrosses && obstacles.length > 0 && routeCrossesObstacles(route.waypoints, obstacles)) {
+    route.waypoints = originalWaypoints;
+  }
 }
 
 function isOrthogonalSegment(a: Waypoint, b: Waypoint): boolean {
@@ -388,7 +399,11 @@ function keepCrossLaneRouteOffDivider(
   }
 
   const alternate = candidateCrossLaneDividerRoute(route, closeIndexes, dividerY, -preferredSign);
-  route.waypoints = routeCrossesObstacles(alternate, obstacles) ? preferred : alternate;
+  if (!routeCrossesObstacles(alternate, obstacles)) {
+    route.waypoints = alternate;
+    return;
+  }
+  // 两侧都会穿障碍；divider 净空只是软约束（F 类），保留 detour 之后的原路径，不主动制造硬违例。
 }
 
 function candidateCrossLaneDividerRoute(

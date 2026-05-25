@@ -140,6 +140,7 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson);
 
 - **早抛异常，少兜底**（与项目根 CLAUDE.md 一致）：layout 阶段发现 invariant 被破坏（节点尺寸异常、edge endpoint 浮空、lane 没找到 owner pool 等），优先 throw，**不要**悄悄写一个看起来还行的值。健壮性来自及早暴露。
 - **stage 之间只通过 plain data 传递**：每个 stage 是纯函数，输入是上一 stage 的输出，输出 schema 在各 stage 文件里定义、**统一在 `src/stages/index.ts` 单点 re-export**。`pipeline.ts` 只从 index 拿，不直接 import 单个 stage 文件。任何"读写共享 mutable state"都是 bug。pipeline.ts 只做装配胶水，不写算法逻辑。
+- **用户 JSON 布局问题先入 fixture**：当用户复制 ELK-BPMN JSON 并描述布局问题时，按 `docs/layout-fix-workflow.md` 新增 fixture、复现、再修复，不要跳过可重复用例。
 - **不写虚假"完成"报告**：如果某个 fixture 渲染出问题，老实说"X 还差 Y"，不要说"主要修好了"就过。
 - **注释只解释 WHY**（与项目根 CLAUDE.md 一致）：不要写 "这一步做 XX" 的复述注释；解释为什么这么选（哪个 fixture 推出来的约束、避开了什么坑）。
 

@@ -1,0 +1,493 @@
+{
+  "id": "definitions_1",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_2",
+      "bpmn": {
+        "type": "process",
+        "name": "蛋炒饭流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_3",
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始做饭"
+          }
+        },
+        {
+          "id": "task_4",
+          "bpmn": {
+            "type": "userTask",
+            "name": "准备隔夜米饭"
+          }
+        },
+        {
+          "id": "task_5",
+          "bpmn": {
+            "type": "userTask",
+            "name": "打鸡蛋并加盐搅匀"
+          }
+        },
+        {
+          "id": "gateway_6",
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行备料"
+          }
+        },
+        {
+          "id": "task_7",
+          "bpmn": {
+            "type": "userTask",
+            "name": "切葱花"
+          }
+        },
+        {
+          "id": "task_8",
+          "bpmn": {
+            "type": "userTask",
+            "name": "切火腿丁"
+          }
+        },
+        {
+          "id": "task_9",
+          "bpmn": {
+            "type": "userTask",
+            "name": "准备玉米粒等辅料"
+          }
+        },
+        {
+          "id": "gateway_10",
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "备料完成"
+          }
+        },
+        {
+          "id": "task_11",
+          "bpmn": {
+            "type": "userTask",
+            "name": "热锅倒油"
+          }
+        },
+        {
+          "id": "task_12",
+          "bpmn": {
+            "type": "userTask",
+            "name": "倒入蛋液翻炒至凝固"
+          }
+        },
+        {
+          "id": "task_13",
+          "bpmn": {
+            "type": "userTask",
+            "name": "盛出炒蛋备用"
+          }
+        },
+        {
+          "id": "task_14",
+          "bpmn": {
+            "type": "userTask",
+            "name": "补油，下火腿丁煸香"
+          }
+        },
+        {
+          "id": "task_15",
+          "bpmn": {
+            "type": "userTask",
+            "name": "倒入米饭大火翻炒"
+          }
+        },
+        {
+          "id": "gateway_16",
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "米饭状态如何？",
+            "default": "flow_25"
+          }
+        },
+        {
+          "id": "task_17",
+          "bpmn": {
+            "type": "userTask",
+            "name": "继续翻炒收干水分"
+          }
+        },
+        {
+          "id": "task_18",
+          "bpmn": {
+            "type": "userTask",
+            "name": "加盐、鸡精、白胡椒粉调味"
+          }
+        },
+        {
+          "id": "task_19",
+          "bpmn": {
+            "type": "userTask",
+            "name": "倒回蛋碎翻炒均匀"
+          }
+        },
+        {
+          "id": "task_20",
+          "bpmn": {
+            "type": "userTask",
+            "name": "撒入葱花翻两下"
+          }
+        },
+        {
+          "id": "gateway_21",
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "尝味是否合格？",
+            "default": "flow_29"
+          }
+        },
+        {
+          "id": "task_22",
+          "bpmn": {
+            "type": "userTask",
+            "name": "补调味料调整"
+          }
+        },
+        {
+          "id": "task_23",
+          "bpmn": {
+            "type": "userTask",
+            "name": "关火装盘"
+          }
+        },
+        {
+          "id": "end_24",
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "上桌开吃"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_25",
+          "sources": [
+            "start_3"
+          ],
+          "targets": [
+            "task_4"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_26",
+          "sources": [
+            "task_4"
+          ],
+          "targets": [
+            "task_5"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_27",
+          "sources": [
+            "task_5"
+          ],
+          "targets": [
+            "gateway_6"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_28",
+          "sources": [
+            "gateway_6"
+          ],
+          "targets": [
+            "task_7"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_29",
+          "sources": [
+            "gateway_6"
+          ],
+          "targets": [
+            "task_8"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_30",
+          "sources": [
+            "gateway_6"
+          ],
+          "targets": [
+            "task_9"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_31",
+          "sources": [
+            "task_7"
+          ],
+          "targets": [
+            "gateway_10"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_32",
+          "sources": [
+            "task_8"
+          ],
+          "targets": [
+            "gateway_10"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_33",
+          "sources": [
+            "task_9"
+          ],
+          "targets": [
+            "gateway_10"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_34",
+          "sources": [
+            "gateway_10"
+          ],
+          "targets": [
+            "task_11"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_35",
+          "sources": [
+            "task_11"
+          ],
+          "targets": [
+            "task_12"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_36",
+          "sources": [
+            "task_12"
+          ],
+          "targets": [
+            "task_13"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_37",
+          "sources": [
+            "task_13"
+          ],
+          "targets": [
+            "task_14"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_38",
+          "sources": [
+            "task_14"
+          ],
+          "targets": [
+            "task_15"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_39",
+          "sources": [
+            "task_15"
+          ],
+          "targets": [
+            "gateway_16"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_40",
+          "sources": [
+            "gateway_16"
+          ],
+          "targets": [
+            "task_17"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "米饭太湿",
+            "conditionExpression": {
+              "body": "${riceTooWet}"
+            }
+          }
+        },
+        {
+          "id": "flow_41",
+          "sources": [
+            "task_17"
+          ],
+          "targets": [
+            "gateway_16"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_42",
+          "sources": [
+            "gateway_16"
+          ],
+          "targets": [
+            "task_18"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "干湿适中",
+            "isDefault": true
+          }
+        },
+        {
+          "id": "flow_43",
+          "sources": [
+            "task_18"
+          ],
+          "targets": [
+            "task_19"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_44",
+          "sources": [
+            "task_19"
+          ],
+          "targets": [
+            "task_20"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_45",
+          "sources": [
+            "task_20"
+          ],
+          "targets": [
+            "gateway_21"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_46",
+          "sources": [
+            "gateway_21"
+          ],
+          "targets": [
+            "task_22"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "味道不够",
+            "conditionExpression": {
+              "body": "${notTasty}"
+            }
+          }
+        },
+        {
+          "id": "flow_47",
+          "sources": [
+            "task_22"
+          ],
+          "targets": [
+            "gateway_21"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        },
+        {
+          "id": "flow_48",
+          "sources": [
+            "gateway_21"
+          ],
+          "targets": [
+            "task_23"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow",
+            "name": "味道OK",
+            "isDefault": true
+          }
+        },
+        {
+          "id": "flow_49",
+          "sources": [
+            "task_23"
+          ],
+          "targets": [
+            "end_24"
+          ],
+          "bpmn": {
+            "type": "sequenceFlow"
+          }
+        }
+      ]
+    }
+  ]
+}

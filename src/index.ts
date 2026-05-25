@@ -1,6 +1,11 @@
 import { layoutAndSerialize as serializeLayout } from './service.ts';
 import { runPipeline as runLayoutPipeline } from './pipeline.ts';
 import { warmup, isReady } from './layout/elk-singleton.ts';
+import {
+  relayoutBpmnXml as relayoutBpmnXmlFromXml,
+  type RelayoutBpmnXmlOptions,
+  type RelayoutBpmnXmlResult,
+} from './relayout/relayout.ts';
 
 export interface NodeBox {
   x: number;
@@ -83,6 +88,9 @@ export async function layoutBpmnXml(
 }
 
 export const layoutAndSerialize = layoutBpmnXml;
+export const relayoutBpmnXml = relayoutBpmnXmlFromXml;
+export const layoutBpmnXmlFromXml = relayoutBpmnXmlFromXml;
+export type { RelayoutBpmnXmlOptions, RelayoutBpmnXmlResult };
 
 export async function layoutBpmnGraph(
   rawJson: unknown,
