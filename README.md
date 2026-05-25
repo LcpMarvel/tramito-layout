@@ -28,6 +28,29 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson, 'request', {
 
 `options.previousBoxes` 用于增量稳定；`options.debug.stageSnapshots` 用于生成 AI debug bundle，不会默认开启。
 
+### 从已有 BPMN XML 重排版
+
+当你拿到的是带（或不带）BPMN DI 的 BPMN 2.0 XML，可以直接 `relayoutBpmnXml` 让布局重算。`layoutBpmnXmlFromXml` 是同一函数的别名，方便按命名习惯引用。
+
+```ts
+import { relayoutBpmnXml, warmupLayoutEngine } from 'tramito-layout';
+
+await warmupLayoutEngine();
+
+const { xml, trace } = await relayoutBpmnXml(originalBpmnXml);
+```
+
+返回的 XML 完整保留原语义元素（process / lane / task / 自定义命名空间 / extensionElements / documentation 等），只重新生成 `<bpmndi:BPMNDiagram>`。
+
+`RelayoutBpmnXmlOptions` 字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `mode` | 目前仅支持 `'full'`（默认）—— 全量重算 BPMNDI。`'preserve'` / `'local'` 暂未实现，传入会抛错。 |
+| `debug` | 同 `layoutBpmnXml` 的 `options.debug`，用于采集 stage snapshot。 |
+
+适用场景：编辑器端拿到的是 BPMN XML 而非 ELK-BPMN JSON；或者业务上游改了流程结构，想用最新布局算法重排但保留原 XML 中的自定义扩展。
+
 ## 当前设计
 
 核心思路：**ELK 只负责通用节点粗排，BPMN-specific 视觉规则由自研 stage 处理。**
