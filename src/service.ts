@@ -5,6 +5,7 @@ import { ModelBuilder, BpmnXmlGenerator, type LayoutedGraph } from './serializer
 import type { LayoutOptions, PipelineTrace } from './pipeline.ts';
 import { parseBpmnLayout } from './evaluation/layout-evaluator.ts';
 import { snapshotFromParsedFixture } from './debug/ai-debug.ts';
+import { withCompileErrors } from './errors.ts';
 
 const modelBuilder = new ModelBuilder();
 const xmlGenerator = new BpmnXmlGenerator();
@@ -19,19 +20,23 @@ export async function layoutAndSerialize(
   fixtureLabel = 'request',
   options: LayoutOptions = {},
 ): Promise<LayoutResult> {
-  const { graph, trace } = await runPipeline(rawJson, fixtureLabel, options);
-  const tS = performance.now();
-  const model = modelBuilder.build(graph as LayoutedGraph);
-  const xml = await xmlGenerator.generate(model);
-  const msSerialize = performance.now() - tS;
-  if (trace.stageSnapshots) {
-    const parsed = parseBpmnLayout(fixtureLabel, xml);
-    trace.stageSnapshots.push(snapshotFromParsedFixture(
-      parsed,
-      'serializer',
-      trace.stageSnapshots.length,
-      ['Serializer snapshot is parsed back from BPMN DI XML and is the ground truth for check:layout.'],
-    ));
-  }
-  return { xml, trace: { ...trace, msSerialize } };
+  // 编译边界：loadFixture 内的校验错（AggregateError）透传给调用方/模型；
+  // 布局+序列化阶段的任何非预期 throw 归为 InternalCompilerError（ICE），不让消费侧误喂模型。
+  return withCompileErrors(async () => {
+    const { graph, trace } = await runPipeline(rawJson, fixtureLabel, options);
+    const tS = performance.now();
+    const model = modelBuilder.build(graph as LayoutedGraph);
+    const xml = await xmlGenerator.generate(model);
+    const msSerialize = performance.now() - tS;
+    if (trace.stageSnapshots) {
+      const parsed = parseBpmnLayout(fixtureLabel, xml);
+      trace.stageSnapshots.push(snapshotFromParsedFixture(
+        parsed,
+        'serializer',
+        trace.stageSnapshots.length,
+        ['Serializer snapshot is parsed back from BPMN DI XML and is the ground truth for check:layout.'],
+      ));
+    }
+    return { xml, trace: { ...trace, msSerialize } };
+  });
 }

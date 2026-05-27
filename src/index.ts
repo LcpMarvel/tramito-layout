@@ -6,6 +6,10 @@ import {
   type RelayoutBpmnXmlOptions,
   type RelayoutBpmnXmlResult,
 } from './relayout/relayout.ts';
+import { withCompileErrors } from './errors.ts';
+export { validateGraph, formatIssuesForFeedback } from './loader/validate-graph.ts';
+export type { ValidationIssue, Severity, ValidationProfile } from './loader/validate-graph.ts';
+export { InternalCompilerError } from './errors.ts';
 
 export interface NodeBox {
   x: number;
@@ -97,7 +101,7 @@ export async function layoutBpmnGraph(
   fixtureLabel = 'request',
   options: LayoutOptions = {},
 ): Promise<LayoutGraphResult> {
-  return runLayoutPipeline(rawJson, fixtureLabel, options);
+  return withCompileErrors(() => runLayoutPipeline(rawJson, fixtureLabel, options));
 }
 
 export const runPipeline = layoutBpmnGraph;

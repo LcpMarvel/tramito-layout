@@ -48,10 +48,10 @@ describe('loader', () => {
 
   it('rejects invalid top-level input with a clear error', () => {
     expect(() => loadFixture('bad-input', null)).toThrow(
-      '[loader] bad-input must be a BPMN definitions object',
+      /INVALID_GRAPH_ROOT/,
     );
     expect(() => loadFixture('bad-input', { id: 'defs' })).toThrow(
-      '[loader] bad-input must contain a children array',
+      /MISSING_CHILDREN/,
     );
   });
 
@@ -61,7 +61,7 @@ describe('loader', () => {
       children: [{
         id: 'proc',
         bpmn: { type: 'process' },
-        children: [],
+        children: [{ id: 'task_a', bpmn: { type: 'task' } }],
         edges: [{
           id: 'flow_without_source',
           sources: [],
@@ -69,6 +69,6 @@ describe('loader', () => {
           bpmn: { type: 'sequenceFlow' },
         }],
       }],
-    })).toThrow('[loader] edge flow_without_source missing source endpoint');
+    })).toThrow(/EDGE_ENDPOINT_MISSING/);
   });
 });

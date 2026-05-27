@@ -5,6 +5,7 @@ import type {
   FlowNode,
   FlowNodeType,
 } from './types.ts';
+import { validateGraph, type ValidationIssue, type ValidationProfile } from './validate-graph.ts';
 
 interface RawNode {
   id: string;
@@ -32,9 +33,25 @@ interface RawDefinitions {
   children: RawNode[];
 }
 
-export function loadFixture(fixturePath: string, json: unknown): BpmnModel {
-  assertRawDefinitions(fixturePath, json);
-  const def = json;
+export function loadFixture(
+  fixturePath: string,
+  json: unknown,
+  options: { validationProfile?: ValidationProfile } = {},
+): BpmnModel {
+  // 单一来源：校验规则只在 validateGraph 里定义，loader 复用它而非另写一套。
+  // 收集全部 issue 后，只在有 error 时整组抛出（warning 不阻断布局）。
+  const issues = validateGraph(json, { profile: options.validationProfile });
+  const errors = issues.filter((i) => i.severity === 'error');
+  if (errors.length > 0) {
+    const lines = errors.map((e) => formatIssue(fixturePath, e));
+    // message 内联所有 issue：便于日志/快速断言，无需展开 .errors 才看到 code。
+    throw new AggregateError(
+      errors.map((e) => new Error(formatIssue(fixturePath, e))),
+      `[loader] ${fixturePath} has ${errors.length} structural error(s):\n${lines.join('\n')}`,
+    );
+  }
+  // validateGraph 已保证 root 是 { children: [...] }，此处可安全断言。
+  const def = json as RawDefinitions;
   const model: BpmnModel = {
     fixture: fixturePath,
     processes: [],
@@ -171,13 +188,10 @@ function loadProcessBody(
   return unit;
 }
 
-function assertRawDefinitions(fixturePath: string, json: unknown): asserts json is RawDefinitions {
-  if (!isRecord(json)) {
-    throw new Error(`[loader] ${fixturePath} must be a BPMN definitions object`);
-  }
-  if (!Array.isArray(json.children)) {
-    throw new Error(`[loader] ${fixturePath} must contain a children array`);
-  }
+function formatIssue(fixturePath: string, issue: ValidationIssue): string {
+  const where = issue.id ? ` (id=${issue.id})` : '';
+  const hint = issue.hint ? ` — ${issue.hint}` : '';
+  return `[loader] ${fixturePath} ${issue.code}${where}: ${issue.message}${hint}`;
 }
 
 function readEdgeEndpoints(edge: RawEdge): { source: string; target: string } {
@@ -193,10 +207,6 @@ function readEdgeEndpoint(edge: RawEdge, side: 'source' | 'target'): string {
     throw new Error(`[loader] edge ${edge.id} missing ${side} endpoint`);
   }
   return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function walkChildren(

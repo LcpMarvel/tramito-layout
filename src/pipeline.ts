@@ -19,6 +19,7 @@
 // 约束：本文件只做装配，不写算法逻辑。
 
 import { loadFixture } from './loader/loader.ts';
+import type { ValidationProfile } from './loader/validate-graph.ts';
 import type { BpmnModel, ProcessUnit, SequenceFlow, Decoration } from './loader/types.ts';
 import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow, layoutHeightWithIoSpec } from './layout/node-sizes.ts';
 import { leafLaneOrder, nodeToLeafLane } from './layout/lane-resolver.ts';
@@ -36,6 +37,9 @@ import type { LayoutedGraph } from './serializer/types/elk-output.ts';
 import { boundaryRuleFor, type BpmnEdgeKind } from './stages/bpmn-rules.ts';
 // 所有 stage 入口从契约注册表 (./stages/index.ts) 单点 import
 import {
+  // HandlerSubgraph（纯图算法，已从 pipeline 抽出）
+  mainFlowReachable,
+  collectHandlerSubgraph,
   // SubprocessLayout
   collectSubprocessLayouts,
   type SubprocessLayout,
@@ -138,76 +142,8 @@ export type PreviousBoxesInput = PreviousBoxes | Record<string, NodeBox>;
 export interface LayoutOptions {
   previousBoxes?: PreviousBoxesInput;
   debug?: boolean | { stageSnapshots?: boolean };
-}
-
-// BFS from startEvents, do not cross boundary events. Returns main-reachable node ids.
-function mainFlowReachable(
-  flowNodes: Array<{ id: string; type: string }>,
-  sequenceFlows: Array<{ source: string; target: string }>,
-): Set<string> {
-  const beIds = new Set(flowNodes.filter(n => n.type === 'boundaryEvent').map(n => n.id));
-  const adj = new Map<string, string[]>();
-  for (const sf of sequenceFlows) {
-    if (!adj.has(sf.source)) adj.set(sf.source, []);
-    adj.get(sf.source)!.push(sf.target);
-  }
-  const starts = flowNodes.filter(n => n.type === 'startEvent').map(n => n.id);
-  const seen = new Set<string>(starts);
-  const q = [...starts];
-  while (q.length) {
-    const cur = q.shift()!;
-    if (beIds.has(cur)) continue;
-    for (const nxt of adj.get(cur) ?? []) {
-      if (beIds.has(nxt)) continue;
-      if (!seen.has(nxt)) { seen.add(nxt); q.push(nxt); }
-    }
-  }
-  return seen;
-}
-
-// 从 BE 出发收集 handler 子图：BFS through outgoing edges，不越界进入 main flow / 其他 handler。
-interface CollectedSubgraph {
-  beId: string;
-  hostId: string;
-  nodes: Set<string>;
-  edges: SequenceFlow[];
-}
-function collectHandlerSubgraph(
-  beId: string,
-  hostId: string,
-  allFlows: SequenceFlow[],
-  mainReachable: Set<string>,
-  alreadyClaimed: Set<string>,
-): CollectedSubgraph {
-  const adj = new Map<string, SequenceFlow[]>();
-  for (const sf of allFlows) {
-    if (!adj.has(sf.source)) adj.set(sf.source, []);
-    adj.get(sf.source)!.push(sf);
-  }
-  const nodes = new Set<string>();
-  const edges: SequenceFlow[] = [];
-  // 起点是 BE 直接 target（不是 BE 自己）
-  const q: string[] = [];
-  for (const sf of adj.get(beId) ?? []) {
-    if (mainReachable.has(sf.target)) continue; // rejoin，跳过
-    if (alreadyClaimed.has(sf.target)) continue;
-    q.push(sf.target);
-    edges.push(sf);
-  }
-  while (q.length) {
-    const cur = q.shift()!;
-    if (nodes.has(cur)) continue;
-    if (mainReachable.has(cur)) continue;
-    if (alreadyClaimed.has(cur)) continue;
-    nodes.add(cur);
-    for (const sf of adj.get(cur) ?? []) {
-      edges.push(sf);
-      if (!mainReachable.has(sf.target) && !nodes.has(sf.target) && !alreadyClaimed.has(sf.target)) {
-        q.push(sf.target);
-      }
-    }
-  }
-  return { beId, hostId, nodes, edges };
+  /** 校验 profile = 源语言。默认 'generation'（最严）；relayout 路径传 'relayout' 跳过生成专属规则。 */
+  validationProfile?: ValidationProfile;
 }
 
 export async function runPipeline(
@@ -216,7 +152,9 @@ export async function runPipeline(
   options: LayoutOptions = {},
 ): Promise<PipelineOutput> {
   const t0 = performance.now();
-  const model: BpmnModel = loadFixture(fixtureLabel, rawJson);
+  const model: BpmnModel = loadFixture(fixtureLabel, rawJson, {
+    validationProfile: options.validationProfile,
+  });
   const layoutConstraints: LayoutConstraint[] = [];
   const layoutDecisions: LayoutDecision[] = [];
   const previousBoxes = normalizePreviousBoxes(options.previousBoxes);

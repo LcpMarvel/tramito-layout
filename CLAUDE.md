@@ -2,12 +2,29 @@
 
 ## 项目定位
 
-把 ELK-BPMN JSON（无坐标）转成带视觉布局的 BPMN 2.0 XML。当前交付形态是 **Bun/TypeScript npm 包**：调用方从 `tramito-layout` 引入 `layoutBpmnXml()`，传入 JSON，得到 BPMN XML。
+**tramito-layout 是一个编译器**：源语言 = ELK-BPMN JSON（无坐标的流程结构），目标 = 带 BPMN DI 的 BPMN 2.0 XML。`layoutBpmnXml()` 就是 `compile(source) → target`。所有设计决策都应回到这个定位上判断。
+
+按编译器分层理解整个项目：
+
+- **前端（诊断 / frontend）= `validateGraph()`**：对源做静态+语义检查，返回 `ValidationIssue[]`。这是"能不能编译"的判定。错误信息必须**清晰且可照着改**（带 `code` / `id` / 可执行的 `hint`），因为源往往由 LLM 生成、要靠错误回喂自纠。`formatIssuesForFeedback()` 把诊断格式化成可直接回喂模型的反馈。
+- **后端（代码生成 / backend）= 布局 + 序列化管线**：elkjs 粗排 → Lane 约束 → Pool 堆叠 → Edge 路由 → 装饰摆位 → 序列化。把合法的源翻译成 XML。
+- **codegen 正确性规范 = 下面的「布局验收标准（E/N/B/L）」**：后端产出必须满足它，违反即 codegen bug。
+- **核心不变式：通过 `validateGraph` 的源 ⟹ 后端一定能产出 XML。** 后端在已过校验的输入上 throw = 编译器自身的 bug = `InternalCompilerError`（ICE），**不是用户/模型的错，绝不能当诊断回喂模型**。详见下面「错误分层」。
+
+实现要点：
 
 - 语言/运行时：TypeScript + Bun
 - 节点摆位：elkjs（Stage 1 / Stage 1b）
 - Lane 约束、Pool 堆叠、Edge 路由、装饰摆位、序列化：**自研**
 - 当前设计与 stage 切分见 `README.md`；历史教训见 `docs/layout-lessons.md`。本文件只讲**怎么验收 / 怎么跑 / 怎么改**。
+
+### 错误分层（HARD - 决定错误归谁、能不能回喂模型）
+
+把"谁的错"分清楚，是这个编译器对接 LLM 自纠循环的关键。混了就会让模型对着自己没写错的东西瞎改、空烧 step。
+
+- **校验错（用户/模型可改）**：源结构非法。`validateGraph` 收集**全部** issue（非 fail-fast）后，loader 以 `AggregateError`（只含 `error` 级）抛出。消费侧应 `formatIssuesForFeedback` + 原始 graph 一起回喂模型自纠。
+- **ICE（编译器 bug）**：源已过校验，后端仍 throw。在编译边界（`service.ts` / `index.layoutBpmnGraph`）被 `withCompileErrors` 统一包成 `InternalCompilerError`（`internal: true` + `stage`）。消费侧**不要**回喂模型，应作为 bug 上报 / 降级处理。
+- **新增/改规则的判据**：`validateGraph` 该覆盖的，**不是 BPMN 规范全集，而是恰好等于"后端处理不了、且用户能改"的集合**。某条 BPMN 约束若后端本就能正常编译，就不该进校验（别误杀合法输入——见 `validate-graph.ts` 里不拦 compensation association 的注释）。若后端会因它 throw 且用户能改，则提升为前端规则。规则单点定义在 `src/loader/validate-graph.ts`，loader 复用、永不漂移。
 
 > 历史：v1.0 是 Kotlin + Java ELK + `ILayoutExecutionListener` 内化 hook；v2.0 是纯自研 SESE 模板；v2.1 是 RPST + elkjs 混合。都因不同原因放弃，**v2.2 才是当前架构**。当前仓库不应再包含 Kotlin/Java 源码；若搜索到 Kotlin / Java / hooks / processors / spike / `LayeredWithHooks`，应只出现在历史说明里，不能作为实现依据。
 

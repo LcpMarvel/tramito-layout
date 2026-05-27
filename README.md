@@ -1,6 +1,13 @@
 # tramito-layout
 
-tramito-layout 用于把无坐标的 ELK-BPMN JSON 自动排版成带 BPMN DI 的 BPMN 2.0 XML。
+**tramito-layout 是一个编译器**：源语言是无坐标的 ELK-BPMN JSON（流程结构），目标是带 BPMN DI 的 BPMN 2.0 XML。`layoutBpmnXml()` 就是 `compile(json) → xml`。
+
+像任何编译器一样，它分两层：
+
+- **前端（诊断）** `validateGraph()`：判定源能不能编译，返回一组**清晰可改**的结构错（`ValidationIssue[]`）。源常由 LLM 生成、靠把错误回喂模型自纠——错误质量直接决定自纠效率。
+- **后端（代码生成）** 布局 + 序列化管线：把合法的源翻译成带视觉布局的 XML。
+
+**不变式：通过 `validateGraph` 的源一定能编译出 XML。** 后端若在已过校验的输入上失败，那是编译器自身的 bug（`InternalCompilerError`），不是输入的错。
 
 它适合接入流程建模、审批流、编排平台等场景：业务侧只需要提供流程结构，布局计算由本库完成。
 
@@ -20,13 +27,46 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson, 'request', {
 
 | API | 作用 |
 | --- | --- |
-| `layoutBpmnXml(rawJson, fixtureLabel?, options?)` | 返回 `{ xml, trace }`，用于业务集成 |
+| `validateGraph(rawJson)` | **前端诊断**：纯函数、不跑布局，返回 `ValidationIssue[]`（空数组=可编译）。同步、无副作用、不依赖 ELK |
+| `formatIssuesForFeedback(issues)` | 把诊断格式化成可直接回喂 LLM 的中文反馈（无 issue 返回 `''`） |
+| `layoutBpmnXml(rawJson, fixtureLabel?, options?)` | **编译**：返回 `{ xml, trace }`。内部先校验，有 `error` 则抛 `AggregateError` |
 | `relayoutBpmnXml(xml, options?)` / `layoutBpmnXmlFromXml(xml, options?)` | 从已有 BPMN XML 全量重算 BPMNDI，保留原语义 XML |
 | `layoutBpmnGraph(rawJson, fixtureLabel?, options?)` | 返回 `{ graph, trace }`，用于调试布局中间结果 |
 | `warmupLayoutEngine()` | 预热 elkjs 单例 |
 | `isLayoutEngineReady()` | 查询 elkjs 是否已预热 |
+| `InternalCompilerError` | ICE 类型：源已过校验但后端失败=编译器 bug，`internal: true` + `stage` |
 
 `options.previousBoxes` 用于增量稳定；`options.debug.stageSnapshots` 用于生成 AI debug bundle，不会默认开启。
+
+### 校验 + 编译 + 错误分层
+
+源常由 LLM 生成，推荐"先校验、按错误类型分流"的接法：
+
+```ts
+import {
+  validateGraph, formatIssuesForFeedback, layoutBpmnXml, InternalCompilerError,
+} from 'tramito-layout';
+
+const issues = validateGraph(graph);
+if (issues.some((i) => i.severity === 'error')) {
+  const feedback = formatIssuesForFeedback(issues); // 连同原 graph 回喂模型自纠
+  // ...让模型重新生成...
+} else {
+  try {
+    const { xml } = await layoutBpmnXml(graph);
+  } catch (e) {
+    if (e instanceof InternalCompilerError) {
+      // 编译器 bug（e.stage 指明阶段）：上报 / 降级，【不要】回喂模型
+    } else {
+      throw e; // 理论上不会到这（已先校验）
+    }
+  }
+}
+```
+
+- **校验错**（`AggregateError` / `validateGraph` 的 `error`）= 源的问题，用户/模型可改 → 回喂自纠。
+- **`InternalCompilerError`** = 源已合法但后端崩，编译器自身的 bug → 上报，别让模型背锅。
+- 新增校验规则的判据：只覆盖"后端处理不了、且用户能改"的情况，不追求 BPMN 规范全集。
 
 ### 从已有 BPMN XML 重排版
 

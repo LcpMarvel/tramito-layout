@@ -33,3 +33,4 @@
 1. **ELK 对 BPMN-specific 二次节点调整仍是黑盒。** 如果 spine 对称、cross-pool X 对齐、boundary handler 定位反复出问题，应新增小的 post-placement stage，不要把补丁散进无关 stage。
 2. **长链容易过宽。** F4 aspect ratio 问题通常来自 layered layout 把流程排成一整行。先用 `scripts/diagnose-aspect.ts` 诊断，再决定是否做折行或 spacing 调整。
 3. **invariant 检查应逐步靠近 stage。** `check:layout` 能抓最终失败；stage-level self-check 能更快定位责任阶段。
+4. **`runPipeline` 仍是 ~800 行单函数，需拆成 phase 函数（F2 剩余）。** 这是后端"没有真正分 pass"的根因，也拖累 ICE stage 归属。完整任务规格与逐字节安全网见 [`refactor-runpipeline-phases.md`](./refactor-runpipeline-phases.md)。

@@ -246,7 +246,7 @@ export class DiagramBuilder {
     if (node.boundaryEvents) {
       node.boundaryEvents.forEach((be) => {
         if (typeof be.x !== 'number' || typeof be.y !== 'number') {
-          throw new Error(`boundary event ${be.id} missing absolute coordinates from layout pipeline`);
+          throw new Error(`[serializer] boundary event ${be.id} missing absolute coordinates from layout pipeline`);
         }
         const beWidth = be.width ?? 36;
         const beHeight = be.height ?? 36;

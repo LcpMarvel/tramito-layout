@@ -47,6 +47,12 @@ export type {
 } from './types.ts';
 
 // ───────────────────────────────────────────────────────────
+// HandlerSubgraph — boundary-event handler 子图识别（纯图算法，供 handler mini-ELK 阶段用）
+// ───────────────────────────────────────────────────────────
+export { mainFlowReachable, collectHandlerSubgraph } from './handler-subgraph.ts';
+export type { CollectedSubgraph } from './handler-subgraph.ts';
+
+// ───────────────────────────────────────────────────────────
 // SubprocessLayout — 递归 mini-ELK 展开 subprocess 内部，最先跑
 // ───────────────────────────────────────────────────────────
 export { collectSubprocessLayouts } from './subprocess-layout.ts';
