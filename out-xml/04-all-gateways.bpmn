@@ -197,7 +197,7 @@
       <bpmndi:BPMNShape id="gateway_exclusive_div_di" bpmnElement="gateway_exclusive_div">
         <dc:Bounds x="178" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="153" y="169" width="100" height="14" />
+          <dc:Bounds x="175" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_path_a_di" bpmnElement="task_path_a">
@@ -212,13 +212,13 @@
       <bpmndi:BPMNShape id="gateway_exclusive_conv_di" bpmnElement="gateway_exclusive_conv">
         <dc:Bounds x="488" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="519" y="169" width="100" height="14" />
+          <dc:Bounds x="519" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_parallel_div_di" bpmnElement="gateway_parallel_div">
         <dc:Bounds x="618" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="593" y="169" width="100" height="14" />
+          <dc:Bounds x="615" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_parallel_1_di" bpmnElement="task_parallel_1">
@@ -233,13 +233,13 @@
       <bpmndi:BPMNShape id="gateway_parallel_conv_di" bpmnElement="gateway_parallel_conv">
         <dc:Bounds x="928" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="959" y="169" width="100" height="14" />
+          <dc:Bounds x="959" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_inclusive_div_di" bpmnElement="gateway_inclusive_div">
         <dc:Bounds x="1058" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1033" y="169" width="100" height="14" />
+          <dc:Bounds x="1055" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_inclusive_1_di" bpmnElement="task_inclusive_1">
@@ -254,13 +254,13 @@
       <bpmndi:BPMNShape id="gateway_inclusive_conv_di" bpmnElement="gateway_inclusive_conv">
         <dc:Bounds x="1368" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1399" y="169" width="100" height="14" />
+          <dc:Bounds x="1399" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_event_based_di" bpmnElement="gateway_event_based">
         <dc:Bounds x="1498" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1473" y="169" width="100" height="14" />
+          <dc:Bounds x="1495" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_event_msg_di" bpmnElement="catch_event_msg">
@@ -296,7 +296,7 @@
       <bpmndi:BPMNShape id="gateway_complex_di" bpmnElement="gateway_complex">
         <dc:Bounds x="2054" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2029" y="169" width="100" height="14" />
+          <dc:Bounds x="2051" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_complex_1_di" bpmnElement="task_complex_1">

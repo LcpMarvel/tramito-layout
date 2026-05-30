@@ -160,6 +160,17 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
   }
 
   if ((sourceAnchor === 'bottom' || sourceAnchor === 'top') && targetAnchor === 'left') {
+    // 优先简单 L：从 source 出发竖直到 target 的中线 y，再横入 target.left。两段都不撞节点才走。
+    // cross-lane 边（target 在右上/右下且直上路径空）若无脑塞进 lane gap 走廊，会拐出"倒退进
+    // 走廊"的 6 点折线（fixture 41 的 payment→pick / gw→check_stock 等手调推出）。走廊保留给
+    // 真正需要避障 / 平行多边的场景——撞节点时回退到下面的走廊路径。
+    const corner = { x: start.x, y: end.y };
+    if (
+      !segmentHitsObstacle(start, corner, input.obstacles, input.source, input.target)
+      && !segmentHitsObstacle(corner, end, input.obstacles, input.source, input.target)
+    ) {
+      return [start, corner, end];
+    }
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
       midY = gapCorridorY(input, start, sourceAnchor);

@@ -43,7 +43,9 @@ describe('layoutAndSerialize — end-to-end', () => {
       + (trace.byEdgeType['cross-lane-up'] ?? 0);
     expect(crossLane).toBeGreaterThan(0);
     expect(trace.constraintSummary.byKind.contains).toBeGreaterThan(0);
-    expect(trace.decisions.some(d => d.kind === 'elk-lane-partition')).toBe(true);
+    // lane pool 不再用 ELK partition 把 X 绑死成 lane 顺序（X 由 flow 拓扑序决定）；
+    // 方向一致性改由 start/end 的 FIRST/LAST layer 约束保证——验证它确实下发了。
+    expect(trace.decisions.some(d => d.kind === 'elk-layer')).toBe(true);
   });
 
   it('handles boundary events (13)', async () => {

@@ -119,7 +119,7 @@
       <bpmndi:BPMNShape id="gw_xor_div_di" bpmnElement="gw_xor_div">
         <dc:Bounds x="178" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="153" y="169" width="100" height="14" />
+          <dc:Bounds x="175" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_xor_a1_di" bpmnElement="task_xor_a1">
@@ -134,13 +134,13 @@
       <bpmndi:BPMNShape id="gw_xor_conv_di" bpmnElement="gw_xor_conv">
         <dc:Bounds x="488" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="519" y="169" width="100" height="14" />
+          <dc:Bounds x="519" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_par_div_di" bpmnElement="gw_par_div">
         <dc:Bounds x="618" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="593" y="169" width="100" height="14" />
+          <dc:Bounds x="615" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_par_1a_di" bpmnElement="task_par_1a">
@@ -155,13 +155,13 @@
       <bpmndi:BPMNShape id="gw_par_conv_di" bpmnElement="gw_par_conv">
         <dc:Bounds x="928" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="959" y="169" width="100" height="14" />
+          <dc:Bounds x="959" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_inc_div_di" bpmnElement="gw_inc_div">
         <dc:Bounds x="1058" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1033" y="152" width="100" height="14" />
+          <dc:Bounds x="1055" y="152" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_inc_vip_di" bpmnElement="task_inc_vip">
@@ -173,7 +173,7 @@
       <bpmndi:BPMNShape id="gw_inc_conv_di" bpmnElement="gw_inc_conv">
         <dc:Bounds x="1368" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1343" y="169" width="100" height="14" />
+          <dc:Bounds x="1365" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_finalize_di" bpmnElement="task_finalize">

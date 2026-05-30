@@ -127,7 +127,7 @@
       <bpmndi:BPMNShape id="gateway_order_type_di" bpmnElement="gateway_order_type">
         <dc:Bounds x="358" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="333" y="169" width="100" height="14" />
+          <dc:Bounds x="355" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_standard_process_di" bpmnElement="task_standard_process">

@@ -134,7 +134,6 @@ export type LayoutTraceValue = string | number | boolean | null;
 
 export type LayoutDecisionKind =
   | 'elk-layer'
-  | 'elk-lane-partition'
   | 'pool-stack'
   | 'boundary-placement'
   | 'incremental-preserve'

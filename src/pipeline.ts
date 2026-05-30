@@ -211,24 +211,6 @@ export async function runPipeline(
       inDegElk.set(sf.target, (inDegElk.get(sf.target) ?? 0) + 1);
     }
 
-    // A1: leaf lane index per node（给 ELK partitioning hint）。无 lane 的 pool 留 undefined。
-    let nodeLaneIndex: Map<string, number> | undefined;
-    let nodeLeafLaneId: Map<string, string> | undefined;
-    if (proc.lanes.length > 0) {
-      const order = leafLaneOrder(proc.lanes);
-      const indexOf = new Map(order.map((id, i) => [id, i]));
-      const nodeLeaf = nodeToLeafLane(proc.lanes, order);
-      nodeLeafLaneId = nodeLeaf;
-      nodeLaneIndex = new Map();
-      for (const n of flowNodesForElk) {
-        const lid = nodeLeaf.get(n.id);
-        if (lid !== undefined) {
-          const idx = indexOf.get(lid);
-          if (idx !== undefined) nodeLaneIndex.set(n.id, idx);
-        }
-      }
-    }
-
     const placementIn: PlacementInput = {
       processId: proc.id,
       hasLanes: proc.lanes.length > 0,
@@ -240,8 +222,6 @@ export async function runPipeline(
         if (n.type === 'startEvent' && (inDegElk.get(n.id) ?? 0) === 0) layerConstraint = 'first';
         else if (n.type === 'endEvent' && (outDegElk.get(n.id) ?? 0) === 0) layerConstraint = 'last';
 
-        const laneIndex = nodeLaneIndex?.get(n.id);
-        const laneId = nodeLeafLaneId?.get(n.id);
         if (layerConstraint) {
           layoutDecisions.push({
             stage: 'ElkPlacement',
@@ -254,16 +234,6 @@ export async function runPipeline(
               outDegree: outDegElk.get(n.id) ?? 0,
             },
             output: { layerConstraint },
-          });
-        }
-        if (laneIndex !== undefined) {
-          layoutDecisions.push({
-            stage: 'ElkPlacement',
-            kind: 'elk-lane-partition',
-            subject: { kind: 'node', id: n.id },
-            reason: 'BPMN lane membership is converted to an ELK partition hint',
-            input: { laneId: laneId ?? null },
-            output: { laneIndex },
           });
         }
 
@@ -284,7 +254,7 @@ export async function runPipeline(
                 n.ioOutputNames,
                 inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
               ),
-              laneIndex, layerConstraint,
+              layerConstraint,
             };
           }
         }
@@ -294,7 +264,6 @@ export async function runPipeline(
           type: n.type,
           ...size,
           layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
-          laneIndex,
           layerConstraint,
         };
       }),

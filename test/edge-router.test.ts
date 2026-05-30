@@ -368,8 +368,11 @@ describe('Stage 4 — routeEdges integration', () => {
     expect(route.sourcePort.side).toBe('bottom');
     expect(route.targetPort.side).toBe('left');
     expect(route.targetPort.point).toEqual({ x: 260, y: 280 });
-    expect(route.waypoints[1]!.y).toBeLessThanOrEqual(176);
-    expect(route.waypoints.at(-2)!.y).toBe(280);
+    // 直上路径无障碍时走简单 L：从 source 竖直直达 target 的中线 y，再横入 target.left——
+    // 不再下凹进 lane gap 走廊绕一圈（那会拐出"倒退进走廊"的多点折线，fixture 41 手调推出）。
+    expect(route.waypoints[1]!.x).toBe(route.waypoints[0]!.x); // 第一段竖直
+    expect(route.waypoints[1]!.y).toBe(280);                   // 直达 target 行，不下凹
+    expect(route.waypoints.at(-2)!.y).toBe(280);               // 末段水平进入 target 左侧
   });
 
   it('treats serializer-only ioSpecification shapes as route obstacles', () => {

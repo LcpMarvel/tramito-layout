@@ -167,16 +167,64 @@ export function routeEdges(input: RouteInput): RouteOutput {
   // 返回真正被重写的 edge——只有它们跳过 detour（撞节点而保留原路由的成员仍需 detour）。
   const fannedInIds = busifyFanInToSink(routes, input, bundles);
   detourRoutesAroundLocalObstacles(routes, input, fannedInIds);
+  finalizeRoutePortsForRoutes(routes, input);
   // F7：把贴着 lane 分隔线跑的水平边中段推开（跨多 lane 的边走廊有时落在离分隔线几 px 处，
   // 流程线与泳道线粘连难辨）。只动失败段、撞节点就回滚；fan-in 干线已自洽,跳过。
+  // **必须放在 finalize 之后**——finalize 的 target arrow tail-stub 对 bottom/top 进入的边会把
+  // 倒数第二段强拉到 end.y±20，正好可能落进分隔线净空区（fixture 36 bottom-bottom 拱：节点底
+  // 353 + 20 = 373，离分隔线 369 仅 4px），在 finalize 之前 nudge 会被它推回来。
   nudgeHorizontalSegmentsOffDividers(routes, input, fannedInIds);
-  finalizeRoutePortsForRoutes(routes, input);
   // F8：两条不同 edge 的内部水平段挨太近(dy<10px 且 x 重叠)会叠成一条糊线。把其中一段推开到
   // ≥12px(撞节点回滚)。**必须放在 finalize 之后**——finalize 的 target arrow tail-stub 会把贴近
   // sink 的水平段(如 fan-in 走廊)再挪几 px 凑足 20px 直入,在那之前测的 dy 不作数(fixture 40)。
   nudgeParallelSegmentsApart(routes, input, fannedInIds);
+  // 同 lane back-edge 的拱默认抬到 source 顶上方 ARCH_BASE_OFFSET，lane 顶留白不够时会冲进上邻
+  // lane（fixture 40：部门主管 lane 顶=132、task 顶仅 151，拱落 127 再被 divider-nudge 推到 122，
+  // 整条线跑进申请人 lane）。把拱夹回 source lane 内。**必须放最后**——divider-nudge 只懂"离分隔
+  // 线远"，不懂"留在本 lane"，会把刚夹回来的拱又推出去。
+  keepIntraLaneBackEdgeInsideLane(routes, input);
 
   return { routes };
+}
+
+// 拱内部水平段离 lane 顶/底至少留这么多：≥ DIVIDER_NUDGE_TRIGGER(8)，否则会再次触发 divider-nudge。
+const INTRA_LANE_BACK_EDGE_CLEAR = 10;
+
+function keepIntraLaneBackEdgeInsideLane(routes: Map<string, EdgeRoute>, input: RouteInput): void {
+  for (const edge of input.edges) {
+    const route = routes.get(edge.id);
+    const src = input.nodes.get(edge.source);
+    const tgt = input.nodes.get(edge.target);
+    if (!route || !src || !tgt) continue;
+    if (src.laneId === null || src.laneId !== tgt.laneId) continue;
+    const upArch = route.edgeType === 'back-edge-down-left';   // top↔top → 拱向上(y 变小)
+    const downArch = route.edgeType === 'back-edge-up-left';   // bottom↔bottom → 拱向下(y 变大)
+    if (!upArch && !downArch) continue;
+    const lane = input.laneBoxes.get(src.laneId);
+    if (!lane) continue;
+    const wps = route.waypoints;
+    if (wps.length !== 4) continue; // 只处理标准 4-wp 拱；finalize 改过形状的跳过
+    const archY = wps[1]!.y;
+    if (Math.abs(wps[2]!.y - archY) > 0.5) continue; // 中段非水平 → 非标准拱
+    const clamped = upArch
+      ? Math.max(archY, lane.top + INTRA_LANE_BACK_EDGE_CLEAR)
+      : Math.min(archY, lane.bottom - INTRA_LANE_BACK_EDGE_CLEAR);
+    if (Math.abs(clamped - archY) < 0.5) continue; // 已在 lane 内
+    // 夹完拱与两端 riser 之间仍要留高度，否则拱会贴进 source/target 边
+    const MIN_RISER = 4;
+    if (upArch && clamped > Math.min(wps[0]!.y, wps[3]!.y) - MIN_RISER) continue;
+    if (downArch && clamped < Math.max(wps[0]!.y, wps[3]!.y) + MIN_RISER) continue;
+    const obstacles = collectObstacles(input, edge, src, tgt, false, true);
+    const orig1 = wps[1]!.y;
+    const orig2 = wps[2]!.y;
+    wps[1]!.y = clamped;
+    wps[2]!.y = clamped;
+    // 夹回 lane 内若反而撞上拱本要避开的节点，回滚——避障优先于留在 lane。
+    if (routeCrossesObstacles(wps, obstacles)) {
+      wps[1]!.y = orig1;
+      wps[2]!.y = orig2;
+    }
+  }
 }
 
 function resolveAnchorsForGeometry(
@@ -730,7 +778,10 @@ function applyFanInBundle(
   ): void => {
     const r = m.route;
     r.waypoints = wps;
-    const srcSide: Anchor = wps[1]!.y <= m.src.box.y + m.src.box.h / 2 ? 'top' : 'bottom';
+    // source 出边侧由首段几何反推：横向出（straddle 情形，见 buildFanInPathVertical）是 left/right，
+    // 竖直 riser 是 top/bottom。硬猜 top/bottom 会把横向出的边标成上/下，端口侧与实际不符。
+    const vFallback: Anchor = wps[1]!.y <= m.src.box.y + m.src.box.h / 2 ? 'top' : 'bottom';
+    const srcSide = inferEndpointSide(m.src.box, wps[0]!, vFallback);
     r.sourcePort = makeBoxPort(m.edge.source, srcSide, wps[0]!);
     r.targetPort = makeBoxPort(m.edge.target, entrySide, { x: entryPoint.x, y: entryPoint.y });
     rewritten.add(m.edge.id);
@@ -852,6 +903,17 @@ function buildFanInPathSide(src: NodeBox, corridorY: number, entryX: number): Wa
 function buildFanInPathVertical(src: NodeBox, corridorY: number, sinkCx: number, entryY: number): Waypoint[] {
   const srcCx = src.x + src.w / 2;
   const srcCy = src.y + src.h / 2;
+  // 走廊高度正好落在 source 自己的 Y 跨度内时（source 与 sink 几乎同高——fixture 40 的 gw_dept：
+  // 走廊 y=190 落在网关 166..216 内），竖直 riser 会从节点边折回穿过自己的身体，起点假性贴边、
+  // 线压在网关上（用户实测"起点不对"）。改从朝向 sink 的那一侧水平出、直落走廊，省掉退化 riser。
+  if (corridorY > src.y && corridorY < src.y + src.h) {
+    const exitX = sinkCx >= srcCx ? src.x + src.w : src.x;
+    return dedupeFanInWaypoints([
+      { x: exitX, y: corridorY },
+      { x: sinkCx, y: corridorY },
+      { x: sinkCx, y: entryY },
+    ]);
+  }
   const startY = corridorY <= srcCy ? src.y : src.y + src.h;
   return dedupeFanInWaypoints([
     { x: srcCx, y: startY },

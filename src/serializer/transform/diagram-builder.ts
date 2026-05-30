@@ -169,11 +169,24 @@ export class DiagramBuilder {
     const hitsEdgeLabel = (x: number, y: number, w: number, h: number): boolean =>
       edgeLabels.some((el) => overlaps(x, y, w, h, el.x, el.y, el.width, el.height));
 
+    // pool（participant）框：标签摆放不能把 gateway 标签甩到 pool 外。fixture 40 的 gw_dept 在
+    // pool 最左、右侧又被驳回边占用，默认往左摆会落到 pool 左缘外（x=-42，标签悬在泳道外）。
+    const pools = shapes
+      .filter((s) => this.nodeBpmn.get(s.bpmnElement)?.type === 'participant')
+      .map((s) => s.bounds);
+    const poolOf = (b: { x: number; y: number; width: number; height: number }) => {
+      for (const p of pools) {
+        if (b.x >= p.x && b.x + b.width <= p.x + p.width && b.y >= p.y && b.y + b.height <= p.y + p.height) return p;
+      }
+      return null;
+    };
+
     for (const shape of shapes) {
       if (!this.isGatewayType(this.nodeBpmn.get(shape.bpmnElement)?.type)) continue;
       const lb = shape.label?.bounds;
       if (!lb) continue;
       const b = shape.bounds;
+      const pool = poolOf(b);
       const cx = b.x + b.width / 2;
       const cy = b.y + b.height / 2;
       const occupied = new Set<'top' | 'bottom' | 'left' | 'right'>();
@@ -194,7 +207,10 @@ export class DiagramBuilder {
       // 默认上方摆放既没被入边占,也没和任何 edge label 冲突 → 保持不动(最小扰动)。
       if (!occupied.has('top') && !defaultHitsLabel) continue;
 
+      const inPool = (x: number): boolean =>
+        pool === null || (x >= pool.x && x + lw <= pool.x + pool.width);
       const tryPlace = (x: number, y: number): boolean => {
+        if (!inPool(x)) return false;
         if (hitsEdgeLabel(x, y, lw, lh)) return false;
         lb.x = x; lb.y = y; return true;
       };
@@ -219,10 +235,13 @@ export class DiagramBuilder {
       if (!occupied.has('right') && tryPlace(b.x + b.width + 4, cy - lh / 2)) continue;
       if (!occupied.has('left') && tryPlace(b.x - lw - 4, cy - lh / 2)) continue;
 
-      // 兜底:顶部被入边占且四侧都腾不开 → 沿竖直 shaft 右侧错开,至少躲开箭头。
+      // 兜底:顶部被入边占且四侧都腾不开 → 沿竖直 shaft 右侧错开,至少躲开箭头。仍夹回 pool 内。
       if (occupied.has('top')) {
         const shaftX = topShaftXs.length ? Math.max(...topShaftXs) : cx;
-        lb.x = shaftX + 6; lb.y = b.y - lh - 4;
+        let nx = shaftX + 6;
+        if (pool && nx + lw > pool.x + pool.width) nx = pool.x + pool.width - lw;
+        if (pool && nx < pool.x) nx = pool.x;
+        lb.x = nx; lb.y = b.y - lh - 4;
       }
     }
   }
@@ -744,7 +763,9 @@ export class DiagramBuilder {
       };
     } else if (this.isGatewayType(node.bpmn?.type) && labelText) {
       // For gateways (diamonds), position the label above the shape to avoid overlap with nodes below
-      const labelWidth = label?.width ?? 100;
+      // 宽度按文字实测估，别用硬编码 100：源 JSON 的 gateway label 不带 width，固定 100 会把窄标签
+      // （如「部门通过?」实测 ~63）撑成 100 的盒子，居中/避让时文字被甩离菱形（fixture 40）。
+      const labelWidth = label?.width ?? this.estimateTextWidth(labelText);
       // Calculate label height based on text content (may need multiple lines)
       const estimatedLines = this.estimateLabelLines(labelText, labelWidth);
       const labelHeight = estimatedLines * 14; // 14px per line

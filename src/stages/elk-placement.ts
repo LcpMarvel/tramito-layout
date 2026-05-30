@@ -23,12 +23,6 @@ export interface PlacementInputNode {
   /** Optional layout-only height reserved in ELK while keeping the visible shape size unchanged. */
   layoutH?: number;
   /**
-   * leaf lane index（0=最上 lane）。仅 hasLanes 时有意义。
-   * 用于给 ELK 传 partitioning.partition hint，让 ELK 在 layer 排序与 crossing minimization 时
-   * 把同 lane 的节点视作一组——减少跨 lane 的层间穿插。Y 仍由 LaneConstrainer 最终决定。
-   */
-  laneIndex?: number;
-  /**
    * 'first' / 'last' 时把 layer constraint 传给 ELK，强制 start/end event 在最左/最右 layer。
    * 解 F1（主流方向一致）。
    */
@@ -115,23 +109,17 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
     };
   }
 
-  // 有 lane 时开 partitioning：每个节点带 partition=laneIndex 后，ELK 在 layer assignment 和
-  // crossing minimization 时把同 partition 的节点视作一组——减少跨 lane 穿插，给 LaneConstrainer
-  // 一个更好的 X 初值（减少其 X 重叠修复 hack 的触发次数）。Y 仍由 LaneConstrainer snap 到 lane 中线。
-  //
-  // ⚠️ partitioning 和 layerConstraint=FIRST/LAST 互斥：partitioning 强制 partition 顺序，
-  // 一旦节点 X 在 partition i 但 i<max_partition，标 LAST 会要求它在最后一层 ↔ 与 partition>i
-  // 的节点冲突。所以 lane pool 一旦开 partitioning 就不再加 FIRST/LAST；方向一致性由
-  // partition 顺序自然保证（start 总在 partition 内的第一层）。
-  const someHasLane = input.nodes.some(n => n.laneIndex !== undefined);
+  // X 永远由 ELK layered 的拓扑分层决定（= flow rank），不再用 lane partition 把 X 绑死成 lane 顺序。
+  // 历史：曾给每个节点传 partition=laneIndex 想减少跨 lane 穿插，但 partition 强制"partition i 的所有
+  // layer 排在 i+1 之前"，于是 X 跟着 lane 上下顺序走、与流程走向脱钩——zig-zag 流程（41/37/39/40）
+  // 主流方向被打乱、回头线满图。全量验收证明：去掉 partition 无任何硬标准退步，修好 4 个 zig-zag
+  // fixture，仅 36 多一处 cosmetic F7（edge-router 另行处理）。详见 docs/layout-lessons.md。
   const baseOptions = input.hasLanes
     ? ELK_OPTIONS_LANES
     : input.hasBoundaryHandlers
       ? ELK_OPTIONS_HANDLERS
       : ELK_OPTIONS_NO_LANE;
-  const layoutOptions = someHasLane
-    ? { ...baseOptions, 'elk.partitioning.activate': 'true' }
-    : baseOptions;
+  const layoutOptions = baseOptions;
 
   const inputNodeById = new Map(input.nodes.map(n => [n.id, n]));
   const elkGraph = {
@@ -139,16 +127,10 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
     layoutOptions,
     children: input.nodes.map(n => {
       const childLayoutOptions: Record<string, string> = {};
-      if (n.laneIndex !== undefined) {
-        childLayoutOptions['elk.partitioning.partition'] = String(n.laneIndex);
-      }
-      // 只在未启用 partitioning 的 graph 加 layerConstraint
-      if (!someHasLane) {
-        if (n.layerConstraint === 'first') {
-          childLayoutOptions['elk.layered.layering.layerConstraint'] = 'FIRST';
-        } else if (n.layerConstraint === 'last') {
-          childLayoutOptions['elk.layered.layering.layerConstraint'] = 'LAST';
-        }
+      if (n.layerConstraint === 'first') {
+        childLayoutOptions['elk.layered.layering.layerConstraint'] = 'FIRST';
+      } else if (n.layerConstraint === 'last') {
+        childLayoutOptions['elk.layered.layering.layerConstraint'] = 'LAST';
       }
       const child: any = {
         id: n.id,

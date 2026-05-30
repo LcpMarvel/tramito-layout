@@ -158,6 +158,7 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson);
 - **早抛异常，少兜底**（与项目根 CLAUDE.md 一致）：layout 阶段发现 invariant 被破坏（节点尺寸异常、edge endpoint 浮空、lane 没找到 owner pool 等），优先 throw，**不要**悄悄写一个看起来还行的值。健壮性来自及早暴露。
 - **stage 之间只通过 plain data 传递**：每个 stage 是纯函数，输入是上一 stage 的输出，输出 schema 在各 stage 文件里定义、**统一在 `src/stages/index.ts` 单点 re-export**。`pipeline.ts` 只从 index 拿，不直接 import 单个 stage 文件。任何"读写共享 mutable state"都是 bug。pipeline.ts 只做装配胶水，不写算法逻辑。
 - **用户 JSON 布局问题先入 fixture**：当用户复制 ELK-BPMN JSON 并描述布局问题时，按 `docs/layout-fix-workflow.md` 新增 fixture、复现、再修复，不要跳过可重复用例。
+- **用户在编辑器手调过布局 → 走对比闭环**：当用户说"我在编辑器/前端调了某 fixture"（产物在 `out-tuned/<fixture>/`），按 `docs/layout-tune-workflow.md`：`bun run tuned:diff <fixture>` 拿「自动 vs 手调」坐标 diff，按差异形态反推该改 *摆位* 还是 *router*，改算法（非单点坐标补丁），全量 `check:layout` 不退步后让 `tuned:diff` 收敛。自动反超手调时提醒用户重存基线。
 - **不写虚假"完成"报告**：如果某个 fixture 渲染出问题，老实说"X 还差 Y"，不要说"主要修好了"就过。
 - **注释只解释 WHY**（与项目根 CLAUDE.md 一致）：不要写 "这一步做 XX" 的复述注释；解释为什么这么选（哪个 fixture 推出来的约束、避开了什么坑）。
 
@@ -175,12 +176,16 @@ tramito-layout/
   dist/                           # `bun run build` npm 包产物（gitignore/发布文件）
   docs/
     layout-lessons.md             # 历史教训与长期工程原则
+    layout-fix-workflow.md        # 修复闭环①：用户给 JSON+描述问题 → 入 fixture → 修
+    layout-tune-workflow.md       # 修复闭环②：用户编辑器手调 → tuned:diff 对比 → 修算法
     prompts/layout-critic.md      # AI 只读 bundle 时使用的 critic prompt
   test/                           # 每个 stage 一个 *.test.ts
   scripts/
     run-xml.ts                    # 全量 fixture → BPMN XML
     render-bpmn.ts                # XML → PNG（bpmn-js + puppeteer-core + 系统 Chrome）
     check-layout.ts               # E/N/B/L 硬标准 + F 软指标；支持 --json
+    serve-editor.ts               # 本地布局编辑器 dev server（bun run editor）→ 手调存 out-tuned/
+    diff-tuned.ts                 # 自动 vs 手调 ideal 坐标 diff（bun run tuned:diff）
     export-ai-debug-bundle.ts     # 生成 out-ai-debug/<fixture>/ 诊断包
     ai-optimize-layout.ts         # dry-run 生成 AI critic prompt / analysis skeleton
     run-metrics.ts                # aesthetic metrics 报告

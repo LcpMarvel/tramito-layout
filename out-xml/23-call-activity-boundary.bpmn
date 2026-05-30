@@ -212,7 +212,7 @@
       <bpmndi:BPMNShape id="gateway_merge_di" bpmnElement="gateway_merge">
         <dc:Bounds x="898" y="47" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="873" y="29" width="100" height="14" />
+          <dc:Bounds x="905" y="29" width="36" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_finalize_di" bpmnElement="task_finalize">

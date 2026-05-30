@@ -26,6 +26,8 @@
     "fixtures:xml": "bun run scripts/run-xml.ts",
     "fixtures:png": "bun run scripts/render-bpmn.ts",
     "fixtures:sync": "bun run fixtures:xml && bun run fixtures:png",
+    "editor": "bun run scripts/serve-editor.ts",
+    "tuned:diff": "bun run scripts/diff-tuned.ts",
     "check:layout": "bun run scripts/check-layout.ts",
     "check:layout:json": "bun run scripts/check-layout.ts --json",
     "debug:ai": "bun run scripts/export-ai-debug-bundle.ts",

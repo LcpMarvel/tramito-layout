@@ -109,7 +109,7 @@
       <bpmndi:BPMNShape id="gateway_check_di" bpmnElement="gateway_check">
         <dc:Bounds x="718" y="73" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="693" y="55" width="100" height="14" />
+          <dc:Bounds x="715" y="55" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="throw_compensation_di" bpmnElement="throw_compensation">
