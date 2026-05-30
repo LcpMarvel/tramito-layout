@@ -127,7 +127,7 @@
       <bpmndi:BPMNShape id="gateway_order_type_di" bpmnElement="gateway_order_type">
         <dc:Bounds x="358" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="355" y="169" width="56" height="14" />
+          <dc:Bounds x="389" y="169" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_standard_process_di" bpmnElement="task_standard_process">
@@ -166,28 +166,26 @@
         <di:waypoint x="358" y="212" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_standard_di" bpmnElement="flow_standard">
-        <di:waypoint x="408" y="212" />
-        <di:waypoint x="448" y="212" />
-        <di:waypoint x="448" y="72" />
+        <di:waypoint x="383" y="187" />
+        <di:waypoint x="383" y="72" />
         <di:waypoint x="488" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="453" y="156" width="50" height="14" />
+          <dc:Bounds x="388" y="158" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_express_di" bpmnElement="flow_express">
         <di:waypoint x="408" y="212" />
         <di:waypoint x="488" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="423" y="193" width="50" height="14" />
+          <dc:Bounds x="417" y="217" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_vip_di" bpmnElement="flow_vip">
-        <di:waypoint x="408" y="212" />
-        <di:waypoint x="448" y="212" />
-        <di:waypoint x="448" y="352" />
+        <di:waypoint x="383" y="237" />
+        <di:waypoint x="383" y="352" />
         <di:waypoint x="488" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="453" y="254" width="50" height="14" />
+          <dc:Bounds x="328" y="252" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_standard_to_link_di" bpmnElement="flow_standard_to_link">

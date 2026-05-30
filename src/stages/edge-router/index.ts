@@ -7,7 +7,7 @@ import type { FlowNodeType } from '../../loader/types.ts';
 import type { Anchor, EdgeRoute, LaneBox, NodeBox, PoolBox, Waypoint } from '../types.ts';
 import { classify, type ClassifierEdge, type ClassifierNode } from './classifier.ts';
 import { selectAnchors } from './anchor.ts';
-import { shapePath } from './path-shaper.ts';
+import { shapePath, segmentHitsObstacle } from './path-shaper.ts';
 import { allocateChannels, type ChannelEdge } from './channel.ts';
 import { detectFanInBundles, type FanInBundle } from './bundle.ts';
 import { SHAPER_MARGIN, edgeStyleRules, type BpmnEdgeKind } from '../bpmn-rules.ts';
@@ -85,11 +85,17 @@ export function routeEdges(input: RouteInput): RouteOutput {
   }));
   const channelAssignments = allocateChannels(channelInputs, bundledIds);
 
+  // 2b) 发散网关「分叉可见性」：决定哪些 forward-step 出边改从 top/bottom 顶点出（见函数注释）。
+  const forkAnchorOverrides = planGatewayForkAnchors(input, edgeTypes);
+  // 2c) 双向节点对（2-cycle）：回边改从侧面进 target，避开正向边的竖直走廊（见函数注释）。
+  const reversePairTargetOverrides = planReversePairAnchors(input, edgeTypes);
+
   // 3) 对每条 edge 选锚点 + 算路径
   const routes = new Map<string, EdgeRoute>();
   for (const e of input.edges) {
     const edgeType = edgeTypes.get(e.id)!;
-    const anchors = selectAnchors(edgeType);
+    const forkOverride = forkAnchorOverrides.get(e.id);
+    const anchors = forkOverride ? { source: forkOverride, target: 'left' as Anchor } : selectAnchors(edgeType);
     const src = input.nodes.get(e.source)!;
     const tgt = input.nodes.get(e.target)!;
     const assignment = channelAssignments.get(e.id) ?? { channel: 0, total: 1 };
@@ -131,7 +137,11 @@ export function routeEdges(input: RouteInput): RouteOutput {
     const obstacles = collectObstacles(input, e, src, tgt, isCrossPool);
 
     const styleRule = edgeStyleRules[e.bpmnType];
-    const resolvedAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box);
+    const geomAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box);
+    const reverseTargetOverride = reversePairTargetOverrides.get(e.id);
+    const resolvedAnchors = reverseTargetOverride
+      ? { source: geomAnchors.source, target: reverseTargetOverride }
+      : geomAnchors;
     const waypoints = shapePath({
       edgeType,
       sourceAnchor: resolvedAnchors.source,
@@ -269,6 +279,145 @@ function isGatewayNode(node: RouteInputNode): boolean {
     || node.type === 'inclusiveGateway'
     || node.type === 'eventBasedGateway'
     || node.type === 'complexGateway';
+}
+
+/**
+ * 发散网关「分叉可见性」：决策网关的多条 forward-step 出边默认全从 right 顶点出，共享同一段
+ * 水平干线后才在 trunkX 处分叉——视觉上像「一条线晚分叉」，看不清是网关在分支（fixture 38
+ * 「尝味是否合格」手调揭示：两条岔路必须分开）。把*唯一*一条明显向上的支移到 top 顶点、
+ * *唯一*一条明显向下的支移到 bottom 顶点，各走干净竖直优先 L，让分叉落在网关本体上。
+ *
+ * 窄触发，避免动到已被接受的 bus 形态 / 单支网关：
+ *   - 仅 gateway 源、且该源 ≥2 条 forward-step 出边时考虑；
+ *   - 某侧（上/下）恰好一条出边才移——多条同侧仍走 right bus，否则它们在同一顶点会二次重叠；
+ *   - 目标顶点未被该网关其它边占用（loop-back 常占 top，见 fixture 38 flow_47 / 16 flow_41）；
+ *   - 移动后竖直优先 L 两段都不撞节点，否则保留原 forward-step（撞了走廊兜底反而更糟）。
+ */
+function planGatewayForkAnchors(
+  input: RouteInput,
+  edgeTypes: Map<string, ReturnType<typeof classify>>,
+): Map<string, Anchor> {
+  const overrides = new Map<string, Anchor>();
+
+  // 按 gateway 源聚 forward-step 出边
+  const fwdOut = new Map<string, RouteInputEdge[]>();
+  for (const e of input.edges) {
+    if (edgeTypes.get(e.id) !== 'forward-step') continue;
+    const src = input.nodes.get(e.source);
+    if (!src || !isGatewayNode(src)) continue;
+    if (!fwdOut.has(e.source)) fwdOut.set(e.source, []);
+    fwdOut.get(e.source)!.push(e);
+  }
+
+  for (const [gwId, outEdges] of fwdOut) {
+    if (outEdges.length < 2) continue;
+    const gw = input.nodes.get(gwId)!.box;
+    const topY = gw.y;
+    const botY = gw.y + gw.h;
+
+    // 该网关已被其它边占用的顶点（含 loop-back 入边的 top/bottom）。用 selectAnchors 基础表估计
+    // ——足以捕获 back-edge 的拱形入点（top/top 或 bottom/bottom），那是唯一会和我们抢顶点的形态。
+    const used = new Set<Anchor>();
+    for (const e of input.edges) {
+      const t = edgeTypes.get(e.id)!;
+      const a = selectAnchors(t);
+      if (e.target === gwId) used.add(a.target);
+      if (e.source === gwId && edgeTypes.get(e.id) !== 'forward-step') used.add(a.source);
+    }
+
+    // 分侧：仅当目标中心越过对应顶点才算「明显上/下」，保证竖直优先 L 朝正确方向且不扎回网关内
+    const above: RouteInputEdge[] = [];
+    const below: RouteInputEdge[] = [];
+    for (const e of outEdges) {
+      const tgt = input.nodes.get(e.target)!.box;
+      const tcy = tgt.y + tgt.h / 2;
+      if (tcy <= topY) above.push(e);
+      else if (tcy >= botY) below.push(e);
+    }
+
+    tryMoveUniqueSide(above, 'top', used, overrides, input, gwId);
+    tryMoveUniqueSide(below, 'bottom', used, overrides, input, gwId);
+  }
+  return overrides;
+}
+
+function tryMoveUniqueSide(
+  side: RouteInputEdge[],
+  vertex: Anchor,
+  used: Set<Anchor>,
+  overrides: Map<string, Anchor>,
+  input: RouteInput,
+  gwId: string,
+): void {
+  if (side.length !== 1) return;       // 多条同侧 → 留给 right bus，避免顶点二次重叠
+  if (used.has(vertex)) return;        // 顶点被 loop-back 等占用
+  const e = side[0]!;
+  const gw = input.nodes.get(gwId)!.box;
+  const tgt = input.nodes.get(e.target)!.box;
+  const startX = gw.x + gw.w / 2;
+  const startY = vertex === 'top' ? gw.y : gw.y + gw.h;
+  const endX = tgt.x;
+  const endY = tgt.y + tgt.h / 2;
+  const start = { x: startX, y: startY };
+  const corner = { x: startX, y: endY };
+  const end = { x: endX, y: endY };
+  const obstacles = collectObstacles(input, e, input.nodes.get(e.source)!, input.nodes.get(e.target)!, false);
+  if (
+    segmentHitsObstacle(start, corner, obstacles, gw, tgt)
+    || segmentHitsObstacle(corner, end, obstacles, gw, tgt)
+  ) {
+    return; // 竖直优先 L 撞节点 → 保留原 forward-step
+  }
+  overrides.set(e.id, vertex);
+}
+
+/**
+ * 双向节点对（2-cycle）回边的侧面进入：当 A↔B 两节点间存在一对方向相反的边（审批/驳回回路是
+ * 典型——fixture 37「审核问题工单」⇄「审批问题工单」），正向边（cross-lane-down）默认竖直走在
+ * target.cx 的走廊里，回边（cross-lane-up）又被拉到同一条 target.cx 竖直走廊上，两条线叠成一条、
+ * 两个标签（批准/拒绝）压在一起，看不出是两条边。
+ *
+ * 修法：把回边（cross-lane-up 那条）改从**侧面**进 target——沿 source 自己的 cx 竖上去，横入
+ * target 朝向 source 的那一侧（source 在右→进 target.right，否则 target.left）。正向边保持原走廊，
+ * 两条边各占独立竖直 X，自然分开。
+ *
+ * 窄触发：①回边须 cross-lane-up 且存在反向兄弟边；②两节点 cx 有足够横向错位（对齐时侧进无意义、
+ * 且竖直仍会叠），阈值借 SHAPER_MARGIN；③侧面竖直优先 L 两段不撞节点，否则保留原走廊路由。
+ */
+function planReversePairAnchors(
+  input: RouteInput,
+  edgeTypes: Map<string, ReturnType<typeof classify>>,
+): Map<string, Anchor> {
+  const overrides = new Map<string, Anchor>();
+  const pairKey = (s: string, t: string) => `${s} ${t}`;
+  const present = new Set<string>();
+  for (const e of input.edges) present.add(pairKey(e.source, e.target));
+
+  for (const e of input.edges) {
+    if (edgeTypes.get(e.id) !== 'cross-lane-up') continue;
+    if (!present.has(pairKey(e.target, e.source))) continue; // 无反向兄弟边
+    const src = input.nodes.get(e.source)!.box; // 回边的 source 在下方
+    const tgt = input.nodes.get(e.target)!.box; // target 在上方
+    const srcCx = src.x + src.w / 2;
+    const tgtCx = tgt.x + tgt.w / 2;
+    if (Math.abs(srcCx - tgtCx) < SHAPER_MARGIN) continue; // 几乎对齐 → 侧进无益
+    const side: Anchor = srcCx >= tgtCx ? 'right' : 'left';
+
+    // 竖直优先 L：source.top 竖到 target.cy，再横入 target 的 side。两段都不撞节点才改。
+    const start = { x: srcCx, y: src.y };
+    const enterX = side === 'right' ? tgt.x + tgt.w : tgt.x;
+    const end = { x: enterX, y: tgt.y + tgt.h / 2 };
+    const corner = { x: srcCx, y: end.y };
+    const obstacles = collectObstacles(input, e, input.nodes.get(e.source)!, input.nodes.get(e.target)!, false);
+    if (
+      segmentHitsObstacle(start, corner, obstacles, src, tgt)
+      || segmentHitsObstacle(corner, end, obstacles, src, tgt)
+    ) {
+      continue;
+    }
+    overrides.set(e.id, side);
+  }
+  return overrides;
 }
 
 function finalizeRoutePortsForRoutes(routes: Map<string, EdgeRoute>, input: RouteInput): void {

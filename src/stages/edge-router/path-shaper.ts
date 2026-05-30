@@ -80,23 +80,33 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     // 但若中间有 obstacle 节点的 X 区间挡着，直线会穿过它 → 改走上拱形
     // （forward-skip：gateway 跳过中间 task 直连后续节点是常见 BPMN 模式）
     if (hasObstacleInForwardPath(start, end, input.obstacles, input.source, input.target)) {
+      // 拱的水平段实际画在 source.cx → target.cx（riser 落在节点中线），不是 right/left 锚点
+      // 那一段。避障必须按这条真实跨度量——否则贴在节点中线下/上方的 ioSpecification 数据形
+      // （fixture 07 task_process 正下的 input_event_form，x 落在锚点跨度外）量不到、被穿过。
+      const archStartX = input.source.x + input.source.w / 2;
+      const archEndX = input.target.x + input.target.w / 2;
       if (input.forwardSkipObstacleSide === 'below') {
-        let archY = clearObstaclesBelow(
+        // 先取「节点底 + margin」地板，再清障——顺序反了的话，地板会把已清好的 archY 顶回到
+        // 一个起点在初始 archY 之下、当时没被看见的障碍里（fixture 07：clearObstaclesBelow 从 364
+        // 起算清不到 y368 起的 input_extra，随后 max() 把线顶到 390 正落在 input_extra 内）。
+        let archY = Math.max(
           Math.max(start.y, end.y) + ARCH_BASE_OFFSET + channel * CHANNEL_GAP,
-          start.x, end.x, input.obstacles, input.source, input.target,
+          input.source.y + input.source.h + SHAPER_MARGIN,
+          input.target.y + input.target.h + SHAPER_MARGIN,
         );
-        archY = Math.max(archY, input.source.y + input.source.h + SHAPER_MARGIN, input.target.y + input.target.h + SHAPER_MARGIN);
-        const archStart = { x: input.source.x + input.source.w / 2, y: input.source.y + input.source.h };
-        const archEnd = { x: input.target.x + input.target.w / 2, y: input.target.y + input.target.h };
+        archY = clearObstaclesBelow(archY, archStartX, archEndX, input.obstacles, input.source, input.target);
+        const archStart = { x: archStartX, y: input.source.y + input.source.h };
+        const archEnd = { x: archEndX, y: input.target.y + input.target.h };
         return [archStart, { x: archStart.x, y: archY }, { x: archEnd.x, y: archY }, archEnd];
       }
-      let archY = clearObstaclesAbove(
+      let archY = Math.min(
         Math.min(start.y, end.y) - ARCH_BASE_OFFSET - channel * CHANNEL_GAP,
-        start.x, end.x, input.obstacles, input.source, input.target,
+        input.source.y - SHAPER_MARGIN,
+        input.target.y - SHAPER_MARGIN,
       );
-      archY = Math.min(archY, input.source.y - SHAPER_MARGIN, input.target.y - SHAPER_MARGIN);
-      const archStart = { x: input.source.x + input.source.w / 2, y: input.source.y };
-      const archEnd = { x: input.target.x + input.target.w / 2, y: input.target.y };
+      archY = clearObstaclesAbove(archY, archStartX, archEndX, input.obstacles, input.source, input.target);
+      const archStart = { x: archStartX, y: input.source.y };
+      const archEnd = { x: archEndX, y: input.target.y };
       return [archStart, { x: archStart.x, y: archY }, { x: archEnd.x, y: archY }, archEnd];
     }
     return [start, end];
@@ -159,11 +169,13 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     return [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
   }
 
-  if ((sourceAnchor === 'bottom' || sourceAnchor === 'top') && targetAnchor === 'left') {
-    // 优先简单 L：从 source 出发竖直到 target 的中线 y，再横入 target.left。两段都不撞节点才走。
+  if ((sourceAnchor === 'bottom' || sourceAnchor === 'top') && (targetAnchor === 'left' || targetAnchor === 'right')) {
+    // 优先简单 L：从 source 出发竖直到 target 的中线 y，再横入 target.left/right。两段都不撞节点才走。
     // cross-lane 边（target 在右上/右下且直上路径空）若无脑塞进 lane gap 走廊，会拐出"倒退进
     // 走廊"的 6 点折线（fixture 41 的 payment→pick / gw→check_stock 等手调推出）。走廊保留给
     // 真正需要避障 / 平行多边的场景——撞节点时回退到下面的走廊路径。
+    // target=right：用于双向网关对的回边（fixture 37 审批→审核「拒绝」），从 source 自己的 X
+    // 竖上去、横入 target 的右侧——避开正向边占用的 target.cx 竖直走廊（两条线否则叠成一条）。
     const corner = { x: start.x, y: end.y };
     if (
       !segmentHitsObstacle(start, corner, input.obstacles, input.source, input.target)
@@ -175,14 +187,16 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     // source 自己那一行横穿到 target.cx，再单段竖直入 sink 的 bottom(up)/top(down)。源行通常在
     // 较空的下层 lane、远离目标 lane 的密集节点，比钻进目标 lane 的走廊骑分隔线干净得多。
     // 手调 fixture 36 的 fork_to_join / quality_to_join 揭示的就是这个形态。
-    // 仍是「两段都不撞节点才走」，撞了回退到下面的走廊。
-    const hFirst = tryHorizontalFirstL(input);
-    if (hFirst) return hFirst;
+    // 仍是「两段都不撞节点才走」，撞了回退到下面的走廊。仅 left 进入侧适用（riser 落 sink.cx）。
+    if (targetAnchor === 'left') {
+      const hFirst = tryHorizontalFirstL(input);
+      if (hFirst) return hFirst;
+    }
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
       midY = gapCorridorY(input, start, sourceAnchor);
     }
-    const approachX = end.x - VERTICAL_STUB;
+    const approachX = targetAnchor === 'left' ? end.x - VERTICAL_STUB : end.x + VERTICAL_STUB;
     return [start, { x: start.x, y: midY }, { x: approachX, y: midY }, { x: approachX, y: end.y }, end];
   }
 
@@ -456,7 +470,7 @@ function detourVerticalAroundObstacle(
  * src/tgt 自身的 bbox 跳过（直线起点 / 终点本来就贴它们）。
  */
 const SEGMENT_HIT_TOL = 1;
-function segmentHitsObstacle(
+export function segmentHitsObstacle(
   start: { x: number; y: number },
   end: { x: number; y: number },
   obstacles: NodeBox[] | undefined,

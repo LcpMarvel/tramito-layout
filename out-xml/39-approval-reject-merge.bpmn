@@ -195,7 +195,7 @@
         <di:waypoint x="87" y="306" />
         <di:waypoint x="192" y="306" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="114.5" y="287" width="50" height="14" />
+          <dc:Bounds x="32" y="231" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_dept_reject_di" bpmnElement="f_dept_reject">
@@ -203,7 +203,7 @@
         <di:waypoint x="1172" y="189.5" />
         <di:waypoint x="1172" y="116" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="616.25" y="170.5" width="50" height="14" />
+          <dc:Bounds x="119.5" y="194.5" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_mgr_gw_di" bpmnElement="f_mgr_gw">
@@ -215,7 +215,7 @@
         <di:waypoint x="397" y="421" />
         <di:waypoint x="502" y="421" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="424.5" y="402" width="50" height="14" />
+          <dc:Bounds x="342" y="346" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_mgr_reject_di" bpmnElement="f_mgr_reject">
@@ -224,7 +224,7 @@
         <di:waypoint x="1172" y="189.5" />
         <di:waypoint x="1172" y="116" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="759.5" y="170.5" width="50" height="14" />
+          <dc:Bounds x="402" y="252" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_fin_gw_di" bpmnElement="f_fin_gw">
@@ -236,7 +236,7 @@
         <di:waypoint x="707" y="536" />
         <di:waypoint x="812" y="536" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="734.5" y="517" width="50" height="14" />
+          <dc:Bounds x="652" y="461" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_fin_reject_di" bpmnElement="f_fin_reject">
@@ -245,7 +245,7 @@
         <di:waypoint x="1172" y="189.5" />
         <di:waypoint x="1172" y="116" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="914.5" y="170.5" width="50" height="14" />
+          <dc:Bounds x="712" y="367" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_gm_gw_di" bpmnElement="f_gm_gw">
@@ -256,7 +256,7 @@
         <di:waypoint x="1042" y="536" />
         <di:waypoint x="1122" y="536" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1057" y="517" width="50" height="14" />
+          <dc:Bounds x="1051" y="541" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_gm_reject_di" bpmnElement="f_gm_reject">
@@ -265,7 +265,7 @@
         <di:waypoint x="1172" y="189.5" />
         <di:waypoint x="1172" y="116" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1022" y="391.475" width="50" height="14" />
+          <dc:Bounds x="1022" y="482" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_archive_end_di" bpmnElement="f_archive_end">

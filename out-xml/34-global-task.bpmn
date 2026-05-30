@@ -72,7 +72,7 @@
       <bpmndi:BPMNShape id="gateway_split_di" bpmnElement="gateway_split">
         <dc:Bounds x="538" y="117" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="535" y="99" width="56" height="14" />
+          <dc:Bounds x="592" y="135" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="call_global_manual_task_di" bpmnElement="call_global_manual_task">
@@ -112,15 +112,13 @@
         <di:waypoint x="538" y="142" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_4a_di" bpmnElement="flow_4a">
-        <di:waypoint x="588" y="142" />
-        <di:waypoint x="628" y="142" />
-        <di:waypoint x="628" y="72" />
+        <di:waypoint x="563" y="117" />
+        <di:waypoint x="563" y="72" />
         <di:waypoint x="668" y="72" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_4b_di" bpmnElement="flow_4b">
-        <di:waypoint x="588" y="142" />
-        <di:waypoint x="628" y="142" />
-        <di:waypoint x="628" y="212" />
+        <di:waypoint x="563" y="167" />
+        <di:waypoint x="563" y="212" />
         <di:waypoint x="668" y="212" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_5a_di" bpmnElement="flow_5a">

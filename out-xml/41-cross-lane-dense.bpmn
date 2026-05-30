@@ -194,7 +194,7 @@
         <di:waypoint x="563" y="298" />
         <di:waypoint x="668" y="298" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="590.5" y="279" width="50" height="14" />
+          <dc:Bounds x="568" y="359" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_check_stock_pack_di" bpmnElement="f_check_stock_pack">
@@ -209,7 +209,7 @@
         <di:waypoint x="588" y="413" />
         <di:waypoint x="848" y="413" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="693" y="394" width="50" height="14" />
+          <dc:Bounds x="597" y="418" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_pack_handover_di" bpmnElement="f_pack_handover">
@@ -232,14 +232,14 @@
         <di:waypoint x="1413" y="298" />
         <di:waypoint x="1698" y="298" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1418" y="585.45" width="50" height="14" />
+          <dc:Bounds x="1418" y="722" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_redeliver_loop_di" bpmnElement="f_redeliver_loop">
         <di:waypoint x="1438" y="776" />
         <di:waypoint x="1518" y="776" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1453" y="757" width="50" height="14" />
+          <dc:Bounds x="1447" y="781" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_redeliver_notify_di" bpmnElement="f_redeliver_notify">

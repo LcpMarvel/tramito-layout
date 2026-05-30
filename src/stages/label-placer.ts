@@ -32,13 +32,27 @@ export interface LabelPlaceContext {
  *
  * 这是从 calculateSmartLabelPosition 1:1 提取的纯函数版本。
  */
+export interface LabelPlaceOptions {
+  /**
+   * 把 label 锚到靠近 source 的第一段上，而不是最长段的中点。用于 gateway 分支边：分支条件
+   * label（充足/不足/已发货…）按 BPMN 惯例贴在网关旁、谁分出来一眼可见，而不是飘到线中段。
+   * 手调 fixture 41 揭示。
+   */
+  anchorNearSource?: boolean;
+}
+
 export function pickLabelPosition(
   waypoints: Waypoint[],
   labelWidth: number,
   labelHeight: number,
   ctx: LabelPlaceContext,
+  opts?: LabelPlaceOptions,
 ): { x: number; y: number } {
   if (waypoints.length < 2) return { x: 0, y: 0 };
+
+  if (opts?.anchorNearSource) {
+    return pickNearSource(waypoints, labelWidth, labelHeight, ctx);
+  }
 
   // 1. 选 segment：优先"足够长" + 不靠端点节点
   let bestIdx = -1;
@@ -134,6 +148,67 @@ export function pickLabelPosition(
     }
   }
   return pickBest(candidates, { x: midX + OFFSET, y: baseLabelY });
+}
+
+/**
+ * 把 label 贴在靠近 source（网关）的第一段上。沿该段从 source 端外移 ~22px 取锚点，再向两侧
+ * 法向偏移让 label 离开流程线；按 L2 > L3 优先级（noNode+noLabel > noNode > noLabel）选最干净的
+ * 落点，必要时沿线略微外移 / 换边。撞不开时退回靠 source 的初始候选（最小扰动）。
+ */
+function pickNearSource(
+  waypoints: Waypoint[],
+  labelWidth: number,
+  labelHeight: number,
+  ctx: LabelPlaceContext,
+): { x: number; y: number } {
+  // 跳过过短的引出 stub，取第一段有意义的段（其 wpStart 即更靠 source 的一端）
+  let idx = 0;
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const len = Math.hypot(waypoints[i + 1]!.x - waypoints[i]!.x, waypoints[i + 1]!.y - waypoints[i]!.y);
+    if (len >= 20) { idx = i; break; }
+  }
+  const a = waypoints[idx]!;
+  const b = waypoints[idx + 1]!;
+  const segLen = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  const ux = (b.x - a.x) / segLen;
+  const uy = (b.y - a.y) / segLen;
+  const horizontal = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y);
+  const OFFSET = 5;
+  // 法向基础距离：让 label 边缘离线 ~OFFSET（竖线用 labelWidth/2，横线用 labelHeight/2）
+  const perpBase = horizontal ? labelHeight / 2 + OFFSET : labelWidth / 2 + OFFSET;
+  const along = Math.min(22, segLen * 0.5);
+  // 法向单位向量（把 along 单位向量旋转 90°）
+  const px = -uy;
+  const py = ux;
+
+  // 候选优先级：先尽量贴线（perp 距离 extra 小）、再尽量贴网关（alongShift 小），两侧都试过
+  // 才放大 perp。这样 label 紧贴线、靠网关；只有近处都被占时才外移（避免一侧近处被挡就甩很远）。
+  const candidates: { x: number; y: number }[] = [];
+  for (let extra = 0; extra <= 2; extra++) {
+    const d = perpBase + extra * (horizontal ? labelHeight + 4 : labelWidth / 2 + 4);
+    for (const alongShift of [0, 12, -8, 26, 40]) {
+      const t = Math.max(8, Math.min(segLen - 4, along + alongShift));
+      const cx0 = a.x + ux * t;
+      const cy0 = a.y + uy * t;
+      for (const side of [1, -1]) {
+        const cx = cx0 + px * side * d;
+        const cy = cy0 + py * side * d;
+        candidates.push({ x: cx - labelWidth / 2, y: cy - labelHeight / 2 });
+      }
+    }
+  }
+
+  let fallback = candidates[0]!;
+  let tier = 0;
+  for (const pos of candidates) {
+    const rect: LabelBox = { x: pos.x, y: pos.y, width: labelWidth, height: labelHeight };
+    const overlapsNode = anyOverlap(rect, ctx.nodeObstacles);
+    const overlapsLabel = anyOverlap(rect, ctx.placedLabels);
+    if (!overlapsNode && !overlapsLabel) return pos;
+    if (!overlapsNode && tier < 2) { fallback = pos; tier = 2; }
+    else if (!overlapsLabel && tier < 1) { fallback = pos; tier = 1; }
+  }
+  return fallback;
 }
 
 // ============================================================

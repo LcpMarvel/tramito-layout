@@ -109,7 +109,7 @@
       <bpmndi:BPMNShape id="gateway_check_di" bpmnElement="gateway_check">
         <dc:Bounds x="718" y="73" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="715" y="55" width="56" height="14" />
+          <dc:Bounds x="772" y="91" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="throw_compensation_di" bpmnElement="throw_compensation">
@@ -147,21 +147,19 @@
         <di:waypoint x="718" y="98" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_success_di" bpmnElement="flow_success">
-        <di:waypoint x="768" y="98" />
-        <di:waypoint x="808" y="98" />
-        <di:waypoint x="808" y="50" />
+        <di:waypoint x="743" y="73" />
+        <di:waypoint x="743" y="50" />
         <di:waypoint x="964" y="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="861" y="31" width="50" height="14" />
+          <dc:Bounds x="748" y="54.5" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fail_di" bpmnElement="flow_fail">
-        <di:waypoint x="768" y="98" />
-        <di:waypoint x="808" y="98" />
-        <di:waypoint x="808" y="146" />
+        <di:waypoint x="743" y="123" />
+        <di:waypoint x="743" y="146" />
         <di:waypoint x="848" y="146" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="813" y="95" width="50" height="14" />
+          <dc:Bounds x="688" y="127.5" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_to_end_cancel_di" bpmnElement="flow_to_end_cancel">

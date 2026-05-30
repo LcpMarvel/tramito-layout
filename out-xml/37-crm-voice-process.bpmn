@@ -317,7 +317,7 @@
       <bpmndi:BPMNShape id="gateway_review_issue_di" bpmnElement="gateway_review_issue">
         <dc:Bounds x="242" y="999" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="296" y="1017" width="84" height="14" />
+          <dc:Bounds x="273" y="981" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_receive_approval_di" bpmnElement="event_receive_approval">
@@ -430,7 +430,7 @@
         <di:waypoint x="642" y="222" />
         <di:waypoint x="682" y="222" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="647" y="419.75" width="50" height="14" />
+          <dc:Bounds x="609" y="542" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_supplement_to_gateway_di" bpmnElement="flow_supplement_to_gateway">
@@ -443,7 +443,7 @@
         <di:waypoint x="602" y="537" />
         <di:waypoint x="682" y="537" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="617" y="518" width="50" height="14" />
+          <dc:Bounds x="611" y="518" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_split_to_relate_di" bpmnElement="flow_split_to_relate">
@@ -456,8 +456,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_classify_to_approval_di" bpmnElement="flow_classify_to_approval">
         <di:waypoint x="1092" y="577" />
-        <di:waypoint x="1092" y="723" />
-        <di:waypoint x="112" y="723" />
+        <di:waypoint x="1092" y="823" />
+        <di:waypoint x="112" y="823" />
         <di:waypoint x="112" y="869" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_approval_to_review_di" bpmnElement="flow_approval_to_review">
@@ -470,7 +470,7 @@
         <di:waypoint x="267" y="537" />
         <di:waypoint x="372" y="537" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="272" y="830.3" width="50" height="14" />
+          <dc:Bounds x="272" y="970" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_approve_di" bpmnElement="flow_review_approve">
@@ -478,23 +478,22 @@
         <di:waypoint x="267" y="1439" />
         <di:waypoint x="388.6666666666667" y="1439" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="272" y="1178.5" width="50" height="14" />
+          <dc:Bounds x="212" y="1064" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_approve_reject_di" bpmnElement="flow_approve_reject">
         <di:waypoint x="413.6666666666667" y="1414" />
-        <di:waypoint x="413.6666666666667" y="1410" />
-        <di:waypoint x="267" y="1410" />
-        <di:waypoint x="267" y="1049" />
+        <di:waypoint x="413.6666666666667" y="1024" />
+        <di:waypoint x="292" y="1024" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="272" y="1276.65" width="50" height="14" />
+          <dc:Bounds x="418.6666666666667" y="1385" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_approve_pass_di" bpmnElement="flow_approve_pass">
         <di:waypoint x="438.6666666666667" y="1439" />
         <di:waypoint x="559" y="1439" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="473.83333333333337" y="1420" width="50" height="14" />
+          <dc:Bounds x="447.6666666666667" y="1444" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_after_to_notify_di" bpmnElement="flow_after_to_notify">

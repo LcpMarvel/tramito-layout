@@ -105,7 +105,7 @@
       <bpmndi:BPMNShape id="gateway_check_result_di" bpmnElement="gateway_check_result">
         <dc:Bounds x="538" y="117" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="531.5" y="82" width="63" height="14" />
+          <dc:Bounds x="592" y="135" width="63" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="call_subprocess_version_di" bpmnElement="call_subprocess_version">
@@ -151,21 +151,19 @@
         <di:waypoint x="538" y="142" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_approved_di" bpmnElement="flow_approved">
-        <di:waypoint x="588" y="142" />
-        <di:waypoint x="628" y="142" />
-        <di:waypoint x="628" y="72" />
+        <di:waypoint x="563" y="117" />
+        <di:waypoint x="563" y="72" />
         <di:waypoint x="668" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="573" y="100" width="50" height="14" />
+          <dc:Bounds x="568" y="88" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_rejected_di" bpmnElement="flow_rejected">
-        <di:waypoint x="588" y="142" />
-        <di:waypoint x="628" y="142" />
-        <di:waypoint x="628" y="212" />
+        <di:waypoint x="563" y="167" />
+        <di:waypoint x="563" y="212" />
         <di:waypoint x="668" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="573" y="170" width="50" height="14" />
+          <dc:Bounds x="508" y="182" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">

@@ -239,12 +239,15 @@ function placeEdgeLabel(
   const labelHeight = label.height ?? 14;
   const sourceBox = sourceId ? toNodeRect(allNodes.get(sourceId)) : undefined;
   const targetBox = targetId ? toNodeRect(allNodes.get(targetId)) : undefined;
+  // 网关分支边：label 贴网关（BPMN 惯例，分支条件标在决策点旁），不飘到线中段（fixture 41）
+  const sourceType = sourceId ? ctx.bpmnInfo.get(sourceId)?.type : undefined;
+  const anchorNearSource = sourceType !== undefined && isGatewayTypeName(sourceType);
   const pos = pickLabelPosition(waypoints, labelWidth, labelHeight, {
     placedLabels: ctx.placedLabels,
     nodeObstacles: ctx.nodeObstacles,
     sourceBox,
     targetBox,
-  });
+  }, { anchorNearSource });
   label.x = pos.x;
   label.y = pos.y;
   label.width = labelWidth;
@@ -253,6 +256,14 @@ function placeEdgeLabel(
 }
 
 type BpmnInfo = { type?: string; isExpanded?: boolean };
+
+function isGatewayTypeName(type: string): boolean {
+  return type === 'exclusiveGateway'
+    || type === 'parallelGateway'
+    || type === 'inclusiveGateway'
+    || type === 'eventBasedGateway'
+    || type === 'complexGateway';
+}
 
 function collectLabelNodeObstacles(info: Map<string, BpmnInfo>, allNodes: Map<string, NodeBox>): LabelObstacle[] {
   const obstacles: LabelObstacle[] = [];

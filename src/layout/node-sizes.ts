@@ -151,6 +151,12 @@ export function layoutHeightWithIoSpec(
   return visibleHeight + below * 2;
 }
 
+/**
+ * 返回 ioSpecification 数据形的避障 box。**唯一消费者是 router 的 routeObstacles**（序列化器另走
+ * 一条路径画形），所以这里把每个 box 的高度撑到「数据形 + label gap + label」整段——否则贴在数据形
+ * 正下方的名字（fixture 07 task_process 下的「事件表单」label，y 454-468）量不到，forward-skip 下拱
+ * 走廊会从文字中间穿过（线压字）。撑高只影响避障，不改数据形的绘制坐标。
+ */
 export function ioSpecDataObjectBoxes(
   host: IoSpecBox,
   ioInputCount: number,
@@ -166,15 +172,17 @@ export function ioSpecDataObjectBoxes(
     const outputName = ioOutputNames[i];
     const maxWidth = ioSpecLabelMaxWidth(host.w);
     const inputLabelHeight = estimateIoSpecLabelHeight(inputName, maxWidth);
+    const outputLabelHeight = estimateIoSpecLabelHeight(outputName, maxWidth);
+    const withLabel = (labelH: number) => IO_SPEC_DATA_HEIGHT + (labelH > 0 ? IO_SPEC_LABEL_GAP + labelH : 0);
     const stackedOutput = i < ioInputCount && i < ioOutputCount && ioSpecLabelsOverlap(inputName, outputName, host.w);
     if (i < ioInputCount) {
-      boxes.push({ x: host.x, y, w: IO_SPEC_DATA_WIDTH, h: IO_SPEC_DATA_HEIGHT });
+      boxes.push({ x: host.x, y, w: IO_SPEC_DATA_WIDTH, h: withLabel(inputLabelHeight) });
     }
     if (i < ioOutputCount) {
       const outputY = stackedOutput
         ? y + IO_SPEC_DATA_HEIGHT + IO_SPEC_LABEL_GAP + inputLabelHeight + IO_SPEC_ROW_GAP
         : y;
-      boxes.push({ x: host.x + host.w - IO_SPEC_DATA_WIDTH, y: outputY, w: IO_SPEC_DATA_WIDTH, h: IO_SPEC_DATA_HEIGHT });
+      boxes.push({ x: host.x + host.w - IO_SPEC_DATA_WIDTH, y: outputY, w: IO_SPEC_DATA_WIDTH, h: withLabel(outputLabelHeight) });
     }
     y += IO_SPEC_DATA_HEIGHT
       + IO_SPEC_LABEL_GAP
