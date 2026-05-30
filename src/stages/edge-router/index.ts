@@ -9,6 +9,7 @@ import { classify, type ClassifierEdge, type ClassifierNode } from './classifier
 import { selectAnchors } from './anchor.ts';
 import { shapePath } from './path-shaper.ts';
 import { allocateChannels, type ChannelEdge } from './channel.ts';
+import { detectFanInBundles, type FanInBundle } from './bundle.ts';
 import { SHAPER_MARGIN, edgeStyleRules, type BpmnEdgeKind } from '../bpmn-rules.ts';
 import { detourAroundLocalObstacles } from './local-obstacle-detour.ts';
 import { finalizeRoutePorts, makeBoxPort } from './port.ts';
@@ -65,13 +66,24 @@ export function routeEdges(input: RouteInput): RouteOutput {
     edgeTypes.set(e.id, classify(e as ClassifierEdge, classifierNodes));
   }
 
+  // 1b) Fan-in 归一识别（拓扑）：哪些 edge 属于「共 sink 的归一束」。成员从 lane 摊开桶里
+  //     剔除（excludeIds），并在 busifyFanInToSink 里被重写成共享干线。
+  const nodeTypeOf = new Map<string, FlowNodeType>();
+  for (const [id, n] of input.nodes) nodeTypeOf.set(id, n.type);
+  const bundles = detectFanInBundles(
+    input.edges.map(e => ({ id: e.id, source: e.source, target: e.target, edgeType: edgeTypes.get(e.id)! })),
+    nodeTypeOf,
+  );
+  const bundledIds = new Set<string>();
+  for (const b of bundles) for (const id of b.memberIds) bundledIds.add(id);
+
   // 2) 分配通道
   const channelInputs: ChannelEdge[] = input.edges.map(e => ({
     id: e.id,
     edgeType: edgeTypes.get(e.id)!,
     sourceX: input.nodes.get(e.source)!.box.x,
   }));
-  const channelAssignments = allocateChannels(channelInputs);
+  const channelAssignments = allocateChannels(channelInputs, bundledIds);
 
   // 3) 对每条 edge 选锚点 + 算路径
   const routes = new Map<string, EdgeRoute>();
@@ -151,7 +163,10 @@ export function routeEdges(input: RouteInput): RouteOutput {
   // 视觉上像"放射状"；统一 trunkX 到组内最小（最靠近 source）能合成"共干→分叉"形态。
   // 仅处理 forward-step（4 wp 标准 Z）的同 source 组；branch-up/down 已经在共 anchor 上自然合干。
   busifyForwardStep(routes, input);
-  detourRoutesAroundLocalObstacles(routes, input);
+  // Fan-in 归一：共 sink 的 gateway 出边聚成一根共享干线、单点进入（镜像 busifyForwardStep）。
+  // 返回真正被重写的 edge——只有它们跳过 detour（撞节点而保留原路由的成员仍需 detour）。
+  const fannedInIds = busifyFanInToSink(routes, input, bundles);
+  detourRoutesAroundLocalObstacles(routes, input, fannedInIds);
   finalizeRoutePortsForRoutes(routes, input);
 
   return { routes };
@@ -333,8 +348,9 @@ function dedupeWaypoints(points: Waypoint[]): Waypoint[] {
   return out;
 }
 
-function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input: RouteInput): void {
+function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input: RouteInput, skipIds?: ReadonlySet<string>): void {
   for (const edge of input.edges) {
+    if (skipIds?.has(edge.id)) continue; // fan-in 干线已聚束并自检过避障，divider/detour 不再插手
     const route = routes.get(edge.id);
     const src = input.nodes.get(edge.source);
     const tgt = input.nodes.get(edge.target);
@@ -499,6 +515,166 @@ function busifyForwardStep(routes: Map<string, EdgeRoute>, input: RouteInput): v
       r.waypoints[2] = { x: trunkX, y: wp3.y };
     }
   }
+}
+
+// Fan-in 归一后处理（镜像 busifyForwardStep，但按共 target 聚束）。
+// 把每个 bundle 的 gateway 出边重写成「source → 共享干线 → 单点进 sink」。
+// 返回真正被重写的 edge id 集合（撞节点而保留原路由的成员不计入）。
+function busifyFanInToSink(
+  routes: Map<string, EdgeRoute>,
+  input: RouteInput,
+  bundles: FanInBundle[],
+): Set<string> {
+  const rewritten = new Set<string>();
+  for (const bundle of bundles) applyFanInBundle(routes, input, bundle, rewritten);
+  return rewritten;
+}
+
+const FANIN_CORRIDOR_GAP = 14;       // 走廊与 sink/障碍行之间的净空
+const FANIN_CORRIDOR_FALLBACK = 28;  // 无障碍时走廊离 sink 的默认距离
+
+function applyFanInBundle(
+  routes: Map<string, EdgeRoute>,
+  input: RouteInput,
+  bundle: FanInBundle,
+  rewritten: Set<string>,
+): void {
+  const sink = input.nodes.get(bundle.sinkId);
+  if (!sink) return;
+  const sinkBox = sink.box;
+
+  // 只聚同 pool 成员；cross-pool 归一不在本期范围。
+  const members = bundle.memberIds
+    .map((id) => {
+      const edge = input.edges.find((e) => e.id === id);
+      const src = edge ? input.nodes.get(edge.source) : undefined;
+      const route = routes.get(id);
+      return edge && src && route ? { id, edge, src, route } : null;
+    })
+    .filter((m): m is { id: string; edge: RouteInputEdge; src: RouteInputNode; route: EdgeRoute } =>
+      m !== null && m.src.poolId === sink.poolId);
+  if (members.length < 2) return;
+
+  const sinkCx = sinkBox.x + sinkBox.w / 2;
+  const sinkCy = sinkBox.y + sinkBox.h / 2;
+  const sinkTop = sinkBox.y;
+  const sinkBottom = sinkBox.y + sinkBox.h;
+  const srcCxs = members.map((m) => m.src.box.x + m.src.box.w / 2);
+  const srcMeanCx = avg(srcCxs);
+  const srcMeanCy = avg(members.map((m) => m.src.box.y + m.src.box.h / 2));
+
+  // sink 上被「非成员」边（主流入/出口）占用的侧——归一束要避开，落到对侧。
+  const memberSet = new Set(members.map((m) => m.id));
+  const occupied = new Set<Anchor>();
+  for (const e of input.edges) {
+    if (memberSet.has(e.id)) continue;
+    const r = routes.get(e.id);
+    if (!r) continue;
+    if (e.target === bundle.sinkId) occupied.add(r.targetPort.side);
+    if (e.source === bundle.sinkId) occupied.add(r.sourcePort.side);
+  }
+
+  const obstaclesFor = (m: { edge: RouteInputEdge; src: RouteInputNode }): NodeBox[] =>
+    collectObstacles(input, m.edge, m.src, sink, m.src.poolId !== sink.poolId, true);
+
+  const applyMember = (
+    m: { edge: RouteInputEdge; src: RouteInputNode; route: EdgeRoute },
+    wps: Waypoint[],
+    entrySide: Anchor,
+    entryPoint: Waypoint,
+  ): void => {
+    const r = m.route;
+    r.waypoints = wps;
+    const srcSide: Anchor = wps[1]!.y <= m.src.box.y + m.src.box.h / 2 ? 'top' : 'bottom';
+    r.sourcePort = makeBoxPort(m.edge.source, srcSide, wps[0]!);
+    r.targetPort = makeBoxPort(m.edge.target, entrySide, { x: entryPoint.x, y: entryPoint.y });
+    rewritten.add(m.edge.id);
+  };
+
+  // ── 首选：从朝向 source 那一侧（左/右）水平进入，共享走廊放在 sink 自己的中线（开阔行）。
+  //    这样走廊落在 sink 所在行而非贴着 sink 边/泳道线，最干净。要求该侧空闲且整束都不撞节点。
+  const sourcesRight = srcMeanCx > sinkCx;
+  const hSide: Anchor = sourcesRight ? 'right' : 'left';
+  const hEntryX = sourcesRight ? sinkBox.x + sinkBox.w : sinkBox.x;
+  if (!occupied.has(hSide)) {
+    const built = members.map((m) => ({ m, wps: buildFanInPathSide(m.src.box, sinkCy, hEntryX) }));
+    if (built.every(({ m, wps }) => !routeCrossesObstacles(wps, obstaclesFor(m)))) {
+      for (const { m, wps } of built) applyMember(m, wps, hSide, { x: hEntryX, y: sinkCy });
+      return;
+    }
+  }
+
+  // ── 退路：sink 中线那一行被挡 → 走廊放到 sink 与最近障碍行之间的偏移净空，从上/下单点进入。
+  const below = srcMeanCy >= sinkCy;
+  const spanLo = Math.min(sinkCx, ...srcCxs);
+  const spanHi = Math.max(sinkCx, ...srcCxs);
+  const memberSrcIds = new Set(members.map((m) => m.edge.source));
+  const obstacleTops: number[] = [];
+  const obstacleBottoms: number[] = [];
+  for (const [id, n] of input.nodes) {
+    if (id === bundle.sinkId || memberSrcIds.has(id)) continue;
+    if (n.poolId !== sink.poolId) continue;
+    if (n.box.x + n.box.w <= spanLo || n.box.x >= spanHi) continue;
+    obstacleTops.push(n.box.y);
+    obstacleBottoms.push(n.box.y + n.box.h);
+  }
+  let corridorY: number;
+  const entryY = below ? sinkBottom : sinkTop;
+  if (below) {
+    const nearestTopBelow = obstacleTops.filter((t) => t > sinkBottom + 1);
+    const ceil = nearestTopBelow.length ? Math.min(...nearestTopBelow) : sinkBottom + 2 * FANIN_CORRIDOR_FALLBACK;
+    corridorY = Math.max((sinkBottom + ceil) / 2, sinkBottom + FANIN_CORRIDOR_GAP);
+  } else {
+    const nearestBottomAbove = obstacleBottoms.filter((b) => b < sinkTop - 1);
+    const floor = nearestBottomAbove.length ? Math.max(...nearestBottomAbove) : sinkTop - 2 * FANIN_CORRIDOR_FALLBACK;
+    corridorY = Math.min((sinkTop + floor) / 2, sinkTop - FANIN_CORRIDOR_GAP);
+  }
+  const entrySide: Anchor = below ? 'bottom' : 'top';
+  for (const m of members) {
+    const wps = buildFanInPathVertical(m.src.box, corridorY, sinkCx, entryY);
+    if (routeCrossesObstacles(wps, obstaclesFor(m))) continue;
+    applyMember(m, wps, entrySide, { x: sinkCx, y: entryY });
+  }
+}
+
+function avg(values: number[]): number {
+  return values.reduce((s, v) => s + v, 0) / values.length;
+}
+
+// 水平进入：source 顶/底出发 → riser 到共享走廊 Y(=sink.cy) → 水平沿走廊单点进 sink 左/右边。
+// riser 在各 source.cx（横向拉开），水平段共用 corridorY（归一成一根），末段水平入边满足 E3。
+function buildFanInPathSide(src: NodeBox, corridorY: number, entryX: number): Waypoint[] {
+  const srcCx = src.x + src.w / 2;
+  const srcCy = src.y + src.h / 2;
+  const startY = corridorY <= srcCy ? src.y : src.y + src.h;
+  return dedupeFanInWaypoints([
+    { x: srcCx, y: startY },
+    { x: srcCx, y: corridorY },
+    { x: entryX, y: corridorY },
+  ]);
+}
+
+// 竖直进入：source → riser 到偏移走廊 → 水平到 sink.cx → 竖直单点进 sink 上/下边。
+function buildFanInPathVertical(src: NodeBox, corridorY: number, sinkCx: number, entryY: number): Waypoint[] {
+  const srcCx = src.x + src.w / 2;
+  const srcCy = src.y + src.h / 2;
+  const startY = corridorY <= srcCy ? src.y : src.y + src.h;
+  return dedupeFanInWaypoints([
+    { x: srcCx, y: startY },
+    { x: srcCx, y: corridorY },
+    { x: sinkCx, y: corridorY },
+    { x: sinkCx, y: entryY },
+  ]);
+}
+
+function dedupeFanInWaypoints(points: Waypoint[]): Waypoint[] {
+  const out: Waypoint[] = [];
+  for (const p of points) {
+    const last = out[out.length - 1];
+    if (last && Math.abs(last.x - p.x) <= 0.5 && Math.abs(last.y - p.y) <= 0.5) continue;
+    out.push(p);
+  }
+  return out;
 }
 
 function collectObstacles(

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_call_activity" targetNamespace="http://example.com/test-call-activity" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_main" name="调用活动主流程" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_prepare" name="准备数据">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="call_subprocess_latest" name="调用子流程(最新)" calledElement="process_reusable_approval">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="gateway_check_result" name="审批结果?" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_approved</bpmn:outgoing>
+      <bpmn:outgoing>flow_rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="call_subprocess_version" name="调用指定版本" calledElement="process_payment">
+      <bpmn:incoming>flow_approved</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="call_subprocess_deployment" name="调用部署版本" calledElement="process_notification">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="call_mi_parallel" name="并行调用多实例" calledElement="process_item_processing">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:loopDataInputRef>orderItems</bpmn:loopDataInputRef>
+        <bpmn:loopDataOutputRef>processedItems</bpmn:loopDataOutputRef>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="call_mi_sequential" name="顺序调用多实例" calledElement="process_approval_step">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+        <bpmn:loopDataInputRef>approvers</bpmn:loopDataInputRef>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${rejected == true}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:callActivity>
+    <bpmn:sendTask id="task_rejected_handler" name="发送拒绝通知">
+      <bpmn:incoming>flow_rejected</bpmn:incoming>
+      <bpmn:outgoing>flow_9</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="task_finalize" name="完成处理">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_success" name="成功结束">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_rejected" name="拒绝结束">
+      <bpmn:incoming>flow_9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_main" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_prepare" targetRef="call_subprocess_latest" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="call_subprocess_latest" targetRef="gateway_check_result" />
+    <bpmn:sequenceFlow id="flow_approved" name="通过" sourceRef="gateway_check_result" targetRef="call_subprocess_version">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_rejected" name="拒绝" sourceRef="gateway_check_result" targetRef="task_rejected_handler">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_4" sourceRef="call_subprocess_version" targetRef="call_subprocess_deployment" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="call_subprocess_deployment" targetRef="call_mi_parallel" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="call_mi_parallel" targetRef="call_mi_sequential" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="call_mi_sequential" targetRef="task_finalize" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_finalize" targetRef="end_success" />
+    <bpmn:sequenceFlow id="flow_9" sourceRef="task_rejected_handler" targetRef="end_rejected" />
+  </bpmn:process>
+  <bpmn:process id="process_reusable_approval" name="可复用审批子流程" processType="Public" isExecutable="true">
+    <bpmn:startEvent id="sub_start" name="开始">
+      <bpmn:outgoing>sub_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="sub_task_review" name="审批">
+      <bpmn:incoming>sub_flow_1</bpmn:incoming>
+      <bpmn:outgoing>sub_flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="sub_end" name="结束">
+      <bpmn:incoming>sub_flow_2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="sub_flow_1" sourceRef="sub_start" targetRef="sub_task_review" />
+    <bpmn:sequenceFlow id="sub_flow_2" sourceRef="sub_task_review" targetRef="sub_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_call_activity" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_call_activity" bpmnElement="process_main">
+      <bpmndi:BPMNShape id="process_main_di" bpmnElement="process_main">
+        <dc:Bounds x="0" y="0" width="1624" height="284" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="124" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_subprocess_latest_di" bpmnElement="call_subprocess_latest">
+        <dc:Bounds x="358" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_check_result_di" bpmnElement="gateway_check_result">
+        <dc:Bounds x="538" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="513" y="99" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_subprocess_version_di" bpmnElement="call_subprocess_version">
+        <dc:Bounds x="668" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_subprocess_deployment_di" bpmnElement="call_subprocess_deployment">
+        <dc:Bounds x="848" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_mi_parallel_di" bpmnElement="call_mi_parallel">
+        <dc:Bounds x="1028" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_mi_sequential_di" bpmnElement="call_mi_sequential">
+        <dc:Bounds x="1208" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_rejected_handler_di" bpmnElement="task_rejected_handler">
+        <dc:Bounds x="668" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_finalize_di" bpmnElement="task_finalize">
+        <dc:Bounds x="1388" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_success_di" bpmnElement="end_success">
+        <dc:Bounds x="1568" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1536" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_rejected_di" bpmnElement="end_rejected">
+        <dc:Bounds x="1568" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1536" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="142" />
+        <di:waypoint x="178" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="142" />
+        <di:waypoint x="358" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="142" />
+        <di:waypoint x="538" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_approved_di" bpmnElement="flow_approved">
+        <di:waypoint x="588" y="142" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="668" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="573" y="100" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_rejected_di" bpmnElement="flow_rejected">
+        <di:waypoint x="588" y="142" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="628" y="212" />
+        <di:waypoint x="668" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="573" y="170" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="768" y="72" />
+        <di:waypoint x="848" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="948" y="72" />
+        <di:waypoint x="1028" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="1128" y="72" />
+        <di:waypoint x="1208" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1308" y="72" />
+        <di:waypoint x="1388" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="1488" y="72" />
+        <di:waypoint x="1568" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_9_di" bpmnElement="flow_9">
+        <di:waypoint x="768" y="212" />
+        <di:waypoint x="1568" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

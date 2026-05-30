@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_participant_options" targetNamespace="http://example.com/test-participant-options" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_request" name="服务请求" />
+  <bpmn:message id="msg_response" name="服务响应" />
+  <bpmn:collaboration id="collaboration_participant_options" name="参与者选项测试">
+    <bpmn:participant id="participant_client" name="客户端" processRef="process_client">
+      <bpmn:participantMultiplicity minimum="1" maximum="10" />
+    </bpmn:participant>
+    <bpmn:participant id="participant_server" name="服务器" processRef="process_server">
+      <bpmn:participantMultiplicity minimum="3" maximum="3" />
+    </bpmn:participant>
+    <bpmn:participant id="participant_external_closed" name="外部系统 (封闭)" processRef="Process_participant_external_closed" />
+    <bpmn:participant id="participant_partner_open" name="合作伙伴 (开放)" processRef="Process_participant_partner_open" />
+    <bpmn:participant id="participant_multi_unlimited" name="无限实例池" processRef="Process_participant_multi_unlimited">
+      <bpmn:participantMultiplicity maximum="-1" />
+    </bpmn:participant>
+    <bpmn:participant id="participant_single_instance" name="单实例池" processRef="Process_participant_single_instance">
+      <bpmn:participantMultiplicity minimum="1" />
+    </bpmn:participant>
+    <bpmn:messageFlow id="msgflow_request" sourceRef="client_send_request" targetRef="server_start" messageRef="msg_request" />
+    <bpmn:messageFlow id="msgflow_response" sourceRef="server_send_response" targetRef="client_wait_response" messageRef="msg_response" />
+    <bpmn:messageFlow id="msgflow_to_external" name="外部调用" sourceRef="server_process" targetRef="participant_external_closed" />
+    <bpmn:messageFlow id="msgflow_from_external" name="外部响应" sourceRef="participant_external_closed" targetRef="server_process" />
+    <bpmn:messageFlow id="msgflow_to_partner" name="通知合作伙伴" sourceRef="client_process_response" targetRef="participant_partner_open" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_client" name="客户端" isExecutable="true">
+    <bpmn:startEvent id="client_start" name="开始">
+      <bpmn:outgoing>client_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="client_send_request" name="发送请求" messageRef="msg_request">
+      <bpmn:incoming>client_flow_1</bpmn:incoming>
+      <bpmn:outgoing>client_flow_2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="client_wait_response" name="等待响应">
+      <bpmn:incoming>client_flow_2</bpmn:incoming>
+      <bpmn:outgoing>client_flow_3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_response" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="client_process_response" name="处理响应">
+      <bpmn:incoming>client_flow_3</bpmn:incoming>
+      <bpmn:outgoing>client_flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="client_end" name="结束">
+      <bpmn:incoming>client_flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="client_flow_1" sourceRef="client_start" targetRef="client_send_request" />
+    <bpmn:sequenceFlow id="client_flow_2" sourceRef="client_send_request" targetRef="client_wait_response" />
+    <bpmn:sequenceFlow id="client_flow_3" sourceRef="client_wait_response" targetRef="client_process_response" />
+    <bpmn:sequenceFlow id="client_flow_4" sourceRef="client_process_response" targetRef="client_end" />
+  </bpmn:process>
+  <bpmn:process id="process_server" name="服务器" isExecutable="true">
+    <bpmn:startEvent id="server_start" name="收到请求">
+      <bpmn:outgoing>server_flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_request" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="server_process" name="处理请求">
+      <bpmn:incoming>server_flow_1</bpmn:incoming>
+      <bpmn:outgoing>server_flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="server_send_response" name="发送响应" messageRef="msg_response">
+      <bpmn:incoming>server_flow_2</bpmn:incoming>
+      <bpmn:outgoing>server_flow_3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="server_end" name="结束">
+      <bpmn:incoming>server_flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="server_flow_1" sourceRef="server_start" targetRef="server_process" />
+    <bpmn:sequenceFlow id="server_flow_2" sourceRef="server_process" targetRef="server_send_response" />
+    <bpmn:sequenceFlow id="server_flow_3" sourceRef="server_send_response" targetRef="server_end" />
+  </bpmn:process>
+  <bpmn:process id="Process_participant_external_closed" name="外部系统 (封闭)" isExecutable="true" />
+  <bpmn:process id="Process_participant_partner_open" name="合作伙伴 (开放)" isExecutable="true" />
+  <bpmn:process id="Process_participant_multi_unlimited" name="无限实例池" isExecutable="true" />
+  <bpmn:process id="Process_participant_single_instance" name="单实例池" isExecutable="true" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_participant_options" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_participant_options" bpmnElement="collaboration_participant_options">
+      <bpmndi:BPMNShape id="collaboration_participant_options_di" bpmnElement="collaboration_participant_options">
+        <dc:Bounds x="0" y="0" width="858" height="838" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_client_di" bpmnElement="participant_client" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_client_di" bpmnElement="process_client">
+        <dc:Bounds x="0" y="0" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="client_start_di" bpmnElement="client_start">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="client_send_request_di" bpmnElement="client_send_request">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="client_wait_response_di" bpmnElement="client_wait_response">
+        <dc:Bounds x="358" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="client_process_response_di" bpmnElement="client_process_response">
+        <dc:Bounds x="474" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="client_end_di" bpmnElement="client_end">
+        <dc:Bounds x="654" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="622" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_server_di" bpmnElement="participant_server" isHorizontal="true">
+        <dc:Bounds x="148" y="174" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_server_di" bpmnElement="process_server">
+        <dc:Bounds x="148" y="174" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="server_start_di" bpmnElement="server_start">
+        <dc:Bounds x="210" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="server_process_di" bpmnElement="server_process">
+        <dc:Bounds x="326" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="server_send_response_di" bpmnElement="server_send_response">
+        <dc:Bounds x="506" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="server_end_di" bpmnElement="server_end">
+        <dc:Bounds x="686" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="654" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_external_closed_di" bpmnElement="participant_external_closed" isHorizontal="true">
+        <dc:Bounds x="0" y="348" width="710" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_partner_open_di" bpmnElement="participant_partner_open" isHorizontal="true">
+        <dc:Bounds x="0" y="478" width="710" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_multi_unlimited_di" bpmnElement="participant_multi_unlimited" isHorizontal="true">
+        <dc:Bounds x="0" y="608" width="710" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_single_instance_di" bpmnElement="participant_single_instance" isHorizontal="true">
+        <dc:Bounds x="0" y="738" width="710" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="client_flow_1_di" bpmnElement="client_flow_1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="client_flow_2_di" bpmnElement="client_flow_2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="client_flow_3_di" bpmnElement="client_flow_3">
+        <di:waypoint x="394" y="72" />
+        <di:waypoint x="474" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="client_flow_4_di" bpmnElement="client_flow_4">
+        <di:waypoint x="574" y="72" />
+        <di:waypoint x="654" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="server_flow_1_di" bpmnElement="server_flow_1">
+        <di:waypoint x="246" y="246" />
+        <di:waypoint x="326" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="server_flow_2_di" bpmnElement="server_flow_2">
+        <di:waypoint x="426" y="246" />
+        <di:waypoint x="506" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="server_flow_3_di" bpmnElement="server_flow_3">
+        <di:waypoint x="606" y="246" />
+        <di:waypoint x="686" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_request_di" bpmnElement="msgflow_request">
+        <di:waypoint x="228" y="112" />
+        <di:waypoint x="228" y="228" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="233" y="145.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_response_di" bpmnElement="msgflow_response">
+        <di:waypoint x="556" y="206" />
+        <di:waypoint x="556" y="159" />
+        <di:waypoint x="376" y="159" />
+        <di:waypoint x="376" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="441" y="140" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

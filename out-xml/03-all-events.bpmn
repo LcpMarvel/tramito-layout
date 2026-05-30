@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_all_events" targetNamespace="http://example.com/test-events" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_1" name="测试消息" />
+  <bpmn:signal id="sig_1" name="测试信号" />
+  <bpmn:error id="err_1" name="测试错误" errorCode="ERR_001" />
+  <bpmn:escalation id="esc_1" name="测试升级" escalationCode="ESC_001" />
+  <bpmn:process id="process_all_events" name="所有事件类型测试" isExecutable="true">
+    <bpmn:startEvent id="start_none" name="空启动">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_message" name="消息启动">
+      <bpmn:messageEventDefinition messageRef="msg_1" />
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_timer" name="定时启动">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT1H</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_signal" name="信号启动">
+      <bpmn:signalEventDefinition signalRef="sig_1" />
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_conditional" name="条件启动">
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${amount &gt; 1000}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_multiple" name="多重启动" />
+    <bpmn:startEvent id="start_parallel_multiple" name="并行多重启动" />
+    <bpmn:intermediateCatchEvent id="catch_message" name="接收消息">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_timer" name="等待定时">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_signal" name="接收信号">
+      <bpmn:signalEventDefinition signalRef="sig_1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_conditional" name="等待条件">
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${status == 'ready'}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_link" name="链接接收">
+      <bpmn:linkEventDefinition name="link_point_A" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateThrowEvent id="throw_none" name="空抛出" />
+    <bpmn:intermediateThrowEvent id="throw_message" name="发送消息">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_1" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_signal" name="发送信号">
+      <bpmn:signalEventDefinition signalRef="sig_1" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_escalation" name="升级">
+      <bpmn:escalationEventDefinition escalationRef="esc_1" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_compensation" name="触发补偿">
+      <bpmn:compensateEventDefinition />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_link" name="链接抛出">
+      <bpmn:linkEventDefinition name="link_point_A" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="end_none" name="正常结束">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_message" name="消息结束">
+      <bpmn:messageEventDefinition messageRef="msg_1" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_error" name="错误结束">
+      <bpmn:errorEventDefinition errorRef="err_1" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_escalation" name="升级结束">
+      <bpmn:escalationEventDefinition escalationRef="esc_1" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_cancel" name="取消结束">
+      <bpmn:cancelEventDefinition />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_compensation" name="补偿结束">
+      <bpmn:compensateEventDefinition />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_signal" name="信号结束">
+      <bpmn:signalEventDefinition signalRef="sig_1" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_terminate" name="终止结束">
+      <bpmn:terminateEventDefinition />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_multiple" name="多重结束" />
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_none" targetRef="catch_message" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="catch_message" targetRef="throw_message" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="throw_message" targetRef="end_none" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_all_events" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_all_events" bpmnElement="process_all_events">
+      <bpmndi:BPMNShape id="process_all_events_di" bpmnElement="process_all_events">
+        <dc:Bounds x="0" y="0" width="560" height="186" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_none_di" bpmnElement="start_none">
+        <dc:Bounds x="62" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="158" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_message_di" bpmnElement="start_message">
+        <dc:Bounds x="62" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_timer_di" bpmnElement="start_timer">
+        <dc:Bounds x="148" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="116" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_signal_di" bpmnElement="start_signal">
+        <dc:Bounds x="234" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="202" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_conditional_di" bpmnElement="start_conditional">
+        <dc:Bounds x="320" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="288" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_multiple_di" bpmnElement="start_multiple">
+        <dc:Bounds x="406" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="374" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_parallel_multiple_di" bpmnElement="start_parallel_multiple">
+        <dc:Bounds x="492" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="460" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_message_di" bpmnElement="catch_message">
+        <dc:Bounds x="198" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="166" y="158" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_message_di" bpmnElement="throw_message">
+        <dc:Bounds x="334" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="302" y="158" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_none_di" bpmnElement="end_none">
+        <dc:Bounds x="470" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="438" y="158" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="136" />
+        <di:waypoint x="198" y="136" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="234" y="136" />
+        <di:waypoint x="334" y="136" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="370" y="136" />
+        <di:waypoint x="470" y="136" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

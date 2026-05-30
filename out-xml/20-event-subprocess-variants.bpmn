@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_event_subprocess_variants" targetNamespace="http://example.com/test-event-subprocess-variants" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_incoming" name="外部消息" />
+  <bpmn:signal id="sig_alert" name="警报信号" />
+  <bpmn:error id="err_system" name="系统错误" errorCode="SYS_ERR_001" />
+  <bpmn:escalation id="esc_timeout" name="超时升级" escalationCode="ESC_TIMEOUT" />
+  <bpmn:process id="process_event_subprocess_variants" name="事件子流程变体测试" isExecutable="true">
+    <bpmn:subProcess id="event_subprocess_message" name="消息事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_msg_start" name="消息触发">
+        <bpmn:outgoing>evtsub_msg_flow_1</bpmn:outgoing>
+        <bpmn:messageEventDefinition messageRef="msg_incoming" />
+      </bpmn:startEvent>
+      <bpmn:task id="evtsub_msg_task" name="处理消息">
+        <bpmn:incoming>evtsub_msg_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_msg_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="evtsub_msg_end" name="消息处理完成">
+        <bpmn:incoming>evtsub_msg_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_msg_flow_1" sourceRef="evtsub_msg_start" targetRef="evtsub_msg_task" />
+      <bpmn:sequenceFlow id="evtsub_msg_flow_2" sourceRef="evtsub_msg_task" targetRef="evtsub_msg_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="event_subprocess_timer" name="定时事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_timer_start" name="定时触发">
+        <bpmn:outgoing>evtsub_timer_flow_1</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT5M</bpmn:timeCycle>
+        </bpmn:timerEventDefinition>
+      </bpmn:startEvent>
+      <bpmn:task id="evtsub_timer_task" name="定时检查">
+        <bpmn:incoming>evtsub_timer_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_timer_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="evtsub_timer_end" name="检查完成">
+        <bpmn:incoming>evtsub_timer_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_timer_flow_1" sourceRef="evtsub_timer_start" targetRef="evtsub_timer_task" />
+      <bpmn:sequenceFlow id="evtsub_timer_flow_2" sourceRef="evtsub_timer_task" targetRef="evtsub_timer_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="event_subprocess_signal" name="信号事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_signal_start" name="信号触发">
+        <bpmn:outgoing>evtsub_signal_flow_1</bpmn:outgoing>
+        <bpmn:signalEventDefinition signalRef="sig_alert" />
+      </bpmn:startEvent>
+      <bpmn:task id="evtsub_signal_task" name="处理警报">
+        <bpmn:incoming>evtsub_signal_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_signal_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="evtsub_signal_end" name="警报处理完成">
+        <bpmn:incoming>evtsub_signal_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_signal_flow_1" sourceRef="evtsub_signal_start" targetRef="evtsub_signal_task" />
+      <bpmn:sequenceFlow id="evtsub_signal_flow_2" sourceRef="evtsub_signal_task" targetRef="evtsub_signal_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="event_subprocess_escalation" name="升级事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_escalation_start" name="升级触发">
+        <bpmn:outgoing>evtsub_escalation_flow_1</bpmn:outgoing>
+        <bpmn:escalationEventDefinition escalationRef="esc_timeout" />
+      </bpmn:startEvent>
+      <bpmn:userTask id="evtsub_escalation_task" name="人工介入">
+        <bpmn:incoming>evtsub_escalation_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_escalation_flow_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="evtsub_escalation_end" name="介入完成">
+        <bpmn:incoming>evtsub_escalation_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_escalation_flow_1" sourceRef="evtsub_escalation_start" targetRef="evtsub_escalation_task" />
+      <bpmn:sequenceFlow id="evtsub_escalation_flow_2" sourceRef="evtsub_escalation_task" targetRef="evtsub_escalation_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="event_subprocess_conditional" name="条件事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_conditional_start" name="条件触发">
+        <bpmn:outgoing>evtsub_conditional_flow_1</bpmn:outgoing>
+        <bpmn:conditionalEventDefinition>
+          <bpmn:condition xsi:type="bpmn:tFormalExpression">${stockLevel &lt; 10}</bpmn:condition>
+        </bpmn:conditionalEventDefinition>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="evtsub_conditional_task" name="自动补货">
+        <bpmn:incoming>evtsub_conditional_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_conditional_flow_2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="evtsub_conditional_end" name="补货完成">
+        <bpmn:incoming>evtsub_conditional_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_conditional_flow_1" sourceRef="evtsub_conditional_start" targetRef="evtsub_conditional_task" />
+      <bpmn:sequenceFlow id="evtsub_conditional_flow_2" sourceRef="evtsub_conditional_task" targetRef="evtsub_conditional_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="event_subprocess_error" name="错误事件子流程" triggeredByEvent="true">
+      <bpmn:startEvent id="evtsub_error_start" name="错误触发">
+        <bpmn:outgoing>evtsub_error_flow_1</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="err_system" />
+      </bpmn:startEvent>
+      <bpmn:task id="evtsub_error_task" name="错误处理">
+        <bpmn:incoming>evtsub_error_flow_1</bpmn:incoming>
+        <bpmn:outgoing>evtsub_error_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="evtsub_error_end" name="错误处理完成">
+        <bpmn:incoming>evtsub_error_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="evtsub_error_flow_1" sourceRef="evtsub_error_start" targetRef="evtsub_error_task" />
+      <bpmn:sequenceFlow id="evtsub_error_flow_2" sourceRef="evtsub_error_task" targetRef="evtsub_error_end" />
+    </bpmn:subProcess>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_event_subprocess_variants" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_event_subprocess_variants" bpmnElement="process_event_subprocess_variants">
+      <bpmndi:BPMNShape id="process_event_subprocess_variants_di" bpmnElement="process_event_subprocess_variants">
+        <dc:Bounds x="0" y="0" width="2474" height="442" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_message_di" bpmnElement="event_subprocess_message" isExpanded="true">
+        <dc:Bounds x="62" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_msg_start_di" bpmnElement="evtsub_msg_start">
+        <dc:Bounds x="94" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="62" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_msg_task_di" bpmnElement="evtsub_msg_task">
+        <dc:Bounds x="230" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_msg_end_di" bpmnElement="evtsub_msg_end">
+        <dc:Bounds x="430" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="398" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_timer_di" bpmnElement="event_subprocess_timer" isExpanded="true">
+        <dc:Bounds x="548" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_timer_start_di" bpmnElement="evtsub_timer_start">
+        <dc:Bounds x="580" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="548" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_timer_task_di" bpmnElement="evtsub_timer_task">
+        <dc:Bounds x="716" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_timer_end_di" bpmnElement="evtsub_timer_end">
+        <dc:Bounds x="916" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="884" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_signal_di" bpmnElement="event_subprocess_signal" isExpanded="true">
+        <dc:Bounds x="1034" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_signal_start_di" bpmnElement="evtsub_signal_start">
+        <dc:Bounds x="1066" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1034" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_signal_task_di" bpmnElement="evtsub_signal_task">
+        <dc:Bounds x="1202" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_signal_end_di" bpmnElement="evtsub_signal_end">
+        <dc:Bounds x="1402" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1370" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_escalation_di" bpmnElement="event_subprocess_escalation" isExpanded="true">
+        <dc:Bounds x="1520" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_escalation_start_di" bpmnElement="evtsub_escalation_start">
+        <dc:Bounds x="1552" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1520" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_escalation_task_di" bpmnElement="evtsub_escalation_task">
+        <dc:Bounds x="1688" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_escalation_end_di" bpmnElement="evtsub_escalation_end">
+        <dc:Bounds x="1888" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1856" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_conditional_di" bpmnElement="event_subprocess_conditional" isExpanded="true">
+        <dc:Bounds x="2006" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_conditional_start_di" bpmnElement="evtsub_conditional_start">
+        <dc:Bounds x="2038" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2006" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_conditional_task_di" bpmnElement="evtsub_conditional_task">
+        <dc:Bounds x="2174" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_conditional_end_di" bpmnElement="evtsub_conditional_end">
+        <dc:Bounds x="2374" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2342" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_subprocess_error_di" bpmnElement="event_subprocess_error" isExpanded="true">
+        <dc:Bounds x="62" y="246" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_error_start_di" bpmnElement="evtsub_error_start">
+        <dc:Bounds x="94" y="320" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="62" y="360" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_error_task_di" bpmnElement="evtsub_error_task">
+        <dc:Bounds x="230" y="298" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="evtsub_error_end_di" bpmnElement="evtsub_error_end">
+        <dc:Bounds x="430" y="320" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="398" y="360" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="evtsub_msg_flow_1_di" bpmnElement="evtsub_msg_flow_1">
+        <di:waypoint x="130" y="124" />
+        <di:waypoint x="230" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_msg_flow_2_di" bpmnElement="evtsub_msg_flow_2">
+        <di:waypoint x="330" y="124" />
+        <di:waypoint x="430" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_timer_flow_1_di" bpmnElement="evtsub_timer_flow_1">
+        <di:waypoint x="616" y="124" />
+        <di:waypoint x="716" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_timer_flow_2_di" bpmnElement="evtsub_timer_flow_2">
+        <di:waypoint x="816" y="124" />
+        <di:waypoint x="916" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_signal_flow_1_di" bpmnElement="evtsub_signal_flow_1">
+        <di:waypoint x="1102" y="124" />
+        <di:waypoint x="1202" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_signal_flow_2_di" bpmnElement="evtsub_signal_flow_2">
+        <di:waypoint x="1302" y="124" />
+        <di:waypoint x="1402" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_escalation_flow_1_di" bpmnElement="evtsub_escalation_flow_1">
+        <di:waypoint x="1588" y="124" />
+        <di:waypoint x="1688" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_escalation_flow_2_di" bpmnElement="evtsub_escalation_flow_2">
+        <di:waypoint x="1788" y="124" />
+        <di:waypoint x="1888" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_conditional_flow_1_di" bpmnElement="evtsub_conditional_flow_1">
+        <di:waypoint x="2074" y="124" />
+        <di:waypoint x="2174" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_conditional_flow_2_di" bpmnElement="evtsub_conditional_flow_2">
+        <di:waypoint x="2274" y="124" />
+        <di:waypoint x="2374" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_error_flow_1_di" bpmnElement="evtsub_error_flow_1">
+        <di:waypoint x="130" y="338" />
+        <di:waypoint x="230" y="338" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="evtsub_error_flow_2_di" bpmnElement="evtsub_error_flow_2">
+        <di:waypoint x="330" y="338" />
+        <di:waypoint x="430" y="338" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

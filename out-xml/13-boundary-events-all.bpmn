@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_boundary_events" targetNamespace="http://example.com/test-boundary-events" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_interrupt" name="中断消息" />
+  <bpmn:signal id="sig_notify" name="通知信号" />
+  <bpmn:error id="err_business" name="业务错误" errorCode="BIZ_001" />
+  <bpmn:escalation id="esc_warning" name="警告升级" escalationCode="WARN_001" />
+  <bpmn:process id="process_boundary_events" name="所有边界事件类型测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_with_timer_int" name="定时中断任务">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_timer_interrupting" name="超时中断" attachedToRef="task_with_timer_int">
+      <bpmn:outgoing>flow_timer_int</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="task_with_timer_non_int" name="定时非中断任务">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_timer_non_interrupting" name="定时提醒" cancelActivity="false" attachedToRef="task_with_timer_non_int">
+      <bpmn:outgoing>flow_timer_non_int</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R3/PT30M</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_with_message_int" name="消息中断任务">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_message_interrupting" name="消息中断" attachedToRef="task_with_message_int">
+      <bpmn:messageEventDefinition messageRef="msg_interrupt" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_with_message_non_int" name="消息非中断任务">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_message_non_interrupting" name="消息通知" cancelActivity="false" attachedToRef="task_with_message_non_int">
+      <bpmn:messageEventDefinition messageRef="msg_interrupt" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_with_error" name="错误边界任务" implementation="${riskyService.execute()}">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_error" name="捕获错误" attachedToRef="task_with_error">
+      <bpmn:outgoing>flow_error_handler</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="err_business" />
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_with_signal_int" name="信号中断任务">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_signal_interrupting" name="信号中断" attachedToRef="task_with_signal_int">
+      <bpmn:signalEventDefinition signalRef="sig_notify" />
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_with_signal_non_int" name="信号非中断任务">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_signal_non_interrupting" name="信号通知" cancelActivity="false" attachedToRef="task_with_signal_non_int">
+      <bpmn:signalEventDefinition signalRef="sig_notify" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="task_with_escalation_int" name="升级中断任务">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_escalation_interrupting" name="升级中断" attachedToRef="task_with_escalation_int">
+      <bpmn:escalationEventDefinition escalationRef="esc_warning" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="task_with_escalation_non_int" name="升级非中断任务">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+      <bpmn:outgoing>flow_9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_escalation_non_interrupting" name="升级通知" cancelActivity="false" attachedToRef="task_with_escalation_non_int">
+      <bpmn:escalationEventDefinition escalationRef="esc_warning" />
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_with_conditional_int" name="条件中断任务">
+      <bpmn:incoming>flow_9</bpmn:incoming>
+      <bpmn:outgoing>flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_conditional_interrupting" name="条件中断" attachedToRef="task_with_conditional_int">
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${status == 'critical'}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_with_conditional_non_int" name="条件非中断任务">
+      <bpmn:incoming>flow_10</bpmn:incoming>
+      <bpmn:outgoing>flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_conditional_non_interrupting" name="条件检查" cancelActivity="false" attachedToRef="task_with_conditional_non_int">
+      <bpmn:conditionalEventDefinition>
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">${temperature &gt; 80}</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_with_compensation" name="补偿任务">
+      <bpmn:incoming>flow_11</bpmn:incoming>
+      <bpmn:outgoing>flow_12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_compensation" name="补偿触发" attachedToRef="task_with_compensation">
+      <bpmn:compensateEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_compensation_handler" name="补偿处理" />
+    <bpmn:task id="task_with_multiple" name="多重边界任务">
+      <bpmn:incoming>flow_12</bpmn:incoming>
+      <bpmn:outgoing>flow_13</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_multiple" name="多重事件" attachedToRef="task_with_multiple" />
+    <bpmn:task id="task_with_parallel_multiple" name="并行多重边界任务">
+      <bpmn:incoming>flow_13</bpmn:incoming>
+      <bpmn:outgoing>flow_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:boundaryEvent id="boundary_parallel_multiple" name="并行多重" attachedToRef="task_with_parallel_multiple" />
+    <bpmn:task id="task_handler_timer" name="超时处理">
+      <bpmn:incoming>flow_timer_int</bpmn:incoming>
+      <bpmn:outgoing>flow_to_timeout_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sendTask id="task_handler_reminder" name="发送提醒">
+      <bpmn:incoming>flow_timer_non_int</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:task id="task_handler_error" name="错误处理">
+      <bpmn:incoming>flow_error_handler</bpmn:incoming>
+      <bpmn:outgoing>flow_to_error_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_normal" name="正常结束">
+      <bpmn:incoming>flow_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_timeout" name="超时结束">
+      <bpmn:incoming>flow_to_timeout_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_error" name="错误结束">
+      <bpmn:incoming>flow_to_error_end</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="err_business" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_with_timer_int" />
+    <bpmn:sequenceFlow id="flow_1" sourceRef="task_with_timer_int" targetRef="task_with_timer_non_int" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_with_timer_non_int" targetRef="task_with_message_int" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_with_message_int" targetRef="task_with_message_non_int" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_with_message_non_int" targetRef="task_with_error" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_with_error" targetRef="task_with_signal_int" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_with_signal_int" targetRef="task_with_signal_non_int" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="task_with_signal_non_int" targetRef="task_with_escalation_int" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_with_escalation_int" targetRef="task_with_escalation_non_int" />
+    <bpmn:sequenceFlow id="flow_9" sourceRef="task_with_escalation_non_int" targetRef="task_with_conditional_int" />
+    <bpmn:sequenceFlow id="flow_10" sourceRef="task_with_conditional_int" targetRef="task_with_conditional_non_int" />
+    <bpmn:sequenceFlow id="flow_11" sourceRef="task_with_conditional_non_int" targetRef="task_with_compensation" />
+    <bpmn:sequenceFlow id="flow_12" sourceRef="task_with_compensation" targetRef="task_with_multiple" />
+    <bpmn:sequenceFlow id="flow_13" sourceRef="task_with_multiple" targetRef="task_with_parallel_multiple" />
+    <bpmn:sequenceFlow id="flow_14" sourceRef="task_with_parallel_multiple" targetRef="end_normal" />
+    <bpmn:sequenceFlow id="flow_timer_int" sourceRef="boundary_timer_interrupting" targetRef="task_handler_timer" />
+    <bpmn:sequenceFlow id="flow_timer_non_int" sourceRef="boundary_timer_non_interrupting" targetRef="task_handler_reminder" />
+    <bpmn:sequenceFlow id="flow_error_handler" sourceRef="boundary_error" targetRef="task_handler_error" />
+    <bpmn:sequenceFlow id="flow_to_timeout_end" sourceRef="task_handler_timer" targetRef="end_timeout" />
+    <bpmn:sequenceFlow id="flow_to_error_end" sourceRef="task_handler_error" targetRef="end_error" />
+    <bpmn:association id="assoc_compensation" associationDirection="One" sourceRef="boundary_compensation" targetRef="task_compensation_handler" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_boundary_events" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_boundary_events" bpmnElement="process_boundary_events">
+      <bpmndi:BPMNShape id="process_boundary_events_di" bpmnElement="process_boundary_events">
+        <dc:Bounds x="0" y="0" width="1378" height="624" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_timer_int_di" bpmnElement="task_with_timer_int">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_timer_interrupting_di" bpmnElement="boundary_timer_interrupting">
+        <dc:Bounds x="180" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="171" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_timer_non_int_di" bpmnElement="task_with_timer_non_int">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_timer_non_interrupting_di" bpmnElement="boundary_timer_non_interrupting">
+        <dc:Bounds x="360" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_message_int_di" bpmnElement="task_with_message_int">
+        <dc:Bounds x="538" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_message_interrupting_di" bpmnElement="boundary_message_interrupting">
+        <dc:Bounds x="540" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="531" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_message_non_int_di" bpmnElement="task_with_message_non_int">
+        <dc:Bounds x="718" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_message_non_interrupting_di" bpmnElement="boundary_message_non_interrupting">
+        <dc:Bounds x="720" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="711" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_error_di" bpmnElement="task_with_error">
+        <dc:Bounds x="898" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_error_di" bpmnElement="boundary_error">
+        <dc:Bounds x="900" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="891" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_signal_int_di" bpmnElement="task_with_signal_int">
+        <dc:Bounds x="1078" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_signal_interrupting_di" bpmnElement="boundary_signal_interrupting">
+        <dc:Bounds x="1080" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1071" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_signal_non_int_di" bpmnElement="task_with_signal_non_int">
+        <dc:Bounds x="1258" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_signal_non_interrupting_di" bpmnElement="boundary_signal_non_interrupting">
+        <dc:Bounds x="1260" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1251" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_escalation_int_di" bpmnElement="task_with_escalation_int">
+        <dc:Bounds x="62" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_escalation_interrupting_di" bpmnElement="boundary_escalation_interrupting">
+        <dc:Bounds x="64" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="55" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_escalation_non_int_di" bpmnElement="task_with_escalation_non_int">
+        <dc:Bounds x="242" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_escalation_non_interrupting_di" bpmnElement="boundary_escalation_non_interrupting">
+        <dc:Bounds x="244" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="235" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_conditional_int_di" bpmnElement="task_with_conditional_int">
+        <dc:Bounds x="422" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_conditional_interrupting_di" bpmnElement="boundary_conditional_interrupting">
+        <dc:Bounds x="424" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_conditional_non_int_di" bpmnElement="task_with_conditional_non_int">
+        <dc:Bounds x="602" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_conditional_non_interrupting_di" bpmnElement="boundary_conditional_non_interrupting">
+        <dc:Bounds x="604" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="595" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_compensation_di" bpmnElement="task_with_compensation">
+        <dc:Bounds x="782" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_compensation_di" bpmnElement="boundary_compensation">
+        <dc:Bounds x="784" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_compensation_handler_di" bpmnElement="task_compensation_handler">
+        <dc:Bounds x="782" y="504" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_multiple_di" bpmnElement="task_with_multiple">
+        <dc:Bounds x="962" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_multiple_di" bpmnElement="boundary_multiple">
+        <dc:Bounds x="964" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="955" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_with_parallel_multiple_di" bpmnElement="task_with_parallel_multiple">
+        <dc:Bounds x="1142" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_parallel_multiple_di" bpmnElement="boundary_parallel_multiple">
+        <dc:Bounds x="1144" y="374" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1135" y="414" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handler_timer_di" bpmnElement="task_handler_timer">
+        <dc:Bounds x="110" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handler_reminder_di" bpmnElement="task_handler_reminder">
+        <dc:Bounds x="410" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handler_error_di" bpmnElement="task_handler_error">
+        <dc:Bounds x="946" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_normal_di" bpmnElement="end_normal">
+        <dc:Bounds x="1322" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1290" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_timeout_di" bpmnElement="end_timeout">
+        <dc:Bounds x="310" y="246" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="278" y="286" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_error_di" bpmnElement="end_error">
+        <dc:Bounds x="1146" y="246" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1114" y="286" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="638" y="72" />
+        <di:waypoint x="718" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="818" y="72" />
+        <di:waypoint x="898" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="998" y="72" />
+        <di:waypoint x="1078" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="1178" y="72" />
+        <di:waypoint x="1258" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1308" y="112" />
+        <di:waypoint x="1308" y="212" />
+        <di:waypoint x="100" y="212" />
+        <di:waypoint x="100" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="162" y="352" />
+        <di:waypoint x="242" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_9_di" bpmnElement="flow_9">
+        <di:waypoint x="342" y="352" />
+        <di:waypoint x="422" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_10_di" bpmnElement="flow_10">
+        <di:waypoint x="522" y="352" />
+        <di:waypoint x="602" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_11_di" bpmnElement="flow_11">
+        <di:waypoint x="702" y="352" />
+        <di:waypoint x="782" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_12_di" bpmnElement="flow_12">
+        <di:waypoint x="882" y="352" />
+        <di:waypoint x="962" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_13_di" bpmnElement="flow_13">
+        <di:waypoint x="1062" y="352" />
+        <di:waypoint x="1142" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_14_di" bpmnElement="flow_14">
+        <di:waypoint x="1242" y="352" />
+        <di:waypoint x="1322" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_timer_int_di" bpmnElement="flow_timer_int">
+        <di:waypoint x="198" y="130" />
+        <di:waypoint x="198" y="159" />
+        <di:waypoint x="160" y="159" />
+        <di:waypoint x="160" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_timer_non_int_di" bpmnElement="flow_timer_non_int">
+        <di:waypoint x="378" y="130" />
+        <di:waypoint x="378" y="171" />
+        <di:waypoint x="460" y="171" />
+        <di:waypoint x="460" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_error_handler_di" bpmnElement="flow_error_handler">
+        <di:waypoint x="918" y="130" />
+        <di:waypoint x="918" y="195" />
+        <di:waypoint x="996" y="195" />
+        <di:waypoint x="996" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_timeout_end_di" bpmnElement="flow_to_timeout_end">
+        <di:waypoint x="210" y="264" />
+        <di:waypoint x="310" y="264" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_error_end_di" bpmnElement="flow_to_error_end">
+        <di:waypoint x="1046" y="264" />
+        <di:waypoint x="1146" y="264" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_compensation_di" bpmnElement="assoc_compensation">
+        <di:waypoint x="802" y="410" />
+        <di:waypoint x="832" y="410" />
+        <di:waypoint x="832" y="504" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

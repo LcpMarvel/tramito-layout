@@ -879,12 +879,92 @@ function checkF5(p: ParsedFixture): SoftMetric {
   };
 }
 
+/**
+ * F6 Fan-in 归一率：多条决策分支（gateway 出边）汇入同一 sink 时，是否聚成「一根共享干线 +
+ * 单点进入」，而不是各自横穿画布从不同高度扎进 sink（fixture 39 的驳回归一诉求）。
+ *
+ * 硬+软标准本来量不到 edge bundling——一束散乱的 fan-in 边可以全程不穿节点、端点都贴边，
+ * 硬标准全过却很乱。F6 专门补这个缺口。
+ *
+ * 度量（与 edge-router/bundle.ts 的判据对齐，但只看几何结果、不依赖内部 edgeType）：
+ *   - **限定 sink**：同 pool 入边里有 ≥2 条「长程」（source/target 不同 lane）的 target。
+ *   - **成员**：该 sink 所有 gateway 出发的入边（分支/驳回）。
+ *   - **归一**：成员按 (进入侧, 干线坐标) 聚类，最大簇占比即该 sink 的归一率；F6 = 各 sink 平均。
+ *
+ * **只观测、不设硬门**（pass 恒 true）：先攒样本看分布，避免单一 fixture 把阈值定偏。
+ */
+function checkF6(p: ParsedFixture): SoftMetric {
+  const laneOf = new Map<string, string>();
+  for (const [laneId, refs] of p.flowNodeRefs) {
+    for (const nid of refs) if (!laneOf.has(nid)) laneOf.set(nid, laneId);
+  }
+  const isGateway = (id: string): boolean => /Gateway$/.test(p.bpmnTagOf.get(id) ?? '');
+
+  const incoming = new Map<string, EdgeRoute[]>();
+  for (const e of p.edges) {
+    if (!sameOwnerPool(p, e.source, e.target)) continue;
+    if (!incoming.has(e.target)) incoming.set(e.target, []);
+    incoming.get(e.target)!.push(e);
+  }
+
+  let ratioSum = 0;
+  let qualifying = 0;
+  let detail = '';
+  for (const [target, ins] of incoming) {
+    const tb = p.boxes.get(target);
+    if (!tb) continue;
+    const longRange = ins.filter((e) => {
+      const sl = laneOf.get(e.source);
+      const tl = laneOf.get(e.target);
+      return sl !== undefined && tl !== undefined && sl !== tl;
+    });
+    if (longRange.length < 2) continue; // 触发门槛与 bundle.ts 一致
+    const members = ins.filter((e) => isGateway(e.source) && e.waypoints.length >= 2);
+    if (members.length < 2) continue;
+
+    qualifying++;
+    const groups = new Map<string, number>();
+    const tcx = tb.x + tb.w / 2;
+    const tcy = tb.y + tb.h / 2;
+    for (const e of members) {
+      const end = e.waypoints[e.waypoints.length - 1]!;
+      const pen = e.waypoints[e.waypoints.length - 2]!;
+      const vertical = Math.abs(pen.x - end.x) <= 2;
+      const side = vertical
+        ? (end.y <= tcy ? 'top' : 'bottom')
+        : (end.x <= tcx ? 'left' : 'right');
+      // 干线坐标：竖直进入看 x、水平进入看 y；量化到 8px 容差视作「同一根干线」。
+      const trunk = Math.round((vertical ? pen.x : pen.y) / 8);
+      const key = `${side}:${trunk}`;
+      groups.set(key, (groups.get(key) ?? 0) + 1);
+    }
+    const largest = Math.max(...groups.values());
+    const ratio = largest / members.length;
+    ratioSum += ratio;
+    if (ratio < 1 && !detail) {
+      detail = `${target}: ${largest}/${members.length} fan-in edges share one trunk+side`;
+    }
+  }
+
+  if (qualifying === 0) {
+    return { rule: 'F6', fixture: p.fixture, value: 1, display: 'n/a', pass: true };
+  }
+  const value = ratioSum / qualifying;
+  return {
+    rule: 'F6', fixture: p.fixture, value,
+    display: `${(value * 100).toFixed(0)}%`,
+    pass: true, // 只观测不设硬门
+    detail: value < 1 ? detail : undefined,
+  };
+}
+
 export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetric }[] = [
   { rule: 'F1', fn: checkF1 },
   { rule: 'F2', fn: checkF2 },
   { rule: 'F3', fn: checkF3 },
   { rule: 'F4', fn: checkF4 },
   { rule: 'F5', fn: checkF5 },
+  { rule: 'F6', fn: checkF6 },
 ];
 
 // ============================================================

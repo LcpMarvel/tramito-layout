@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_embedded_subprocess" targetNamespace="http://example.com/test-embedded-subprocess" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_embedded" name="嵌入式子流程测试" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="开始">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="subprocess_embedded" name="嵌入式子流程">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+      <bpmn:startEvent id="sub_start" name="子开始">
+        <bpmn:outgoing>sub_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="sub_task_1" name="子任务1">
+        <bpmn:incoming>sub_flow_1</bpmn:incoming>
+        <bpmn:outgoing>sub_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="sub_task_2" name="子任务2">
+        <bpmn:incoming>sub_flow_2</bpmn:incoming>
+        <bpmn:outgoing>sub_flow_3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="sub_end" name="子结束">
+        <bpmn:incoming>sub_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="sub_flow_1" sourceRef="sub_start" targetRef="sub_task_1" />
+      <bpmn:sequenceFlow id="sub_flow_2" sourceRef="sub_task_1" targetRef="sub_task_2" />
+      <bpmn:sequenceFlow id="sub_flow_3" sourceRef="sub_task_2" targetRef="sub_end" />
+    </bpmn:subProcess>
+    <bpmn:task id="task_after" name="后续任务">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+      <bpmn:outgoing>main_flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_main" name="结束">
+      <bpmn:incoming>main_flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="subprocess_embedded" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="subprocess_embedded" targetRef="task_after" />
+    <bpmn:sequenceFlow id="main_flow_3" sourceRef="task_after" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_embedded_subprocess" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_embedded_subprocess" bpmnElement="process_embedded">
+      <bpmndi:BPMNShape id="process_embedded_di" bpmnElement="process_embedded">
+        <dc:Bounds x="0" y="0" width="1130" height="228" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="subprocess_embedded_di" bpmnElement="subprocess_embedded" isExpanded="true">
+        <dc:Bounds x="178" y="32" width="636" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_start_di" bpmnElement="sub_start">
+        <dc:Bounds x="210" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_1_di" bpmnElement="sub_task_1">
+        <dc:Bounds x="346" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_2_di" bpmnElement="sub_task_2">
+        <dc:Bounds x="546" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_end_di" bpmnElement="sub_end">
+        <dc:Bounds x="746" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="714" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_after_di" bpmnElement="task_after">
+        <dc:Bounds x="894" y="74" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="1074" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1042" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="sub_flow_1_di" bpmnElement="sub_flow_1">
+        <di:waypoint x="246" y="124" />
+        <di:waypoint x="346" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_flow_2_di" bpmnElement="sub_flow_2">
+        <di:waypoint x="446" y="124" />
+        <di:waypoint x="546" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_flow_3_di" bpmnElement="sub_flow_3">
+        <di:waypoint x="646" y="124" />
+        <di:waypoint x="746" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="114" />
+        <di:waypoint x="178" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="814" y="114" />
+        <di:waypoint x="894" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_3_di" bpmnElement="main_flow_3">
+        <di:waypoint x="994" y="114" />
+        <di:waypoint x="1074" y="114" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

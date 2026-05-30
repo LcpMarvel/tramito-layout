@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_voc_processing" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:collaboration id="collaboration_voc_main" name="VOC/VOP事件处理流程">
+    <bpmn:participant id="pool_company" name="公司" processRef="process_voc" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_voc" name="公司" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_receiving_dept" name="诉求接收部门">
+        <bpmn:flowNodeRef>start_event</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_create_form</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_supplement_info</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_create_work_order</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_associate_info</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_classify_level</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_fast_path</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_management" name="管理层">
+        <bpmn:flowNodeRef>task_approval_confirm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_qc_dept" name="品管部" />
+      <bpmn:lane id="lane_sales_after_sales" name="销售/售后部">
+        <bpmn:flowNodeRef>task_match_personnel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_fast</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_normal</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_event" name="请求流入">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_create_form" name="5.1.2.1 创建事件表单">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_supplement_info" name="补充事件信息">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_create_work_order" name="5.1.2.2 分类请求创建工单">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_associate_info" name="关联信息">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_classify_level" name="分类定级">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_fast_path" name="判断快速流程">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_fast</bpmn:outgoing>
+      <bpmn:outgoing>flow_normal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_approval_confirm" name="审批确认">
+      <bpmn:incoming>flow_normal</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_match_personnel" name="5.1.2.3 匹配人员">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_fast" name="远程处理完成">
+      <bpmn:incoming>flow_fast</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_normal" name="工单分派完成">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_event" targetRef="task_create_form" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_create_form" targetRef="task_supplement_info" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_supplement_info" targetRef="task_create_work_order" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_create_work_order" targetRef="task_associate_info" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_associate_info" targetRef="task_classify_level" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_classify_level" targetRef="gateway_fast_path" />
+    <bpmn:sequenceFlow id="flow_fast" name="是，远程解决" sourceRef="gateway_fast_path" targetRef="end_fast">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isFastPath == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_normal" name="否，需审批分派" sourceRef="gateway_fast_path" targetRef="task_approval_confirm" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="task_approval_confirm" targetRef="task_match_personnel" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_match_personnel" targetRef="end_normal" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_voc_processing" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_voc_processing" bpmnElement="collaboration_voc_main">
+      <bpmndi:BPMNShape id="collaboration_voc_main_di" bpmnElement="collaboration_voc_main">
+        <dc:Bounds x="0" y="0" width="1624" height="589" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_company_di" bpmnElement="pool_company" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1624" height="589" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_receiving_dept_di" bpmnElement="lane_receiving_dept" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1594" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_event_di" bpmnElement="start_event">
+        <dc:Bounds x="62" y="61" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="101" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_create_form_di" bpmnElement="task_create_form">
+        <dc:Bounds x="178" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_supplement_info_di" bpmnElement="task_supplement_info">
+        <dc:Bounds x="358" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_create_work_order_di" bpmnElement="task_create_work_order">
+        <dc:Bounds x="538" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_associate_info_di" bpmnElement="task_associate_info">
+        <dc:Bounds x="718" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_classify_level_di" bpmnElement="task_classify_level">
+        <dc:Bounds x="898" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_fast_path_di" bpmnElement="gateway_fast_path">
+        <dc:Bounds x="1078" y="54" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1053" y="36" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_management_di" bpmnElement="lane_management" isHorizontal="true">
+        <dc:Bounds x="30" y="135" width="1594" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_approval_confirm_di" bpmnElement="task_approval_confirm">
+        <dc:Bounds x="1208" y="151" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_qc_dept_di" bpmnElement="lane_qc_dept" isHorizontal="true">
+        <dc:Bounds x="30" y="247" width="1594" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_sales_after_sales_di" bpmnElement="lane_sales_after_sales" isHorizontal="true">
+        <dc:Bounds x="30" y="347" width="1594" height="222" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_match_personnel_di" bpmnElement="task_match_personnel">
+        <dc:Bounds x="1388" y="473" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_fast_di" bpmnElement="end_fast">
+        <dc:Bounds x="1388" y="363" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1356" y="403" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_normal_di" bpmnElement="end_normal">
+        <dc:Bounds x="1568" y="495" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1536" y="535" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="79" />
+        <di:waypoint x="178" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="79" />
+        <di:waypoint x="358" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="79" />
+        <di:waypoint x="538" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="638" y="79" />
+        <di:waypoint x="718" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="818" y="79" />
+        <di:waypoint x="898" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="998" y="79" />
+        <di:waypoint x="1078" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fast_di" bpmnElement="flow_fast">
+        <di:waypoint x="1103" y="104" />
+        <di:waypoint x="1103" y="241" />
+        <di:waypoint x="1368" y="241" />
+        <di:waypoint x="1368" y="381" />
+        <di:waypoint x="1388" y="381" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_normal_di" bpmnElement="flow_normal">
+        <di:waypoint x="1103" y="104" />
+        <di:waypoint x="1103" y="177" />
+        <di:waypoint x="1188" y="177" />
+        <di:waypoint x="1188" y="191" />
+        <di:waypoint x="1208" y="191" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1258" y="231" />
+        <di:waypoint x="1258" y="315" />
+        <di:waypoint x="1368" y="315" />
+        <di:waypoint x="1368" y="513" />
+        <di:waypoint x="1388" y="513" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="1488" y="513" />
+        <di:waypoint x="1568" y="513" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:collaboration id="collaboration_voc_vop" name="客户之声(VOC)与流程之声(VOP)捕获流程">
+    <bpmn:participant id="pool_external" name="外部实体 (客户)" processRef="Process_pool_external" />
+    <bpmn:participant id="pool_company" name="公司" processRef="process_company" />
+    <bpmn:messageFlow id="msgflow_voc" name="客户诉求" sourceRef="pool_external" targetRef="task_receive_voc" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_company" name="公司" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_marketing" name="营销部">
+        <bpmn:flowNodeRef>start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_parallel_fork</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_receive_voc</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_customer_type</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_related</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_department</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_marketing_after_sales</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_marketing_receive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_parallel_join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_quality" name="品管部">
+        <bpmn:flowNodeRef>task_quality_receive</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_business_depts" name="各业务部门">
+        <bpmn:flowNodeRef>task_receive_vop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_vop_fork</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_process_mgmt" name="流程管理部门">
+        <bpmn:flowNodeRef>task_vop_copy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_vop_copy</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start_to_fork</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="gateway_parallel_fork" name="信息源并行分叉">
+      <bpmn:incoming>flow_start_to_fork</bpmn:incoming>
+      <bpmn:outgoing>flow_fork_to_voc</bpmn:outgoing>
+      <bpmn:outgoing>flow_fork_to_vop</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:receiveTask id="task_receive_voc" name="接收VOC诉求">
+      <bpmn:incoming>flow_fork_to_voc</bpmn:incoming>
+      <bpmn:outgoing>flow_voc_to_customer_type</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:exclusiveGateway id="gateway_customer_type" name="客户类型判断">
+      <bpmn:incoming>flow_voc_to_customer_type</bpmn:incoming>
+      <bpmn:outgoing>flow_customer_type_to_export</bpmn:outgoing>
+      <bpmn:outgoing>flow_customer_type_to_internal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gateway_related" name="是否为关联客户？">
+      <bpmn:incoming>flow_customer_type_to_export</bpmn:incoming>
+      <bpmn:outgoing>flow_related_to_yes</bpmn:outgoing>
+      <bpmn:outgoing>flow_related_to_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gateway_department" name="关联客户是否为德、美质量/研发部门？" default="flow_department_no">
+      <bpmn:incoming>flow_related_to_yes</bpmn:incoming>
+      <bpmn:outgoing>flow_department_to_yes</bpmn:outgoing>
+      <bpmn:outgoing>flow_department_no</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_marketing_after_sales" name="营销部售后团队接收">
+      <bpmn:incoming>flow_customer_type_to_internal</bpmn:incoming>
+      <bpmn:outgoing>flow_internal_to_join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_marketing_receive" name="营销部接收">
+      <bpmn:incoming>flow_related_to_no</bpmn:incoming>
+      <bpmn:incoming>flow_department_no</bpmn:incoming>
+      <bpmn:outgoing>flow_marketing_to_join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gateway_parallel_join" name="信息源并行汇合">
+      <bpmn:incoming>flow_internal_to_join</bpmn:incoming>
+      <bpmn:incoming>flow_marketing_to_join</bpmn:incoming>
+      <bpmn:incoming>flow_quality_to_join</bpmn:incoming>
+      <bpmn:incoming>flow_fork_to_join</bpmn:incoming>
+      <bpmn:outgoing>flow_join_to_end</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_join_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_quality_receive" name="品管部接收">
+      <bpmn:incoming>flow_department_to_yes</bpmn:incoming>
+      <bpmn:outgoing>flow_quality_to_join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:receiveTask id="task_receive_vop" name="接收VOP事件">
+      <bpmn:incoming>flow_fork_to_vop</bpmn:incoming>
+      <bpmn:outgoing>flow_vop_to_fork</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:parallelGateway id="gateway_vop_fork" name="VOP分叉">
+      <bpmn:incoming>flow_vop_to_fork</bpmn:incoming>
+      <bpmn:outgoing>flow_fork_to_join</bpmn:outgoing>
+      <bpmn:outgoing>flow_fork_to_copy</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="task_vop_copy" name="接收VOP抄送">
+      <bpmn:incoming>flow_fork_to_copy</bpmn:incoming>
+      <bpmn:outgoing>flow_copy_to_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_vop_copy" name="抄送结束">
+      <bpmn:incoming>flow_copy_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start_to_fork" sourceRef="start_1" targetRef="gateway_parallel_fork" />
+    <bpmn:sequenceFlow id="flow_fork_to_voc" name="VOC路径" sourceRef="gateway_parallel_fork" targetRef="task_receive_voc" />
+    <bpmn:sequenceFlow id="flow_fork_to_vop" name="VOP路径" sourceRef="gateway_parallel_fork" targetRef="task_receive_vop" />
+    <bpmn:sequenceFlow id="flow_voc_to_customer_type" sourceRef="task_receive_voc" targetRef="gateway_customer_type" />
+    <bpmn:sequenceFlow id="flow_customer_type_to_export" name="外销客户" sourceRef="gateway_customer_type" targetRef="gateway_related">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${customerType == 'export'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_customer_type_to_internal" name="内销客户" sourceRef="gateway_customer_type" targetRef="task_marketing_after_sales">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${customerType == 'internal'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_related_to_yes" name="是" sourceRef="gateway_related" targetRef="gateway_department">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isRelated == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_related_to_no" name="否" sourceRef="gateway_related" targetRef="task_marketing_receive">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isRelated == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_department_to_yes" name="是" sourceRef="gateway_department" targetRef="task_quality_receive">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${relatedDept == 'german_us_quality'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_department_no" name="否" sourceRef="gateway_department" targetRef="task_marketing_receive" />
+    <bpmn:sequenceFlow id="flow_internal_to_join" sourceRef="task_marketing_after_sales" targetRef="gateway_parallel_join" />
+    <bpmn:sequenceFlow id="flow_marketing_to_join" sourceRef="task_marketing_receive" targetRef="gateway_parallel_join" />
+    <bpmn:sequenceFlow id="flow_quality_to_join" sourceRef="task_quality_receive" targetRef="gateway_parallel_join" />
+    <bpmn:sequenceFlow id="flow_vop_to_fork" sourceRef="task_receive_vop" targetRef="gateway_vop_fork" />
+    <bpmn:sequenceFlow id="flow_fork_to_join" sourceRef="gateway_vop_fork" targetRef="gateway_parallel_join" />
+    <bpmn:sequenceFlow id="flow_fork_to_copy" sourceRef="gateway_vop_fork" targetRef="task_vop_copy" />
+    <bpmn:sequenceFlow id="flow_copy_to_end" sourceRef="task_vop_copy" targetRef="end_vop_copy" />
+    <bpmn:sequenceFlow id="flow_join_to_end" sourceRef="gateway_parallel_join" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee" bpmnElement="collaboration_voc_vop">
+      <bpmndi:BPMNShape id="collaboration_voc_vop_di" bpmnElement="collaboration_voc_vop">
+        <dc:Bounds x="0" y="0" width="2030" height="788" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_external_di" bpmnElement="pool_external" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="2030" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_company_di" bpmnElement="pool_company" isHorizontal="true">
+        <dc:Bounds x="0" y="130" width="2030" height="658" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_marketing_di" bpmnElement="lane_marketing" isHorizontal="true">
+        <dc:Bounds x="30" y="150" width="2000" height="279" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="219" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="259" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_parallel_fork_di" bpmnElement="gateway_parallel_fork">
+        <dc:Bounds x="178" y="212" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="153" y="194" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receive_voc_di" bpmnElement="task_receive_voc">
+        <dc:Bounds x="308" y="197" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_customer_type_di" bpmnElement="gateway_customer_type">
+        <dc:Bounds x="488" y="212" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="463" y="194" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_related_di" bpmnElement="gateway_related">
+        <dc:Bounds x="618" y="212" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="593" y="180" width="100" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_department_di" bpmnElement="gateway_department">
+        <dc:Bounds x="748" y="212" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="723" y="166" width="100" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_marketing_after_sales_di" bpmnElement="task_marketing_after_sales">
+        <dc:Bounds x="878" y="333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_marketing_receive_di" bpmnElement="task_marketing_receive">
+        <dc:Bounds x="878" y="197" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_parallel_join_di" bpmnElement="gateway_parallel_join">
+        <dc:Bounds x="1058" y="212" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1033" y="194" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1188" y="219" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1156" y="259" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_quality_di" bpmnElement="lane_quality" isHorizontal="true">
+        <dc:Bounds x="30" y="429" width="2000" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_quality_receive_di" bpmnElement="task_quality_receive">
+        <dc:Bounds x="1304" y="445" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_business_depts_di" bpmnElement="lane_business_depts" isHorizontal="true">
+        <dc:Bounds x="30" y="541" width="2000" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receive_vop_di" bpmnElement="task_receive_vop">
+        <dc:Bounds x="1484" y="560" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_vop_fork_di" bpmnElement="gateway_vop_fork">
+        <dc:Bounds x="1664" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1639" y="557" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_process_mgmt_di" bpmnElement="lane_process_mgmt" isHorizontal="true">
+        <dc:Bounds x="30" y="656" width="2000" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_vop_copy_di" bpmnElement="task_vop_copy">
+        <dc:Bounds x="1794" y="672" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_vop_copy_di" bpmnElement="end_vop_copy">
+        <dc:Bounds x="1974" y="694" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1942" y="734" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_to_fork_di" bpmnElement="flow_start_to_fork">
+        <di:waypoint x="98" y="237" />
+        <di:waypoint x="178" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fork_to_voc_di" bpmnElement="flow_fork_to_voc">
+        <di:waypoint x="228" y="237" />
+        <di:waypoint x="308" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fork_to_vop_di" bpmnElement="flow_fork_to_vop">
+        <di:waypoint x="203" y="262" />
+        <di:waypoint x="203" y="435" />
+        <di:waypoint x="1464" y="435" />
+        <di:waypoint x="1464" y="600" />
+        <di:waypoint x="1484" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_voc_to_customer_type_di" bpmnElement="flow_voc_to_customer_type">
+        <di:waypoint x="408" y="237" />
+        <di:waypoint x="488" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_customer_type_to_export_di" bpmnElement="flow_customer_type_to_export">
+        <di:waypoint x="538" y="237" />
+        <di:waypoint x="618" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_customer_type_to_internal_di" bpmnElement="flow_customer_type_to_internal">
+        <di:waypoint x="538" y="237" />
+        <di:waypoint x="546" y="237" />
+        <di:waypoint x="546" y="202" />
+        <di:waypoint x="708" y="202" />
+        <di:waypoint x="708" y="373" />
+        <di:waypoint x="878" y="373" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_related_to_yes_di" bpmnElement="flow_related_to_yes">
+        <di:waypoint x="668" y="237" />
+        <di:waypoint x="748" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_related_to_no_di" bpmnElement="flow_related_to_no">
+        <di:waypoint x="643" y="262" />
+        <di:waypoint x="643" y="287" />
+        <di:waypoint x="643" y="297" />
+        <di:waypoint x="928" y="297" />
+        <di:waypoint x="928" y="277" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_department_to_yes_di" bpmnElement="flow_department_to_yes">
+        <di:waypoint x="773" y="262" />
+        <di:waypoint x="773" y="453" />
+        <di:waypoint x="1284" y="453" />
+        <di:waypoint x="1284" y="485" />
+        <di:waypoint x="1304" y="485" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_department_no_di" bpmnElement="flow_department_no">
+        <di:waypoint x="798" y="237" />
+        <di:waypoint x="878" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_internal_to_join_di" bpmnElement="flow_internal_to_join">
+        <di:waypoint x="928" y="333" />
+        <di:waypoint x="928" y="297.5" />
+        <di:waypoint x="1083" y="297.5" />
+        <di:waypoint x="1083" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_marketing_to_join_di" bpmnElement="flow_marketing_to_join">
+        <di:waypoint x="978" y="237" />
+        <di:waypoint x="1058" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_quality_to_join_di" bpmnElement="flow_quality_to_join">
+        <di:waypoint x="1354" y="445" />
+        <di:waypoint x="1354" y="441" />
+        <di:waypoint x="1083" y="441" />
+        <di:waypoint x="1083" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vop_to_fork_di" bpmnElement="flow_vop_to_fork">
+        <di:waypoint x="1584" y="600" />
+        <di:waypoint x="1664" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fork_to_join_di" bpmnElement="flow_fork_to_join">
+        <di:waypoint x="1689" y="575" />
+        <di:waypoint x="1689" y="535" />
+        <di:waypoint x="1083" y="535" />
+        <di:waypoint x="1083" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fork_to_copy_di" bpmnElement="flow_fork_to_copy">
+        <di:waypoint x="1689" y="625" />
+        <di:waypoint x="1689" y="716" />
+        <di:waypoint x="1774" y="716" />
+        <di:waypoint x="1774" y="712" />
+        <di:waypoint x="1794" y="712" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_copy_to_end_di" bpmnElement="flow_copy_to_end">
+        <di:waypoint x="1894" y="712" />
+        <di:waypoint x="1974" y="712" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_to_end_di" bpmnElement="flow_join_to_end">
+        <di:waypoint x="1108" y="237" />
+        <di:waypoint x="1188" y="237" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

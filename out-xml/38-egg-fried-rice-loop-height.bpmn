@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:process id="process_2" name="蛋炒饭流程" isExecutable="true">
+    <bpmn:startEvent id="start_3" name="开始做饭">
+      <bpmn:outgoing>flow_25</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_4" name="准备隔夜米饭">
+      <bpmn:incoming>flow_25</bpmn:incoming>
+      <bpmn:outgoing>flow_26</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_5" name="打鸡蛋并加盐搅匀">
+      <bpmn:incoming>flow_26</bpmn:incoming>
+      <bpmn:outgoing>flow_27</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gateway_6" name="并行备料">
+      <bpmn:incoming>flow_27</bpmn:incoming>
+      <bpmn:outgoing>flow_28</bpmn:outgoing>
+      <bpmn:outgoing>flow_29</bpmn:outgoing>
+      <bpmn:outgoing>flow_30</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="task_7" name="切葱花">
+      <bpmn:incoming>flow_28</bpmn:incoming>
+      <bpmn:outgoing>flow_31</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_8" name="切火腿丁">
+      <bpmn:incoming>flow_29</bpmn:incoming>
+      <bpmn:outgoing>flow_32</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_9" name="准备玉米粒等辅料">
+      <bpmn:incoming>flow_30</bpmn:incoming>
+      <bpmn:outgoing>flow_33</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gateway_10" name="备料完成">
+      <bpmn:incoming>flow_31</bpmn:incoming>
+      <bpmn:incoming>flow_32</bpmn:incoming>
+      <bpmn:incoming>flow_33</bpmn:incoming>
+      <bpmn:outgoing>flow_34</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="task_11" name="热锅倒油">
+      <bpmn:incoming>flow_34</bpmn:incoming>
+      <bpmn:outgoing>flow_35</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_12" name="倒入蛋液翻炒至凝固">
+      <bpmn:incoming>flow_35</bpmn:incoming>
+      <bpmn:outgoing>flow_36</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_13" name="盛出炒蛋备用">
+      <bpmn:incoming>flow_36</bpmn:incoming>
+      <bpmn:outgoing>flow_37</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_14" name="补油，下火腿丁煸香">
+      <bpmn:incoming>flow_37</bpmn:incoming>
+      <bpmn:outgoing>flow_38</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_15" name="倒入米饭大火翻炒">
+      <bpmn:incoming>flow_38</bpmn:incoming>
+      <bpmn:outgoing>flow_39</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_16" name="米饭状态如何？" default="flow_25">
+      <bpmn:incoming>flow_39</bpmn:incoming>
+      <bpmn:incoming>flow_41</bpmn:incoming>
+      <bpmn:outgoing>flow_40</bpmn:outgoing>
+      <bpmn:outgoing>flow_42</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_17" name="继续翻炒收干水分">
+      <bpmn:incoming>flow_40</bpmn:incoming>
+      <bpmn:outgoing>flow_41</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_18" name="加盐、鸡精、白胡椒粉调味">
+      <bpmn:incoming>flow_42</bpmn:incoming>
+      <bpmn:outgoing>flow_43</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_19" name="倒回蛋碎翻炒均匀">
+      <bpmn:incoming>flow_43</bpmn:incoming>
+      <bpmn:outgoing>flow_44</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_20" name="撒入葱花翻两下">
+      <bpmn:incoming>flow_44</bpmn:incoming>
+      <bpmn:outgoing>flow_45</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_21" name="尝味是否合格？" default="flow_29">
+      <bpmn:incoming>flow_45</bpmn:incoming>
+      <bpmn:incoming>flow_47</bpmn:incoming>
+      <bpmn:outgoing>flow_46</bpmn:outgoing>
+      <bpmn:outgoing>flow_48</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_22" name="补调味料调整">
+      <bpmn:incoming>flow_46</bpmn:incoming>
+      <bpmn:outgoing>flow_47</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_23" name="关火装盘">
+      <bpmn:incoming>flow_48</bpmn:incoming>
+      <bpmn:outgoing>flow_49</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_24" name="上桌开吃">
+      <bpmn:incoming>flow_49</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_25" sourceRef="start_3" targetRef="task_4" />
+    <bpmn:sequenceFlow id="flow_26" sourceRef="task_4" targetRef="task_5" />
+    <bpmn:sequenceFlow id="flow_27" sourceRef="task_5" targetRef="gateway_6" />
+    <bpmn:sequenceFlow id="flow_28" sourceRef="gateway_6" targetRef="task_7" />
+    <bpmn:sequenceFlow id="flow_29" sourceRef="gateway_6" targetRef="task_8" />
+    <bpmn:sequenceFlow id="flow_30" sourceRef="gateway_6" targetRef="task_9" />
+    <bpmn:sequenceFlow id="flow_31" sourceRef="task_7" targetRef="gateway_10" />
+    <bpmn:sequenceFlow id="flow_32" sourceRef="task_8" targetRef="gateway_10" />
+    <bpmn:sequenceFlow id="flow_33" sourceRef="task_9" targetRef="gateway_10" />
+    <bpmn:sequenceFlow id="flow_34" sourceRef="gateway_10" targetRef="task_11" />
+    <bpmn:sequenceFlow id="flow_35" sourceRef="task_11" targetRef="task_12" />
+    <bpmn:sequenceFlow id="flow_36" sourceRef="task_12" targetRef="task_13" />
+    <bpmn:sequenceFlow id="flow_37" sourceRef="task_13" targetRef="task_14" />
+    <bpmn:sequenceFlow id="flow_38" sourceRef="task_14" targetRef="task_15" />
+    <bpmn:sequenceFlow id="flow_39" sourceRef="task_15" targetRef="gateway_16" />
+    <bpmn:sequenceFlow id="flow_40" name="米饭太湿" sourceRef="gateway_16" targetRef="task_17">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${riceTooWet}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_41" sourceRef="task_17" targetRef="gateway_16" />
+    <bpmn:sequenceFlow id="flow_42" name="干湿适中" sourceRef="gateway_16" targetRef="task_18" />
+    <bpmn:sequenceFlow id="flow_43" sourceRef="task_18" targetRef="task_19" />
+    <bpmn:sequenceFlow id="flow_44" sourceRef="task_19" targetRef="task_20" />
+    <bpmn:sequenceFlow id="flow_45" sourceRef="task_20" targetRef="gateway_21" />
+    <bpmn:sequenceFlow id="flow_46" name="味道不够" sourceRef="gateway_21" targetRef="task_22">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${notTasty}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_47" sourceRef="task_22" targetRef="gateway_21" />
+    <bpmn:sequenceFlow id="flow_48" name="味道OK" sourceRef="gateway_21" targetRef="task_23" />
+    <bpmn:sequenceFlow id="flow_49" sourceRef="task_23" targetRef="end_24" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_1" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_1" bpmnElement="process_2">
+      <bpmndi:BPMNShape id="process_2_di" bpmnElement="process_2">
+        <dc:Bounds x="0" y="0" width="1682" height="794.5833333333333" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_3_di" bpmnElement="start_3">
+        <dc:Bounds x="236" y="136.91666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="204" y="176.91666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_4_di" bpmnElement="task_4">
+        <dc:Bounds x="352" y="114.91666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_5_di" bpmnElement="task_5">
+        <dc:Bounds x="532" y="114.91666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_6_di" bpmnElement="gateway_6">
+        <dc:Bounds x="737" y="129.91666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="712" y="111.91666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_7_di" bpmnElement="task_7">
+        <dc:Bounds x="867" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_8_di" bpmnElement="task_8">
+        <dc:Bounds x="867" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_9_di" bpmnElement="task_9">
+        <dc:Bounds x="867" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_10_di" bpmnElement="gateway_10">
+        <dc:Bounds x="1047" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1022" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_11_di" bpmnElement="task_11">
+        <dc:Bounds x="1214.5" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_12_di" bpmnElement="task_12">
+        <dc:Bounds x="1382" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_13_di" bpmnElement="task_13">
+        <dc:Bounds x="1562" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_14_di" bpmnElement="task_14">
+        <dc:Bounds x="172" y="479.66666666666663" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_15_di" bpmnElement="task_15">
+        <dc:Bounds x="352" y="479.66666666666663" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_16_di" bpmnElement="gateway_16">
+        <dc:Bounds x="569.5" y="494.66666666666663" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="544.5" y="476.66666666666663" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_17_di" bpmnElement="task_17">
+        <dc:Bounds x="699.5" y="473" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_18_di" bpmnElement="task_18">
+        <dc:Bounds x="699.5" y="613" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_19_di" bpmnElement="task_19">
+        <dc:Bounds x="867" y="613" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_20_di" bpmnElement="task_20">
+        <dc:Bounds x="1034.5" y="613" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_21_di" bpmnElement="gateway_21">
+        <dc:Bounds x="1252" y="628" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1227" y="610" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_22_di" bpmnElement="task_22">
+        <dc:Bounds x="1382" y="542.5833333333333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_23_di" bpmnElement="task_23">
+        <dc:Bounds x="1382" y="682.5833333333333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_24_di" bpmnElement="end_24">
+        <dc:Bounds x="1562" y="704.5833333333333" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1530" y="744.5833333333333" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_25_di" bpmnElement="flow_25">
+        <di:waypoint x="272" y="154.91666666666669" />
+        <di:waypoint x="352" y="154.91666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_26_di" bpmnElement="flow_26">
+        <di:waypoint x="452" y="154.91666666666669" />
+        <di:waypoint x="532" y="154.91666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_27_di" bpmnElement="flow_27">
+        <di:waypoint x="632" y="154.91666666666669" />
+        <di:waypoint x="737" y="154.91666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_28_di" bpmnElement="flow_28">
+        <di:waypoint x="787" y="154.91666666666669" />
+        <di:waypoint x="827" y="154.91666666666669" />
+        <di:waypoint x="827" y="72" />
+        <di:waypoint x="867" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_29_di" bpmnElement="flow_29">
+        <di:waypoint x="787" y="154.91666666666669" />
+        <di:waypoint x="827" y="154.91666666666669" />
+        <di:waypoint x="827" y="212" />
+        <di:waypoint x="867" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_30_di" bpmnElement="flow_30">
+        <di:waypoint x="787" y="154.91666666666669" />
+        <di:waypoint x="827" y="154.91666666666669" />
+        <di:waypoint x="827" y="352" />
+        <di:waypoint x="867" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_31_di" bpmnElement="flow_31">
+        <di:waypoint x="917" y="112" />
+        <di:waypoint x="917" y="149.5" />
+        <di:waypoint x="1072" y="149.5" />
+        <di:waypoint x="1072" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_32_di" bpmnElement="flow_32">
+        <di:waypoint x="967" y="212" />
+        <di:waypoint x="1047" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_33_di" bpmnElement="flow_33">
+        <di:waypoint x="917" y="312" />
+        <di:waypoint x="917" y="274.5" />
+        <di:waypoint x="1072" y="274.5" />
+        <di:waypoint x="1072" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_34_di" bpmnElement="flow_34">
+        <di:waypoint x="1097" y="212" />
+        <di:waypoint x="1214.5" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_35_di" bpmnElement="flow_35">
+        <di:waypoint x="1314.5" y="212" />
+        <di:waypoint x="1382" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_36_di" bpmnElement="flow_36">
+        <di:waypoint x="1482" y="212" />
+        <di:waypoint x="1562" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_37_di" bpmnElement="flow_37">
+        <di:waypoint x="1612" y="252" />
+        <di:waypoint x="1612" y="402" />
+        <di:waypoint x="222" y="402" />
+        <di:waypoint x="222" y="479.66666666666663" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_38_di" bpmnElement="flow_38">
+        <di:waypoint x="272" y="519.6666666666666" />
+        <di:waypoint x="352" y="519.6666666666666" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_39_di" bpmnElement="flow_39">
+        <di:waypoint x="452" y="519.6666666666666" />
+        <di:waypoint x="569.5" y="519.6666666666666" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_40_di" bpmnElement="flow_40">
+        <di:waypoint x="619.5" y="519.6666666666666" />
+        <di:waypoint x="659.5" y="519.6666666666666" />
+        <di:waypoint x="659.5" y="513" />
+        <di:waypoint x="699.5" y="513" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_41_di" bpmnElement="flow_41">
+        <di:waypoint x="749.5" y="473" />
+        <di:waypoint x="749.5" y="449" />
+        <di:waypoint x="594.5" y="449" />
+        <di:waypoint x="594.5" y="494.66666666666663" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_42_di" bpmnElement="flow_42">
+        <di:waypoint x="619.5" y="519.6666666666666" />
+        <di:waypoint x="659.5" y="519.6666666666666" />
+        <di:waypoint x="659.5" y="653" />
+        <di:waypoint x="699.5" y="653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_43_di" bpmnElement="flow_43">
+        <di:waypoint x="799.5" y="653" />
+        <di:waypoint x="867" y="653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_44_di" bpmnElement="flow_44">
+        <di:waypoint x="967" y="653" />
+        <di:waypoint x="1034.5" y="653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_45_di" bpmnElement="flow_45">
+        <di:waypoint x="1134.5" y="653" />
+        <di:waypoint x="1252" y="653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_46_di" bpmnElement="flow_46">
+        <di:waypoint x="1302" y="653" />
+        <di:waypoint x="1342" y="653" />
+        <di:waypoint x="1342" y="582.5833333333333" />
+        <di:waypoint x="1382" y="582.5833333333333" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_47_di" bpmnElement="flow_47">
+        <di:waypoint x="1432" y="542.5833333333333" />
+        <di:waypoint x="1432" y="500.58333333333326" />
+        <di:waypoint x="1277" y="500.58333333333326" />
+        <di:waypoint x="1277" y="628" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_48_di" bpmnElement="flow_48">
+        <di:waypoint x="1302" y="653" />
+        <di:waypoint x="1342" y="653" />
+        <di:waypoint x="1342" y="722.5833333333333" />
+        <di:waypoint x="1382" y="722.5833333333333" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_49_di" bpmnElement="flow_49">
+        <di:waypoint x="1482" y="722.5833333333333" />
+        <di:waypoint x="1562" y="722.5833333333333" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

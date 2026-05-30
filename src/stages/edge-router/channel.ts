@@ -38,9 +38,15 @@ function bucketKey(t: EdgeType): string | null {
   }
 }
 
-export function allocateChannels(edges: ChannelEdge[]): Map<string, ChannelAssignment> {
+// excludeIds：已被 fan-in bundle 接管的 edge。它们不参与 bucket 摊开——否则「先按 sourceX
+// 摊到不同 Y」会和「聚成一根共享干线」打架。被排除的 edge channel 默认 0（见结尾兜底）。
+export function allocateChannels(
+  edges: ChannelEdge[],
+  excludeIds?: ReadonlySet<string>,
+): Map<string, ChannelAssignment> {
   const buckets = new Map<string, ChannelEdge[]>();
   for (const e of edges) {
+    if (excludeIds?.has(e.id)) continue;
     const key = bucketKey(e.edgeType);
     if (!key) continue;
     if (!buckets.has(key)) buckets.set(key, []);

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_transaction" targetNamespace="http://example.com/test-transaction" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:error id="err_cancel" name="取消错误" errorCode="CANCEL_001" />
+  <bpmn:process id="process_transaction" name="事务子流程测试" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="开始">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:transaction id="transaction_1" name="事务子流程">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+      <bpmn:startEvent id="tx_start" name="事务开始">
+        <bpmn:outgoing>tx_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="tx_task" name="事务操作">
+        <bpmn:incoming>tx_flow_1</bpmn:incoming>
+        <bpmn:outgoing>tx_flow_2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="tx_end" name="事务完成">
+        <bpmn:incoming>tx_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="tx_flow_1" sourceRef="tx_start" targetRef="tx_task" />
+      <bpmn:sequenceFlow id="tx_flow_2" sourceRef="tx_task" targetRef="tx_end" />
+    </bpmn:transaction>
+    <bpmn:boundaryEvent id="tx_boundary_cancel" name="取消边界" attachedToRef="transaction_1">
+      <bpmn:outgoing>main_flow_cancel</bpmn:outgoing>
+      <bpmn:cancelEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:task id="task_cancel_handler" name="取消补偿">
+      <bpmn:incoming>main_flow_cancel</bpmn:incoming>
+      <bpmn:outgoing>main_flow_cancel_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_main" name="结束">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+      <bpmn:incoming>main_flow_cancel_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="transaction_1" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="transaction_1" targetRef="end_main" />
+    <bpmn:sequenceFlow id="main_flow_cancel" sourceRef="tx_boundary_cancel" targetRef="task_cancel_handler" />
+    <bpmn:sequenceFlow id="main_flow_cancel_end" sourceRef="task_cancel_handler" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_transaction" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_transaction" bpmnElement="process_transaction">
+      <bpmndi:BPMNShape id="process_transaction_di" bpmnElement="process_transaction">
+        <dc:Bounds x="0" y="0" width="750" height="428" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="transaction_1_di" bpmnElement="transaction_1" isExpanded="true">
+        <dc:Bounds x="178" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="tx_start_di" bpmnElement="tx_start">
+        <dc:Bounds x="210" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="tx_task_di" bpmnElement="tx_task">
+        <dc:Bounds x="346" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="tx_end_di" bpmnElement="tx_end">
+        <dc:Bounds x="546" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="514" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="tx_boundary_cancel_di" bpmnElement="tx_boundary_cancel">
+        <dc:Bounds x="180" y="178" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="171" y="218" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cancel_handler_di" bpmnElement="task_cancel_handler">
+        <dc:Bounds x="346" y="308" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="694" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="662" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="tx_flow_1_di" bpmnElement="tx_flow_1">
+        <di:waypoint x="246" y="124" />
+        <di:waypoint x="346" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="tx_flow_2_di" bpmnElement="tx_flow_2">
+        <di:waypoint x="446" y="124" />
+        <di:waypoint x="546" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="114" />
+        <di:waypoint x="178" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="614" y="114" />
+        <di:waypoint x="694" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_cancel_di" bpmnElement="main_flow_cancel">
+        <di:waypoint x="198" y="214" />
+        <di:waypoint x="198" y="261" />
+        <di:waypoint x="396" y="261" />
+        <di:waypoint x="396" y="308" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_cancel_end_di" bpmnElement="main_flow_cancel_end">
+        <di:waypoint x="446" y="348" />
+        <di:waypoint x="624" y="348" />
+        <di:waypoint x="624" y="114" />
+        <di:waypoint x="694" y="114" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

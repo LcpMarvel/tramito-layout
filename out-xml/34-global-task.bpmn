@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_global_task" targetNamespace="http://example.com/test-global-task" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_using_global_tasks" name="使用全局任务的流程" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_prepare" name="准备数据">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="call_global_user_task" name="调用审批" calledElement="global_user_task_approval">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:parallelGateway id="gateway_split" name="并行分支" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4a</bpmn:outgoing>
+      <bpmn:outgoing>flow_4b</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:callActivity id="call_global_manual_task" name="调用核验" calledElement="global_manual_task_verification">
+      <bpmn:incoming>flow_4a</bpmn:incoming>
+      <bpmn:outgoing>flow_5a</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="call_global_script_task" name="调用校验" calledElement="global_script_task_validation">
+      <bpmn:incoming>flow_4b</bpmn:incoming>
+      <bpmn:outgoing>flow_5b</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:parallelGateway id="gateway_join" name="并行汇聚" gatewayDirection="Converging">
+      <bpmn:incoming>flow_5a</bpmn:incoming>
+      <bpmn:incoming>flow_5b</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:callActivity id="call_global_business_rule" name="调用定价" calledElement="global_business_rule_task_pricing">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:serviceTask id="task_finalize" name="完成处理">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_1" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_prepare" targetRef="call_global_user_task" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="call_global_user_task" targetRef="gateway_split" />
+    <bpmn:sequenceFlow id="flow_4a" sourceRef="gateway_split" targetRef="call_global_manual_task" />
+    <bpmn:sequenceFlow id="flow_4b" sourceRef="gateway_split" targetRef="call_global_script_task" />
+    <bpmn:sequenceFlow id="flow_5a" sourceRef="call_global_manual_task" targetRef="gateway_join" />
+    <bpmn:sequenceFlow id="flow_5b" sourceRef="call_global_script_task" targetRef="gateway_join" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="gateway_join" targetRef="call_global_business_rule" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="call_global_business_rule" targetRef="task_finalize" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_finalize" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_global_task" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_global_task" bpmnElement="process_using_global_tasks">
+      <bpmndi:BPMNShape id="process_using_global_tasks_di" bpmnElement="process_using_global_tasks">
+        <dc:Bounds x="0" y="0" width="1394" height="284" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="124" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_global_user_task_di" bpmnElement="call_global_user_task">
+        <dc:Bounds x="358" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_split_di" bpmnElement="gateway_split">
+        <dc:Bounds x="538" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="513" y="99" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_global_manual_task_di" bpmnElement="call_global_manual_task">
+        <dc:Bounds x="668" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_global_script_task_di" bpmnElement="call_global_script_task">
+        <dc:Bounds x="668" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_join_di" bpmnElement="gateway_join">
+        <dc:Bounds x="848" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="823" y="99" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="call_global_business_rule_di" bpmnElement="call_global_business_rule">
+        <dc:Bounds x="978" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_finalize_di" bpmnElement="task_finalize">
+        <dc:Bounds x="1158" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1338" y="124" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="142" />
+        <di:waypoint x="178" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="142" />
+        <di:waypoint x="358" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="142" />
+        <di:waypoint x="538" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4a_di" bpmnElement="flow_4a">
+        <di:waypoint x="588" y="142" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="668" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4b_di" bpmnElement="flow_4b">
+        <di:waypoint x="588" y="142" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="628" y="212" />
+        <di:waypoint x="668" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5a_di" bpmnElement="flow_5a">
+        <di:waypoint x="768" y="72" />
+        <di:waypoint x="808" y="72" />
+        <di:waypoint x="808" y="142" />
+        <di:waypoint x="848" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5b_di" bpmnElement="flow_5b">
+        <di:waypoint x="768" y="212" />
+        <di:waypoint x="808" y="212" />
+        <di:waypoint x="808" y="142" />
+        <di:waypoint x="848" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="898" y="142" />
+        <di:waypoint x="978" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1078" y="142" />
+        <di:waypoint x="1158" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="1258" y="142" />
+        <di:waypoint x="1338" y="142" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

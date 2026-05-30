@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_link_events" targetNamespace="http://example.com/test-link-events" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_link_events" name="Link事件测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:receiveTask id="task_receive_order" name="接收订单">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_to_gateway</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:exclusiveGateway id="gateway_order_type" name="订单类型" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>flow_standard</bpmn:outgoing>
+      <bpmn:outgoing>flow_express</bpmn:outgoing>
+      <bpmn:outgoing>flow_vip</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="task_standard_process" name="标准处理">
+      <bpmn:incoming>flow_standard</bpmn:incoming>
+      <bpmn:outgoing>flow_standard_to_link</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateThrowEvent id="throw_link_to_approval" name="跳转到审批">
+      <bpmn:incoming>flow_standard_to_link</bpmn:incoming>
+      <bpmn:linkEventDefinition name="link_approval" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:task id="task_express_process" name="加急处理">
+      <bpmn:incoming>flow_express</bpmn:incoming>
+      <bpmn:outgoing>flow_express_to_link</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateThrowEvent id="throw_link_to_shipping" name="跳转到发货">
+      <bpmn:incoming>flow_express_to_link</bpmn:incoming>
+      <bpmn:linkEventDefinition name="link_shipping" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:task id="task_vip_process" name="VIP处理">
+      <bpmn:incoming>flow_vip</bpmn:incoming>
+      <bpmn:outgoing>flow_vip_to_link</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateThrowEvent id="throw_link_to_complete" name="跳转到完成">
+      <bpmn:incoming>flow_vip_to_link</bpmn:incoming>
+      <bpmn:linkEventDefinition name="link_complete" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="catch_link_approval" name="审批入口">
+      <bpmn:outgoing>flow_catch_approval</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="link_approval" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="task_approval" name="人工审批">
+      <bpmn:incoming>flow_catch_approval</bpmn:incoming>
+      <bpmn:outgoing>flow_approval_to_link</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="throw_link_from_approval" name="审批后跳转发货">
+      <bpmn:incoming>flow_approval_to_link</bpmn:incoming>
+      <bpmn:linkEventDefinition name="link_shipping" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="catch_link_shipping" name="发货入口">
+      <bpmn:outgoing>flow_catch_shipping</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="link_shipping" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="task_shipping" name="安排发货">
+      <bpmn:incoming>flow_catch_shipping</bpmn:incoming>
+      <bpmn:outgoing>flow_shipping_notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="task_notify" name="发送通知">
+      <bpmn:incoming>flow_shipping_notify</bpmn:incoming>
+      <bpmn:outgoing>flow_notify_to_link</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateThrowEvent id="throw_link_to_complete_2" name="跳转到完成">
+      <bpmn:incoming>flow_notify_to_link</bpmn:incoming>
+      <bpmn:linkEventDefinition name="link_complete" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="catch_link_complete" name="完成入口">
+      <bpmn:outgoing>flow_catch_complete</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="link_complete" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="task_finalize" name="最终处理">
+      <bpmn:incoming>flow_catch_complete</bpmn:incoming>
+      <bpmn:outgoing>flow_finalize_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_finalize_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:intermediateThrowEvent id="throw_link_multi_target_1" name="多目标链接A">
+      <bpmn:linkEventDefinition name="link_multi_target" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="catch_link_multi_target" name="多源链接接收">
+      <bpmn:outgoing>flow_catch_multi</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="link_multi_target" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="task_multi_handler" name="统一处理">
+      <bpmn:incoming>flow_catch_multi</bpmn:incoming>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_receive_order" />
+    <bpmn:sequenceFlow id="flow_to_gateway" sourceRef="task_receive_order" targetRef="gateway_order_type" />
+    <bpmn:sequenceFlow id="flow_standard" name="标准" sourceRef="gateway_order_type" targetRef="task_standard_process">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${orderType == 'standard'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_express" name="加急" sourceRef="gateway_order_type" targetRef="task_express_process">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${orderType == 'express'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_vip" name="VIP" sourceRef="gateway_order_type" targetRef="task_vip_process">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${orderType == 'vip'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_standard_to_link" sourceRef="task_standard_process" targetRef="throw_link_to_approval" />
+    <bpmn:sequenceFlow id="flow_express_to_link" sourceRef="task_express_process" targetRef="throw_link_to_shipping" />
+    <bpmn:sequenceFlow id="flow_vip_to_link" sourceRef="task_vip_process" targetRef="throw_link_to_complete" />
+    <bpmn:sequenceFlow id="flow_catch_approval" sourceRef="catch_link_approval" targetRef="task_approval" />
+    <bpmn:sequenceFlow id="flow_approval_to_link" sourceRef="task_approval" targetRef="throw_link_from_approval" />
+    <bpmn:sequenceFlow id="flow_catch_shipping" sourceRef="catch_link_shipping" targetRef="task_shipping" />
+    <bpmn:sequenceFlow id="flow_shipping_notify" sourceRef="task_shipping" targetRef="task_notify" />
+    <bpmn:sequenceFlow id="flow_notify_to_link" sourceRef="task_notify" targetRef="throw_link_to_complete_2" />
+    <bpmn:sequenceFlow id="flow_catch_complete" sourceRef="catch_link_complete" targetRef="task_finalize" />
+    <bpmn:sequenceFlow id="flow_finalize_end" sourceRef="task_finalize" targetRef="end_1" />
+    <bpmn:sequenceFlow id="flow_catch_multi" sourceRef="catch_link_multi_target" targetRef="task_multi_handler" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_link_events" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_link_events" bpmnElement="process_link_events">
+      <bpmndi:BPMNShape id="process_link_events_di" bpmnElement="process_link_events">
+        <dc:Bounds x="0" y="0" width="724" height="424" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receive_order_di" bpmnElement="task_receive_order">
+        <dc:Bounds x="178" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_order_type_di" bpmnElement="gateway_order_type">
+        <dc:Bounds x="358" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="333" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_standard_process_di" bpmnElement="task_standard_process">
+        <dc:Bounds x="488" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_link_to_approval_di" bpmnElement="throw_link_to_approval">
+        <dc:Bounds x="668" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_express_process_di" bpmnElement="task_express_process">
+        <dc:Bounds x="488" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_link_to_shipping_di" bpmnElement="throw_link_to_shipping">
+        <dc:Bounds x="668" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_vip_process_di" bpmnElement="task_vip_process">
+        <dc:Bounds x="488" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_link_to_complete_di" bpmnElement="throw_link_to_complete">
+        <dc:Bounds x="668" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_gateway_di" bpmnElement="flow_to_gateway">
+        <di:waypoint x="278" y="212" />
+        <di:waypoint x="358" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_standard_di" bpmnElement="flow_standard">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="448" y="72" />
+        <di:waypoint x="488" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="453" y="156" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_express_di" bpmnElement="flow_express">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="488" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="423" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vip_di" bpmnElement="flow_vip">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="448" y="352" />
+        <di:waypoint x="488" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="453" y="254" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_standard_to_link_di" bpmnElement="flow_standard_to_link">
+        <di:waypoint x="588" y="72" />
+        <di:waypoint x="668" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_express_to_link_di" bpmnElement="flow_express_to_link">
+        <di:waypoint x="588" y="212" />
+        <di:waypoint x="668" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vip_to_link_di" bpmnElement="flow_vip_to_link">
+        <di:waypoint x="588" y="352" />
+        <di:waypoint x="668" y="352" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

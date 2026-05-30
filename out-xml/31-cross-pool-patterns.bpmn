@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_cross_pool_patterns" targetNamespace="http://example.com/test-cross-pool-patterns" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_order_request" name="订单请求" />
+  <bpmn:message id="msg_order_response" name="订单响应" />
+  <bpmn:message id="msg_payment_request" name="支付请求" />
+  <bpmn:message id="msg_payment_confirmation" name="支付确认" />
+  <bpmn:message id="msg_shipping_request" name="发货请求" />
+  <bpmn:message id="msg_shipping_status" name="发货状态" />
+  <bpmn:message id="msg_notification" name="通知消息" />
+  <bpmn:collaboration id="collaboration_cross_pool" name="跨池通信模式">
+    <bpmn:participant id="participant_customer" name="客户" processRef="process_customer" />
+    <bpmn:participant id="participant_order_system" name="订单系统" processRef="process_order_system" />
+    <bpmn:participant id="participant_payment_system" name="支付系统" processRef="process_payment_system" />
+    <bpmn:participant id="participant_shipping_system" name="物流系统" processRef="process_shipping_system" />
+    <bpmn:participant id="participant_blackbox_external" name="外部系统 (黑盒)" processRef="Process_participant_blackbox_external" />
+    <bpmn:messageFlow id="msgflow_order_request" sourceRef="customer_send_order" targetRef="order_start" messageRef="msg_order_request" />
+    <bpmn:messageFlow id="msgflow_order_response" sourceRef="order_send_confirmation" targetRef="customer_wait_confirmation" messageRef="msg_order_response" />
+    <bpmn:messageFlow id="msgflow_payment_to_order" sourceRef="customer_send_payment" targetRef="order_wait_payment" messageRef="msg_payment_request" />
+    <bpmn:messageFlow id="msgflow_order_to_payment" sourceRef="order_send_to_payment" targetRef="payment_start" messageRef="msg_payment_request" />
+    <bpmn:messageFlow id="msgflow_payment_confirmation" sourceRef="payment_send_confirmation" targetRef="order_wait_payment_result" messageRef="msg_payment_confirmation" />
+    <bpmn:messageFlow id="msgflow_payment_to_customer" sourceRef="order_send_payment_confirm" targetRef="customer_wait_payment_confirm" messageRef="msg_payment_confirmation" />
+    <bpmn:messageFlow id="msgflow_shipping_request" sourceRef="order_send_shipping_request" targetRef="shipping_start" messageRef="msg_shipping_request" />
+    <bpmn:messageFlow id="msgflow_shipping_status" sourceRef="shipping_send_status" targetRef="order_wait_shipping" messageRef="msg_shipping_status" />
+    <bpmn:messageFlow id="msgflow_shipping_to_customer" sourceRef="order_notify_customer" targetRef="customer_wait_shipping" messageRef="msg_shipping_status" />
+    <bpmn:messageFlow id="msgflow_to_external" name="外部验证" sourceRef="order_validate" targetRef="participant_blackbox_external" />
+    <bpmn:messageFlow id="msgflow_from_external" name="验证结果" sourceRef="participant_blackbox_external" targetRef="order_validate" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_customer" name="客户" isExecutable="true">
+    <bpmn:startEvent id="customer_start" name="开始购物">
+      <bpmn:outgoing>customer_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="customer_send_order" name="发送订单" messageRef="msg_order_request">
+      <bpmn:incoming>customer_flow_1</bpmn:incoming>
+      <bpmn:outgoing>customer_flow_2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="customer_wait_confirmation" name="等待订单确认">
+      <bpmn:incoming>customer_flow_2</bpmn:incoming>
+      <bpmn:outgoing>customer_flow_3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_order_response" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="customer_send_payment" name="发送支付" messageRef="msg_payment_request">
+      <bpmn:incoming>customer_flow_3</bpmn:incoming>
+      <bpmn:outgoing>customer_flow_4</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="customer_wait_payment_confirm" name="等待支付确认">
+      <bpmn:incoming>customer_flow_4</bpmn:incoming>
+      <bpmn:outgoing>customer_flow_5</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_payment_confirmation" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="customer_wait_shipping" name="等待发货通知">
+      <bpmn:incoming>customer_flow_5</bpmn:incoming>
+      <bpmn:outgoing>customer_flow_6</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_shipping_status" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="customer_end" name="购物完成">
+      <bpmn:incoming>customer_flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="customer_flow_1" sourceRef="customer_start" targetRef="customer_send_order" />
+    <bpmn:sequenceFlow id="customer_flow_2" sourceRef="customer_send_order" targetRef="customer_wait_confirmation" />
+    <bpmn:sequenceFlow id="customer_flow_3" sourceRef="customer_wait_confirmation" targetRef="customer_send_payment" />
+    <bpmn:sequenceFlow id="customer_flow_4" sourceRef="customer_send_payment" targetRef="customer_wait_payment_confirm" />
+    <bpmn:sequenceFlow id="customer_flow_5" sourceRef="customer_wait_payment_confirm" targetRef="customer_wait_shipping" />
+    <bpmn:sequenceFlow id="customer_flow_6" sourceRef="customer_wait_shipping" targetRef="customer_end" />
+  </bpmn:process>
+  <bpmn:process id="process_order_system" name="订单系统" isExecutable="true">
+    <bpmn:startEvent id="order_start" name="收到订单">
+      <bpmn:outgoing>order_flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_order_request" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="order_validate" name="验证订单">
+      <bpmn:incoming>order_flow_1</bpmn:incoming>
+      <bpmn:outgoing>order_flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="order_send_confirmation" name="发送确认" messageRef="msg_order_response">
+      <bpmn:incoming>order_flow_2</bpmn:incoming>
+      <bpmn:outgoing>order_flow_3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="order_wait_payment" name="等待支付">
+      <bpmn:incoming>order_flow_3</bpmn:incoming>
+      <bpmn:outgoing>order_flow_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_payment_request" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="order_send_to_payment" name="转发支付" messageRef="msg_payment_request">
+      <bpmn:incoming>order_flow_4</bpmn:incoming>
+      <bpmn:outgoing>order_flow_5</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="order_wait_payment_result" name="等待支付结果">
+      <bpmn:incoming>order_flow_5</bpmn:incoming>
+      <bpmn:outgoing>order_flow_6</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_payment_confirmation" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="order_send_payment_confirm" name="确认支付" messageRef="msg_payment_confirmation">
+      <bpmn:incoming>order_flow_6</bpmn:incoming>
+      <bpmn:outgoing>order_flow_7</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="order_send_shipping_request" name="请求发货" messageRef="msg_shipping_request">
+      <bpmn:incoming>order_flow_7</bpmn:incoming>
+      <bpmn:outgoing>order_flow_8</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="order_wait_shipping" name="等待发货状态">
+      <bpmn:incoming>order_flow_8</bpmn:incoming>
+      <bpmn:outgoing>order_flow_9</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_shipping_status" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="order_notify_customer" name="通知客户" messageRef="msg_shipping_status">
+      <bpmn:incoming>order_flow_9</bpmn:incoming>
+      <bpmn:outgoing>order_flow_10</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="order_end" name="订单完成">
+      <bpmn:incoming>order_flow_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="order_flow_1" sourceRef="order_start" targetRef="order_validate" />
+    <bpmn:sequenceFlow id="order_flow_2" sourceRef="order_validate" targetRef="order_send_confirmation" />
+    <bpmn:sequenceFlow id="order_flow_3" sourceRef="order_send_confirmation" targetRef="order_wait_payment" />
+    <bpmn:sequenceFlow id="order_flow_4" sourceRef="order_wait_payment" targetRef="order_send_to_payment" />
+    <bpmn:sequenceFlow id="order_flow_5" sourceRef="order_send_to_payment" targetRef="order_wait_payment_result" />
+    <bpmn:sequenceFlow id="order_flow_6" sourceRef="order_wait_payment_result" targetRef="order_send_payment_confirm" />
+    <bpmn:sequenceFlow id="order_flow_7" sourceRef="order_send_payment_confirm" targetRef="order_send_shipping_request" />
+    <bpmn:sequenceFlow id="order_flow_8" sourceRef="order_send_shipping_request" targetRef="order_wait_shipping" />
+    <bpmn:sequenceFlow id="order_flow_9" sourceRef="order_wait_shipping" targetRef="order_notify_customer" />
+    <bpmn:sequenceFlow id="order_flow_10" sourceRef="order_notify_customer" targetRef="order_end" />
+  </bpmn:process>
+  <bpmn:process id="process_payment_system" name="支付系统" isExecutable="true">
+    <bpmn:startEvent id="payment_start" name="收到支付">
+      <bpmn:outgoing>payment_flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_payment_request" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="payment_process" name="处理支付">
+      <bpmn:incoming>payment_flow_1</bpmn:incoming>
+      <bpmn:outgoing>payment_flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="payment_send_confirmation" name="发送确认" messageRef="msg_payment_confirmation">
+      <bpmn:incoming>payment_flow_2</bpmn:incoming>
+      <bpmn:outgoing>payment_flow_3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="payment_end" name="支付完成">
+      <bpmn:incoming>payment_flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="payment_flow_1" sourceRef="payment_start" targetRef="payment_process" />
+    <bpmn:sequenceFlow id="payment_flow_2" sourceRef="payment_process" targetRef="payment_send_confirmation" />
+    <bpmn:sequenceFlow id="payment_flow_3" sourceRef="payment_send_confirmation" targetRef="payment_end" />
+  </bpmn:process>
+  <bpmn:process id="process_shipping_system" name="物流系统" isExecutable="true">
+    <bpmn:startEvent id="shipping_start" name="收到发货请求">
+      <bpmn:outgoing>shipping_flow_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_shipping_request" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="shipping_process" name="处理发货">
+      <bpmn:incoming>shipping_flow_1</bpmn:incoming>
+      <bpmn:outgoing>shipping_flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="shipping_send_status" name="发送状态" messageRef="msg_shipping_status">
+      <bpmn:incoming>shipping_flow_2</bpmn:incoming>
+      <bpmn:outgoing>shipping_flow_3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="shipping_end" name="发货完成">
+      <bpmn:incoming>shipping_flow_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="shipping_flow_1" sourceRef="shipping_start" targetRef="shipping_process" />
+    <bpmn:sequenceFlow id="shipping_flow_2" sourceRef="shipping_process" targetRef="shipping_send_status" />
+    <bpmn:sequenceFlow id="shipping_flow_3" sourceRef="shipping_send_status" targetRef="shipping_end" />
+  </bpmn:process>
+  <bpmn:process id="Process_participant_blackbox_external" name="外部系统 (黑盒)" isExecutable="true" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_cross_pool_patterns" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_cross_pool_patterns" bpmnElement="collaboration_cross_pool">
+      <bpmndi:BPMNShape id="collaboration_cross_pool_di" bpmnElement="collaboration_cross_pool">
+        <dc:Bounds x="0" y="0" width="2074" height="1074" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_customer_di" bpmnElement="participant_customer" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1128" height="261" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_customer_di" bpmnElement="process_customer">
+        <dc:Bounds x="0" y="0" width="1128" height="261" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_start_di" bpmnElement="customer_start">
+        <dc:Bounds x="172" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_send_order_di" bpmnElement="customer_send_order">
+        <dc:Bounds x="288" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_wait_confirmation_di" bpmnElement="customer_wait_confirmation">
+        <dc:Bounds x="468" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="436" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_send_payment_di" bpmnElement="customer_send_payment">
+        <dc:Bounds x="584" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_wait_payment_confirm_di" bpmnElement="customer_wait_payment_confirm">
+        <dc:Bounds x="172" y="193" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="233" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_wait_shipping_di" bpmnElement="customer_wait_shipping">
+        <dc:Bounds x="320" y="193" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="288" y="233" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="customer_end_di" bpmnElement="customer_end">
+        <dc:Bounds x="468" y="193" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="436" y="233" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_order_system_di" bpmnElement="participant_order_system" isHorizontal="true">
+        <dc:Bounds x="84" y="291" width="1128" height="305" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_order_system_di" bpmnElement="process_order_system">
+        <dc:Bounds x="84" y="291" width="1128" height="305" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_start_di" bpmnElement="order_start">
+        <dc:Bounds x="320" y="345" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="288" y="385" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_validate_di" bpmnElement="order_validate">
+        <dc:Bounds x="436" y="323" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_send_confirmation_di" bpmnElement="order_send_confirmation">
+        <dc:Bounds x="616" y="323" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_wait_payment_di" bpmnElement="order_wait_payment">
+        <dc:Bounds x="828" y="345" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="796" y="385" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_send_to_payment_di" bpmnElement="order_send_to_payment">
+        <dc:Bounds x="976" y="323" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_wait_payment_result_di" bpmnElement="order_wait_payment_result">
+        <dc:Bounds x="1156" y="345" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124" y="385" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_send_payment_confirm_di" bpmnElement="order_send_payment_confirm">
+        <dc:Bounds x="256" y="484" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_send_shipping_request_di" bpmnElement="order_send_shipping_request">
+        <dc:Bounds x="436" y="484" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_wait_shipping_di" bpmnElement="order_wait_shipping">
+        <dc:Bounds x="648" y="506" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="616" y="546" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_notify_customer_di" bpmnElement="order_notify_customer">
+        <dc:Bounds x="796" y="484" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="order_end_di" bpmnElement="order_end">
+        <dc:Bounds x="976" y="506" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="944" y="546" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_payment_system_di" bpmnElement="participant_payment_system" isHorizontal="true">
+        <dc:Bounds x="946" y="626" width="1128" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_payment_system_di" bpmnElement="process_payment_system">
+        <dc:Bounds x="946" y="626" width="1128" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="payment_start_di" bpmnElement="payment_start">
+        <dc:Bounds x="1008" y="680" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="976" y="720" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="payment_process_di" bpmnElement="payment_process">
+        <dc:Bounds x="1124" y="658" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="payment_send_confirmation_di" bpmnElement="payment_send_confirmation">
+        <dc:Bounds x="1304" y="658" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="payment_end_di" bpmnElement="payment_end">
+        <dc:Bounds x="1484" y="680" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1452" y="720" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_shipping_system_di" bpmnElement="participant_shipping_system" isHorizontal="true">
+        <dc:Bounds x="406" y="800" width="1128" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="process_shipping_system_di" bpmnElement="process_shipping_system">
+        <dc:Bounds x="406" y="800" width="1128" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shipping_start_di" bpmnElement="shipping_start">
+        <dc:Bounds x="468" y="854" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="436" y="894" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shipping_process_di" bpmnElement="shipping_process">
+        <dc:Bounds x="584" y="832" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shipping_send_status_di" bpmnElement="shipping_send_status">
+        <dc:Bounds x="764" y="832" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shipping_end_di" bpmnElement="shipping_end">
+        <dc:Bounds x="944" y="854" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="912" y="894" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="participant_blackbox_external_di" bpmnElement="participant_blackbox_external" isHorizontal="true">
+        <dc:Bounds x="0" y="974" width="1128" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="customer_flow_1_di" bpmnElement="customer_flow_1">
+        <di:waypoint x="208" y="72" />
+        <di:waypoint x="288" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="customer_flow_2_di" bpmnElement="customer_flow_2">
+        <di:waypoint x="388" y="72" />
+        <di:waypoint x="468" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="customer_flow_3_di" bpmnElement="customer_flow_3">
+        <di:waypoint x="504" y="72" />
+        <di:waypoint x="584" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="customer_flow_4_di" bpmnElement="customer_flow_4">
+        <di:waypoint x="634" y="112" />
+        <di:waypoint x="634" y="152.5" />
+        <di:waypoint x="190" y="152.5" />
+        <di:waypoint x="190" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="customer_flow_5_di" bpmnElement="customer_flow_5">
+        <di:waypoint x="208" y="211" />
+        <di:waypoint x="320" y="211" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="customer_flow_6_di" bpmnElement="customer_flow_6">
+        <di:waypoint x="356" y="211" />
+        <di:waypoint x="468" y="211" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_1_di" bpmnElement="order_flow_1">
+        <di:waypoint x="356" y="363" />
+        <di:waypoint x="436" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_2_di" bpmnElement="order_flow_2">
+        <di:waypoint x="536" y="363" />
+        <di:waypoint x="616" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_3_di" bpmnElement="order_flow_3">
+        <di:waypoint x="716" y="363" />
+        <di:waypoint x="828" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_4_di" bpmnElement="order_flow_4">
+        <di:waypoint x="864" y="363" />
+        <di:waypoint x="976" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_5_di" bpmnElement="order_flow_5">
+        <di:waypoint x="1076" y="363" />
+        <di:waypoint x="1156" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_6_di" bpmnElement="order_flow_6">
+        <di:waypoint x="1174" y="381" />
+        <di:waypoint x="1174" y="432.5" />
+        <di:waypoint x="306" y="432.5" />
+        <di:waypoint x="306" y="484" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_7_di" bpmnElement="order_flow_7">
+        <di:waypoint x="356" y="524" />
+        <di:waypoint x="436" y="524" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_8_di" bpmnElement="order_flow_8">
+        <di:waypoint x="536" y="524" />
+        <di:waypoint x="648" y="524" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_9_di" bpmnElement="order_flow_9">
+        <di:waypoint x="684" y="524" />
+        <di:waypoint x="796" y="524" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="order_flow_10_di" bpmnElement="order_flow_10">
+        <di:waypoint x="896" y="524" />
+        <di:waypoint x="976" y="524" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="payment_flow_1_di" bpmnElement="payment_flow_1">
+        <di:waypoint x="1044" y="698" />
+        <di:waypoint x="1124" y="698" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="payment_flow_2_di" bpmnElement="payment_flow_2">
+        <di:waypoint x="1224" y="698" />
+        <di:waypoint x="1304" y="698" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="payment_flow_3_di" bpmnElement="payment_flow_3">
+        <di:waypoint x="1404" y="698" />
+        <di:waypoint x="1484" y="698" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="shipping_flow_1_di" bpmnElement="shipping_flow_1">
+        <di:waypoint x="504" y="872" />
+        <di:waypoint x="584" y="872" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="shipping_flow_2_di" bpmnElement="shipping_flow_2">
+        <di:waypoint x="684" y="872" />
+        <di:waypoint x="764" y="872" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="shipping_flow_3_di" bpmnElement="shipping_flow_3">
+        <di:waypoint x="864" y="872" />
+        <di:waypoint x="944" y="872" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_order_request_di" bpmnElement="msgflow_order_request">
+        <di:waypoint x="338" y="112" />
+        <di:waypoint x="366" y="128" />
+        <di:waypoint x="366" y="325" />
+        <di:waypoint x="338" y="325" />
+        <di:waypoint x="338" y="345" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="371" y="189.95" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_order_response_di" bpmnElement="msgflow_order_response">
+        <di:waypoint x="666" y="323" />
+        <di:waypoint x="666" y="258" />
+        <di:waypoint x="458" y="258" />
+        <di:waypoint x="458" y="110" />
+        <di:waypoint x="486" y="110" />
+        <di:waypoint x="486" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="537" y="239" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_payment_to_order_di" bpmnElement="msgflow_payment_to_order">
+        <di:waypoint x="634" y="112" />
+        <di:waypoint x="634" y="285" />
+        <di:waypoint x="846" y="285" />
+        <di:waypoint x="846" y="345" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="715" y="266" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_order_to_payment_di" bpmnElement="msgflow_order_to_payment">
+        <di:waypoint x="1026" y="403" />
+        <di:waypoint x="1026" y="680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1031" y="492.95" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_payment_confirmation_di" bpmnElement="msgflow_payment_confirmation">
+        <di:waypoint x="1354" y="658" />
+        <di:waypoint x="1354" y="647" />
+        <di:waypoint x="1174" y="647" />
+        <di:waypoint x="1174" y="381" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1179" y="546.9" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_payment_to_customer_di" bpmnElement="msgflow_payment_to_customer">
+        <di:waypoint x="306" y="484" />
+        <di:waypoint x="306" y="249" />
+        <di:waypoint x="190" y="249" />
+        <di:waypoint x="190" y="229" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="311" y="394.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_shipping_request_di" bpmnElement="msgflow_shipping_request">
+        <di:waypoint x="486" y="564" />
+        <di:waypoint x="486" y="854" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="491" y="658.5" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_shipping_status_di" bpmnElement="msgflow_shipping_status">
+        <di:waypoint x="814" y="832" />
+        <di:waypoint x="814" y="698" />
+        <di:waypoint x="666" y="698" />
+        <di:waypoint x="666" y="542" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="671" y="636.4" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_shipping_to_customer_di" bpmnElement="msgflow_shipping_to_customer">
+        <di:waypoint x="818" y="484" />
+        <di:waypoint x="818" y="294" />
+        <di:waypoint x="338" y="294" />
+        <di:waypoint x="338" y="229" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="553" y="275" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

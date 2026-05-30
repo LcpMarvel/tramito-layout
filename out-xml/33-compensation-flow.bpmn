@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_compensation_flow" targetNamespace="http://example.com/test-compensation" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_compensation" name="补偿流程测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_book_flight" name="预订机票">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_comp_flight" name="补偿触发" attachedToRef="task_book_flight">
+      <bpmn:compensateEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_cancel_flight" name="取消机票" />
+    <bpmn:serviceTask id="task_book_hotel" name="预订酒店">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_comp_hotel" name="补偿触发" attachedToRef="task_book_hotel">
+      <bpmn:compensateEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_cancel_hotel" name="取消酒店" />
+    <bpmn:serviceTask id="task_charge_card" name="信用卡扣款">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_comp_charge" name="补偿触发" attachedToRef="task_charge_card">
+      <bpmn:compensateEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_refund" name="退款" />
+    <bpmn:exclusiveGateway id="gateway_check" name="检查结果" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_success</bpmn:outgoing>
+      <bpmn:outgoing>flow_fail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="throw_compensation" name="触发全部补偿">
+      <bpmn:incoming>flow_fail</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end_cancel</bpmn:outgoing>
+      <bpmn:compensateEventDefinition />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="end_success" name="预订成功">
+      <bpmn:incoming>flow_success</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_cancelled" name="已取消">
+      <bpmn:incoming>flow_to_end_cancel</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_1" targetRef="task_book_flight" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_book_flight" targetRef="task_book_hotel" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_book_hotel" targetRef="task_charge_card" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_charge_card" targetRef="gateway_check" />
+    <bpmn:sequenceFlow id="flow_success" name="成功" sourceRef="gateway_check" targetRef="end_success">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${success == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_fail" name="失败" sourceRef="gateway_check" targetRef="throw_compensation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${success == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_to_end_cancel" sourceRef="throw_compensation" targetRef="end_cancelled" />
+    <bpmn:association id="assoc_comp_flight" associationDirection="One" sourceRef="boundary_comp_flight" targetRef="task_cancel_flight" />
+    <bpmn:association id="assoc_comp_hotel" associationDirection="One" sourceRef="boundary_comp_hotel" targetRef="task_cancel_hotel" />
+    <bpmn:association id="assoc_comp_charge" associationDirection="One" sourceRef="boundary_comp_charge" targetRef="task_refund" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_compensation_flow" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_compensation_flow" bpmnElement="process_compensation">
+      <bpmndi:BPMNShape id="process_compensation_di" bpmnElement="process_compensation">
+        <dc:Bounds x="0" y="0" width="1020" height="370" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="80" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="120" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_book_flight_di" bpmnElement="task_book_flight">
+        <dc:Bounds x="178" y="57.99999999999999" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_comp_flight_di" bpmnElement="boundary_comp_flight">
+        <dc:Bounds x="180" y="120" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="171" y="160" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cancel_flight_di" bpmnElement="task_cancel_flight">
+        <dc:Bounds x="178" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_book_hotel_di" bpmnElement="task_book_hotel">
+        <dc:Bounds x="358" y="57.99999999999999" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_comp_hotel_di" bpmnElement="boundary_comp_hotel">
+        <dc:Bounds x="360" y="120" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351" y="160" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cancel_hotel_di" bpmnElement="task_cancel_hotel">
+        <dc:Bounds x="358" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_charge_card_di" bpmnElement="task_charge_card">
+        <dc:Bounds x="538" y="57.99999999999999" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_comp_charge_di" bpmnElement="boundary_comp_charge">
+        <dc:Bounds x="540" y="120" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="531" y="160" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_refund_di" bpmnElement="task_refund">
+        <dc:Bounds x="538" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_check_di" bpmnElement="gateway_check">
+        <dc:Bounds x="718" y="73" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="693" y="55" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_compensation_di" bpmnElement="throw_compensation">
+        <dc:Bounds x="848" y="128" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="816" y="168" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_success_di" bpmnElement="end_success">
+        <dc:Bounds x="964" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="932" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_cancelled_di" bpmnElement="end_cancelled">
+        <dc:Bounds x="964" y="128" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="932" y="168" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="98" />
+        <di:waypoint x="178" y="98" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="98" />
+        <di:waypoint x="358" y="98" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="98" />
+        <di:waypoint x="538" y="98" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="638" y="98" />
+        <di:waypoint x="718" y="98" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_success_di" bpmnElement="flow_success">
+        <di:waypoint x="768" y="98" />
+        <di:waypoint x="808" y="98" />
+        <di:waypoint x="808" y="50" />
+        <di:waypoint x="964" y="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="861" y="31" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fail_di" bpmnElement="flow_fail">
+        <di:waypoint x="768" y="98" />
+        <di:waypoint x="808" y="98" />
+        <di:waypoint x="808" y="146" />
+        <di:waypoint x="848" y="146" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="813" y="95" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_cancel_di" bpmnElement="flow_to_end_cancel">
+        <di:waypoint x="884" y="146" />
+        <di:waypoint x="964" y="146" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_comp_flight_di" bpmnElement="assoc_comp_flight">
+        <di:waypoint x="198" y="156" />
+        <di:waypoint x="228" y="156" />
+        <di:waypoint x="228" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_comp_hotel_di" bpmnElement="assoc_comp_hotel">
+        <di:waypoint x="378" y="156" />
+        <di:waypoint x="408" y="156" />
+        <di:waypoint x="408" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_comp_charge_di" bpmnElement="assoc_comp_charge">
+        <di:waypoint x="558" y="156" />
+        <di:waypoint x="588" y="156" />
+        <di:waypoint x="588" y="250" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

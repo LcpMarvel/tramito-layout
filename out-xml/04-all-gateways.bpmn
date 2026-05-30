@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_all_gateways" targetNamespace="http://example.com/test-gateways" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_a" name="消息A" />
+  <bpmn:message id="msg_b" name="消息B" />
+  <bpmn:signal id="sig_timeout" name="超时信号" />
+  <bpmn:process id="process_all_gateways" name="所有网关类型测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gateway_exclusive_div" name="排他分支" gatewayDirection="Diverging" default="flow_exclusive_default">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_exclusive_a</bpmn:outgoing>
+      <bpmn:outgoing>flow_exclusive_b</bpmn:outgoing>
+      <bpmn:outgoing>flow_exclusive_default</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="task_path_a" name="路径A">
+      <bpmn:incoming>flow_exclusive_a</bpmn:incoming>
+      <bpmn:outgoing>flow_to_exc_conv_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_path_b" name="路径B">
+      <bpmn:incoming>flow_exclusive_b</bpmn:incoming>
+      <bpmn:outgoing>flow_to_exc_conv_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_path_default" name="默认路径">
+      <bpmn:incoming>flow_exclusive_default</bpmn:incoming>
+      <bpmn:outgoing>flow_to_exc_conv_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gateway_exclusive_conv" name="排他合并" gatewayDirection="Converging">
+      <bpmn:incoming>flow_to_exc_conv_1</bpmn:incoming>
+      <bpmn:incoming>flow_to_exc_conv_2</bpmn:incoming>
+      <bpmn:incoming>flow_to_exc_conv_3</bpmn:incoming>
+      <bpmn:outgoing>flow_to_parallel</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="gateway_parallel_div" name="并行分支" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_to_parallel</bpmn:incoming>
+      <bpmn:outgoing>flow_parallel_1</bpmn:outgoing>
+      <bpmn:outgoing>flow_parallel_2</bpmn:outgoing>
+      <bpmn:outgoing>flow_parallel_3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="task_parallel_1" name="并行任务1">
+      <bpmn:incoming>flow_parallel_1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_par_conv_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_parallel_2" name="并行任务2">
+      <bpmn:incoming>flow_parallel_2</bpmn:incoming>
+      <bpmn:outgoing>flow_to_par_conv_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_parallel_3" name="并行任务3">
+      <bpmn:incoming>flow_parallel_3</bpmn:incoming>
+      <bpmn:outgoing>flow_to_par_conv_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="gateway_parallel_conv" name="并行合并" gatewayDirection="Converging">
+      <bpmn:incoming>flow_to_par_conv_1</bpmn:incoming>
+      <bpmn:incoming>flow_to_par_conv_2</bpmn:incoming>
+      <bpmn:incoming>flow_to_par_conv_3</bpmn:incoming>
+      <bpmn:outgoing>flow_to_inclusive</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:inclusiveGateway id="gateway_inclusive_div" name="包容分支" gatewayDirection="Diverging" default="flow_inclusive_default">
+      <bpmn:incoming>flow_to_inclusive</bpmn:incoming>
+      <bpmn:outgoing>flow_inclusive_1</bpmn:outgoing>
+      <bpmn:outgoing>flow_inclusive_2</bpmn:outgoing>
+      <bpmn:outgoing>flow_inclusive_default</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:task id="task_inclusive_1" name="包容路径1">
+      <bpmn:incoming>flow_inclusive_1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_inc_conv_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_inclusive_2" name="包容路径2">
+      <bpmn:incoming>flow_inclusive_2</bpmn:incoming>
+      <bpmn:outgoing>flow_to_inc_conv_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_inclusive_default" name="包容默认">
+      <bpmn:incoming>flow_inclusive_default</bpmn:incoming>
+      <bpmn:outgoing>flow_to_inc_conv_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:inclusiveGateway id="gateway_inclusive_conv" name="包容合并" gatewayDirection="Converging">
+      <bpmn:incoming>flow_to_inc_conv_1</bpmn:incoming>
+      <bpmn:incoming>flow_to_inc_conv_2</bpmn:incoming>
+      <bpmn:incoming>flow_to_inc_conv_3</bpmn:incoming>
+      <bpmn:outgoing>flow_to_event</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:eventBasedGateway id="gateway_event_based" name="事件网关" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_to_event</bpmn:incoming>
+      <bpmn:outgoing>flow_event_msg</bpmn:outgoing>
+      <bpmn:outgoing>flow_event_timer</bpmn:outgoing>
+      <bpmn:outgoing>flow_event_signal</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="catch_event_msg" name="等待消息">
+      <bpmn:incoming>flow_event_msg</bpmn:incoming>
+      <bpmn:outgoing>flow_after_msg</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_a" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_event_timer" name="等待超时">
+      <bpmn:incoming>flow_event_timer</bpmn:incoming>
+      <bpmn:outgoing>flow_after_timer</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_event_signal" name="等待信号">
+      <bpmn:incoming>flow_event_signal</bpmn:incoming>
+      <bpmn:outgoing>flow_after_signal</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="sig_timeout" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="task_after_msg" name="消息后处理">
+      <bpmn:incoming>flow_after_msg</bpmn:incoming>
+      <bpmn:outgoing>flow_to_event_conv_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_after_timer" name="超时后处理">
+      <bpmn:incoming>flow_after_timer</bpmn:incoming>
+      <bpmn:outgoing>flow_to_event_conv_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_after_signal" name="信号后处理">
+      <bpmn:incoming>flow_after_signal</bpmn:incoming>
+      <bpmn:outgoing>flow_to_event_conv_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gateway_event_conv" gatewayDirection="Converging">
+      <bpmn:incoming>flow_to_event_conv_1</bpmn:incoming>
+      <bpmn:incoming>flow_to_event_conv_2</bpmn:incoming>
+      <bpmn:incoming>flow_to_event_conv_3</bpmn:incoming>
+      <bpmn:outgoing>flow_to_complex</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:complexGateway id="gateway_complex" name="复杂网关" gatewayDirection="Mixed">
+      <bpmn:incoming>flow_to_complex</bpmn:incoming>
+      <bpmn:outgoing>flow_complex_1</bpmn:outgoing>
+      <bpmn:outgoing>flow_complex_2</bpmn:outgoing>
+      <bpmn:activationCondition xsi:type="bpmn:tFormalExpression">${completed &gt;= 2}</bpmn:activationCondition>
+    </bpmn:complexGateway>
+    <bpmn:task id="task_complex_1" name="复杂路径1">
+      <bpmn:incoming>flow_complex_1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_complex_2" name="复杂路径2">
+      <bpmn:incoming>flow_complex_2</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_to_end_1</bpmn:incoming>
+      <bpmn:incoming>flow_to_end_2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="gateway_exclusive_div" />
+    <bpmn:sequenceFlow id="flow_exclusive_a" name="条件A" sourceRef="gateway_exclusive_div" targetRef="task_path_a">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${type == 'A'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_exclusive_b" name="条件B" sourceRef="gateway_exclusive_div" targetRef="task_path_b">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${type == 'B'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_exclusive_default" name="默认" sourceRef="gateway_exclusive_div" targetRef="task_path_default" />
+    <bpmn:sequenceFlow id="flow_to_exc_conv_1" sourceRef="task_path_a" targetRef="gateway_exclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_exc_conv_2" sourceRef="task_path_b" targetRef="gateway_exclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_exc_conv_3" sourceRef="task_path_default" targetRef="gateway_exclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_parallel" sourceRef="gateway_exclusive_conv" targetRef="gateway_parallel_div" />
+    <bpmn:sequenceFlow id="flow_parallel_1" sourceRef="gateway_parallel_div" targetRef="task_parallel_1" />
+    <bpmn:sequenceFlow id="flow_parallel_2" sourceRef="gateway_parallel_div" targetRef="task_parallel_2" />
+    <bpmn:sequenceFlow id="flow_parallel_3" sourceRef="gateway_parallel_div" targetRef="task_parallel_3" />
+    <bpmn:sequenceFlow id="flow_to_par_conv_1" sourceRef="task_parallel_1" targetRef="gateway_parallel_conv" />
+    <bpmn:sequenceFlow id="flow_to_par_conv_2" sourceRef="task_parallel_2" targetRef="gateway_parallel_conv" />
+    <bpmn:sequenceFlow id="flow_to_par_conv_3" sourceRef="task_parallel_3" targetRef="gateway_parallel_conv" />
+    <bpmn:sequenceFlow id="flow_to_inclusive" sourceRef="gateway_parallel_conv" targetRef="gateway_inclusive_div" />
+    <bpmn:sequenceFlow id="flow_inclusive_1" name="大于100" sourceRef="gateway_inclusive_div" targetRef="task_inclusive_1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt; 100}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_inclusive_2" name="VIP客户" sourceRef="gateway_inclusive_div" targetRef="task_inclusive_2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isVip == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_inclusive_default" sourceRef="gateway_inclusive_div" targetRef="task_inclusive_default" />
+    <bpmn:sequenceFlow id="flow_to_inc_conv_1" sourceRef="task_inclusive_1" targetRef="gateway_inclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_inc_conv_2" sourceRef="task_inclusive_2" targetRef="gateway_inclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_inc_conv_3" sourceRef="task_inclusive_default" targetRef="gateway_inclusive_conv" />
+    <bpmn:sequenceFlow id="flow_to_event" sourceRef="gateway_inclusive_conv" targetRef="gateway_event_based" />
+    <bpmn:sequenceFlow id="flow_event_msg" sourceRef="gateway_event_based" targetRef="catch_event_msg" />
+    <bpmn:sequenceFlow id="flow_event_timer" sourceRef="gateway_event_based" targetRef="catch_event_timer" />
+    <bpmn:sequenceFlow id="flow_event_signal" sourceRef="gateway_event_based" targetRef="catch_event_signal" />
+    <bpmn:sequenceFlow id="flow_after_msg" sourceRef="catch_event_msg" targetRef="task_after_msg" />
+    <bpmn:sequenceFlow id="flow_after_timer" sourceRef="catch_event_timer" targetRef="task_after_timer" />
+    <bpmn:sequenceFlow id="flow_after_signal" sourceRef="catch_event_signal" targetRef="task_after_signal" />
+    <bpmn:sequenceFlow id="flow_to_event_conv_1" sourceRef="task_after_msg" targetRef="gateway_event_conv" />
+    <bpmn:sequenceFlow id="flow_to_event_conv_2" sourceRef="task_after_timer" targetRef="gateway_event_conv" />
+    <bpmn:sequenceFlow id="flow_to_event_conv_3" sourceRef="task_after_signal" targetRef="gateway_event_conv" />
+    <bpmn:sequenceFlow id="flow_to_complex" sourceRef="gateway_event_conv" targetRef="gateway_complex" />
+    <bpmn:sequenceFlow id="flow_complex_1" sourceRef="gateway_complex" targetRef="task_complex_1" />
+    <bpmn:sequenceFlow id="flow_complex_2" sourceRef="gateway_complex" targetRef="task_complex_2" />
+    <bpmn:sequenceFlow id="flow_to_end_1" sourceRef="task_complex_1" targetRef="end_1" />
+    <bpmn:sequenceFlow id="flow_to_end_2" sourceRef="task_complex_2" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_all_gateways" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_all_gateways" bpmnElement="process_all_gateways">
+      <bpmndi:BPMNShape id="process_all_gateways_di" bpmnElement="process_all_gateways">
+        <dc:Bounds x="0" y="0" width="2420" height="424" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_exclusive_div_di" bpmnElement="gateway_exclusive_div">
+        <dc:Bounds x="178" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="153" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_path_a_di" bpmnElement="task_path_a">
+        <dc:Bounds x="308" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_path_b_di" bpmnElement="task_path_b">
+        <dc:Bounds x="308" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_path_default_di" bpmnElement="task_path_default">
+        <dc:Bounds x="308" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_exclusive_conv_di" bpmnElement="gateway_exclusive_conv">
+        <dc:Bounds x="488" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="463" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_parallel_div_di" bpmnElement="gateway_parallel_div">
+        <dc:Bounds x="618" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="593" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_parallel_1_di" bpmnElement="task_parallel_1">
+        <dc:Bounds x="748" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_parallel_2_di" bpmnElement="task_parallel_2">
+        <dc:Bounds x="748" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_parallel_3_di" bpmnElement="task_parallel_3">
+        <dc:Bounds x="748" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_parallel_conv_di" bpmnElement="gateway_parallel_conv">
+        <dc:Bounds x="928" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="903" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_inclusive_div_di" bpmnElement="gateway_inclusive_div">
+        <dc:Bounds x="1058" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1033" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inclusive_1_di" bpmnElement="task_inclusive_1">
+        <dc:Bounds x="1188" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inclusive_2_di" bpmnElement="task_inclusive_2">
+        <dc:Bounds x="1188" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inclusive_default_di" bpmnElement="task_inclusive_default">
+        <dc:Bounds x="1188" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_inclusive_conv_di" bpmnElement="gateway_inclusive_conv">
+        <dc:Bounds x="1368" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1343" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_event_based_di" bpmnElement="gateway_event_based">
+        <dc:Bounds x="1498" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1473" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_event_msg_di" bpmnElement="catch_event_msg">
+        <dc:Bounds x="1628" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1596" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_event_timer_di" bpmnElement="catch_event_timer">
+        <dc:Bounds x="1628" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1596" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_event_signal_di" bpmnElement="catch_event_signal">
+        <dc:Bounds x="1628" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1596" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_after_msg_di" bpmnElement="task_after_msg">
+        <dc:Bounds x="1744" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_after_timer_di" bpmnElement="task_after_timer">
+        <dc:Bounds x="1744" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_after_signal_di" bpmnElement="task_after_signal">
+        <dc:Bounds x="1744" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_event_conv_di" bpmnElement="gateway_event_conv">
+        <dc:Bounds x="1924" y="187" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_complex_di" bpmnElement="gateway_complex">
+        <dc:Bounds x="2054" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2029" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_complex_1_di" bpmnElement="task_complex_1">
+        <dc:Bounds x="2184" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_complex_2_di" bpmnElement="task_complex_2">
+        <dc:Bounds x="2184" y="242" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="2364" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2332" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_exclusive_a_di" bpmnElement="flow_exclusive_a">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="268" y="212" />
+        <di:waypoint x="268" y="72" />
+        <di:waypoint x="308" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="156" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_exclusive_b_di" bpmnElement="flow_exclusive_b">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="308" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="243" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_exclusive_default_di" bpmnElement="flow_exclusive_default">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="268" y="212" />
+        <di:waypoint x="268" y="352" />
+        <di:waypoint x="308" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="254" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_exc_conv_1_di" bpmnElement="flow_to_exc_conv_1">
+        <di:waypoint x="358" y="112" />
+        <di:waypoint x="358" y="149.5" />
+        <di:waypoint x="513" y="149.5" />
+        <di:waypoint x="513" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_exc_conv_2_di" bpmnElement="flow_to_exc_conv_2">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="488" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_exc_conv_3_di" bpmnElement="flow_to_exc_conv_3">
+        <di:waypoint x="358" y="312" />
+        <di:waypoint x="358" y="274.5" />
+        <di:waypoint x="513" y="274.5" />
+        <di:waypoint x="513" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_parallel_di" bpmnElement="flow_to_parallel">
+        <di:waypoint x="538" y="212" />
+        <di:waypoint x="618" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_parallel_1_di" bpmnElement="flow_parallel_1">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="708" y="212" />
+        <di:waypoint x="708" y="72" />
+        <di:waypoint x="748" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_parallel_2_di" bpmnElement="flow_parallel_2">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="748" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_parallel_3_di" bpmnElement="flow_parallel_3">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="708" y="212" />
+        <di:waypoint x="708" y="352" />
+        <di:waypoint x="748" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_par_conv_1_di" bpmnElement="flow_to_par_conv_1">
+        <di:waypoint x="798" y="112" />
+        <di:waypoint x="798" y="149.5" />
+        <di:waypoint x="953" y="149.5" />
+        <di:waypoint x="953" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_par_conv_2_di" bpmnElement="flow_to_par_conv_2">
+        <di:waypoint x="848" y="212" />
+        <di:waypoint x="928" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_par_conv_3_di" bpmnElement="flow_to_par_conv_3">
+        <di:waypoint x="798" y="312" />
+        <di:waypoint x="798" y="274.5" />
+        <di:waypoint x="953" y="274.5" />
+        <di:waypoint x="953" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_inclusive_di" bpmnElement="flow_to_inclusive">
+        <di:waypoint x="978" y="212" />
+        <di:waypoint x="1058" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_inclusive_1_di" bpmnElement="flow_inclusive_1">
+        <di:waypoint x="1108" y="212" />
+        <di:waypoint x="1148" y="212" />
+        <di:waypoint x="1148" y="72" />
+        <di:waypoint x="1188" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1153" y="156" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_inclusive_2_di" bpmnElement="flow_inclusive_2">
+        <di:waypoint x="1108" y="212" />
+        <di:waypoint x="1188" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1123" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_inclusive_default_di" bpmnElement="flow_inclusive_default">
+        <di:waypoint x="1108" y="212" />
+        <di:waypoint x="1148" y="212" />
+        <di:waypoint x="1148" y="352" />
+        <di:waypoint x="1188" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1153" y="254" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_inc_conv_1_di" bpmnElement="flow_to_inc_conv_1">
+        <di:waypoint x="1238" y="112" />
+        <di:waypoint x="1238" y="149.5" />
+        <di:waypoint x="1393" y="149.5" />
+        <di:waypoint x="1393" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_inc_conv_2_di" bpmnElement="flow_to_inc_conv_2">
+        <di:waypoint x="1288" y="212" />
+        <di:waypoint x="1368" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_inc_conv_3_di" bpmnElement="flow_to_inc_conv_3">
+        <di:waypoint x="1238" y="312" />
+        <di:waypoint x="1238" y="274.5" />
+        <di:waypoint x="1393" y="274.5" />
+        <di:waypoint x="1393" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_event_di" bpmnElement="flow_to_event">
+        <di:waypoint x="1418" y="212" />
+        <di:waypoint x="1498" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_event_msg_di" bpmnElement="flow_event_msg">
+        <di:waypoint x="1548" y="212" />
+        <di:waypoint x="1588" y="212" />
+        <di:waypoint x="1588" y="72" />
+        <di:waypoint x="1628" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_event_timer_di" bpmnElement="flow_event_timer">
+        <di:waypoint x="1548" y="212" />
+        <di:waypoint x="1628" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_event_signal_di" bpmnElement="flow_event_signal">
+        <di:waypoint x="1548" y="212" />
+        <di:waypoint x="1588" y="212" />
+        <di:waypoint x="1588" y="352" />
+        <di:waypoint x="1628" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_after_msg_di" bpmnElement="flow_after_msg">
+        <di:waypoint x="1664" y="72" />
+        <di:waypoint x="1744" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_after_timer_di" bpmnElement="flow_after_timer">
+        <di:waypoint x="1664" y="212" />
+        <di:waypoint x="1744" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_after_signal_di" bpmnElement="flow_after_signal">
+        <di:waypoint x="1664" y="352" />
+        <di:waypoint x="1744" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_event_conv_1_di" bpmnElement="flow_to_event_conv_1">
+        <di:waypoint x="1794" y="112" />
+        <di:waypoint x="1794" y="149.5" />
+        <di:waypoint x="1949" y="149.5" />
+        <di:waypoint x="1949" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_event_conv_2_di" bpmnElement="flow_to_event_conv_2">
+        <di:waypoint x="1844" y="212" />
+        <di:waypoint x="1924" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_event_conv_3_di" bpmnElement="flow_to_event_conv_3">
+        <di:waypoint x="1794" y="312" />
+        <di:waypoint x="1794" y="274.5" />
+        <di:waypoint x="1949" y="274.5" />
+        <di:waypoint x="1949" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_complex_di" bpmnElement="flow_to_complex">
+        <di:waypoint x="1974" y="212" />
+        <di:waypoint x="2054" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_complex_1_di" bpmnElement="flow_complex_1">
+        <di:waypoint x="2104" y="212" />
+        <di:waypoint x="2144" y="212" />
+        <di:waypoint x="2144" y="142" />
+        <di:waypoint x="2184" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_complex_2_di" bpmnElement="flow_complex_2">
+        <di:waypoint x="2104" y="212" />
+        <di:waypoint x="2144" y="212" />
+        <di:waypoint x="2144" y="282" />
+        <di:waypoint x="2184" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_1_di" bpmnElement="flow_to_end_1">
+        <di:waypoint x="2284" y="142" />
+        <di:waypoint x="2324" y="142" />
+        <di:waypoint x="2324" y="212" />
+        <di:waypoint x="2364" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_2_di" bpmnElement="flow_to_end_2">
+        <di:waypoint x="2284" y="282" />
+        <di:waypoint x="2324" y="282" />
+        <di:waypoint x="2324" y="212" />
+        <di:waypoint x="2364" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

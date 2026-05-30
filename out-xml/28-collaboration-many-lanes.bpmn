@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_employee_resignation" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:message id="msg_resignation_request" name="离职申请" />
+  <bpmn:message id="msg_approval_result" name="审批结果" />
+  <bpmn:message id="msg_check_request" name="设备检查请求" />
+  <bpmn:message id="msg_transfer_request" name="资产转移请求" />
+  <bpmn:message id="msg_damage_report" name="损坏报告" />
+  <bpmn:message id="msg_process_complete" name="流程完成通知" />
+  <bpmn:collaboration id="collaboration_resignation" name="员工离职IT资产与账号处理流程">
+    <bpmn:participant id="pool_employee" name="离职员工" processRef="process_employee" />
+    <bpmn:participant id="pool_it_manager" name="IT部-IT经理" processRef="process_it_manager" />
+    <bpmn:participant id="pool_it_engineer" name="IT部-IT工程师" processRef="process_it_engineer" />
+    <bpmn:participant id="pool_custodian" name="资产保管人" processRef="process_custodian" />
+    <bpmn:participant id="pool_hr" name="人事部" processRef="process_hr" />
+    <bpmn:messageFlow id="msgflow_resignation_request" sourceRef="task_submit_resignation" targetRef="start_it_manager" messageRef="msg_resignation_request" />
+    <bpmn:messageFlow id="msgflow_approval_result" sourceRef="throw_approval_result" targetRef="catch_approval_result" messageRef="msg_approval_result" />
+    <bpmn:messageFlow id="msgflow_check_request" sourceRef="throw_check_request" targetRef="start_it_engineer" messageRef="msg_check_request" />
+    <bpmn:messageFlow id="msgflow_damage_report" sourceRef="throw_damage_report" targetRef="pool_hr" messageRef="msg_damage_report" />
+    <bpmn:messageFlow id="msgflow_transfer_request" sourceRef="throw_transfer_request" targetRef="start_custodian" messageRef="msg_transfer_request" />
+    <bpmn:messageFlow id="msgflow_process_complete" sourceRef="throw_process_complete" targetRef="catch_process_complete" messageRef="msg_process_complete" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_employee" name="离职员工" isExecutable="true">
+    <bpmn:startEvent id="start_employee" name="开始">
+      <bpmn:outgoing>flow_e1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_submit_resignation" name="提交离职申请">
+      <bpmn:incoming>flow_e1</bpmn:incoming>
+      <bpmn:outgoing>flow_e2</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="data_flow_manual">
+        <bpmn:sourceRef>data_manual_ref</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_approval_result" name="等待审批结果">
+      <bpmn:incoming>flow_e2</bpmn:incoming>
+      <bpmn:outgoing>flow_e3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_approval_result" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_process_complete" name="等待流程完成">
+      <bpmn:incoming>flow_e3</bpmn:incoming>
+      <bpmn:outgoing>flow_e4</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_process_complete" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="end_employee" name="结束">
+      <bpmn:incoming>flow_e4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="data_manual_ref" name="《离职手册程序单》" />
+    <bpmn:sequenceFlow id="flow_e1" sourceRef="start_employee" targetRef="task_submit_resignation" />
+    <bpmn:sequenceFlow id="flow_e2" sourceRef="task_submit_resignation" targetRef="catch_approval_result" />
+    <bpmn:sequenceFlow id="flow_e3" sourceRef="catch_approval_result" targetRef="catch_process_complete" />
+    <bpmn:sequenceFlow id="flow_e4" sourceRef="catch_process_complete" targetRef="end_employee" />
+  </bpmn:process>
+  <bpmn:process id="process_it_manager" name="IT部-IT经理" isExecutable="true">
+    <bpmn:startEvent id="start_it_manager" name="收到申请">
+      <bpmn:outgoing>flow_m1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_resignation_request" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_approve" name="审批离职申请">
+      <bpmn:incoming>flow_m1</bpmn:incoming>
+      <bpmn:outgoing>flow_m2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="throw_approval_result" name="发送审批结果">
+      <bpmn:incoming>flow_m2</bpmn:incoming>
+      <bpmn:outgoing>flow_m3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_approval_result" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_check_request" name="发送检查请求">
+      <bpmn:incoming>flow_m3</bpmn:incoming>
+      <bpmn:outgoing>flow_m4</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_check_request" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="end_it_manager" name="结束">
+      <bpmn:incoming>flow_m4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_m1" sourceRef="start_it_manager" targetRef="task_approve" />
+    <bpmn:sequenceFlow id="flow_m2" sourceRef="task_approve" targetRef="throw_approval_result" />
+    <bpmn:sequenceFlow id="flow_m3" sourceRef="throw_approval_result" targetRef="throw_check_request" />
+    <bpmn:sequenceFlow id="flow_m4" sourceRef="throw_check_request" targetRef="end_it_manager" />
+  </bpmn:process>
+  <bpmn:process id="process_it_engineer" name="IT部-IT工程师" isExecutable="true">
+    <bpmn:startEvent id="start_it_engineer" name="收到检查请求">
+      <bpmn:outgoing>flow_eng1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_check_request" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_check_equipment" name="检查电脑设备">
+      <bpmn:incoming>flow_eng1</bpmn:incoming>
+      <bpmn:outgoing>flow_eng2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_damage" name="人为损坏？" default="flow_no_damage">
+      <bpmn:incoming>flow_eng2</bpmn:incoming>
+      <bpmn:outgoing>flow_has_damage</bpmn:outgoing>
+      <bpmn:outgoing>flow_no_damage</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="throw_damage_report" name="报告损坏">
+      <bpmn:incoming>flow_has_damage</bpmn:incoming>
+      <bpmn:outgoing>flow_eng3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_damage_report" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="throw_transfer_request" name="请求资产转移">
+      <bpmn:incoming>flow_no_damage</bpmn:incoming>
+      <bpmn:incoming>flow_eng3</bpmn:incoming>
+      <bpmn:outgoing>flow_eng4</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_transfer_request" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="task_handle_accounts" name="处理系统账号">
+      <bpmn:incoming>flow_eng4</bpmn:incoming>
+      <bpmn:outgoing>flow_eng5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="throw_process_complete" name="通知完成">
+      <bpmn:incoming>flow_eng5</bpmn:incoming>
+      <bpmn:outgoing>flow_eng6</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_process_complete" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="end_it_engineer" name="结束">
+      <bpmn:incoming>flow_eng6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_eng1" sourceRef="start_it_engineer" targetRef="task_check_equipment" />
+    <bpmn:sequenceFlow id="flow_eng2" sourceRef="task_check_equipment" targetRef="gateway_damage" />
+    <bpmn:sequenceFlow id="flow_has_damage" name="是" sourceRef="gateway_damage" targetRef="throw_damage_report">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${equipmentDamaged == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_no_damage" name="否" sourceRef="gateway_damage" targetRef="throw_transfer_request" />
+    <bpmn:sequenceFlow id="flow_eng3" sourceRef="throw_damage_report" targetRef="throw_transfer_request" />
+    <bpmn:sequenceFlow id="flow_eng4" sourceRef="throw_transfer_request" targetRef="task_handle_accounts" />
+    <bpmn:sequenceFlow id="flow_eng5" sourceRef="task_handle_accounts" targetRef="throw_process_complete" />
+    <bpmn:sequenceFlow id="flow_eng6" sourceRef="throw_process_complete" targetRef="end_it_engineer" />
+  </bpmn:process>
+  <bpmn:process id="process_custodian" name="资产保管人" isExecutable="true">
+    <bpmn:startEvent id="start_custodian" name="收到转移请求">
+      <bpmn:outgoing>flow_c1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_transfer_request" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_fill_transfer" name="填写资产转移单">
+      <bpmn:incoming>flow_c1</bpmn:incoming>
+      <bpmn:outgoing>flow_c2</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="data_flow_transfer">
+        <bpmn:targetRef>data_transfer_ref</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_custodian" name="结束">
+      <bpmn:incoming>flow_c2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="data_transfer_ref" name="OA《资产转移单》" />
+    <bpmn:sequenceFlow id="flow_c1" sourceRef="start_custodian" targetRef="task_fill_transfer" />
+    <bpmn:sequenceFlow id="flow_c2" sourceRef="task_fill_transfer" targetRef="end_custodian" />
+  </bpmn:process>
+  <bpmn:process id="process_hr" name="人事部" isExecutable="true" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_employee_resignation" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_employee_resignation" bpmnElement="collaboration_resignation">
+      <bpmndi:BPMNShape id="collaboration_resignation_di" bpmnElement="collaboration_resignation">
+        <dc:Bounds x="0" y="0" width="1224" height="1164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_employee_di" bpmnElement="pool_employee" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="664" height="242" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_employee_di" bpmnElement="start_employee">
+        <dc:Bounds x="62" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_resignation_di" bpmnElement="task_submit_resignation">
+        <dc:Bounds x="178" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_approval_result_di" bpmnElement="catch_approval_result">
+        <dc:Bounds x="358" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_process_complete_di" bpmnElement="catch_process_complete">
+        <dc:Bounds x="474" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="442" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_employee_di" bpmnElement="end_employee">
+        <dc:Bounds x="590" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="558" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_manual_ref_di" bpmnElement="data_manual_ref">
+        <dc:Bounds x="210" y="40" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_it_manager_di" bpmnElement="pool_it_manager" isHorizontal="true">
+        <dc:Bounds x="148" y="272" width="664" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_it_manager_di" bpmnElement="start_it_manager">
+        <dc:Bounds x="210" y="326" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="366" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_approve_di" bpmnElement="task_approve">
+        <dc:Bounds x="326" y="304" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_approval_result_di" bpmnElement="throw_approval_result">
+        <dc:Bounds x="506" y="326" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="474" y="366" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_check_request_di" bpmnElement="throw_check_request">
+        <dc:Bounds x="622" y="326" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="590" y="366" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_it_manager_di" bpmnElement="end_it_manager">
+        <dc:Bounds x="738" y="326" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="706" y="366" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_it_engineer_di" bpmnElement="pool_it_engineer" isHorizontal="true">
+        <dc:Bounds x="440" y="446" width="664" height="316" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_it_engineer_di" bpmnElement="start_it_engineer">
+        <dc:Bounds x="622" y="500" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="590" y="540" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_check_equipment_di" bpmnElement="task_check_equipment">
+        <dc:Bounds x="738" y="478" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_damage_di" bpmnElement="gateway_damage">
+        <dc:Bounds x="918" y="493" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="893" y="475" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_damage_report_di" bpmnElement="throw_damage_report">
+        <dc:Bounds x="1048" y="486" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1016" y="526" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_transfer_request_di" bpmnElement="throw_transfer_request">
+        <dc:Bounds x="622" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="590" y="712" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handle_accounts_di" bpmnElement="task_handle_accounts">
+        <dc:Bounds x="738" y="650" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_process_complete_di" bpmnElement="throw_process_complete">
+        <dc:Bounds x="925" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="893" y="712" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_it_engineer_di" bpmnElement="end_it_engineer">
+        <dc:Bounds x="1048" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1016" y="712" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_custodian_di" bpmnElement="pool_custodian" isHorizontal="true">
+        <dc:Bounds x="560" y="792" width="664" height="242" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_custodian_di" bpmnElement="start_custodian">
+        <dc:Bounds x="622" y="846" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="590" y="886" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_fill_transfer_di" bpmnElement="task_fill_transfer">
+        <dc:Bounds x="738" y="824" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_custodian_di" bpmnElement="end_custodian">
+        <dc:Bounds x="918" y="846" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="886" y="886" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_transfer_ref_di" bpmnElement="data_transfer_ref">
+        <dc:Bounds x="770" y="944" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_hr_di" bpmnElement="pool_hr" isHorizontal="true">
+        <dc:Bounds x="0" y="1064" width="664" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_e1_di" bpmnElement="flow_e1">
+        <di:waypoint x="98" y="170" />
+        <di:waypoint x="178" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_e2_di" bpmnElement="flow_e2">
+        <di:waypoint x="278" y="170" />
+        <di:waypoint x="358" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_e3_di" bpmnElement="flow_e3">
+        <di:waypoint x="394" y="170" />
+        <di:waypoint x="474" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_e4_di" bpmnElement="flow_e4">
+        <di:waypoint x="510" y="170" />
+        <di:waypoint x="590" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_flow_manual_di" bpmnElement="data_flow_manual">
+        <di:waypoint x="228" y="90" />
+        <di:waypoint x="228" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_m1_di" bpmnElement="flow_m1">
+        <di:waypoint x="246" y="344" />
+        <di:waypoint x="326" y="344" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_m2_di" bpmnElement="flow_m2">
+        <di:waypoint x="426" y="344" />
+        <di:waypoint x="506" y="344" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_m3_di" bpmnElement="flow_m3">
+        <di:waypoint x="542" y="344" />
+        <di:waypoint x="622" y="344" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_m4_di" bpmnElement="flow_m4">
+        <di:waypoint x="658" y="344" />
+        <di:waypoint x="738" y="344" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng1_di" bpmnElement="flow_eng1">
+        <di:waypoint x="658" y="518" />
+        <di:waypoint x="738" y="518" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng2_di" bpmnElement="flow_eng2">
+        <di:waypoint x="838" y="518" />
+        <di:waypoint x="918" y="518" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_has_damage_di" bpmnElement="flow_has_damage">
+        <di:waypoint x="968" y="518" />
+        <di:waypoint x="1008" y="518" />
+        <di:waypoint x="1008" y="504" />
+        <di:waypoint x="1048" y="504" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="963" y="463" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_no_damage_di" bpmnElement="flow_no_damage">
+        <di:waypoint x="943" y="543" />
+        <di:waypoint x="943" y="607.5" />
+        <di:waypoint x="640" y="607.5" />
+        <di:waypoint x="640" y="672" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="766.5" y="588.5" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng3_di" bpmnElement="flow_eng3">
+        <di:waypoint x="1066" y="522" />
+        <di:waypoint x="1066" y="597" />
+        <di:waypoint x="640" y="597" />
+        <di:waypoint x="640" y="672" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng4_di" bpmnElement="flow_eng4">
+        <di:waypoint x="658" y="690" />
+        <di:waypoint x="738" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng5_di" bpmnElement="flow_eng5">
+        <di:waypoint x="838" y="690" />
+        <di:waypoint x="925" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_eng6_di" bpmnElement="flow_eng6">
+        <di:waypoint x="961" y="690" />
+        <di:waypoint x="1048" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_c1_di" bpmnElement="flow_c1">
+        <di:waypoint x="658" y="864" />
+        <di:waypoint x="738" y="864" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_c2_di" bpmnElement="flow_c2">
+        <di:waypoint x="838" y="864" />
+        <di:waypoint x="918" y="864" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_flow_transfer_di" bpmnElement="data_flow_transfer">
+        <di:waypoint x="788" y="904" />
+        <di:waypoint x="788" y="944" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_resignation_request_di" bpmnElement="msgflow_resignation_request">
+        <di:waypoint x="228" y="210" />
+        <di:waypoint x="228" y="326" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="233" y="243.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_approval_result_di" bpmnElement="msgflow_approval_result">
+        <di:waypoint x="524" y="326" />
+        <di:waypoint x="524" y="248" />
+        <di:waypoint x="376" y="248" />
+        <di:waypoint x="376" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="425" y="229" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_check_request_di" bpmnElement="msgflow_check_request">
+        <di:waypoint x="640" y="362" />
+        <di:waypoint x="640" y="500" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="403.3" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_transfer_request_di" bpmnElement="msgflow_transfer_request">
+        <di:waypoint x="640" y="708" />
+        <di:waypoint x="640" y="846" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="749.3" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_process_complete_di" bpmnElement="msgflow_process_complete">
+        <di:waypoint x="943" y="672" />
+        <di:waypoint x="943" y="664" />
+        <di:waypoint x="908" y="664" />
+        <di:waypoint x="908" y="372" />
+        <di:waypoint x="492" y="372" />
+        <di:waypoint x="492" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="675" y="353" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

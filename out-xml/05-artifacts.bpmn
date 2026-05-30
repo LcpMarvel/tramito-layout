@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_artifacts" targetNamespace="http://example.com/test-artifacts" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_artifacts" name="Artifacts测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_1" name="读取数据">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="data_assoc_1">
+        <bpmn:sourceRef>data_input</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_2" name="处理数据">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="data_assoc_2">
+        <bpmn:targetRef>data_store</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_3" name="审核">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="data_input" name="输入数据" />
+    <bpmn:dataStoreReference id="data_store" name="数据库" />
+    <bpmn:textAnnotation id="annotation_1">
+      <bpmn:text>这里需要验证数据</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_1" targetRef="task_1" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_1" targetRef="task_2" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_2" targetRef="task_3" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_3" targetRef="end_1" />
+    <bpmn:association id="assoc_1" associationDirection="None" sourceRef="annotation_1" targetRef="task_2" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_artifacts" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_artifacts" bpmnElement="process_artifacts">
+      <bpmndi:BPMNShape id="process_artifacts_di" bpmnElement="process_artifacts">
+        <dc:Bounds x="0" y="0" width="774" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_1_di" bpmnElement="task_1">
+        <dc:Bounds x="178" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_2_di" bpmnElement="task_2">
+        <dc:Bounds x="358" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_3_di" bpmnElement="task_3">
+        <dc:Bounds x="538" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="718" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_input_di" bpmnElement="data_input">
+        <dc:Bounds x="210" y="40" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_store_di" bpmnElement="data_store">
+        <dc:Bounds x="383" y="250" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="annotation_1_di" bpmnElement="annotation_1">
+        <dc:Bounds x="358" y="50" width="100" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="170" />
+        <di:waypoint x="178" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="170" />
+        <di:waypoint x="358" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="170" />
+        <di:waypoint x="538" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="638" y="170" />
+        <di:waypoint x="718" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_assoc_1_di" bpmnElement="data_assoc_1">
+        <di:waypoint x="228" y="90" />
+        <di:waypoint x="228" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_assoc_2_di" bpmnElement="data_assoc_2">
+        <di:waypoint x="408" y="210" />
+        <di:waypoint x="408" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_1_di" bpmnElement="assoc_1">
+        <di:waypoint x="408" y="90" />
+        <di:waypoint x="408" y="130" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

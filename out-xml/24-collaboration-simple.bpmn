@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_collab_simple" targetNamespace="http://example.com/test-collab-simple" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="简单协作">
+    <bpmn:participant id="pool_customer" name="客户" processRef="process_customer" />
+    <bpmn:participant id="pool_supplier" name="供应商" processRef="process_supplier" />
+    <bpmn:messageFlow id="msgflow_order" name="订单" sourceRef="task_submit" targetRef="start_supplier" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_customer" name="客户" isExecutable="true">
+    <bpmn:startEvent id="start_customer" name="开始">
+      <bpmn:outgoing>flow_c1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="提交订单">
+      <bpmn:incoming>flow_c1</bpmn:incoming>
+      <bpmn:outgoing>flow_c2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_customer" name="结束">
+      <bpmn:incoming>flow_c2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_c1" sourceRef="start_customer" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="flow_c2" sourceRef="task_submit" targetRef="end_customer" />
+  </bpmn:process>
+  <bpmn:process id="process_supplier" name="供应商" isExecutable="true">
+    <bpmn:startEvent id="start_supplier" name="收到订单">
+      <bpmn:outgoing>flow_s1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_process" name="处理订单">
+      <bpmn:incoming>flow_s1</bpmn:incoming>
+      <bpmn:outgoing>flow_s2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_supplier" name="结束">
+      <bpmn:incoming>flow_s2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_s1" sourceRef="start_supplier" targetRef="task_process" />
+    <bpmn:sequenceFlow id="flow_s2" sourceRef="task_process" targetRef="end_supplier" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_collab_simple" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_collab_simple" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="562" height="318" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_customer_di" bpmnElement="pool_customer" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="414" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_customer_di" bpmnElement="start_customer">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_customer_di" bpmnElement="end_customer">
+        <dc:Bounds x="358" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_supplier_di" bpmnElement="pool_supplier" isHorizontal="true">
+        <dc:Bounds x="148" y="174" width="414" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_supplier_di" bpmnElement="start_supplier">
+        <dc:Bounds x="210" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_process_di" bpmnElement="task_process">
+        <dc:Bounds x="326" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_supplier_di" bpmnElement="end_supplier">
+        <dc:Bounds x="506" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="474" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_c1_di" bpmnElement="flow_c1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_c2_di" bpmnElement="flow_c2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_s1_di" bpmnElement="flow_s1">
+        <di:waypoint x="246" y="246" />
+        <di:waypoint x="326" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_s2_di" bpmnElement="flow_s2">
+        <di:waypoint x="426" y="246" />
+        <di:waypoint x="506" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_order_di" bpmnElement="msgflow_order">
+        <di:waypoint x="228" y="112" />
+        <di:waypoint x="228" y="228" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="233" y="145.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

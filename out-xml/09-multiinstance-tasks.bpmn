@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_multiinstance_tasks" targetNamespace="http://example.com/test-multiinstance-tasks" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_multiinstance_tasks" name="多实例任务测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_mi_parallel" name="并行多实例">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">${items.size()}</bpmn:loopCardinality>
+        <bpmn:loopDataInputRef>items</bpmn:loopDataInputRef>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${nrOfCompletedInstances &gt;= 3}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_mi_sequential" name="顺序多实例">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">5</bpmn:loopCardinality>
+        <bpmn:loopDataInputRef>approvers</bpmn:loopDataInputRef>
+        <bpmn:loopDataOutputRef>approvalResults</bpmn:loopDataOutputRef>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_mi_cardinality" name="固定次数多实例">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">3</bpmn:loopCardinality>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+    <bpmn:task id="task_mi_collection" name="集合驱动多实例">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:loopDataInputRef>orderItems</bpmn:loopDataInputRef>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:task>
+    <bpmn:userTask id="task_mi_with_completion" name="带完成条件">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics>
+        <bpmn:loopCardinality xsi:type="bpmn:tFormalExpression">10</bpmn:loopCardinality>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${nrOfCompletedInstances/nrOfInstances &gt;= 0.6}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_1" targetRef="task_mi_parallel" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_mi_parallel" targetRef="task_mi_sequential" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_mi_sequential" targetRef="task_mi_cardinality" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_mi_cardinality" targetRef="task_mi_collection" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_mi_collection" targetRef="task_mi_with_completion" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_mi_with_completion" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_multiinstance_tasks" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_multiinstance_tasks" bpmnElement="process_multiinstance_tasks">
+      <bpmndi:BPMNShape id="process_multiinstance_tasks_di" bpmnElement="process_multiinstance_tasks">
+        <dc:Bounds x="0" y="0" width="832" height="305" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="236" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="204" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mi_parallel_di" bpmnElement="task_mi_parallel">
+        <dc:Bounds x="352" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mi_sequential_di" bpmnElement="task_mi_sequential">
+        <dc:Bounds x="532" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mi_cardinality_di" bpmnElement="task_mi_cardinality">
+        <dc:Bounds x="712" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mi_collection_di" bpmnElement="task_mi_collection">
+        <dc:Bounds x="172" y="193" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mi_with_completion_di" bpmnElement="task_mi_with_completion">
+        <dc:Bounds x="352" y="193" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="532" y="215" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="500" y="255" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="272" y="72" />
+        <di:waypoint x="352" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="452" y="72" />
+        <di:waypoint x="532" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="632" y="72" />
+        <di:waypoint x="712" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="762" y="112" />
+        <di:waypoint x="762" y="152.5" />
+        <di:waypoint x="222" y="152.5" />
+        <di:waypoint x="222" y="193" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="272" y="233" />
+        <di:waypoint x="352" y="233" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="452" y="233" />
+        <di:waypoint x="532" y="233" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

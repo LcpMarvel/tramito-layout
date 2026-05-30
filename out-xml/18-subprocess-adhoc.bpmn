@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_adhoc" targetNamespace="http://example.com/test-adhoc" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_adhoc" name="临时子流程测试" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="开始">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:adHocSubProcess id="adhoc_subprocess" name="临时子流程" ordering="Parallel">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+      <bpmn:task id="adhoc_task_1" name="可选任务1" />
+      <bpmn:task id="adhoc_task_2" name="可选任务2" />
+      <bpmn:task id="adhoc_task_3" name="可选任务3" />
+      <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">${nrOfCompletedInstances &gt;= 2}</bpmn:completionCondition>
+    </bpmn:adHocSubProcess>
+    <bpmn:endEvent id="end_main" name="结束">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="adhoc_subprocess" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="adhoc_subprocess" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_adhoc" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_adhoc" bpmnElement="process_adhoc">
+      <bpmndi:BPMNShape id="process_adhoc_di" bpmnElement="process_adhoc">
+        <dc:Bounds x="0" y="0" width="778" height="228" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="adhoc_subprocess_di" bpmnElement="adhoc_subprocess" isExpanded="true">
+        <dc:Bounds x="178" y="32" width="464" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="adhoc_task_1_di" bpmnElement="adhoc_task_1">
+        <dc:Bounds x="210" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="adhoc_task_2_di" bpmnElement="adhoc_task_2">
+        <dc:Bounds x="360" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="adhoc_task_3_di" bpmnElement="adhoc_task_3">
+        <dc:Bounds x="510" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="722" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="114" />
+        <di:waypoint x="178" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="642" y="114" />
+        <di:waypoint x="722" y="114" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

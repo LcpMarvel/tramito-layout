@@ -6,15 +6,17 @@
 /dist/
 /build/
 
-# Generated fixture/debug artifacts. Keep only directory placeholders.
+# Generated fixture artifacts. Track the BPMN XML (compiler output = "bpmn 代码") and its
+# rendered PNG side-by-side so layout changes are reviewable in git. Run `bun run fixtures:sync`
+# after any layout change to regenerate both. Other out-* dirs stay placeholder-only.
 /out/
 /out-*/
 !/out-xml/
 /out-xml/**
-!/out-xml/.keep
+!/out-xml/*.bpmn
 !/out-bpmn-png/
 /out-bpmn-png/**
-!/out-bpmn-png/.keep
+!/out-bpmn-png/*.png
 !/out-ai-debug/
 /out-ai-debug/**
 !/out-ai-debug/.keep
