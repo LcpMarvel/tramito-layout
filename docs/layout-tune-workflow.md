@@ -80,6 +80,7 @@ bun run tuned:diff <fixture>    # 确认该 fixture 收敛（待修差异清零�
 - **41-cross-lane-dense**：手调把 4 条 cross-lane 边从"倒退进 lane gap 走廊"的 6 点折线改成干净 L。反推出 `path-shaper.ts` 的 `(top/bottom)→left` 分支应**优先简单 L（两段不撞节点时），撞了才回退走廊**。落地后自动对全部 10 条同类边统一成 L，反超手调。详见 [`layout-lessons.md`](./layout-lessons.md) "不要再走的路"。
 - 同一轮还顺带验证了删除 ELK lane partitioning（X 改由 flow 拓扑序决定）——那条是"文字描述 + 坐标 diff"混合推出的。
 - **40-fanin-sink-near-lane**：手调揭示两处。①归一束里 `gw_dept`（与 sink 几乎同高）的驳回边起点压在网关身上——反推出 `buildFanInPathVertical` 的 straddle 分支（走廊落在 source Y 跨度内时改水平出）。②同 lane back-edge `f_dept_gw` 的拱冲进上邻 lane——反推出 `keepIntraLaneBackEdgeInsideLane`（把拱夹回 source lane，放在所有 nudge 之后）。两处都是 0 硬 0 软下的 router 形态修正，落地后 39/40/41 的软失败一并清零。残留的"申请人 lane 顶 36px 留白"是 lane-sizing 项（爆炸半径大、纯 cosmetic），未追。
+- **36-voc-vop-capture-process**：手调把两条汇入并行汇合网关的 cross-lane 边（`fork_to_join`/`quality_to_join`）从"钻进目标 lane 走廊、骑分隔线横穿全宽 / 7 点乱折"改成"沿源行横穿到 sink.cx、单段竖直入网关"的干净 L。反推出 `path-shaper.ts` 的 `(top/bottom)→left` 分支在**竖直优先 L 被目标 lane 节点挡住**时，应再试**水平优先 L**（`tryHorizontalFirstL`：source.right 横穿到 sink.cx，竖直入 sink 顶/底顶点）——两段都不撞节点才走，否则回退走廊。关键约束：riser 必须落在 sink.cx（gateway 的顶/底顶点），**不能**按 channel 错开 X——E1 只认 bbox 边，偏离顶点的入点落在菱形斜面（bbox 内部）会判 E1 违例；多条边共用这条末段 riser 视觉上自然读成"归一汇入"。auto 原本就 0 硬 0 软（属"丑但合规"），改完两条 cross-lane 边收敛到手调形态，全量零退步，**仅 36 一个 fixture 的 XML 变化**（其余 cross-lane 边要么竖直优先 L 已成、要么水平 L 被挡而回退，门槛收得很紧）。残留 ★（forward-step 的 `*_to_internal`/`related_to_*`、`internal_to_join`）的手调优势主要来自**节点移行**（elk-placement），不属 cross-lane 走廊范畴，未追。
 
 ## 注意
 

@@ -182,7 +182,7 @@
       <bpmndi:BPMNShape id="gateway_parallel_join_di" bpmnElement="gateway_parallel_join">
         <dc:Bounds x="1188" y="288" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1164" y="342" width="98" height="14" />
+          <dc:Bounds x="1219" y="270" width="98" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
@@ -206,7 +206,7 @@
       <bpmndi:BPMNShape id="gateway_vop_fork_di" bpmnElement="gateway_vop_fork">
         <dc:Bounds x="488" y="515" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="542" y="533" width="49" height="14" />
+          <dc:Bounds x="488.5" y="497" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_process_mgmt_di" bpmnElement="lane_process_mgmt" isHorizontal="true">
@@ -282,24 +282,18 @@
         <di:waypoint x="1188" y="313" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_quality_to_join_di" bpmnElement="flow_quality_to_join">
-        <di:waypoint x="1048" y="385" />
-        <di:waypoint x="1048" y="381" />
-        <di:waypoint x="988" y="381" />
-        <di:waypoint x="988" y="411" />
-        <di:waypoint x="1168" y="411" />
-        <di:waypoint x="1168" y="313" />
-        <di:waypoint x="1188" y="313" />
+        <di:waypoint x="1098" y="425" />
+        <di:waypoint x="1213" y="425" />
+        <di:waypoint x="1213" y="338" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_vop_to_fork_di" bpmnElement="flow_vop_to_fork">
         <di:waypoint x="408" y="540" />
         <di:waypoint x="488" y="540" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fork_to_join_di" bpmnElement="flow_fork_to_join">
-        <di:waypoint x="513" y="515" />
-        <di:waypoint x="513" y="359" />
-        <di:waypoint x="1168" y="359" />
-        <di:waypoint x="1168" y="313" />
-        <di:waypoint x="1188" y="313" />
+        <di:waypoint x="538" y="540" />
+        <di:waypoint x="1213" y="540" />
+        <di:waypoint x="1213" y="338" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fork_to_copy_di" bpmnElement="flow_fork_to_copy">
         <di:waypoint x="513" y="565" />

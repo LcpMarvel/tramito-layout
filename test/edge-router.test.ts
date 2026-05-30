@@ -225,6 +225,42 @@ describe('Stage 4c — PathShaper', () => {
     expect(wps[1]!.y).toBe(464);
     expect(wps[2]!.y).toBe(464);
   });
+
+  it('cross-lane prefers horizontal-first L into sink when vertical-first L is blocked', () => {
+    // source 在左下、target 在右上，竖直优先 L（在 source.x 直上）被一个节点挡住 →
+    // 改走「source.right 横穿到 sink.cx，再单段竖直入 sink 顶/底」的水平优先 L。
+    // 这是 fixture 36 fork_to_join / quality_to_join 手调揭示的形态。
+    const source = box(500, 600, 50, 50); // cy=625, right=550
+    const target = box(1200, 300, 50, 50); // cx=1225, bottom=350
+    const wps = shapePath({
+      edgeType: 'cross-lane-up',
+      sourceAnchor: 'top', targetAnchor: 'left',
+      source, target,
+      channel: 0, channelTotal: 1,
+      // 挡住竖直优先 L 的直上路径（x=525 落在此障碍 X 区间内）
+      obstacles: [box(505, 400, 60, 80)],
+    });
+    expect(wps.length).toBe(3);
+    expect(wps[0]).toEqual({ x: 550, y: 625 });        // 从 source 右边出
+    expect(wps[1]).toEqual({ x: 1225, y: 625 });       // 沿 source 行横穿到 sink.cx
+    expect(wps[2]).toEqual({ x: 1225, y: 350 });       // 单段竖直入 sink 底
+    expect(wps[1]!.x).toBe(wps[2]!.x);                 // 末段竖直（E3）
+  });
+
+  it('cross-lane falls back to corridor when horizontal-first L is also blocked', () => {
+    // 横穿路径上有障碍 → 水平优先 L 不成立，回退到走廊（≥4 点）。
+    const source = box(500, 600, 50, 50);
+    const target = box(1200, 300, 50, 50);
+    const wps = shapePath({
+      edgeType: 'cross-lane-up',
+      sourceAnchor: 'top', targetAnchor: 'left',
+      source, target,
+      channel: 0, channelTotal: 1,
+      gap: { top: 481, bottom: 596 },
+      obstacles: [box(505, 400, 60, 80), box(800, 590, 100, 80)], // 第二个挡住 y=625 横段
+    });
+    expect(wps.length).toBeGreaterThanOrEqual(4);
+  });
 });
 
 describe('Stage 4d — ChannelAllocator', () => {

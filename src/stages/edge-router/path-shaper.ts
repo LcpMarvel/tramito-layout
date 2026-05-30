@@ -171,6 +171,13 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     ) {
       return [start, corner, end];
     }
+    // 竖直优先 L 被挡（target lane 把直上路径占了）→ 试水平优先 L：从 source **右**边出，沿
+    // source 自己那一行横穿到 target.cx，再单段竖直入 sink 的 bottom(up)/top(down)。源行通常在
+    // 较空的下层 lane、远离目标 lane 的密集节点，比钻进目标 lane 的走廊骑分隔线干净得多。
+    // 手调 fixture 36 的 fork_to_join / quality_to_join 揭示的就是这个形态。
+    // 仍是「两段都不撞节点才走」，撞了回退到下面的走廊。
+    const hFirst = tryHorizontalFirstL(input);
+    if (hFirst) return hFirst;
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
       midY = gapCorridorY(input, start, sourceAnchor);
@@ -201,6 +208,40 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
 
 function approxEq(a: number, b: number): boolean {
   return Math.abs(a - b) < 0.5;
+}
+
+/**
+ * 水平优先 L（cross-lane 专用）：source.right →（横）→ sink.cx →（竖）→ sink 的 bottom/top 顶点。
+ * 触发条件：target 在 source 右侧足够远 + 两段都不撞节点。否则返回 null，让调用方回退走廊。
+ *
+ * riser 落在 sink.cx（边中点 / gateway 是底/顶顶点）——**不能**按 channel 错开 X：E1 只认 bbox 边，
+ * gateway 偏离顶点的入点会落在菱形斜面（在 bbox 内部）判 E1 违例。多条 cross-lane 边汇到同一 sink
+ * 时共用这条末段 riser，视觉上自然读成「归一汇入」，可接受。
+ */
+function tryHorizontalFirstL(input: PathShapeInput): Waypoint[] | null {
+  if (input.edgeType !== 'cross-lane-up' && input.edgeType !== 'cross-lane-down') return null;
+  const s = input.source;
+  const t = input.target;
+  const srcRightX = s.x + s.w;
+  const srcCy = s.y + s.h / 2;
+  const riserX = t.x + t.w / 2;
+  if (riserX <= srcRightX + SHAPER_MARGIN) return null; // 横段必须向右、riser 离开 source 才成立
+
+  const enterY = input.edgeType === 'cross-lane-up' ? t.y + t.h : t.y; // 入 sink 底(上行) / 顶(下行)
+  // 竖直 riser 的方向要和 edge 类型一致：上行从源行往上、下行往下；否则几何反了，放弃。
+  if (input.edgeType === 'cross-lane-up' && srcCy <= enterY) return null;
+  if (input.edgeType === 'cross-lane-down' && srcCy >= enterY) return null;
+
+  const exit = { x: srcRightX, y: srcCy };
+  const corner = { x: riserX, y: srcCy };
+  const enter = { x: riserX, y: enterY };
+  if (
+    segmentHitsObstacle(exit, corner, input.obstacles, s, t)
+    || segmentHitsObstacle(corner, enter, input.obstacles, s, t)
+  ) {
+    return null;
+  }
+  return [exit, corner, enter];
 }
 
 // forward-straight 路径会穿过非 src/tgt 的节点吗？
