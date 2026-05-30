@@ -267,13 +267,29 @@ function buildLaneMetric(
     extents.set(id, nodeVerticalExtent(nodes.get(id)!, nodeMeta?.get(id)));
   }
 
-  const rows = groupLaneRows(memberIds, nodes, extents);
-  const shouldKeepRows = rows.length > 1 && memberIds.length >= MULTI_ROW_MIN_MEMBERS;
-
   // 驳回归一走廊预留：本 lane 若含 fan-in sink，edge-router 会在 sink 上/下边贴一根水平走廊
   // （busifyFanInToSink）。lane 默认只按节点尺寸算高、不给走廊留地，走廊+label 会被挤到泳道
   // 分隔线上（fixture 40 的「驳回」字压线）。这里在走廊所在那一侧补一段净空，把分隔线推开。
   const fanIn = estimateFanInCorridorReserve(memberIds, nodes, edges, laneIndexOf);
+
+  // F2：先按「主干（spine）居中 + 分支上下分布」拆行。主干 = 同 lane 内最长的前向路径（按 X 拓扑
+  // 序的最长链）；不在主干上的节点按 ELK 给的 cy 落到主干上方 / 下方，填满泳道而不是全挤一行。
+  // ELK 自己的 Y 受跨 lane crossing-min 干扰（如本 fixture 把 gateway_department 甩到最上），不能直接
+  // 用；这里把主干 snap 成一条对齐的中心行（保 F5），只让真正的分支节点离开中心行。
+  // 拆不出分支（纯链）时返回 null，回退原 groupLaneRows——简单 lane 行为不变，blast radius 受控。
+  const spineRows = assignSpineAwareRows(memberIds, nodes, extents, edges);
+  if (spineRows) {
+    for (const row of spineRows) {
+      const reserve = estimateForwardArchReserveAbove(row.ids, nodes, edges);
+      if (reserve > row.above) row.above = reserve;
+    }
+    if (fanIn.above > 0) spineRows[0]!.above += fanIn.above;
+    if (fanIn.below > 0) spineRows[spineRows.length - 1]!.below += fanIn.below;
+    return buildMultiRowMetric(spineRows);
+  }
+
+  const rows = groupLaneRows(memberIds, nodes, extents);
+  const shouldKeepRows = rows.length > 1 && memberIds.length >= MULTI_ROW_MIN_MEMBERS;
 
   if (shouldKeepRows) {
     // arch 是同行 src/tgt 之间的"凸"，必须按该行实际成员预留。原先只给 rows[0] 加 above，
@@ -338,6 +354,92 @@ function groupLaneRows(
     }
   }
   return rows;
+}
+
+// 分支节点离主干至少这么宽算"分到不同行"才有意义——太挤就别拆。
+const SPINE_MIN_BRANCHES = 1;
+
+// F2 拆行：主干（最长前向路径）压一条中心行，分支按 ELK cy 落到上 / 下方，各侧再按 X 不重叠贪心打包成行。
+// 返回 top→bottom 顺序的行；拆不出分支（纯链 / 信息不足）→ null，让调用方回退原逻辑。
+function assignSpineAwareRows(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  extents: Map<string, NodeVerticalExtent>,
+  edges: LaneEdgeInfo[] | undefined,
+): LaneRow[] | null {
+  if (!edges || memberIds.length < MULTI_ROW_MIN_MEMBERS) return null;
+  const memberSet = new Set(memberIds);
+
+  // 只取同 lane、前向（target 在 source 右侧）的边构 DAG——back-edge / 跨 lane 不参与主干判定。
+  const adj = new Map<string, string[]>();
+  for (const id of memberIds) adj.set(id, []);
+  for (const e of edges) {
+    if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
+    if (nodes.get(e.target)!.x <= nodes.get(e.source)!.x) continue;
+    adj.get(e.source)!.push(e.target);
+  }
+
+  // 按 X 升序做 DAG 最长链 DP（节点数最多者为主干）。
+  const order = memberIds.slice().sort((a, b) => nodes.get(a)!.x - nodes.get(b)!.x);
+  const dist = new Map<string, number>();
+  const prev = new Map<string, string | null>();
+  for (const id of order) { dist.set(id, dist.get(id) ?? 0); prev.set(id, prev.get(id) ?? null); }
+  for (const id of order) {
+    const d = dist.get(id)!;
+    for (const t of adj.get(id)!) {
+      if (d + 1 > (dist.get(t) ?? 0)) { dist.set(t, d + 1); prev.set(t, id); }
+    }
+  }
+  let endNode: string | null = null;
+  let best = -1;
+  for (const id of order) { const d = dist.get(id)!; if (d > best) { best = d; endNode = id; } }
+  const spine = new Set<string>();
+  for (let cur = endNode; cur; cur = prev.get(cur) ?? null) spine.add(cur);
+
+  const branches = memberIds.filter((id) => !spine.has(id));
+  if (branches.length < SPINE_MIN_BRANCHES || spine.size < 2) return null;
+
+  const spineRow = makeRowFrom([...spine], extents);
+  const spineMeanCy = [...spine].reduce((s, id) => s + centerY(nodes.get(id)!), 0) / spine.size;
+  const above: string[] = [];
+  const below: string[] = [];
+  for (const id of branches) (centerY(nodes.get(id)!) < spineMeanCy ? above : below).push(id);
+
+  // 各侧按 X 不重叠贪心打包成若干行（同行节点 X 区间不相交）。
+  const aboveRows = packRowsByX(above, nodes, extents);
+  const belowRows = packRowsByX(below, nodes, extents);
+  return [...aboveRows, spineRow, ...belowRows];
+}
+
+function makeRowFrom(ids: string[], extents: Map<string, NodeVerticalExtent>): LaneRow {
+  let above = 0;
+  let below = 0;
+  for (const id of ids) {
+    const e = extents.get(id)!;
+    if (e.above > above) above = e.above;
+    if (e.below > below) below = e.below;
+  }
+  return { cy: 0, ids, above, below };
+}
+
+// 把一组节点按 X 升序贪心塞进多行：每行内 X 区间互不相交。返回行数组（顺序无关紧要，仅用于堆叠高度）。
+function packRowsByX(
+  ids: string[],
+  nodes: Map<string, NodeBox>,
+  extents: Map<string, NodeVerticalExtent>,
+): LaneRow[] {
+  if (ids.length === 0) return [];
+  const sorted = ids.slice().sort((a, b) => nodes.get(a)!.x - nodes.get(b)!.x);
+  const rows: { ids: string[]; maxRight: number }[] = [];
+  for (const id of sorted) {
+    const b = nodes.get(id)!;
+    let placed = false;
+    for (const row of rows) {
+      if (b.x >= row.maxRight + MIN_X_GAP) { row.ids.push(id); row.maxRight = b.x + b.w; placed = true; break; }
+    }
+    if (!placed) rows.push({ ids: [id], maxRight: b.x + b.w });
+  }
+  return rows.map((r) => makeRowFrom(r.ids, extents));
 }
 
 function buildMultiRowMetric(rows: LaneRow[]): LaneMetric {

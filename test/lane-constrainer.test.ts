@@ -145,6 +145,20 @@ describe('Stage 2 — LaneConstrainer', () => {
     }
   });
 
+  it('spreads off-spine branch onto a separate row, spine aligned (36-voc marketing lane)', async () => {
+    const { constrain } = await runStage1And2('36-voc-vop-capture-process');
+    // 主干（最长前向链）的节点应共用一条对齐行
+    const spineIds = [
+      'gateway_parallel_fork', 'task_receive_voc', 'gateway_customer_type',
+      'gateway_related', 'gateway_department', 'task_marketing_receive', 'gateway_parallel_join',
+    ];
+    const cy = (id: string) => { const b = constrain.nodes.get(id)!; return b.y + b.h / 2; };
+    const spineCy = cy(spineIds[0]!);
+    for (const id of spineIds) expect(Math.abs(cy(id) - spineCy)).toBeLessThan(1);
+    // 内销分支任务离开主干行，落到上 / 下方（填满泳道）
+    expect(Math.abs(cy('task_marketing_after_sales') - spineCy)).toBeGreaterThan(60);
+  });
+
   it('reserves lane-local space for ioSpecification data shapes (37-crm)', async () => {
     const { proc, constrain } = await runStage1And2('37-crm-voice-process');
     const task = proc.flowNodes.find(n => n.id === 'task_split_create_issue')!;

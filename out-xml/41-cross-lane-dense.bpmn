@@ -101,18 +101,18 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_fuzz_cross_lane_dense_1" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_fuzz_cross_lane_dense_1" bpmnElement="collaboration_fuzz1">
       <bpmndi:BPMNShape id="collaboration_fuzz1_di" bpmnElement="collaboration_fuzz1">
-        <dc:Bounds x="0" y="0" width="2114" height="606" />
+        <dc:Bounds x="0" y="0" width="2114" height="852" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_main_di" bpmnElement="pool_main" isHorizontal="true">
-        <dc:Bounds x="0" y="0" width="2114" height="606" />
+        <dc:Bounds x="0" y="0" width="2114" height="852" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_customer_di" bpmnElement="lane_customer" isHorizontal="true">
-        <dc:Bounds x="30" y="20" width="2084" height="112" />
+        <dc:Bounds x="30" y="20" width="2084" height="222" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
-        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <dc:Bounds x="62" y="172" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="30" y="212" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_confirm_di" bpmnElement="task_confirm">
@@ -125,130 +125,130 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_sales_di" bpmnElement="lane_sales" isHorizontal="true">
-        <dc:Bounds x="30" y="132" width="2084" height="112" />
+        <dc:Bounds x="30" y="242" width="2084" height="112" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_check_stock_di" bpmnElement="task_check_stock">
-        <dc:Bounds x="668" y="148" width="100" height="80" />
+        <dc:Bounds x="668" y="258" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_notify_ship_di" bpmnElement="task_notify_ship">
-        <dc:Bounds x="1698" y="148" width="100" height="80" />
+        <dc:Bounds x="1698" y="258" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_warehouse_di" bpmnElement="lane_warehouse" isHorizontal="true">
-        <dc:Bounds x="30" y="244" width="2084" height="115" />
+        <dc:Bounds x="30" y="354" width="2084" height="115" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_pick_di" bpmnElement="task_pick">
-        <dc:Bounds x="358" y="263" width="100" height="80" />
+        <dc:Bounds x="358" y="373" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_stock_di" bpmnElement="gw_stock">
-        <dc:Bounds x="538" y="278" width="50" height="50" />
+        <dc:Bounds x="538" y="388" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="531.5" y="332" width="63" height="14" />
+          <dc:Bounds x="531.5" y="442" width="63" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_pack_di" bpmnElement="task_pack">
-        <dc:Bounds x="848" y="263" width="100" height="80" />
+        <dc:Bounds x="848" y="373" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_finance_di" bpmnElement="lane_finance" isHorizontal="true">
-        <dc:Bounds x="30" y="359" width="2084" height="112" />
+        <dc:Bounds x="30" y="469" width="2084" height="112" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_payment_di" bpmnElement="task_payment">
-        <dc:Bounds x="178" y="375" width="100" height="80" />
+        <dc:Bounds x="178" y="485" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_invoice_di" bpmnElement="task_invoice">
-        <dc:Bounds x="1208" y="375" width="100" height="80" />
+        <dc:Bounds x="1208" y="485" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_logistics_di" bpmnElement="lane_logistics" isHorizontal="true">
-        <dc:Bounds x="30" y="471" width="2084" height="115" />
+        <dc:Bounds x="30" y="581" width="2084" height="251" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_handover_di" bpmnElement="task_handover">
-        <dc:Bounds x="1028" y="490" width="100" height="80" />
+        <dc:Bounds x="1028" y="597" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_deliver_di" bpmnElement="gw_deliver">
-        <dc:Bounds x="1388" y="505" width="50" height="50" />
+        <dc:Bounds x="1388" y="751" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1381.5" y="559" width="63" height="14" />
+          <dc:Bounds x="1381.5" y="805" width="63" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_redeliver_di" bpmnElement="task_redeliver">
-        <dc:Bounds x="1518" y="490" width="100" height="80" />
+        <dc:Bounds x="1518" y="736" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_start_payment_di" bpmnElement="f_start_payment">
-        <di:waypoint x="80" y="94" />
-        <di:waypoint x="80" y="415" />
-        <di:waypoint x="178" y="415" />
+        <di:waypoint x="80" y="208" />
+        <di:waypoint x="80" y="525" />
+        <di:waypoint x="178" y="525" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="85" y="199.35" width="50" height="14" />
+          <dc:Bounds x="85" y="311.95" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_payment_pick_di" bpmnElement="f_payment_pick">
-        <di:waypoint x="228" y="375" />
-        <di:waypoint x="228" y="303" />
-        <di:waypoint x="358" y="303" />
+        <di:waypoint x="228" y="485" />
+        <di:waypoint x="228" y="413" />
+        <di:waypoint x="358" y="413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_pick_gw_di" bpmnElement="f_pick_gw">
-        <di:waypoint x="458" y="303" />
-        <di:waypoint x="538" y="303" />
+        <di:waypoint x="458" y="413" />
+        <di:waypoint x="538" y="413" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_gw_check_stock_di" bpmnElement="f_gw_check_stock">
-        <di:waypoint x="563" y="278" />
-        <di:waypoint x="563" y="188" />
-        <di:waypoint x="668" y="188" />
+        <di:waypoint x="563" y="388" />
+        <di:waypoint x="563" y="298" />
+        <di:waypoint x="668" y="298" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="590.5" y="169" width="50" height="14" />
+          <dc:Bounds x="590.5" y="279" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_check_stock_pack_di" bpmnElement="f_check_stock_pack">
-        <di:waypoint x="718" y="228" />
-        <di:waypoint x="718" y="303" />
-        <di:waypoint x="848" y="303" />
+        <di:waypoint x="718" y="338" />
+        <di:waypoint x="718" y="413" />
+        <di:waypoint x="848" y="413" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="758" y="284" width="50" height="14" />
+          <dc:Bounds x="758" y="394" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_gw_pack_direct_di" bpmnElement="f_gw_pack_direct">
-        <di:waypoint x="588" y="303" />
-        <di:waypoint x="848" y="303" />
+        <di:waypoint x="588" y="413" />
+        <di:waypoint x="848" y="413" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="693" y="284" width="50" height="14" />
+          <dc:Bounds x="693" y="394" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_pack_handover_di" bpmnElement="f_pack_handover">
-        <di:waypoint x="898" y="343" />
-        <di:waypoint x="898" y="530" />
-        <di:waypoint x="1028" y="530" />
+        <di:waypoint x="898" y="453" />
+        <di:waypoint x="898" y="637" />
+        <di:waypoint x="1028" y="637" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_handover_invoice_di" bpmnElement="f_handover_invoice">
-        <di:waypoint x="1078" y="490" />
-        <di:waypoint x="1078" y="415" />
-        <di:waypoint x="1208" y="415" />
+        <di:waypoint x="1078" y="597" />
+        <di:waypoint x="1078" y="525" />
+        <di:waypoint x="1208" y="525" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_invoice_gw_deliver_di" bpmnElement="f_invoice_gw_deliver">
-        <di:waypoint x="1258" y="455" />
-        <di:waypoint x="1258" y="530" />
-        <di:waypoint x="1388" y="530" />
+        <di:waypoint x="1258" y="565" />
+        <di:waypoint x="1258" y="776" />
+        <di:waypoint x="1388" y="776" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_deliver_notify_di" bpmnElement="f_deliver_notify">
-        <di:waypoint x="1413" y="505" />
-        <di:waypoint x="1413" y="188" />
-        <di:waypoint x="1698" y="188" />
+        <di:waypoint x="1413" y="751" />
+        <di:waypoint x="1413" y="298" />
+        <di:waypoint x="1698" y="298" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1418" y="387.05" width="50" height="14" />
+          <dc:Bounds x="1418" y="585.45" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_redeliver_loop_di" bpmnElement="f_redeliver_loop">
-        <di:waypoint x="1438" y="530" />
-        <di:waypoint x="1518" y="530" />
+        <di:waypoint x="1438" y="776" />
+        <di:waypoint x="1518" y="776" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1453" y="511" width="50" height="14" />
+          <dc:Bounds x="1453" y="757" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_redeliver_notify_di" bpmnElement="f_redeliver_notify">
-        <di:waypoint x="1568" y="490" />
-        <di:waypoint x="1568" y="188" />
-        <di:waypoint x="1698" y="188" />
+        <di:waypoint x="1568" y="736" />
+        <di:waypoint x="1568" y="298" />
+        <di:waypoint x="1698" y="298" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_notify_confirm_di" bpmnElement="f_notify_confirm">
-        <di:waypoint x="1748" y="148" />
+        <di:waypoint x="1748" y="258" />
         <di:waypoint x="1748" y="76" />
         <di:waypoint x="1878" y="76" />
       </bpmndi:BPMNEdge>

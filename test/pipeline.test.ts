@@ -58,9 +58,13 @@ describe('layoutAndSerialize — end-to-end', () => {
   it('handles a rigid fixture (37)', async () => {
     const { xml, trace } = await layoutBpmnXml(FIX('37-crm-voice-process'), '37');
     expect(xml).toContain('<bpmn:definitions');
-    // 应该有 back-edge
+    // 应该有「回连」边（loop / reject 回流）。具体落到哪个 back 子类型取决于摆位——spine 居中拆行后
+    // 37 的回流边从 back-edge-*-left 变成 back-row-down（跨行回连），所以这里统计全部 backward 子类型，
+    // 验证「有回连」这件事，而不锁死几何子类。
     const back = (trace.byEdgeType['back-edge-up-left'] ?? 0)
-      + (trace.byEdgeType['back-edge-down-left'] ?? 0);
+      + (trace.byEdgeType['back-edge-down-left'] ?? 0)
+      + (trace.byEdgeType['back-row-up'] ?? 0)
+      + (trace.byEdgeType['back-row-down'] ?? 0);
     expect(back).toBeGreaterThan(0);
   });
 
