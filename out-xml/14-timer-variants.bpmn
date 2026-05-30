@@ -174,7 +174,7 @@
       <bpmndi:BPMNShape id="gateway_merge_starts_di" bpmnElement="gateway_merge_starts">
         <dc:Bounds x="178" y="169" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="153" y="151" width="100" height="14" />
+          <dc:Bounds x="209" y="151" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_init_di" bpmnElement="task_init">

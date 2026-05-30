@@ -1,0 +1,99 @@
+{
+  "id": "definitions_fuzz_fan_in_common_sink_1",
+  "bpmn": {
+    "targetNamespace": "http://example.com/fuzz-fan-in-common-sink-1",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": { "type": "collaboration", "name": "多级驳回归一压测" },
+      "children": [
+        {
+          "id": "pool_main",
+          "bpmn": { "type": "participant", "name": "费用报销流程", "processRef": "process_main" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_applicant",
+              "bpmn": { "type": "lane", "name": "申请人" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                { "id": "start_1", "width": 36, "height": 36, "bpmn": { "type": "startEvent", "name": "发起报销" }, "labels": [{ "text": "发起报销" }] },
+                { "id": "task_revise", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "修改申请单" }, "labels": [{ "text": "修改申请单" }] },
+                { "id": "task_submit", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "提交申请单" }, "labels": [{ "text": "提交申请单" }] }
+              ]
+            },
+            {
+              "id": "lane_dept",
+              "bpmn": { "type": "lane", "name": "部门主管" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                { "id": "task_dept_review", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "部门审核" }, "labels": [{ "text": "部门审核" }] },
+                { "id": "gw_dept", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "部门通过?" }, "labels": [{ "text": "部门通过?" }] }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务专员" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                { "id": "task_fin_check", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "财务初审" }, "labels": [{ "text": "财务初审" }] },
+                { "id": "gw_fin", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "初审通过?" }, "labels": [{ "text": "初审通过?" }] }
+              ]
+            },
+            {
+              "id": "lane_manager",
+              "bpmn": { "type": "lane", "name": "财务经理" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                { "id": "task_mgr_review", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "经理复核" }, "labels": [{ "text": "经理复核" }] },
+                { "id": "gw_mgr", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "复核通过?" }, "labels": [{ "text": "复核通过?" }] }
+              ]
+            },
+            {
+              "id": "lane_cfo",
+              "bpmn": { "type": "lane", "name": "CFO" },
+              "layoutOptions": { "elk.partitioning.partition": 4 },
+              "children": [
+                { "id": "task_cfo_approve", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "CFO 最终审批" }, "labels": [{ "text": "CFO 最终审批" }] },
+                { "id": "gw_cfo", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "CFO 通过?" }, "labels": [{ "text": "CFO 通过?" }] },
+                { "id": "task_pay", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "付款处理" }, "labels": [{ "text": "付款处理" }] },
+                { "id": "end_1", "width": 36, "height": 36, "bpmn": { "type": "endEvent", "name": "报销完成" }, "labels": [{ "text": "报销完成" }] }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_start_revise",     "sources": ["start_1"],        "targets": ["task_revise"],    "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_revise_submit",    "sources": ["task_revise"],    "targets": ["task_submit"],    "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_submit_dept",      "sources": ["task_submit"],    "targets": ["task_dept_review"],"bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_dept_gw",          "sources": ["task_dept_review"],"targets": ["gw_dept"],       "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_dept_pass",        "sources": ["gw_dept"],        "targets": ["task_fin_check"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_dept_reject",      "sources": ["gw_dept"],        "targets": ["task_revise"],    "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_fin_gw",           "sources": ["task_fin_check"], "targets": ["gw_fin"],         "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_fin_pass",         "sources": ["gw_fin"],         "targets": ["task_mgr_review"],"bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_fin_reject",       "sources": ["gw_fin"],         "targets": ["task_revise"],    "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_mgr_gw",           "sources": ["task_mgr_review"],"targets": ["gw_mgr"],         "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_mgr_pass",         "sources": ["gw_mgr"],         "targets": ["task_cfo_approve"],"bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_mgr_reject",       "sources": ["gw_mgr"],         "targets": ["task_revise"],    "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_cfo_gw",           "sources": ["task_cfo_approve"],"targets": ["gw_cfo"],        "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cfo_pass",         "sources": ["gw_cfo"],         "targets": ["task_pay"],       "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_cfo_reject",       "sources": ["gw_cfo"],         "targets": ["task_revise"],    "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_pay_end",          "sources": ["task_pay"],       "targets": ["end_1"],          "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

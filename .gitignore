@@ -14,12 +14,17 @@
 !/out-xml/
 /out-xml/**
 !/out-xml/*.bpmn
+/out-xml/zzfuzz-*.bpmn
 !/out-bpmn-png/
 /out-bpmn-png/**
 !/out-bpmn-png/*.png
+/out-bpmn-png/zzfuzz-*.png
 !/out-ai-debug/
 /out-ai-debug/**
 !/out-ai-debug/.keep
+
+# layout-loop skill 的临时探针 fixture（report-only，跑完清理/升级；勿入库）
+/fixtures/zzfuzz-*.json
 
 # Local planning scratch files should stay out of the package docs.
 /docs/plans/

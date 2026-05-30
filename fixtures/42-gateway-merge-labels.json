@@ -1,0 +1,177 @@
+{
+  "id": "definitions_gateway_spine_1",
+  "bpmn": {
+    "targetNamespace": "http://example.com/fuzz-gateway-spine-1",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 60,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 120
+  },
+  "children": [
+    {
+      "id": "process_spine_1",
+      "bpmn": {
+        "type": "process",
+        "name": "多级分叉合并主干压测",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "gw_xor_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "排他分叉",
+            "gatewayDirection": "Diverging",
+            "default": "flow_xor_c"
+          },
+          "labels": [{ "text": "排他分叉" }]
+        },
+        {
+          "id": "task_xor_a1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "信用评估" },
+          "labels": [{ "text": "信用评估" }]
+        },
+        {
+          "id": "task_xor_b1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "自动审批" },
+          "labels": [{ "text": "自动审批" }]
+        },
+        {
+          "id": "task_xor_c1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "人工复核" },
+          "labels": [{ "text": "人工复核" }]
+        },
+        {
+          "id": "gw_xor_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "排他合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "排他合并" }]
+        },
+        {
+          "id": "gw_par_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行分叉",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "并行分叉" }]
+        },
+        {
+          "id": "task_par_1a",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "发送邮件通知" },
+          "labels": [{ "text": "发送邮件通知" }]
+        },
+        {
+          "id": "task_par_2a",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "更新数据库" },
+          "labels": [{ "text": "更新数据库" }]
+        },
+        {
+          "id": "task_par_3a",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "线下签署协议" },
+          "labels": [{ "text": "线下签署协议" }]
+        },
+        {
+          "id": "gw_par_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "parallelGateway",
+            "name": "并行合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "并行合并" }]
+        },
+        {
+          "id": "gw_inc_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "包容分叉",
+            "gatewayDirection": "Diverging",
+            "default": "flow_inc_standard"
+          },
+          "labels": [{ "text": "包容分叉" }]
+        },
+        {
+          "id": "task_inc_vip",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "VIP专属服务" },
+          "labels": [{ "text": "VIP专属服务" }]
+        },
+        {
+          "id": "task_inc_standard",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "标准服务流程" },
+          "labels": [{ "text": "标准服务流程" }]
+        },
+        {
+          "id": "gw_inc_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "包容合并",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "包容合并" }]
+        },
+        {
+          "id": "task_finalize",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "归档结案" },
+          "labels": [{ "text": "归档结案" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "结束" },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "f_start_xor", "sources": ["start_1"], "targets": ["gw_xor_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_xor_a", "sources": ["gw_xor_div"], "targets": ["task_xor_a1"], "bpmn": { "type": "sequenceFlow", "name": "高风险", "conditionExpression": { "body": "${risk == 'high'}" } }, "labels": [{ "text": "高风险" }] },
+        { "id": "flow_xor_b", "sources": ["gw_xor_div"], "targets": ["task_xor_b1"], "bpmn": { "type": "sequenceFlow", "name": "低风险", "conditionExpression": { "body": "${risk == 'low'}" } }, "labels": [{ "text": "低风险" }] },
+        { "id": "flow_xor_c", "sources": ["gw_xor_div"], "targets": ["task_xor_c1"], "bpmn": { "type": "sequenceFlow", "name": "默认", "isDefault": true }, "labels": [{ "text": "默认" }] },
+        { "id": "f_xor_a1_conv", "sources": ["task_xor_a1"], "targets": ["gw_xor_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_xor_b1_conv", "sources": ["task_xor_b1"], "targets": ["gw_xor_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_xor_c1_conv", "sources": ["task_xor_c1"], "targets": ["gw_xor_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_xor_conv_par", "sources": ["gw_xor_conv"], "targets": ["gw_par_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_1", "sources": ["gw_par_div"], "targets": ["task_par_1a"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_2", "sources": ["gw_par_div"], "targets": ["task_par_2a"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_3", "sources": ["gw_par_div"], "targets": ["task_par_3a"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_1_conv", "sources": ["task_par_1a"], "targets": ["gw_par_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_2_conv", "sources": ["task_par_2a"], "targets": ["gw_par_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_3_conv", "sources": ["task_par_3a"], "targets": ["gw_par_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_par_conv_inc", "sources": ["gw_par_conv"], "targets": ["gw_inc_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_inc_vip", "sources": ["gw_inc_div"], "targets": ["task_inc_vip"], "bpmn": { "type": "sequenceFlow", "name": "VIP客户", "conditionExpression": { "body": "${isVip == true}" } }, "labels": [{ "text": "VIP客户" }] },
+        { "id": "flow_inc_standard", "sources": ["gw_inc_div"], "targets": ["task_inc_standard"], "bpmn": { "type": "sequenceFlow", "name": "标准", "isDefault": true }, "labels": [{ "text": "标准" }] },
+        { "id": "f_inc_vip_conv", "sources": ["task_inc_vip"], "targets": ["gw_inc_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_inc_std_conv", "sources": ["task_inc_standard"], "targets": ["gw_inc_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_inc_conv_fin", "sources": ["gw_inc_conv"], "targets": ["task_finalize"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fin_end", "sources": ["task_finalize"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

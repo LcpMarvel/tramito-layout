@@ -282,8 +282,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_order_timeout_to_merge_di" bpmnElement="flow_order_timeout_to_merge">
         <di:waypoint x="558" y="224" />
-        <di:waypoint x="558" y="160.5" />
-        <di:waypoint x="923" y="160.5" />
+        <di:waypoint x="558" y="153" />
+        <di:waypoint x="923" y="153" />
         <di:waypoint x="923" y="97" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_payment_error_di" bpmnElement="flow_payment_error">
@@ -322,8 +322,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_inventory_di" bpmnElement="flow_inventory">
         <di:waypoint x="778" y="130" />
-        <di:waypoint x="778" y="204" />
-        <di:waypoint x="1514" y="204" />
+        <di:waypoint x="778" y="213" />
+        <di:waypoint x="1514" y="213" />
         <di:waypoint x="1514" y="224" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_inventory_to_merge_di" bpmnElement="flow_inventory_to_merge">

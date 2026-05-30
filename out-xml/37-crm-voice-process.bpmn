@@ -245,7 +245,7 @@
       <bpmndi:BPMNShape id="gateway_info_complete_di" bpmnElement="gateway_info_complete">
         <dc:Bounds x="358" y="512" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="333" y="480" width="100" height="28" />
+          <dc:Bounds x="333" y="566" width="100" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_supplement_info_di" bpmnElement="task_supplement_info">
@@ -317,7 +317,7 @@
       <bpmndi:BPMNShape id="gateway_review_issue_di" bpmnElement="gateway_review_issue">
         <dc:Bounds x="1208" y="863" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1183" y="845" width="100" height="14" />
+          <dc:Bounds x="1262" y="881" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_receive_approval_di" bpmnElement="event_receive_approval">
@@ -365,7 +365,7 @@
       <bpmndi:BPMNShape id="gateway_approve_issue_di" bpmnElement="gateway_approve_issue">
         <dc:Bounds x="1944" y="1402" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1919" y="1384" width="100" height="14" />
+          <dc:Bounds x="1919" y="1456" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_after_approval_di" bpmnElement="event_after_approval">

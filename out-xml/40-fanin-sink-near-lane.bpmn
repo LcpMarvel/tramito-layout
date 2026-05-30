@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_fuzz_fan_in_common_sink_1" targetNamespace="http://example.com/fuzz-fan-in-common-sink-1" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="多级驳回归一压测">
+    <bpmn:participant id="pool_main" name="费用报销流程" processRef="process_main" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_main" name="费用报销流程" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_applicant" name="申请人">
+        <bpmn:flowNodeRef>start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_revise</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_submit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_dept" name="部门主管">
+        <bpmn:flowNodeRef>task_dept_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_dept</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_finance" name="财务专员">
+        <bpmn:flowNodeRef>task_fin_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_manager" name="财务经理">
+        <bpmn:flowNodeRef>task_mgr_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_mgr</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_cfo" name="CFO">
+        <bpmn:flowNodeRef>task_cfo_approve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_cfo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_pay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_1" name="发起报销">
+      <bpmn:outgoing>f_start_revise</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_revise" name="修改申请单">
+      <bpmn:incoming>f_start_revise</bpmn:incoming>
+      <bpmn:incoming>f_dept_reject</bpmn:incoming>
+      <bpmn:incoming>f_fin_reject</bpmn:incoming>
+      <bpmn:incoming>f_mgr_reject</bpmn:incoming>
+      <bpmn:incoming>f_cfo_reject</bpmn:incoming>
+      <bpmn:outgoing>f_revise_submit</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_submit" name="提交申请单">
+      <bpmn:incoming>f_revise_submit</bpmn:incoming>
+      <bpmn:outgoing>f_submit_dept</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_dept_review" name="部门审核">
+      <bpmn:incoming>f_submit_dept</bpmn:incoming>
+      <bpmn:outgoing>f_dept_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_dept" name="部门通过?">
+      <bpmn:incoming>f_dept_gw</bpmn:incoming>
+      <bpmn:outgoing>f_dept_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_dept_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_fin_check" name="财务初审">
+      <bpmn:incoming>f_dept_pass</bpmn:incoming>
+      <bpmn:outgoing>f_fin_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_fin" name="初审通过?">
+      <bpmn:incoming>f_fin_gw</bpmn:incoming>
+      <bpmn:outgoing>f_fin_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_fin_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_mgr_review" name="经理复核">
+      <bpmn:incoming>f_fin_pass</bpmn:incoming>
+      <bpmn:outgoing>f_mgr_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_mgr" name="复核通过?">
+      <bpmn:incoming>f_mgr_gw</bpmn:incoming>
+      <bpmn:outgoing>f_mgr_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_mgr_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_cfo_approve" name="CFO 最终审批">
+      <bpmn:incoming>f_mgr_pass</bpmn:incoming>
+      <bpmn:outgoing>f_cfo_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_cfo" name="CFO 通过?">
+      <bpmn:incoming>f_cfo_gw</bpmn:incoming>
+      <bpmn:outgoing>f_cfo_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_cfo_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_pay" name="付款处理">
+      <bpmn:incoming>f_cfo_pass</bpmn:incoming>
+      <bpmn:outgoing>f_pay_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="报销完成">
+      <bpmn:incoming>f_pay_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_revise" sourceRef="start_1" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="f_revise_submit" sourceRef="task_revise" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_submit_dept" sourceRef="task_submit" targetRef="task_dept_review" />
+    <bpmn:sequenceFlow id="f_dept_gw" sourceRef="task_dept_review" targetRef="gw_dept" />
+    <bpmn:sequenceFlow id="f_dept_pass" name="通过" sourceRef="gw_dept" targetRef="task_fin_check" />
+    <bpmn:sequenceFlow id="f_dept_reject" name="驳回" sourceRef="gw_dept" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="f_fin_gw" sourceRef="task_fin_check" targetRef="gw_fin" />
+    <bpmn:sequenceFlow id="f_fin_pass" name="通过" sourceRef="gw_fin" targetRef="task_mgr_review" />
+    <bpmn:sequenceFlow id="f_fin_reject" name="驳回" sourceRef="gw_fin" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="f_mgr_gw" sourceRef="task_mgr_review" targetRef="gw_mgr" />
+    <bpmn:sequenceFlow id="f_mgr_pass" name="通过" sourceRef="gw_mgr" targetRef="task_cfo_approve" />
+    <bpmn:sequenceFlow id="f_mgr_reject" name="驳回" sourceRef="gw_mgr" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="f_cfo_gw" sourceRef="task_cfo_approve" targetRef="gw_cfo" />
+    <bpmn:sequenceFlow id="f_cfo_pass" name="通过" sourceRef="gw_cfo" targetRef="task_pay" />
+    <bpmn:sequenceFlow id="f_cfo_reject" name="驳回" sourceRef="gw_cfo" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="f_pay_end" sourceRef="task_pay" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_fuzz_fan_in_common_sink_1" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_fuzz_fan_in_common_sink_1" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="2014" height="648" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_main_di" bpmnElement="pool_main" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="2014" height="648" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_applicant_di" bpmnElement="lane_applicant" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1984" height="148" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_revise_di" bpmnElement="task_revise">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="358" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_dept_di" bpmnElement="lane_dept" isHorizontal="true">
+        <dc:Bounds x="30" y="168" width="1984" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_dept_review_di" bpmnElement="task_dept_review">
+        <dc:Bounds x="538" y="187" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_dept_di" bpmnElement="gw_dept">
+        <dc:Bounds x="718" y="202" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="772" y="220" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_finance_di" bpmnElement="lane_finance" isHorizontal="true">
+        <dc:Bounds x="30" y="283" width="1984" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_fin_check_di" bpmnElement="task_fin_check">
+        <dc:Bounds x="848" y="302" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_fin_di" bpmnElement="gw_fin">
+        <dc:Bounds x="1028" y="317" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1082" y="335" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_manager_di" bpmnElement="lane_manager" isHorizontal="true">
+        <dc:Bounds x="30" y="398" width="1984" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mgr_review_di" bpmnElement="task_mgr_review">
+        <dc:Bounds x="1158" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_mgr_di" bpmnElement="gw_mgr">
+        <dc:Bounds x="1338" y="432" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1392" y="450" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_cfo_di" bpmnElement="lane_cfo" isHorizontal="true">
+        <dc:Bounds x="30" y="513" width="1984" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cfo_approve_di" bpmnElement="task_cfo_approve">
+        <dc:Bounds x="1468" y="532" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_cfo_di" bpmnElement="gw_cfo">
+        <dc:Bounds x="1648" y="547" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1623" y="601" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pay_di" bpmnElement="task_pay">
+        <dc:Bounds x="1778" y="532" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1958" y="554" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1926" y="594" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_revise_di" bpmnElement="f_start_revise">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_revise_submit_di" bpmnElement="f_revise_submit">
+        <di:waypoint x="278" y="76" />
+        <di:waypoint x="358" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_submit_dept_di" bpmnElement="f_submit_dept">
+        <di:waypoint x="408" y="116" />
+        <di:waypoint x="408" y="148" />
+        <di:waypoint x="518" y="148" />
+        <di:waypoint x="518" y="227" />
+        <di:waypoint x="538" y="227" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_dept_gw_di" bpmnElement="f_dept_gw">
+        <di:waypoint x="638" y="227" />
+        <di:waypoint x="718" y="227" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_dept_pass_di" bpmnElement="f_dept_pass">
+        <di:waypoint x="743" y="252" />
+        <di:waypoint x="743" y="325" />
+        <di:waypoint x="828" y="325" />
+        <di:waypoint x="828" y="342" />
+        <di:waypoint x="848" y="342" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="760.5" y="306" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_dept_reject_di" bpmnElement="f_dept_reject">
+        <di:waypoint x="743" y="202" />
+        <di:waypoint x="743" y="136" />
+        <di:waypoint x="228" y="136" />
+        <di:waypoint x="228" y="116" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="460.5" y="117" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fin_gw_di" bpmnElement="f_fin_gw">
+        <di:waypoint x="948" y="342" />
+        <di:waypoint x="1028" y="342" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fin_pass_di" bpmnElement="f_fin_pass">
+        <di:waypoint x="1053" y="367" />
+        <di:waypoint x="1053" y="458" />
+        <di:waypoint x="1138" y="458" />
+        <di:waypoint x="1138" y="457" />
+        <di:waypoint x="1158" y="457" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1058" y="391.85" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fin_reject_di" bpmnElement="f_fin_reject">
+        <di:waypoint x="1053" y="317" />
+        <di:waypoint x="1053" y="136" />
+        <di:waypoint x="228" y="136" />
+        <di:waypoint x="228" y="116" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615.5" y="117" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mgr_gw_di" bpmnElement="f_mgr_gw">
+        <di:waypoint x="1258" y="457" />
+        <di:waypoint x="1338" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mgr_pass_di" bpmnElement="f_mgr_pass">
+        <di:waypoint x="1363" y="482" />
+        <di:waypoint x="1363" y="591" />
+        <di:waypoint x="1448" y="591" />
+        <di:waypoint x="1448" y="572" />
+        <di:waypoint x="1468" y="572" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1368" y="513.15" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mgr_reject_di" bpmnElement="f_mgr_reject">
+        <di:waypoint x="1363" y="432" />
+        <di:waypoint x="1363" y="136" />
+        <di:waypoint x="228" y="136" />
+        <di:waypoint x="228" y="116" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="770.5" y="117" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cfo_gw_di" bpmnElement="f_cfo_gw">
+        <di:waypoint x="1568" y="572" />
+        <di:waypoint x="1648" y="572" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cfo_pass_di" bpmnElement="f_cfo_pass">
+        <di:waypoint x="1698" y="572" />
+        <di:waypoint x="1778" y="572" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1713" y="553" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cfo_reject_di" bpmnElement="f_cfo_reject">
+        <di:waypoint x="1673" y="547" />
+        <di:waypoint x="1673" y="136" />
+        <di:waypoint x="228" y="136" />
+        <di:waypoint x="228" y="116" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="925.5" y="117" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_pay_end_di" bpmnElement="f_pay_end">
+        <di:waypoint x="1878" y="572" />
+        <di:waypoint x="1958" y="572" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,245 @@
+{
+  "id": "definitions_fuzz_cross_lane_dense_1",
+  "bpmn": {
+    "targetNamespace": "http://example.com/fuzz-cross-lane-dense-1",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_fuzz1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "跨泳道密集压测"
+      },
+      "children": [
+        {
+          "id": "pool_main",
+          "bpmn": {
+            "type": "participant",
+            "name": "订单履行流程",
+            "processRef": "process_fuzz1"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_customer",
+              "bpmn": { "type": "lane", "name": "客户" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_order",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "提交订单" },
+                  "labels": [{ "text": "提交订单" }]
+                },
+                {
+                  "id": "task_confirm",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "确认收货" },
+                  "labels": [{ "text": "确认收货" }]
+                },
+                {
+                  "id": "end_complete",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "订单完成" },
+                  "labels": [{ "text": "订单完成" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_sales",
+              "bpmn": { "type": "lane", "name": "销售" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_check_stock",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "查询库存" },
+                  "labels": [{ "text": "查询库存" }]
+                },
+                {
+                  "id": "task_notify_ship",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "通知发货" },
+                  "labels": [{ "text": "通知发货" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_warehouse",
+              "bpmn": { "type": "lane", "name": "仓储" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_pick",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "拣货" },
+                  "labels": [{ "text": "拣货" }]
+                },
+                {
+                  "id": "gw_stock",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "库存充足?" },
+                  "labels": [{ "text": "库存充足?" }]
+                },
+                {
+                  "id": "task_pack",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "打包" },
+                  "labels": [{ "text": "打包" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                {
+                  "id": "task_payment",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "收款核对" },
+                  "labels": [{ "text": "收款核对" }]
+                },
+                {
+                  "id": "task_invoice",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "开具发票" },
+                  "labels": [{ "text": "开具发票" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_logistics",
+              "bpmn": { "type": "lane", "name": "物流" },
+              "layoutOptions": { "elk.partitioning.partition": 4 },
+              "children": [
+                {
+                  "id": "task_handover",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "交付快递" },
+                  "labels": [{ "text": "交付快递" }]
+                },
+                {
+                  "id": "gw_deliver",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "配送成功?" },
+                  "labels": [{ "text": "配送成功?" }]
+                },
+                {
+                  "id": "task_redeliver",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "重新派送" },
+                  "labels": [{ "text": "重新派送" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "id": "f_start_payment",
+              "sources": ["start_order"],
+              "targets": ["task_payment"],
+              "bpmn": { "type": "sequenceFlow", "name": "付款" },
+              "labels": [{ "text": "付款" }]
+            },
+            {
+              "id": "f_payment_pick",
+              "sources": ["task_payment"],
+              "targets": ["task_pick"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_pick_gw",
+              "sources": ["task_pick"],
+              "targets": ["gw_stock"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_gw_check_stock",
+              "sources": ["gw_stock"],
+              "targets": ["task_check_stock"],
+              "bpmn": { "type": "sequenceFlow", "name": "不足" },
+              "labels": [{ "text": "不足" }]
+            },
+            {
+              "id": "f_check_stock_pack",
+              "sources": ["task_check_stock"],
+              "targets": ["task_pack"],
+              "bpmn": { "type": "sequenceFlow", "name": "补货完成" },
+              "labels": [{ "text": "补货完成" }]
+            },
+            {
+              "id": "f_gw_pack_direct",
+              "sources": ["gw_stock"],
+              "targets": ["task_pack"],
+              "bpmn": { "type": "sequenceFlow", "name": "充足" },
+              "labels": [{ "text": "充足" }]
+            },
+            {
+              "id": "f_pack_handover",
+              "sources": ["task_pack"],
+              "targets": ["task_handover"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_handover_invoice",
+              "sources": ["task_handover"],
+              "targets": ["task_invoice"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_invoice_gw_deliver",
+              "sources": ["task_invoice"],
+              "targets": ["gw_deliver"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_deliver_notify",
+              "sources": ["gw_deliver"],
+              "targets": ["task_notify_ship"],
+              "bpmn": { "type": "sequenceFlow", "name": "已发货" },
+              "labels": [{ "text": "已发货" }]
+            },
+            {
+              "id": "f_redeliver_loop",
+              "sources": ["gw_deliver"],
+              "targets": ["task_redeliver"],
+              "bpmn": { "type": "sequenceFlow", "name": "派送失败" },
+              "labels": [{ "text": "派送失败" }]
+            },
+            {
+              "id": "f_redeliver_notify",
+              "sources": ["task_redeliver"],
+              "targets": ["task_notify_ship"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_notify_confirm",
+              "sources": ["task_notify_ship"],
+              "targets": ["task_confirm"],
+              "bpmn": { "type": "sequenceFlow" }
+            },
+            {
+              "id": "f_confirm_end",
+              "sources": ["task_confirm"],
+              "targets": ["end_complete"],
+              "bpmn": { "type": "sequenceFlow" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

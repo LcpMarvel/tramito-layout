@@ -171,8 +171,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fast_di" bpmnElement="flow_fast">
         <di:waypoint x="1103" y="104" />
-        <di:waypoint x="1103" y="241" />
-        <di:waypoint x="1368" y="241" />
+        <di:waypoint x="1103" y="237" />
+        <di:waypoint x="1368" y="237" />
         <di:waypoint x="1368" y="381" />
         <di:waypoint x="1388" y="381" />
       </bpmndi:BPMNEdge>

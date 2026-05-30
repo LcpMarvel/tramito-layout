@@ -122,6 +122,11 @@ export class DiagramBuilder {
       this.collectShapesAndEdges(child as LayoutedNode, shapes, edges);
     }
 
+    // L3：gateway 默认把 name 标签放在菱形正上方，但「合并 gateway」常有竖直入边从上方顶点
+    // 进入——标签就压在箭头上、和入边 label 糊在一起（layout-loop 在 42 揪出此 bug）。这里
+    // 用已建好的绝对坐标 edges 判断 gateway 上方是否被竖直边占用，占用则把标签挪到空闲侧。
+    this.placeGatewayLabelsOffEdges(shapes, edges);
+
     return {
       id: `BPMNDiagram_${graph.id}`,
       name: 'BPMNDiagram',
@@ -139,6 +144,87 @@ export class DiagramBuilder {
    */
   getNodePositions(): Map<string, NodePosition> {
     return this.nodePositions;
+  }
+
+  // gateway 的 name 标签默认放菱形正上方,但两类碰撞要躲:
+  //   1. 合并 gateway 顶部被竖直**入边**占用 → name 压在箭头上(排他/并行合并)。
+  //   2. diverge gateway 的某条分叉**出边的 label** 落进了 name 的上方 y-band → name 和边
+  //      label 糊成一坨(fixture 42 的「包容分叉」撞「VIP客户」:分支朝右上走,label 正好和
+  //      name 同高)。这是 node-name 撞 edge-label,不是撞箭头,故 occupied.has('top') 为 false。
+  // 重定位优先级:下 > 右 > 左(各自要求该侧无端点占用、且落点不压任何 edge label);都不行
+  // 再保持上方但水平挪开(优先朝远离 colliding edge label 的一侧),最后才退回 shaft 错开。
+  private placeGatewayLabelsOffEdges(shapes: ShapeModel[], edges: EdgeModel[]): void {
+    const TOL = 3;
+    const endpointsOf = (e: EdgeModel): PointModel[] => {
+      const n = e.waypoints.length;
+      return n >= 2 ? [e.waypoints[0]!, e.waypoints[n - 1]!] : [];
+    };
+    const edgeLabels = edges
+      .map((e) => e.label?.bounds)
+      .filter((b): b is NonNullable<typeof b> => b !== undefined);
+    const overlaps = (
+      ax: number, ay: number, aw: number, ah: number,
+      bx: number, by: number, bw: number, bh: number,
+    ): boolean => ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
+    const hitsEdgeLabel = (x: number, y: number, w: number, h: number): boolean =>
+      edgeLabels.some((el) => overlaps(x, y, w, h, el.x, el.y, el.width, el.height));
+
+    for (const shape of shapes) {
+      if (!this.isGatewayType(this.nodeBpmn.get(shape.bpmnElement)?.type)) continue;
+      const lb = shape.label?.bounds;
+      if (!lb) continue;
+      const b = shape.bounds;
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      const occupied = new Set<'top' | 'bottom' | 'left' | 'right'>();
+      const topShaftXs: number[] = [];
+      for (const e of edges) {
+        for (const p of endpointsOf(e)) {
+          if (p.x < b.x - TOL || p.x > b.x + b.width + TOL || p.y < b.y - TOL || p.y > b.y + b.height + TOL) continue;
+          if (Math.abs(p.y - b.y) <= TOL) { occupied.add('top'); topShaftXs.push(p.x); }
+          else if (Math.abs(p.y - (b.y + b.height)) <= TOL) occupied.add('bottom');
+          else if (Math.abs(p.x - b.x) <= TOL) occupied.add('left');
+          else if (Math.abs(p.x - (b.x + b.width)) <= TOL) occupied.add('right');
+        }
+      }
+
+      const lw = lb.width;
+      const lh = lb.height;
+      const defaultHitsLabel = hitsEdgeLabel(lb.x, lb.y, lw, lh);
+      // 默认上方摆放既没被入边占,也没和任何 edge label 冲突 → 保持不动(最小扰动)。
+      if (!occupied.has('top') && !defaultHitsLabel) continue;
+
+      const tryPlace = (x: number, y: number): boolean => {
+        if (hitsEdgeLabel(x, y, lw, lh)) return false;
+        lb.x = x; lb.y = y; return true;
+      };
+
+      // diverge 情形(顶部没被入边占,只是 name 撞了某条出边的 label):name 不在任何 shaft 上,
+      // 最干净的修法是**保持上方居中、把它再抬高到那条 edge label 之上**——gateway 正上方通常
+      // 是空的,而两侧常被相邻合并 gateway 的 name / 分支占住(往左挪会撞上一个合并 gateway 名)。
+      if (!occupied.has('top')) {
+        const colliding = edgeLabels.filter((el) =>
+          overlaps(lb.x, lb.y, lw, lh, el.x, el.y, el.width, el.height));
+        if (colliding.length) {
+          const minTop = Math.min(...colliding.map((el) => el.y));
+          const liftedY = minTop - 4 - lh;
+          // 只在抬高后 name 仍贴着 gateway(到节点上沿 gap ≤ 26,留足 L1 的 30px 容差)才采用;
+          // 否则(edge label 本就在更高处)抬上去会把 name 甩离节点、触发 L1——此时宁可保持
+          // 默认轻微擦边(基线本就容忍),也不甩飞。
+          if (b.y - (liftedY + lh) <= 26 && tryPlace(cx - lw / 2, liftedY)) continue;
+        }
+      }
+
+      if (!occupied.has('bottom') && tryPlace(cx - lw / 2, b.y + b.height + 4)) continue;
+      if (!occupied.has('right') && tryPlace(b.x + b.width + 4, cy - lh / 2)) continue;
+      if (!occupied.has('left') && tryPlace(b.x - lw - 4, cy - lh / 2)) continue;
+
+      // 兜底:顶部被入边占且四侧都腾不开 → 沿竖直 shaft 右侧错开,至少躲开箭头。
+      if (occupied.has('top')) {
+        const shaftX = topShaftXs.length ? Math.max(...topShaftXs) : cx;
+        lb.x = shaftX + 6; lb.y = b.y - lh - 4;
+      }
+    }
   }
 
   /**

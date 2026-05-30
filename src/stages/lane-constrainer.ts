@@ -138,10 +138,19 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
     laneMembers.set(laneId, memberIds);
   }
 
+  // node → leaf lane index(自上而下)。fan-in 走廊方向靠 lane 顺序判定——此刻节点 Y 还是
+  // ELK 原值、未 snap 到 lane,用 Y 判上下不可靠(见 estimateFanInCorridorReserve)。
+  const laneIndexById = new Map<string, number>(leafOrder.map((id, i) => [id, i]));
+  const laneIndexOf = new Map<string, number>();
+  for (const [nodeId, laneId] of nodeLeaf) {
+    const idx = laneIndexById.get(laneId);
+    if (idx !== undefined) laneIndexOf.set(nodeId, idx);
+  }
+
   const laneMetrics = new Map<string, LaneMetric>();
   for (const laneId of leafOrder) {
     const memberIds = laneMembers.get(laneId) ?? [];
-    laneMetrics.set(laneId, buildLaneMetric(memberIds, nodes, nodeMeta, edges));
+    laneMetrics.set(laneId, buildLaneMetric(memberIds, nodes, nodeMeta, edges, laneIndexOf));
   }
 
   // Lane Y band：从 y=0 顺序累加（仅叶子）
@@ -247,6 +256,7 @@ function buildLaneMetric(
   nodes: Map<string, NodeBox>,
   nodeMeta: Map<string, LaneNodeMeta> | undefined,
   edges: LaneEdgeInfo[] | undefined,
+  laneIndexOf: Map<string, number>,
 ): LaneMetric {
   if (memberIds.length === 0) {
     return { height: LANE_MIN_H, centerOffset: LANE_MIN_H / 2, nodeCenterOffset: new Map() };
@@ -260,6 +270,11 @@ function buildLaneMetric(
   const rows = groupLaneRows(memberIds, nodes, extents);
   const shouldKeepRows = rows.length > 1 && memberIds.length >= MULTI_ROW_MIN_MEMBERS;
 
+  // 驳回归一走廊预留：本 lane 若含 fan-in sink，edge-router 会在 sink 上/下边贴一根水平走廊
+  // （busifyFanInToSink）。lane 默认只按节点尺寸算高、不给走廊留地，走廊+label 会被挤到泳道
+  // 分隔线上（fixture 40 的「驳回」字压线）。这里在走廊所在那一侧补一段净空，把分隔线推开。
+  const fanIn = estimateFanInCorridorReserve(memberIds, nodes, edges, laneIndexOf);
+
   if (shouldKeepRows) {
     // arch 是同行 src/tgt 之间的"凸"，必须按该行实际成员预留。原先只给 rows[0] 加 above，
     // 第 2 行以下的 forward-skip arch 会顶出 lane 边界或挤到上一行的 label 上。
@@ -267,11 +282,14 @@ function buildLaneMetric(
       const reserve = estimateForwardArchReserveAbove(row.ids, nodes, edges);
       if (reserve > row.above) row.above = reserve;
     }
+    // 走廊在最上行之上 / 最下行之下，按侧补到对应边缘行。
+    if (fanIn.above > 0) rows[0]!.above += fanIn.above;
+    if (fanIn.below > 0) rows[rows.length - 1]!.below += fanIn.below;
     return buildMultiRowMetric(rows);
   }
 
   const archReserveAbove = estimateForwardArchReserveAbove(memberIds, nodes, edges);
-  return buildFlatMetric(memberIds, extents, archReserveAbove);
+  return buildFlatMetric(memberIds, extents, archReserveAbove, fanIn.above, fanIn.below);
 }
 
 function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {
@@ -347,6 +365,8 @@ function buildFlatMetric(
   memberIds: string[],
   extents: Map<string, NodeVerticalExtent>,
   archReserveAbove: number,
+  fanInReserveAbove = 0,
+  fanInReserveBelow = 0,
 ): LaneMetric {
   let above = archReserveAbove;
   let below = 0;
@@ -355,6 +375,9 @@ function buildFlatMetric(
     above = Math.max(above, extent.above);
     below = Math.max(below, extent.below);
   }
+  // fan-in 走廊预留是节点外的净空带，加在节点 extent 之上（不是 max——走廊在节点边之外）。
+  above += fanInReserveAbove;
+  below += fanInReserveBelow;
   const contentH = above + below + LANE_PAD * 2;
   const h = Math.max(LANE_MIN_H, contentH);
   const extra = h - contentH;
@@ -406,6 +429,48 @@ function estimateForwardArchReserveAbove(
     if (need > reserve) reserve = need;
   }
   return reserve;
+}
+
+// 驳回归一走廊在 sink 所在 lane 内需预留的净空(超出节点 extent + LANE_PAD 的部分)。
+// 走廊 offset(~28) + edge label(14) + 离分隔线净空(~10),减去 LANE_PAD 已给的 16,约 36。
+const FANIN_CORRIDOR_RESERVE = 36;
+
+// 估算本 lane 的 fan-in sink 需要在哪一侧预留走廊净空。
+// sink = 被 ≥2 条 backward(source 中心在 sink 右侧)边汇入的成员节点——这正是 edge-router 的
+// busifyFanInToSink 识别并聚成水平走廊的「驳回/回环归一」拓扑。走廊朝 source 群所在那一侧贴
+// sink 跑:source 多在更下方的 lane → 走廊在下、预留 below,反之预留 above。
+// 方向用 **lane 顺序** 判(不是节点 Y):此刻节点 Y 还是 ELK 原值、尚未 snap 到 lane,用 Y 判上下
+// 会判反(fixture 40 实测 ELK 把 sink 排得比 source 还低)。backward 判据用 X(ELK 已定、可靠)。
+function estimateFanInCorridorReserve(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+  laneIndexOf: Map<string, number>,
+): { above: number; below: number } {
+  if (!edges || edges.length === 0) return { above: 0, below: 0 };
+  let above = 0;
+  let below = 0;
+  for (const sinkId of memberIds) {
+    const sink = nodes.get(sinkId)!;
+    const sinkCx = sink.x + sink.w / 2;
+    const sinkIdx = laneIndexOf.get(sinkId);
+    if (sinkIdx === undefined) continue;
+    const srcLaneIdxs: number[] = [];
+    for (const e of edges) {
+      if (e.target !== sinkId) continue;
+      const s = nodes.get(e.source);
+      const sIdx = laneIndexOf.get(e.source);
+      if (!s || sIdx === undefined) continue;
+      if (s.x + s.w / 2 <= sinkCx) continue; // 只算 source 在 sink 右侧的 backward 边
+      srcLaneIdxs.push(sIdx);
+    }
+    if (srcLaneIdxs.length < 2) continue; // 不足两条 → 不构成归一束
+    const meanIdx = srcLaneIdxs.reduce((a, b) => a + b, 0) / srcLaneIdxs.length;
+    // 同 lane(meanIdx == sinkIdx)默认走下方——走廊自然贴 sink 底边。
+    if (meanIdx >= sinkIdx) below = Math.max(below, FANIN_CORRIDOR_RESERVE);
+    else above = Math.max(above, FANIN_CORRIDOR_RESERVE);
+  }
+  return { above, below };
 }
 
 function resolveLaneOverlaps(outNodes: Map<string, NodeBox>, laneMembers: Map<string, string[]>): void {

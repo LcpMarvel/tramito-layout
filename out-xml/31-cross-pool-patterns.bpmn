@@ -478,11 +478,11 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_shipping_to_customer_di" bpmnElement="msgflow_shipping_to_customer">
         <di:waypoint x="818" y="484" />
-        <di:waypoint x="818" y="294" />
-        <di:waypoint x="338" y="294" />
+        <di:waypoint x="818" y="297" />
+        <di:waypoint x="338" y="297" />
         <di:waypoint x="338" y="229" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="553" y="275" width="50" height="14" />
+          <dc:Bounds x="553" y="278" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

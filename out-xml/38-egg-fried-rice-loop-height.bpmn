@@ -160,7 +160,7 @@
       <bpmndi:BPMNShape id="gateway_10_di" bpmnElement="gateway_10">
         <dc:Bounds x="1047" y="187" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1022" y="169" width="100" height="14" />
+          <dc:Bounds x="1078" y="169" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_11_di" bpmnElement="task_11">
@@ -181,7 +181,7 @@
       <bpmndi:BPMNShape id="gateway_16_di" bpmnElement="gateway_16">
         <dc:Bounds x="569.5" y="494.66666666666663" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="544.5" y="476.66666666666663" width="100" height="14" />
+          <dc:Bounds x="544.5" y="548.6666666666666" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_17_di" bpmnElement="task_17">
@@ -199,7 +199,7 @@
       <bpmndi:BPMNShape id="gateway_21_di" bpmnElement="gateway_21">
         <dc:Bounds x="1252" y="628" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1227" y="610" width="100" height="14" />
+          <dc:Bounds x="1227" y="682" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_22_di" bpmnElement="task_22">

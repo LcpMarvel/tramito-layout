@@ -167,7 +167,14 @@ export function routeEdges(input: RouteInput): RouteOutput {
   // 返回真正被重写的 edge——只有它们跳过 detour（撞节点而保留原路由的成员仍需 detour）。
   const fannedInIds = busifyFanInToSink(routes, input, bundles);
   detourRoutesAroundLocalObstacles(routes, input, fannedInIds);
+  // F7：把贴着 lane 分隔线跑的水平边中段推开（跨多 lane 的边走廊有时落在离分隔线几 px 处，
+  // 流程线与泳道线粘连难辨）。只动失败段、撞节点就回滚；fan-in 干线已自洽,跳过。
+  nudgeHorizontalSegmentsOffDividers(routes, input, fannedInIds);
   finalizeRoutePortsForRoutes(routes, input);
+  // F8：两条不同 edge 的内部水平段挨太近(dy<10px 且 x 重叠)会叠成一条糊线。把其中一段推开到
+  // ≥12px(撞节点回滚)。**必须放在 finalize 之后**——finalize 的 target arrow tail-stub 会把贴近
+  // sink 的水平段(如 fan-in 走廊)再挪几 px 凑足 20px 直入,在那之前测的 dy 不作数(fixture 40)。
+  nudgeParallelSegmentsApart(routes, input, fannedInIds);
 
   return { routes };
 }
@@ -369,6 +376,144 @@ function detourRoutesAroundLocalObstacles(routes: Map<string, EdgeRoute>, input:
     });
     route.waypoints = detoured.waypoints;
     keepCrossLaneRouteOffDivider(route, src, tgt, input.laneBoxes, obstacles);
+  }
+}
+
+// F7 通用净空 pass：把任何「内部水平段」中离某条 lane 分隔线 < TRIGGER 的，推到离所有分隔线
+// ≥ TARGET（跨多 lane 的边走廊有时正好落在分隔线旁几 px，视觉与泳道线粘连）。只动触发段;
+// 推完若撞节点或反而更近别的分隔线则回滚。端点段(连节点的首尾)不动。
+const DIVIDER_NUDGE_TRIGGER = 8;
+const DIVIDER_NUDGE_TARGET = 10;
+
+function nudgeHorizontalSegmentsOffDividers(
+  routes: Map<string, EdgeRoute>,
+  input: RouteInput,
+  skipIds: ReadonlySet<string>,
+): void {
+  const dividers: number[] = [];
+  for (const [, lb] of input.laneBoxes) dividers.push(lb.top, lb.bottom);
+  const uniqDiv = [...new Set(dividers)];
+  if (uniqDiv.length === 0) return;
+
+  const nearestDivider = (y: number): number | null => {
+    let best: number | null = null;
+    let bestD = Infinity;
+    for (const d of uniqDiv) {
+      const dd = Math.abs(y - d);
+      if (dd < bestD) { bestD = dd; best = d; }
+    }
+    return bestD < DIVIDER_NUDGE_TRIGGER ? best : null;
+  };
+  const minDivDist = (y: number): number => Math.min(...uniqDiv.map((d) => Math.abs(y - d)));
+
+  for (const edge of input.edges) {
+    if (skipIds.has(edge.id)) continue;
+    const route = routes.get(edge.id);
+    const src = input.nodes.get(edge.source);
+    const tgt = input.nodes.get(edge.target);
+    if (!route || !src || !tgt) continue;
+    const wps = route.waypoints;
+    if (wps.length < 4) continue; // 没有"内部"水平段可动
+    const obstacles = collectObstacles(input, edge, src, tgt, src.poolId !== tgt.poolId, true);
+
+    // 内部水平段:索引 i..i+1 都不是首尾端点(i>=1 且 i+1<=len-2)
+    for (let i = 1; i + 1 <= wps.length - 2; i++) {
+      const a = wps[i]!;
+      const b = wps[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue; // 非水平
+      const d = nearestDivider(a.y);
+      if (d === null) continue;
+      // 候选:分隔线两侧 ±TARGET,挑离所有分隔线最远且不撞节点的
+      const cands = [d - DIVIDER_NUDGE_TARGET, d + DIVIDER_NUDGE_TARGET]
+        .sort((p, q) => minDivDist(q) - minDivDist(p));
+      const origY = a.y;
+      for (const cand of cands) {
+        if (minDivDist(cand) < DIVIDER_NUDGE_TRIGGER) continue; // 推过去反而贴另一条
+        a.y = cand;
+        b.y = cand;
+        if (!routeCrossesObstacles(wps, obstacles)) break; // 成功
+        a.y = origY; b.y = origY; // 回滚,试下一个候选
+      }
+    }
+  }
+}
+
+const PARALLEL_MIN_GAP = 10;    // 镜像 evaluator F8_MIN_GAP:dy < 此值即视觉叠线
+const PARALLEL_TARGET_GAP = 12; // 推开后留的间距(略高于阈值,留余量)
+
+// F8 净空:把两条不同 edge 的近平行内部水平段推开。只动内部段(两端都非首尾 waypoint),所以端点
+// 贴边/末段正交(E1/E3)不受影响;移动后整条路径过 routeCrossesObstacles,撞节点即回滚;推到的新
+// Y 若贴近泳道分隔线则放弃(别为修 F8 又破 F7)。单趟贪心:改一段就地更新,后续比较读新值。
+function nudgeParallelSegmentsApart(
+  routes: Map<string, EdgeRoute>,
+  input: RouteInput,
+  skipIds: ReadonlySet<string>,
+): void {
+  const dividers = new Set<number>();
+  for (const [, lb] of input.laneBoxes) { dividers.add(lb.top); dividers.add(lb.bottom); }
+  const nearDivider = (y: number): boolean =>
+    [...dividers].some((d) => Math.abs(y - d) < DIVIDER_NUDGE_TRIGGER);
+
+  // fixed = fan-in 归一走廊段:它是一束 reject 边共用的单根干线,不能拆动,但**会**和别的边
+  // (如主流 forward 步降段)叠成近平行——把它当固定锚,只推可动的那条让开(fixture 40:lane
+  // 增高后走廊上移,正好和 submit→dept 的步降段并行 dy=8)。
+  interface HSeg { wps: Waypoint[]; i: number; obstacles: NodeBox[]; fixed: boolean }
+  const segs: HSeg[] = [];
+  for (const edge of input.edges) {
+    const route = routes.get(edge.id);
+    const src = input.nodes.get(edge.source);
+    const tgt = input.nodes.get(edge.target);
+    if (!route || !src || !tgt) continue;
+    const wps = route.waypoints;
+    if (wps.length < 4) continue;
+    const fixed = skipIds.has(edge.id);
+    const obstacles = collectObstacles(input, edge, src, tgt, src.poolId !== tgt.poolId, true);
+    for (let i = 1; i + 1 <= wps.length - 2; i++) {
+      const a = wps[i]!, b = wps[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue;       // 非水平
+      if (Math.abs(a.x - b.x) < 20) continue;      // 太短,F8 也不计
+      segs.push({ wps, i, obstacles, fixed });
+    }
+  }
+
+  const xLo = (g: HSeg): number => Math.min(g.wps[g.i]!.x, g.wps[g.i + 1]!.x);
+  const xHi = (g: HSeg): number => Math.max(g.wps[g.i]!.x, g.wps[g.i + 1]!.x);
+  const xOverlap = (g: HSeg, h: HSeg): number =>
+    Math.min(xHi(g), xHi(h)) - Math.max(xLo(g), xLo(h));
+
+  // 把 seg 的水平段推到离 otherY 至少 PARALLEL_TARGET_GAP(朝当前所在的那一侧推远),成功返回 true。
+  // 拒绝三种坏落点:贴泳道线、撞节点、或推过去又和**另一条**重叠段挤成新的近平行(否则只是把
+  // 糊线从一处搬到另一处——23 那一簇边就是这么越推越糟)。
+  const tryShift = (seg: HSeg, otherY: number): boolean => {
+    const a = seg.wps[seg.i]!, b = seg.wps[seg.i + 1]!;
+    const sign = a.y >= otherY ? 1 : -1;
+    const newY = otherY + sign * PARALLEL_TARGET_GAP;
+    if (nearDivider(newY)) return false;
+    for (const other of segs) {
+      if (other === seg) continue;
+      if (xOverlap(seg, other) <= 20) continue;
+      const odY = Math.abs(newY - other.wps[other.i]!.y);
+      if (odY > 0.5 && odY < PARALLEL_MIN_GAP) return false; // 会撞出新的近平行
+    }
+    const origY = a.y;
+    a.y = newY; b.y = newY;
+    if (!routeCrossesObstacles(seg.wps, seg.obstacles)) return true;
+    a.y = origY; b.y = origY;
+    return false;
+  };
+
+  for (let p = 0; p < segs.length; p++) {
+    for (let q = p + 1; q < segs.length; q++) {
+      const s = segs[p]!, t = segs[q]!;
+      if (s.fixed && t.fixed) continue; // 两根都不可动(同束走廊段)→ 无能为力
+      const dy = Math.abs(s.wps[s.i]!.y - t.wps[t.i]!.y);
+      if (dy <= 0.5 || dy >= PARALLEL_MIN_GAP) continue;
+      if (xOverlap(s, t) <= 20) continue;
+      // 优先推可动的一根;两根都可动则先试 t、再试 s。都不行就保留(F8 软指标,不制造硬违例/新叠线)。
+      if (t.fixed) { tryShift(s, t.wps[t.i]!.y); continue; }
+      if (s.fixed) { tryShift(t, s.wps[s.i]!.y); continue; }
+      if (!tryShift(t, s.wps[s.i]!.y)) tryShift(s, t.wps[t.i]!.y);
+    }
   }
 }
 
@@ -604,7 +749,7 @@ function applyFanInBundle(
     }
   }
 
-  // ── 退路：sink 中线那一行被挡 → 走廊放到 sink 与最近障碍行之间的偏移净空，从上/下单点进入。
+  // ── 退路：sink 中线那行被挡 → 走廊放到 sink 与最近障碍行之间的偏移净空，从上/下单点进入。
   const below = srcMeanCy >= sinkCy;
   const spanLo = Math.min(sinkCx, ...srcCxs);
   const spanHi = Math.max(sinkCx, ...srcCxs);
@@ -618,17 +763,45 @@ function applyFanInBundle(
     obstacleTops.push(n.box.y);
     obstacleBottoms.push(n.box.y + n.box.h);
   }
-  let corridorY: number;
+
+  // 走廊要躲开的 Y：① lane 分隔线（F7：别贴泳道线）② forward 主流边的水平段（③主流优先、
+  // 驳回让路：别贴着主流跑）③ 节点行边缘。在净空带里挑离这些都最远的 Y。
+  const avoidYs: number[] = [];
+  for (const [, lb] of input.laneBoxes) {
+    if (lb.poolId === sink.poolId) avoidYs.push(lb.top, lb.bottom);
+  }
+  for (const e of input.edges) {
+    if (memberSet.has(e.id)) continue;
+    const r = routes.get(e.id);
+    if (!r) continue;
+    for (let i = 0; i < r.waypoints.length - 1; i++) {
+      const a = r.waypoints[i]!;
+      const b = r.waypoints[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue;
+      if (Math.max(a.x, b.x) <= spanLo + 2 || Math.min(a.x, b.x) >= spanHi - 2) continue;
+      avoidYs.push(a.y);
+    }
+  }
+  avoidYs.push(...obstacleTops, ...obstacleBottoms);
+
+  // 走廊带:从 sink 边(留一点)到最近的节点行边。节点行净空不预扣——节点边已进 avoidYs,
+  // 交给 picker 自然保持距离;这样 picker 能选中「分隔线 与 节点行」之间那段净空的中点
+  // (预扣 GAP 会把这段挤没,逼得走廊只能贴在分隔线一侧)。
   const entryY = below ? sinkBottom : sinkTop;
+  let lo: number;
+  let hi: number;
   if (below) {
     const nearestTopBelow = obstacleTops.filter((t) => t > sinkBottom + 1);
     const ceil = nearestTopBelow.length ? Math.min(...nearestTopBelow) : sinkBottom + 2 * FANIN_CORRIDOR_FALLBACK;
-    corridorY = Math.max((sinkBottom + ceil) / 2, sinkBottom + FANIN_CORRIDOR_GAP);
+    lo = sinkBottom + 4;
+    hi = ceil;
   } else {
     const nearestBottomAbove = obstacleBottoms.filter((b) => b < sinkTop - 1);
     const floor = nearestBottomAbove.length ? Math.max(...nearestBottomAbove) : sinkTop - 2 * FANIN_CORRIDOR_FALLBACK;
-    corridorY = Math.min((sinkTop + floor) / 2, sinkTop - FANIN_CORRIDOR_GAP);
+    lo = floor;
+    hi = sinkTop - 4;
   }
+  const corridorY = pickCleanCorridorY(lo, hi, avoidYs);
   const entrySide: Anchor = below ? 'bottom' : 'top';
   for (const m of members) {
     const wps = buildFanInPathVertical(m.src.box, corridorY, sinkCx, entryY);
@@ -639,6 +812,27 @@ function applyFanInBundle(
 
 function avg(values: number[]): number {
   return values.reduce((s, v) => s + v, 0) / values.length;
+}
+
+// 在 [lo,hi] 里挑离所有 avoidYs 都最远的 Y（最大化到最近 avoid 的距离）。
+// 候选 = 区间端点 + 相邻 avoid 中点(落在区间内的) + 区间中点。空 avoid 取中点。
+function pickCleanCorridorY(lo: number, hi: number, avoidYs: number[]): number {
+  if (hi <= lo) return lo;
+  const sorted = [...new Set(avoidYs)].sort((a, b) => a - b);
+  if (sorted.length === 0) return (lo + hi) / 2;
+  const cands = [lo, hi, (lo + hi) / 2];
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const mid = (sorted[i]! + sorted[i + 1]!) / 2;
+    if (mid > lo && mid < hi) cands.push(mid);
+  }
+  let best = lo;
+  let bestDist = -1;
+  for (const c of cands) {
+    let d = Infinity;
+    for (const a of sorted) d = Math.min(d, Math.abs(c - a));
+    if (d > bestDist) { bestDist = d; best = c; }
+  }
+  return best;
 }
 
 // 水平进入：source 顶/底出发 → riser 到共享走廊 Y(=sink.cy) → 水平沿走廊单点进 sink 左/右边。

@@ -573,18 +573,37 @@ function checkL2(p: ParsedFixture): Violation[] {
       }
     }
   }
+  // 节点 name 标签(gateway/event 的外置 name)也不能压住**别的**节点。盲区由来:gateway name
+  // 以前不发显式 bounds、检测器看不到;现在 diagram-builder 会发(见 placeGatewayLabelsOffEdges),
+  // 故能补检。判据同 edge label:label 几何中心落进非 owner 节点 box 才算(容忍角部擦边)。
+  for (const [ownerId, lab] of p.labels) {
+    if (!p.boxes.has(ownerId)) continue;           // edge label 的 owner 不在 boxes → 上面已处理
+    const ok = p.kindOf.get(ownerId);
+    if (ok && CONTAINER_KINDS.has(ok)) continue;    // pool/lane/subProcess 容器自身的 name 不算
+    const cx = lab.x + lab.w / 2;
+    const cy = lab.y + lab.h / 2;
+    for (const o of obstacles) {
+      if (o.id === ownerId) continue;
+      if (cx > o.x && cx < o.x + o.w && cy > o.y && cy < o.y + o.h) {
+        vs.push({ rule: 'L2', fixture: p.fixture, detail: `node label=${ownerId} center (${cx.toFixed(0)},${cy.toFixed(0)}) inside node=${o.id}` });
+      }
+    }
+  }
   return vs;
 }
 
 function checkL3(p: ParsedFixture): Violation[] {
-  // CLAUDE.md §4.L3 字面："多个 boundary event 或多条 edge 在同一区域时，label 必须错开"
-  // ——只看 edge label 之间，不包括 node label（gateway node label 跟出边 label 在同一区域
-  // 是 BPMN 工具普遍允许的场景）。
+  // CLAUDE.md §4.L3："多个 boundary event 或多条 edge 在同一区域时，label 必须错开"。
+  // 纳入两类 label 做两两叠放检测:edge label 之间、以及 node name(gateway/event 外置 name)
+  // 与 edge label / 别的 node name 之间。gateway name 撞分支出边 label(如 42「包容分叉」撞
+  // 「VIP客户」)正是 L3 该守的盲区——以前因 gateway 不发显式 bounds 漏检。容器(pool/lane/
+  // subProcess)的 name 不纳入:它和内部元素 label 必然"同区域"但不算堆叠。
   const vs: Violation[] = [];
-  const edgeLabelIds = new Set(p.edges.filter(e => e.labelBounds).map(e => e.id));
   const labs: Box[] = [];
   for (const [ownerId, lab] of p.labels) {
-    if (edgeLabelIds.has(ownerId)) labs.push(lab);
+    const k = p.kindOf.get(ownerId);
+    if (k && CONTAINER_KINDS.has(k)) continue;
+    labs.push(lab);
   }
   for (let i = 0; i < labs.length; i++) {
     for (let j = i + 1; j < labs.length; j++) {
@@ -933,8 +952,10 @@ function checkF6(p: ParsedFixture): SoftMetric {
       const side = vertical
         ? (end.y <= tcy ? 'top' : 'bottom')
         : (end.x <= tcx ? 'left' : 'right');
-      // 干线坐标：竖直进入看 x、水平进入看 y；量化到 8px 容差视作「同一根干线」。
-      const trunk = Math.round((vertical ? pen.x : pen.y) / 8);
+      // 干线坐标：竖直进入看 x、水平进入看 y；量化到 2px 视作「同一根干线」。
+      // 早先用 8px 太松——差 5px 的两条「几乎重叠但没真合并」也被算成同一根，
+      // 给叠糊版打了 100% 的假分。收紧到 2px 才能区分「真合一根」与「挤在一起」。
+      const trunk = Math.round((vertical ? pen.x : pen.y) / 2);
       const key = `${side}:${trunk}`;
       groups.set(key, (groups.get(key) ?? 0) + 1);
     }
@@ -958,6 +979,93 @@ function checkF6(p: ParsedFixture): SoftMetric {
   };
 }
 
+/**
+ * F7 边-分隔线净空：水平 edge 段不应紧贴 lane 分隔线跑（视觉上分不清是流程线还是泳道边）。
+ * 这是硬标准量不到的「丑但合规」：边没穿节点、端点都贴边，却贴着泳道线。
+ *
+ * 度量：统计「较长(>30px)的水平 edge 段」中，离任一 lane 上/下边界 < 8px(且不正好压在线上)的条数。
+ * 0 条 = 干净。无 lane 的图 n/a。
+ */
+const F7_CLEARANCE = 8;
+function checkF7(p: ParsedFixture): SoftMetric {
+  const dividers = laneDividerYs(p);
+  if (dividers.length === 0) return { rule: 'F7', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  let tooClose = 0;
+  let worst = Infinity;
+  let ex = '';
+  for (const e of p.edges) {
+    for (let i = 0; i < e.waypoints.length - 1; i++) {
+      const a = e.waypoints[i]!;
+      const b = e.waypoints[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue;            // 仅水平段
+      if (Math.abs(a.x - b.x) < 30) continue;           // 忽略短 stub（入节点的最后一小段）
+      for (const d of dividers) {
+        const dist = Math.abs(a.y - d);
+        if (dist > 0.5 && dist < F7_CLEARANCE) {
+          tooClose++;
+          if (dist < worst) { worst = dist; ex = `${e.id}@y${Math.round(a.y)} 距分隔线${d}仅${dist.toFixed(0)}px`; }
+          break;
+        }
+      }
+    }
+  }
+  return {
+    rule: 'F7', fixture: p.fixture, value: tooClose,
+    display: `${tooClose}`, pass: tooClose === 0,
+    detail: tooClose === 0 ? undefined : `${tooClose} 段贴分隔线(<${F7_CLEARANCE}px)，最近 ${ex}`,
+  };
+}
+
+/**
+ * F8 近平行边间距：两条不同 edge 的同向段若 dy<10px 且 x 区间重叠，视觉上叠成一条糊线。
+ * 也是硬标准量不到的「丑但合规」（fan-in 归一早期版叠 5px 即此类）。
+ *
+ * 度量：统计这样的水平段对数。0 = 干净。
+ */
+const F8_MIN_GAP = 10;
+function checkF8(p: ParsedFixture): SoftMetric {
+  const segs: { id: string; y: number; x1: number; x2: number }[] = [];
+  for (const e of p.edges) {
+    for (let i = 0; i < e.waypoints.length - 1; i++) {
+      const a = e.waypoints[i]!;
+      const b = e.waypoints[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue;
+      if (Math.abs(a.x - b.x) < 20) continue;
+      segs.push({ id: e.id, y: a.y, x1: Math.min(a.x, b.x), x2: Math.max(a.x, b.x) });
+    }
+  }
+  let pairs = 0;
+  let ex = '';
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i + 1; j < segs.length; j++) {
+      const s = segs[i]!;
+      const t = segs[j]!;
+      if (s.id === t.id) continue;
+      const dy = Math.abs(s.y - t.y);
+      const overlap = Math.min(s.x2, t.x2) - Math.max(s.x1, t.x1);
+      if (dy > 0.5 && dy < F8_MIN_GAP && overlap > 20) {
+        pairs++;
+        if (!ex) ex = `${s.id}@y${Math.round(s.y)} ∥ ${t.id}@y${Math.round(t.y)} dy=${dy.toFixed(0)}`;
+      }
+    }
+  }
+  return {
+    rule: 'F8', fixture: p.fixture, value: pairs,
+    display: `${pairs}`, pass: pairs === 0,
+    detail: pairs === 0 ? undefined : `${pairs} 对近平行叠线(dy<${F8_MIN_GAP}px)，如 ${ex}`,
+  };
+}
+
+// lane 上/下边界 Y（去重、取整）。供 F7 判断边是否贴泳道线。
+function laneDividerYs(p: ParsedFixture): number[] {
+  const ys: number[] = [];
+  for (const laneId of p.flowNodeRefs.keys()) {
+    const b = p.boxes.get(laneId);
+    if (b) { ys.push(b.y, b.y + b.h); }
+  }
+  return [...new Set(ys.map((y) => Math.round(y)))];
+}
+
 export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetric }[] = [
   { rule: 'F1', fn: checkF1 },
   { rule: 'F2', fn: checkF2 },
@@ -965,6 +1073,8 @@ export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetr
   { rule: 'F4', fn: checkF4 },
   { rule: 'F5', fn: checkF5 },
   { rule: 'F6', fn: checkF6 },
+  { rule: 'F7', fn: checkF7 },
+  { rule: 'F8', fn: checkF8 },
 ];
 
 // ============================================================

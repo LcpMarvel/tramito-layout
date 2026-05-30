@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_gateway_spine_1" targetNamespace="http://example.com/fuzz-gateway-spine-1" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_spine_1" name="多级分叉合并主干压测" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>f_start_xor</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gw_xor_div" name="排他分叉" gatewayDirection="Diverging" default="flow_xor_c">
+      <bpmn:incoming>f_start_xor</bpmn:incoming>
+      <bpmn:outgoing>flow_xor_a</bpmn:outgoing>
+      <bpmn:outgoing>flow_xor_b</bpmn:outgoing>
+      <bpmn:outgoing>flow_xor_c</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_xor_a1" name="信用评估">
+      <bpmn:incoming>flow_xor_a</bpmn:incoming>
+      <bpmn:outgoing>f_xor_a1_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_xor_b1" name="自动审批">
+      <bpmn:incoming>flow_xor_b</bpmn:incoming>
+      <bpmn:outgoing>f_xor_b1_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="task_xor_c1" name="人工复核">
+      <bpmn:incoming>flow_xor_c</bpmn:incoming>
+      <bpmn:outgoing>f_xor_c1_conv</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gw_xor_conv" name="排他合并" gatewayDirection="Converging">
+      <bpmn:incoming>f_xor_a1_conv</bpmn:incoming>
+      <bpmn:incoming>f_xor_b1_conv</bpmn:incoming>
+      <bpmn:incoming>f_xor_c1_conv</bpmn:incoming>
+      <bpmn:outgoing>f_xor_conv_par</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="gw_par_div" name="并行分叉" gatewayDirection="Diverging">
+      <bpmn:incoming>f_xor_conv_par</bpmn:incoming>
+      <bpmn:outgoing>f_par_1</bpmn:outgoing>
+      <bpmn:outgoing>f_par_2</bpmn:outgoing>
+      <bpmn:outgoing>f_par_3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="task_par_1a" name="发送邮件通知">
+      <bpmn:incoming>f_par_1</bpmn:incoming>
+      <bpmn:outgoing>f_par_1_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_par_2a" name="更新数据库">
+      <bpmn:incoming>f_par_2</bpmn:incoming>
+      <bpmn:outgoing>f_par_2_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_par_3a" name="线下签署协议">
+      <bpmn:incoming>f_par_3</bpmn:incoming>
+      <bpmn:outgoing>f_par_3_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gw_par_conv" name="并行合并" gatewayDirection="Converging">
+      <bpmn:incoming>f_par_1_conv</bpmn:incoming>
+      <bpmn:incoming>f_par_2_conv</bpmn:incoming>
+      <bpmn:incoming>f_par_3_conv</bpmn:incoming>
+      <bpmn:outgoing>f_par_conv_inc</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:inclusiveGateway id="gw_inc_div" name="包容分叉" gatewayDirection="Diverging" default="flow_inc_standard">
+      <bpmn:incoming>f_par_conv_inc</bpmn:incoming>
+      <bpmn:outgoing>flow_inc_vip</bpmn:outgoing>
+      <bpmn:outgoing>flow_inc_standard</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="task_inc_vip" name="VIP专属服务">
+      <bpmn:incoming>flow_inc_vip</bpmn:incoming>
+      <bpmn:outgoing>f_inc_vip_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="task_inc_standard" name="标准服务流程">
+      <bpmn:incoming>flow_inc_standard</bpmn:incoming>
+      <bpmn:outgoing>f_inc_std_conv</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:inclusiveGateway id="gw_inc_conv" name="包容合并" gatewayDirection="Converging">
+      <bpmn:incoming>f_inc_vip_conv</bpmn:incoming>
+      <bpmn:incoming>f_inc_std_conv</bpmn:incoming>
+      <bpmn:outgoing>f_inc_conv_fin</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="task_finalize" name="归档结案">
+      <bpmn:incoming>f_inc_conv_fin</bpmn:incoming>
+      <bpmn:outgoing>f_fin_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>f_fin_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_xor" sourceRef="start_1" targetRef="gw_xor_div" />
+    <bpmn:sequenceFlow id="flow_xor_a" name="高风险" sourceRef="gw_xor_div" targetRef="task_xor_a1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${risk == 'high'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_xor_b" name="低风险" sourceRef="gw_xor_div" targetRef="task_xor_b1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${risk == 'low'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_xor_c" name="默认" sourceRef="gw_xor_div" targetRef="task_xor_c1" />
+    <bpmn:sequenceFlow id="f_xor_a1_conv" sourceRef="task_xor_a1" targetRef="gw_xor_conv" />
+    <bpmn:sequenceFlow id="f_xor_b1_conv" sourceRef="task_xor_b1" targetRef="gw_xor_conv" />
+    <bpmn:sequenceFlow id="f_xor_c1_conv" sourceRef="task_xor_c1" targetRef="gw_xor_conv" />
+    <bpmn:sequenceFlow id="f_xor_conv_par" sourceRef="gw_xor_conv" targetRef="gw_par_div" />
+    <bpmn:sequenceFlow id="f_par_1" sourceRef="gw_par_div" targetRef="task_par_1a" />
+    <bpmn:sequenceFlow id="f_par_2" sourceRef="gw_par_div" targetRef="task_par_2a" />
+    <bpmn:sequenceFlow id="f_par_3" sourceRef="gw_par_div" targetRef="task_par_3a" />
+    <bpmn:sequenceFlow id="f_par_1_conv" sourceRef="task_par_1a" targetRef="gw_par_conv" />
+    <bpmn:sequenceFlow id="f_par_2_conv" sourceRef="task_par_2a" targetRef="gw_par_conv" />
+    <bpmn:sequenceFlow id="f_par_3_conv" sourceRef="task_par_3a" targetRef="gw_par_conv" />
+    <bpmn:sequenceFlow id="f_par_conv_inc" sourceRef="gw_par_conv" targetRef="gw_inc_div" />
+    <bpmn:sequenceFlow id="flow_inc_vip" name="VIP客户" sourceRef="gw_inc_div" targetRef="task_inc_vip">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isVip == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_inc_standard" name="标准" sourceRef="gw_inc_div" targetRef="task_inc_standard" />
+    <bpmn:sequenceFlow id="f_inc_vip_conv" sourceRef="task_inc_vip" targetRef="gw_inc_conv" />
+    <bpmn:sequenceFlow id="f_inc_std_conv" sourceRef="task_inc_standard" targetRef="gw_inc_conv" />
+    <bpmn:sequenceFlow id="f_inc_conv_fin" sourceRef="gw_inc_conv" targetRef="task_finalize" />
+    <bpmn:sequenceFlow id="f_fin_end" sourceRef="task_finalize" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_gateway_spine_1" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_gateway_spine_1" bpmnElement="process_spine_1">
+      <bpmndi:BPMNShape id="process_spine_1_di" bpmnElement="process_spine_1">
+        <dc:Bounds x="0" y="0" width="1734" height="424" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_xor_div_di" bpmnElement="gw_xor_div">
+        <dc:Bounds x="178" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="153" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_xor_a1_di" bpmnElement="task_xor_a1">
+        <dc:Bounds x="308" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_xor_b1_di" bpmnElement="task_xor_b1">
+        <dc:Bounds x="308" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_xor_c1_di" bpmnElement="task_xor_c1">
+        <dc:Bounds x="308" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_xor_conv_di" bpmnElement="gw_xor_conv">
+        <dc:Bounds x="488" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="519" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_par_div_di" bpmnElement="gw_par_div">
+        <dc:Bounds x="618" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="593" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_par_1a_di" bpmnElement="task_par_1a">
+        <dc:Bounds x="748" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_par_2a_di" bpmnElement="task_par_2a">
+        <dc:Bounds x="748" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_par_3a_di" bpmnElement="task_par_3a">
+        <dc:Bounds x="748" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_par_conv_di" bpmnElement="gw_par_conv">
+        <dc:Bounds x="928" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="959" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_inc_div_di" bpmnElement="gw_inc_div">
+        <dc:Bounds x="1058" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1033" y="152" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inc_vip_di" bpmnElement="task_inc_vip">
+        <dc:Bounds x="1188" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inc_standard_di" bpmnElement="task_inc_standard">
+        <dc:Bounds x="1188" y="242" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_inc_conv_di" bpmnElement="gw_inc_conv">
+        <dc:Bounds x="1368" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1343" y="169" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_finalize_di" bpmnElement="task_finalize">
+        <dc:Bounds x="1498" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1678" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_xor_di" bpmnElement="f_start_xor">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_xor_a_di" bpmnElement="flow_xor_a">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="268" y="212" />
+        <di:waypoint x="268" y="72" />
+        <di:waypoint x="308" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="156" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_xor_b_di" bpmnElement="flow_xor_b">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="308" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="243" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_xor_c_di" bpmnElement="flow_xor_c">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="268" y="212" />
+        <di:waypoint x="268" y="352" />
+        <di:waypoint x="308" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="254" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xor_a1_conv_di" bpmnElement="f_xor_a1_conv">
+        <di:waypoint x="358" y="112" />
+        <di:waypoint x="358" y="149.5" />
+        <di:waypoint x="513" y="149.5" />
+        <di:waypoint x="513" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xor_b1_conv_di" bpmnElement="f_xor_b1_conv">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="488" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xor_c1_conv_di" bpmnElement="f_xor_c1_conv">
+        <di:waypoint x="358" y="312" />
+        <di:waypoint x="358" y="274.5" />
+        <di:waypoint x="513" y="274.5" />
+        <di:waypoint x="513" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_xor_conv_par_di" bpmnElement="f_xor_conv_par">
+        <di:waypoint x="538" y="212" />
+        <di:waypoint x="618" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_1_di" bpmnElement="f_par_1">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="708" y="212" />
+        <di:waypoint x="708" y="72" />
+        <di:waypoint x="748" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_2_di" bpmnElement="f_par_2">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="748" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_3_di" bpmnElement="f_par_3">
+        <di:waypoint x="668" y="212" />
+        <di:waypoint x="708" y="212" />
+        <di:waypoint x="708" y="352" />
+        <di:waypoint x="748" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_1_conv_di" bpmnElement="f_par_1_conv">
+        <di:waypoint x="798" y="112" />
+        <di:waypoint x="798" y="149.5" />
+        <di:waypoint x="953" y="149.5" />
+        <di:waypoint x="953" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_2_conv_di" bpmnElement="f_par_2_conv">
+        <di:waypoint x="848" y="212" />
+        <di:waypoint x="928" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_3_conv_di" bpmnElement="f_par_3_conv">
+        <di:waypoint x="798" y="312" />
+        <di:waypoint x="798" y="274.5" />
+        <di:waypoint x="953" y="274.5" />
+        <di:waypoint x="953" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_par_conv_inc_di" bpmnElement="f_par_conv_inc">
+        <di:waypoint x="978" y="212" />
+        <di:waypoint x="1058" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_inc_vip_di" bpmnElement="flow_inc_vip">
+        <di:waypoint x="1108" y="212" />
+        <di:waypoint x="1148" y="212" />
+        <di:waypoint x="1148" y="142" />
+        <di:waypoint x="1188" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1093" y="170" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_inc_standard_di" bpmnElement="flow_inc_standard">
+        <di:waypoint x="1108" y="212" />
+        <di:waypoint x="1148" y="212" />
+        <di:waypoint x="1148" y="282" />
+        <di:waypoint x="1188" y="282" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1093" y="240" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_inc_vip_conv_di" bpmnElement="f_inc_vip_conv">
+        <di:waypoint x="1288" y="142" />
+        <di:waypoint x="1328" y="142" />
+        <di:waypoint x="1328" y="212" />
+        <di:waypoint x="1368" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_inc_std_conv_di" bpmnElement="f_inc_std_conv">
+        <di:waypoint x="1288" y="282" />
+        <di:waypoint x="1328" y="282" />
+        <di:waypoint x="1328" y="212" />
+        <di:waypoint x="1368" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_inc_conv_fin_di" bpmnElement="f_inc_conv_fin">
+        <di:waypoint x="1418" y="212" />
+        <di:waypoint x="1498" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fin_end_di" bpmnElement="f_fin_end">
+        <di:waypoint x="1598" y="212" />
+        <di:waypoint x="1678" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
