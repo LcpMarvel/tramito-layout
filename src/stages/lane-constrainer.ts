@@ -280,8 +280,9 @@ function buildLaneMetric(
   const spineRows = assignSpineAwareRows(memberIds, nodes, extents, edges);
   if (spineRows) {
     for (const row of spineRows) {
-      const reserve = estimateForwardArchReserveAbove(row.ids, nodes, edges);
-      if (reserve > row.above) row.above = reserve;
+      const reserve = estimateForwardArchReserve(row.ids, nodes, edges, nodeMeta);
+      if (reserve.above > row.above) row.above = reserve.above;
+      if (reserve.below > row.below) row.below = reserve.below;
     }
     if (fanIn.above > 0) spineRows[0]!.above += fanIn.above;
     if (fanIn.below > 0) spineRows[spineRows.length - 1]!.below += fanIn.below;
@@ -295,8 +296,9 @@ function buildLaneMetric(
     // arch 是同行 src/tgt 之间的"凸"，必须按该行实际成员预留。原先只给 rows[0] 加 above，
     // 第 2 行以下的 forward-skip arch 会顶出 lane 边界或挤到上一行的 label 上。
     for (const row of rows) {
-      const reserve = estimateForwardArchReserveAbove(row.ids, nodes, edges);
-      if (reserve > row.above) row.above = reserve;
+      const reserve = estimateForwardArchReserve(row.ids, nodes, edges, nodeMeta);
+      if (reserve.above > row.above) row.above = reserve.above;
+      if (reserve.below > row.below) row.below = reserve.below;
     }
     // 走廊在最上行之上 / 最下行之下，按侧补到对应边缘行。
     if (fanIn.above > 0) rows[0]!.above += fanIn.above;
@@ -304,8 +306,8 @@ function buildLaneMetric(
     return buildMultiRowMetric(rows);
   }
 
-  const archReserveAbove = estimateForwardArchReserveAbove(memberIds, nodes, edges);
-  return buildFlatMetric(memberIds, extents, archReserveAbove, fanIn.above, fanIn.below);
+  const archReserve = estimateForwardArchReserve(memberIds, nodes, edges, nodeMeta);
+  return buildFlatMetric(memberIds, extents, archReserve, fanIn.above, fanIn.below);
 }
 
 function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {
@@ -466,12 +468,12 @@ function buildMultiRowMetric(rows: LaneRow[]): LaneMetric {
 function buildFlatMetric(
   memberIds: string[],
   extents: Map<string, NodeVerticalExtent>,
-  archReserveAbove: number,
+  archReserve: { above: number; below: number },
   fanInReserveAbove = 0,
   fanInReserveBelow = 0,
 ): LaneMetric {
-  let above = archReserveAbove;
-  let below = 0;
+  let above = archReserve.above;
+  let below = archReserve.below;
   for (const id of memberIds) {
     const extent = extents.get(id)!;
     above = Math.max(above, extent.above);
@@ -489,13 +491,20 @@ function buildFlatMetric(
   return { height: h, centerOffset: rowCenter, nodeCenterOffset };
 }
 
-function estimateForwardArchReserveAbove(
+// 同行 src/tgt 间「跳过中间节点」的 forward-skip arch 预留高度。返回 {above, below}：
+// 默认凸在行上方；但**源是 gateway 的同 cy forward-skip 在 router 里走下方**（见 edge-router 的
+// preferForwardSkipBelow——gateway 出边的 label 占着上方，skip 支让到下方），lane 必须在**下方**
+// 给这条 arch 留净空，否则它被挤到 lane 底分隔线上、被 obstacle-clear/nudge 揉成多点折线
+// （fixture 43「不加辣」默认支：gateway_11 跳过 task_12 直连 task_8，原先 reserve 全加在上方、
+// 节点贴着 lane 底，arch 没地方走）。判据与 preferForwardSkipBelow 对齐：源 gateway → 算 below。
+function estimateForwardArchReserve(
   memberIds: string[],
   nodes: Map<string, NodeBox>,
   edges: LaneEdgeInfo[] | undefined,
-): number {
-  if (!edges || edges.length === 0) return 0;
-  const archesAbove: { left: number; right: number; obsMaxH: number }[] = [];
+  nodeMeta: Map<string, LaneNodeMeta> | undefined,
+): { above: number; below: number } {
+  if (!edges || edges.length === 0) return { above: 0, below: 0 };
+  const arches: { left: number; right: number; obsMaxH: number; side: 'above' | 'below' }[] = [];
   const memberSet = new Set(memberIds);
   for (const e of edges) {
     if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
@@ -512,25 +521,29 @@ function estimateForwardArchReserveAbove(
       if (o.h > obsMaxH) obsMaxH = o.h;
     }
     if (obsMaxH === 0) continue;
-    archesAbove.push({ left: sRight, right: tLeft, obsMaxH });
+    const srcType = nodeMeta?.get(e.source)?.type;
+    const srcIsGateway = srcType !== undefined && isGatewayType(srcType);
+    arches.push({ left: sRight, right: tLeft, obsMaxH, side: srcIsGateway ? 'below' : 'above' });
   }
 
-  let reserve = 0;
-  for (let i = 0; i < archesAbove.length; i++) {
+  let above = 0;
+  let below = 0;
+  for (let i = 0; i < arches.length; i++) {
+    const a = arches[i]!;
     let parallel = 1;
-    for (let j = 0; j < archesAbove.length; j++) {
+    for (let j = 0; j < arches.length; j++) {
       if (j === i) continue;
-      const a = archesAbove[i]!, b = archesAbove[j]!;
-      if (a.left < b.right && b.left < a.right) parallel++;
+      const b = arches[j]!;
+      if (a.side === b.side && a.left < b.right && b.left < a.right) parallel++;
     }
-    const a = archesAbove[i]!;
-    const archAbove = a.obsMaxH / 2 + ARCH_CLEAR_MARGIN
+    const archClear = a.obsMaxH / 2 + ARCH_CLEAR_MARGIN
       + Math.max(0, parallel - 1) * CHANNEL_GAP;
-    const labelAbove = LABEL_LINE_H + EDGE_LABEL_ABOVE_GAP;
-    const need = Math.max(ARCH_BASE_OFFSET, archAbove) + labelAbove;
-    if (need > reserve) reserve = need;
+    const labelClear = LABEL_LINE_H + EDGE_LABEL_ABOVE_GAP;
+    const need = Math.max(ARCH_BASE_OFFSET, archClear) + labelClear;
+    if (a.side === 'below') { if (need > below) below = need; }
+    else if (need > above) above = need;
   }
-  return reserve;
+  return { above, below };
 }
 
 // 驳回归一走廊在 sink 所在 lane 内需预留的净空(超出节点 extent + LANE_PAD 的部分)。

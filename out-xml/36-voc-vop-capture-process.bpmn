@@ -129,16 +129,16 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_d158aff1-1f2d-4617-b1e6-3646a07e52ee" bpmnElement="collaboration_voc_vop">
       <bpmndi:BPMNShape id="collaboration_voc_vop_di" bpmnElement="collaboration_voc_vop">
-        <dc:Bounds x="0" y="0" width="1344" height="788" />
+        <dc:Bounds x="0" y="0" width="1344" height="808" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_external_di" bpmnElement="pool_external" isHorizontal="true">
         <dc:Bounds x="0" y="0" width="1344" height="100" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_company_di" bpmnElement="pool_company" isHorizontal="true">
-        <dc:Bounds x="0" y="130" width="1344" height="658" />
+        <dc:Bounds x="0" y="130" width="1344" height="678" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_marketing_di" bpmnElement="lane_marketing" isHorizontal="true">
-        <dc:Bounds x="30" y="150" width="1314" height="279" />
+        <dc:Bounds x="30" y="150" width="1314" height="299" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="219" width="36" height="36" />
@@ -174,7 +174,7 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_marketing_after_sales_di" bpmnElement="task_marketing_after_sales">
-        <dc:Bounds x="798" y="333" width="100" height="80" />
+        <dc:Bounds x="798" y="353" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_marketing_receive_di" bpmnElement="task_marketing_receive">
         <dc:Bounds x="978" y="197" width="100" height="80" />
@@ -192,33 +192,33 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_quality_di" bpmnElement="lane_quality" isHorizontal="true">
-        <dc:Bounds x="30" y="429" width="1314" height="112" />
+        <dc:Bounds x="30" y="449" width="1314" height="112" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_quality_receive_di" bpmnElement="task_quality_receive">
-        <dc:Bounds x="978" y="445" width="100" height="80" />
+        <dc:Bounds x="978" y="465" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_business_depts_di" bpmnElement="lane_business_depts" isHorizontal="true">
-        <dc:Bounds x="30" y="541" width="1314" height="115" />
+        <dc:Bounds x="30" y="561" width="1314" height="115" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_receive_vop_di" bpmnElement="task_receive_vop">
-        <dc:Bounds x="308" y="560" width="100" height="80" />
+        <dc:Bounds x="308" y="580" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_vop_fork_di" bpmnElement="gateway_vop_fork">
-        <dc:Bounds x="488" y="575" width="50" height="50" />
+        <dc:Bounds x="488" y="595" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="488.5" y="557" width="49" height="14" />
+          <dc:Bounds x="488.5" y="577" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_process_mgmt_di" bpmnElement="lane_process_mgmt" isHorizontal="true">
-        <dc:Bounds x="30" y="656" width="1314" height="112" />
+        <dc:Bounds x="30" y="676" width="1314" height="112" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_vop_copy_di" bpmnElement="task_vop_copy">
-        <dc:Bounds x="618" y="672" width="100" height="80" />
+        <dc:Bounds x="618" y="692" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_vop_copy_di" bpmnElement="end_vop_copy">
-        <dc:Bounds x="1288" y="694" width="36" height="36" />
+        <dc:Bounds x="1288" y="714" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1256" y="734" width="100" height="14" />
+          <dc:Bounds x="1256" y="754" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_to_fork_di" bpmnElement="flow_start_to_fork">
@@ -231,8 +231,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fork_to_vop_di" bpmnElement="flow_fork_to_vop">
         <di:waypoint x="203" y="262" />
-        <di:waypoint x="203" y="600" />
-        <di:waypoint x="308" y="600" />
+        <di:waypoint x="203" y="620" />
+        <di:waypoint x="308" y="620" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_voc_to_customer_type_di" bpmnElement="flow_voc_to_customer_type">
         <di:waypoint x="408" y="237" />
@@ -245,8 +245,8 @@
       <bpmndi:BPMNEdge id="flow_customer_type_to_internal_di" bpmnElement="flow_customer_type_to_internal">
         <di:waypoint x="538" y="237" />
         <di:waypoint x="641.3333333333334" y="237" />
-        <di:waypoint x="641.3333333333334" y="373" />
-        <di:waypoint x="798" y="373" />
+        <di:waypoint x="641.3333333333334" y="393" />
+        <di:waypoint x="798" y="393" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_related_to_yes_di" bpmnElement="flow_related_to_yes">
         <di:waypoint x="701.3333333333334" y="237" />
@@ -261,19 +261,19 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_department_to_yes_di" bpmnElement="flow_department_to_yes">
         <di:waypoint x="856.3333333333334" y="262" />
-        <di:waypoint x="856.3333333333334" y="323" />
-        <di:waypoint x="958" y="323" />
-        <di:waypoint x="958" y="485" />
-        <di:waypoint x="978" y="485" />
+        <di:waypoint x="856.3333333333334" y="343" />
+        <di:waypoint x="958" y="343" />
+        <di:waypoint x="958" y="505" />
+        <di:waypoint x="978" y="505" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_department_no_di" bpmnElement="flow_department_no">
         <di:waypoint x="881.3333333333334" y="237" />
         <di:waypoint x="978" y="237" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_internal_to_join_di" bpmnElement="flow_internal_to_join">
-        <di:waypoint x="848" y="333" />
-        <di:waypoint x="848" y="297.5" />
-        <di:waypoint x="1183" y="297.5" />
+        <di:waypoint x="848" y="353" />
+        <di:waypoint x="848" y="307.5" />
+        <di:waypoint x="1183" y="307.5" />
         <di:waypoint x="1183" y="262" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_marketing_to_join_di" bpmnElement="flow_marketing_to_join">
@@ -281,27 +281,27 @@
         <di:waypoint x="1158" y="237" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_quality_to_join_di" bpmnElement="flow_quality_to_join">
-        <di:waypoint x="1078" y="485" />
-        <di:waypoint x="1183" y="485" />
+        <di:waypoint x="1078" y="505" />
+        <di:waypoint x="1183" y="505" />
         <di:waypoint x="1183" y="262" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_vop_to_fork_di" bpmnElement="flow_vop_to_fork">
-        <di:waypoint x="408" y="600" />
-        <di:waypoint x="488" y="600" />
+        <di:waypoint x="408" y="620" />
+        <di:waypoint x="488" y="620" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fork_to_join_di" bpmnElement="flow_fork_to_join">
-        <di:waypoint x="538" y="600" />
-        <di:waypoint x="1183" y="600" />
+        <di:waypoint x="538" y="620" />
+        <di:waypoint x="1183" y="620" />
         <di:waypoint x="1183" y="262" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fork_to_copy_di" bpmnElement="flow_fork_to_copy">
-        <di:waypoint x="513" y="625" />
-        <di:waypoint x="513" y="712" />
-        <di:waypoint x="618" y="712" />
+        <di:waypoint x="513" y="645" />
+        <di:waypoint x="513" y="732" />
+        <di:waypoint x="618" y="732" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_copy_to_end_di" bpmnElement="flow_copy_to_end">
-        <di:waypoint x="718" y="712" />
-        <di:waypoint x="1288" y="712" />
+        <di:waypoint x="718" y="732" />
+        <di:waypoint x="1288" y="732" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_join_to_end_di" bpmnElement="flow_join_to_end">
         <di:waypoint x="1208" y="237" />

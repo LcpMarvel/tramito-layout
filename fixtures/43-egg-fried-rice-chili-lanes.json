@@ -1,0 +1,77 @@
+{
+  "id": "definitions_1",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_2",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "蛋炒饭流程"
+      },
+      "children": [
+        {
+          "id": "pool_3",
+          "bpmn": {
+            "type": "participant",
+            "name": "厨房",
+            "processRef": "process_4"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_5",
+              "bpmn": { "type": "lane", "name": "帮厨" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                { "id": "start_3", "width": 36, "height": 36, "bpmn": { "type": "startEvent", "name": "开始" }, "labels": [{ "text": "开始" }] },
+                { "id": "task_4", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "打鸡蛋" }, "labels": [{ "text": "打鸡蛋" }] },
+                { "id": "task_13", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "备米饭" }, "labels": [{ "text": "备米饭" }] },
+                { "id": "task_14", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "切葱花" }, "labels": [{ "text": "切葱花" }] },
+                { "id": "task_15", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "备调料" }, "labels": [{ "text": "备调料" }] },
+                { "id": "task_9", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "出锅装盘" }, "labels": [{ "text": "出锅装盘" }] },
+                { "id": "end_10", "width": 36, "height": 36, "bpmn": { "type": "endEvent", "name": "结束" }, "labels": [{ "text": "结束" }] }
+              ]
+            },
+            {
+              "id": "lane_6",
+              "bpmn": { "type": "lane", "name": "主厨" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                { "id": "task_5", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "热锅倒油" }, "labels": [{ "text": "热锅倒油" }] },
+                { "id": "task_6", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "炒鸡蛋" }, "labels": [{ "text": "炒鸡蛋" }] },
+                { "id": "task_7", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "炒米饭" }, "labels": [{ "text": "炒米饭" }] },
+                { "id": "gateway_11", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "加辣椒？", "default": "flow_18" }, "labels": [{ "text": "加辣椒？" }] },
+                { "id": "task_12", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "加入辣椒" }, "labels": [{ "text": "加入辣椒" }] },
+                { "id": "task_8", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "混合调味" }, "labels": [{ "text": "混合调味" }] }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_11", "sources": ["start_3"], "targets": ["task_4"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_21", "sources": ["task_4"], "targets": ["task_13"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_22", "sources": ["task_13"], "targets": ["task_14"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_23", "sources": ["task_14"], "targets": ["task_15"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_12", "sources": ["task_15"], "targets": ["task_5"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_13", "sources": ["task_5"], "targets": ["task_6"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_14", "sources": ["task_6"], "targets": ["task_7"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_15", "sources": ["task_7"], "targets": ["gateway_11"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_16", "sources": ["gateway_11"], "targets": ["task_12"], "bpmn": { "type": "sequenceFlow", "name": "加辣", "conditionExpression": { "body": "${addChili}" } } },
+            { "id": "flow_17", "sources": ["task_12"], "targets": ["task_8"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_18", "sources": ["gateway_11"], "targets": ["task_8"], "bpmn": { "type": "sequenceFlow", "name": "不加辣", "isDefault": true } },
+            { "id": "flow_19", "sources": ["task_8"], "targets": ["task_9"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_20", "sources": ["task_9"], "targets": ["end_10"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

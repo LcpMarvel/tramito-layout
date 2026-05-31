@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:collaboration id="collaboration_2" name="蛋炒饭流程">
+    <bpmn:participant id="pool_3" name="厨房" processRef="process_4" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_4" name="厨房" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_5" name="帮厨">
+        <bpmn:flowNodeRef>start_3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_13</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_14</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_15</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_10</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_6" name="主厨">
+        <bpmn:flowNodeRef>task_5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gateway_11</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_12</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_8</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_3" name="开始">
+      <bpmn:outgoing>flow_11</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_4" name="打鸡蛋">
+      <bpmn:incoming>flow_11</bpmn:incoming>
+      <bpmn:outgoing>flow_21</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_13" name="备米饭">
+      <bpmn:incoming>flow_21</bpmn:incoming>
+      <bpmn:outgoing>flow_22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_14" name="切葱花">
+      <bpmn:incoming>flow_22</bpmn:incoming>
+      <bpmn:outgoing>flow_23</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_15" name="备调料">
+      <bpmn:incoming>flow_23</bpmn:incoming>
+      <bpmn:outgoing>flow_12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_9" name="出锅装盘">
+      <bpmn:incoming>flow_19</bpmn:incoming>
+      <bpmn:outgoing>flow_20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_10" name="结束">
+      <bpmn:incoming>flow_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_5" name="热锅倒油">
+      <bpmn:incoming>flow_12</bpmn:incoming>
+      <bpmn:outgoing>flow_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_6" name="炒鸡蛋">
+      <bpmn:incoming>flow_13</bpmn:incoming>
+      <bpmn:outgoing>flow_14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_7" name="炒米饭">
+      <bpmn:incoming>flow_14</bpmn:incoming>
+      <bpmn:outgoing>flow_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_11" name="加辣椒？" default="flow_18">
+      <bpmn:incoming>flow_15</bpmn:incoming>
+      <bpmn:outgoing>flow_16</bpmn:outgoing>
+      <bpmn:outgoing>flow_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_12" name="加入辣椒">
+      <bpmn:incoming>flow_16</bpmn:incoming>
+      <bpmn:outgoing>flow_17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_8" name="混合调味">
+      <bpmn:incoming>flow_17</bpmn:incoming>
+      <bpmn:incoming>flow_18</bpmn:incoming>
+      <bpmn:outgoing>flow_19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="flow_11" sourceRef="start_3" targetRef="task_4" />
+    <bpmn:sequenceFlow id="flow_21" sourceRef="task_4" targetRef="task_13" />
+    <bpmn:sequenceFlow id="flow_22" sourceRef="task_13" targetRef="task_14" />
+    <bpmn:sequenceFlow id="flow_23" sourceRef="task_14" targetRef="task_15" />
+    <bpmn:sequenceFlow id="flow_12" sourceRef="task_15" targetRef="task_5" />
+    <bpmn:sequenceFlow id="flow_13" sourceRef="task_5" targetRef="task_6" />
+    <bpmn:sequenceFlow id="flow_14" sourceRef="task_6" targetRef="task_7" />
+    <bpmn:sequenceFlow id="flow_15" sourceRef="task_7" targetRef="gateway_11" />
+    <bpmn:sequenceFlow id="flow_16" name="加辣" sourceRef="gateway_11" targetRef="task_12">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${addChili}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_17" sourceRef="task_12" targetRef="task_8" />
+    <bpmn:sequenceFlow id="flow_18" name="不加辣" sourceRef="gateway_11" targetRef="task_8" />
+    <bpmn:sequenceFlow id="flow_19" sourceRef="task_8" targetRef="task_9" />
+    <bpmn:sequenceFlow id="flow_20" sourceRef="task_9" targetRef="end_10" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_1" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_1" bpmnElement="collaboration_2">
+      <bpmndi:BPMNShape id="collaboration_2_di" bpmnElement="collaboration_2">
+        <dc:Bounds x="0" y="0" width="2164" height="438" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_3_di" bpmnElement="pool_3" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="2164" height="438" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_5_di" bpmnElement="lane_5" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="2134" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_3_di" bpmnElement="start_3">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_4_di" bpmnElement="task_4">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_13_di" bpmnElement="task_13">
+        <dc:Bounds x="358" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_14_di" bpmnElement="task_14">
+        <dc:Bounds x="538" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_15_di" bpmnElement="task_15">
+        <dc:Bounds x="718" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_9_di" bpmnElement="task_9">
+        <dc:Bounds x="1928" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_10_di" bpmnElement="end_10">
+        <dc:Bounds x="2108" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2076" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_6_di" bpmnElement="lane_6" isHorizontal="true">
+        <dc:Bounds x="30" y="268" width="2134" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_5_di" bpmnElement="task_5">
+        <dc:Bounds x="898" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_6_di" bpmnElement="task_6">
+        <dc:Bounds x="1078" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_7_di" bpmnElement="task_7">
+        <dc:Bounds x="1258" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_11_di" bpmnElement="gateway_11">
+        <dc:Bounds x="1438" y="302" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1435" y="284" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_12_di" bpmnElement="task_12">
+        <dc:Bounds x="1568" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_8_di" bpmnElement="task_8">
+        <dc:Bounds x="1748" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_11_di" bpmnElement="flow_11">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_21_di" bpmnElement="flow_21">
+        <di:waypoint x="278" y="76" />
+        <di:waypoint x="358" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_22_di" bpmnElement="flow_22">
+        <di:waypoint x="458" y="76" />
+        <di:waypoint x="538" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_23_di" bpmnElement="flow_23">
+        <di:waypoint x="638" y="76" />
+        <di:waypoint x="718" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_12_di" bpmnElement="flow_12">
+        <di:waypoint x="768" y="116" />
+        <di:waypoint x="768" y="327" />
+        <di:waypoint x="898" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_13_di" bpmnElement="flow_13">
+        <di:waypoint x="998" y="327" />
+        <di:waypoint x="1078" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_14_di" bpmnElement="flow_14">
+        <di:waypoint x="1178" y="327" />
+        <di:waypoint x="1258" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_15_di" bpmnElement="flow_15">
+        <di:waypoint x="1358" y="327" />
+        <di:waypoint x="1438" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_16_di" bpmnElement="flow_16">
+        <di:waypoint x="1488" y="327" />
+        <di:waypoint x="1568" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_17_di" bpmnElement="flow_17">
+        <di:waypoint x="1668" y="327" />
+        <di:waypoint x="1748" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_18_di" bpmnElement="flow_18">
+        <di:waypoint x="1463" y="352" />
+        <di:waypoint x="1463" y="377" />
+        <di:waypoint x="1463" y="387" />
+        <di:waypoint x="1798" y="387" />
+        <di:waypoint x="1798" y="367" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_19_di" bpmnElement="flow_19">
+        <di:waypoint x="1798" y="287" />
+        <di:waypoint x="1798" y="212" />
+        <di:waypoint x="1928" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_20_di" bpmnElement="flow_20">
+        <di:waypoint x="2028" y="212" />
+        <di:waypoint x="2108" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
