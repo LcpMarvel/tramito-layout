@@ -93,6 +93,23 @@ interface EdgeRecord {
   poolId: string | null;
 }
 
+// 悬空边端点的 hint：区分「打错 id」与「漏声明节点」两种成因，把 LLM 导向正确的修法。
+// WHY：泛化的「端点必须存在」会被模型误读成"删掉这条边"，但绝大多数实际成因是模型把
+// 经过某网关的连线全写了、却忘了在 children 里 emit 这个网关节点。判据：
+//   - 被 ≥2 条边引用 → 它是有入/出度的枢纽节点，几乎不可能是打错的孤立 id，必是漏声明；
+//   - id 形如 gateway* → 直接点名是网关，并给出网关类型，省得模型猜。
+// 两种情况都明确要求"补节点、别删边"。
+function missingEndpointHint(id: string, refCount: number): string {
+  const looksLikeGateway = /gateway/i.test(id);
+  if (refCount >= 2 || looksLikeGateway) {
+    const typeHint = looksLikeGateway
+      ? '它看起来是个网关：用 exclusiveGateway / parallelGateway / inclusiveGateway 之一声明'
+      : '把它作为节点声明';
+    return `"${id}" 被 ${refCount} 条连线引用，却没有在 children / lane.children 里声明为节点——你很可能漏写了这个节点。${typeHint}，加进对应 lane.children；不要删掉这些连线。`;
+  }
+  return '端点必须是树内存在的节点 id（flow node / boundaryEvent / artifact / 黑盒池）；若该 id 是打错的，改成真实节点 id。';
+}
+
 class Validator {
   readonly issues: ValidationIssue[] = [];
   // profile 决定哪些"生成路径专属"规则生效。relayout 的源是已存在的合法 BPMN XML，不能拿生成约束去卡它。
@@ -451,6 +468,18 @@ class Validator {
   }
 
   private reportEdges(): void {
+    // 先统计每个"被引用但不在树里"的端点 id 被多少条边引用：引用越多越像漏声明的枢纽节点，
+    // missingEndpointHint 据此把 feedback 导向"补节点"而非"删边"。
+    const missingRefCount = new Map<string, number>();
+    for (const e of this.edges) {
+      for (const side of ['source', 'target'] as const) {
+        const ep = e[side];
+        if (ep !== undefined && !this.reachable.has(ep)) {
+          missingRefCount.set(ep, (missingRefCount.get(ep) ?? 0) + 1);
+        }
+      }
+    }
+
     for (const e of this.edges) {
       for (const side of ['source', 'target'] as const) {
         const endpoint = e[side];
@@ -468,7 +497,7 @@ class Validator {
             severity: 'error',
             id: e.id,
             message: `edge ${e.id} 的 ${side} "${endpoint}" 不指向任何已知节点`,
-            hint: '端点必须是树内存在的节点 id（flow node / boundaryEvent / artifact / 黑盒池）。',
+            hint: missingEndpointHint(endpoint, missingRefCount.get(endpoint) ?? 1),
           });
         }
       }

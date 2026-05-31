@@ -100,6 +100,42 @@ describe('validateGraph — 结构错误', () => {
     expect(missing.length).toBe(2);
   });
 
+  it('EDGE_ENDPOINT_MISSING — 漏声明网关：hint 指向"补节点"而非"删边"', () => {
+    // 模型常写了经过网关的所有连线、却忘了把网关 emit 进 children（生产实测的失败模式）。
+    const g = baseProcess(
+      [
+        { id: 'start_1', bpmn: { type: 'startEvent' } },
+        { id: 'task_2', bpmn: { type: 'userTask', name: 'A' } },
+        { id: 'task_3', bpmn: { type: 'userTask', name: 'B' } },
+        { id: 'end_4', bpmn: { type: 'endEvent' } },
+      ],
+      [
+        { id: 'f1', sources: ['start_1'], targets: ['task_2'], bpmn: { type: 'sequenceFlow' } },
+        // gateway_9 从未声明，却被三条边引用（1 入 2 出）。
+        { id: 'f2', sources: ['task_2'], targets: ['gateway_9'], bpmn: { type: 'sequenceFlow' } },
+        { id: 'f3', sources: ['gateway_9'], targets: ['task_3'], bpmn: { type: 'sequenceFlow' } },
+        { id: 'f4', sources: ['gateway_9'], targets: ['end_4'], bpmn: { type: 'sequenceFlow' } },
+      ],
+    );
+    const missing = validateGraph(g).filter((i) => i.code === 'EDGE_ENDPOINT_MISSING');
+    expect(missing.length).toBe(3); // f2.target + f3.source + f4.source
+    for (const i of missing) {
+      expect(i.hint).toContain('漏写了这个节点');
+      expect(i.hint).toContain('网关');
+      expect(i.hint).toContain('不要删掉这些连线');
+    }
+  });
+
+  it('EDGE_ENDPOINT_MISSING — 单次引用的非网关 id 仍按打错处理', () => {
+    const g = baseProcess(
+      [{ id: 'a', bpmn: { type: 'task' } }],
+      [{ id: 'f1', sources: ['a'], targets: ['typo_node'], bpmn: { type: 'sequenceFlow' } }],
+    );
+    const missing = validateGraph(g).filter((i) => i.code === 'EDGE_ENDPOINT_MISSING');
+    expect(missing.length).toBe(1);
+    expect(missing[0]!.hint).toContain('若该 id 是打错的');
+  });
+
   it('EVENT_MISSING_EVENT_DEF — only catch/boundary', () => {
     const g = baseProcess([
       { id: 'c', bpmn: { type: 'intermediateCatchEvent' } },
