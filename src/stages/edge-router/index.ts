@@ -243,11 +243,20 @@ function resolveAnchorsForGeometry(
   source: NodeBox,
   target: NodeBox,
 ): { source: Anchor; target: Anchor } {
-  if (
-    (edgeType === 'cross-lane-down' || edgeType === 'cross-lane-up')
-    && target.x - (source.x + source.w / 2) >= SHAPER_MARGIN + 30
-  ) {
-    return { source: anchors.source, target: 'left' };
+  if (edgeType === 'cross-lane-down' || edgeType === 'cross-lane-up') {
+    const srcCx = source.x + source.w / 2;
+    // target 在 source 右侧足够远 → 从 target 左侧进（横段向右、riser 落 source 那一列）。
+    if (target.x - srcCx >= SHAPER_MARGIN + 30) {
+      return { source: anchors.source, target: 'left' };
+    }
+    // 镜像，**仅 cross-lane-down**：target 在 source 左侧足够远（源在上、gateway 被甩到下游左侧）
+    // → 从 target 右侧进。否则默认 bottom→top 锚点会逼出「下行→左折→再下扎进顶点」的多段抖线
+    // （fixture 44 手调揭示：提交报销单→金额判断，gateway 在其左下方，应从 gateway 右侧单 L 进入）。
+    // cross-lane-up（自下而上的回环/驳回）不走这条——它的横段会横贯整条上层 lane、撞中间节点，
+    // 留给已有的走廊/horizontal-first 逻辑处理（egg-fried-rice / voc 回环即此）。
+    if (edgeType === 'cross-lane-down' && srcCx - (target.x + target.w) >= SHAPER_MARGIN + 30) {
+      return { source: anchors.source, target: 'right' };
+    }
   }
   return anchors;
 }

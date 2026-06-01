@@ -272,6 +272,14 @@ function buildLaneMetric(
   // 分隔线上（fixture 40 的「驳回」字压线）。这里在走廊所在那一侧补一段净空，把分隔线推开。
   const fanIn = estimateFanInCorridorReserve(memberIds, nodes, edges, laneIndexOf);
 
+  // 驳回回边过境走廊预留：本 lane 含一条 cross-lane-up 边的 *源*，且该源被同 lane 右侧成员挡住
+  // （horizontal-first-L 走不通）→ edge-router 只剩 gap 走廊一条路，会把横段贴在 divider+24 处、
+  // 正好落进顶行节点里（fixture 44「经理审批→提交报销单」驳回：源在 lane 最左、网关在其右，横段
+  // 落 y156 切穿源 task）。在顶行上方补一段净空，让走廊跑在节点上方的干净带里（用户手调即此形态：
+  // 把泳道弄高、回边在节点上方平移）。与 fanIn.above 同属「顶行上方水平走廊」，取 max 不叠加。
+  const transitAbove = estimateBackEdgeTransitReserve(memberIds, nodes, edges, laneIndexOf);
+  const topAbove = Math.max(fanIn.above, transitAbove);
+
   // F2：先按「主干（spine）居中 + 分支上下分布」拆行。主干 = 同 lane 内最长的前向路径（按 X 拓扑
   // 序的最长链）；不在主干上的节点按 ELK 给的 cy 落到主干上方 / 下方，填满泳道而不是全挤一行。
   // ELK 自己的 Y 受跨 lane crossing-min 干扰（如本 fixture 把 gateway_department 甩到最上），不能直接
@@ -284,7 +292,7 @@ function buildLaneMetric(
       if (reserve.above > row.above) row.above = reserve.above;
       if (reserve.below > row.below) row.below = reserve.below;
     }
-    if (fanIn.above > 0) spineRows[0]!.above += fanIn.above;
+    if (topAbove > 0) spineRows[0]!.above += topAbove;
     if (fanIn.below > 0) spineRows[spineRows.length - 1]!.below += fanIn.below;
     return buildMultiRowMetric(spineRows);
   }
@@ -301,13 +309,13 @@ function buildLaneMetric(
       if (reserve.below > row.below) row.below = reserve.below;
     }
     // 走廊在最上行之上 / 最下行之下，按侧补到对应边缘行。
-    if (fanIn.above > 0) rows[0]!.above += fanIn.above;
+    if (topAbove > 0) rows[0]!.above += topAbove;
     if (fanIn.below > 0) rows[rows.length - 1]!.below += fanIn.below;
     return buildMultiRowMetric(rows);
   }
 
   const archReserve = estimateForwardArchReserve(memberIds, nodes, edges, nodeMeta);
-  return buildFlatMetric(memberIds, extents, archReserve, fanIn.above, fanIn.below);
+  return buildFlatMetric(memberIds, extents, archReserve, topAbove, fanIn.below);
 }
 
 function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {
@@ -586,6 +594,50 @@ function estimateFanInCorridorReserve(
     else above = Math.max(above, FANIN_CORRIDOR_RESERVE);
   }
   return { above, below };
+}
+
+// cross-lane-up 回边过境走廊的净空（同量级于 fan-in 走廊：corridor offset 24 + label 14 ≈ 38，
+// 取 36 与 FANIN_CORRIDOR_RESERVE 对齐）。让顶行节点下移 ~36，腾出节点上方的水平带给回边横段。
+const BACKEDGE_TRANSIT_RESERVE = 36;
+
+// 估算本 lane 是否需要在顶行上方留「回边过境走廊」净空。
+// 触发：本 lane 某成员 S 是一条 cross-lane-up 边的源（target 在更上层 lane，按 lane 顺序判），
+// 且 (a) sink 在 S 右侧足够远（→ edge-router 取 target='left'、需要水平过境），
+// 且 (b) S 与 sink 之间、与 S 同行的位置上还有别的本 lane 成员挡着（→ horizontal-first-L 走不通，
+//        只剩 gap 走廊；走廊默认落 divider+24，会切进顶行节点）。
+// 方向用 lane 顺序判（节点 Y 此刻还是 ELK 原值，见 estimateFanInCorridorReserve 同款理由）；
+// 横向远近 / 挡道用 X（ELK 已定、可靠）。只算 above（up 边走廊在源行上方）；down 的对称情形暂不处理
+// （目前没有 fixture 触发，留待真实用例再加，避免凭空扩大 blast radius）。
+function estimateBackEdgeTransitReserve(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+  laneIndexOf: Map<string, number>,
+): number {
+  if (!edges || edges.length === 0) return 0;
+  const memberSet = new Set(memberIds);
+  for (const e of edges) {
+    if (!memberSet.has(e.source)) continue;
+    const s = nodes.get(e.source);
+    const t = nodes.get(e.target);
+    const sIdx = laneIndexOf.get(e.source);
+    const tIdx = laneIndexOf.get(e.target);
+    if (!s || !t || sIdx === undefined || tIdx === undefined) continue;
+    if (tIdx >= sIdx) continue; // 目标不在更上层 → 非 cross-lane-up
+    const sCx = s.x + s.w / 2;
+    const tCx = t.x + t.w / 2;
+    // 40 = edge-router resolveAnchorsForGeometry 取 target='left' 的同款门槛(SHAPER_MARGIN 10 + 30)：
+    // sink 不在右侧足够远 → 直上 riser 即可，无需水平过境走廊。
+    if (tCx <= sCx + 40) continue;
+    // S 与 sink 之间是否有同行成员挡道（horizontal-first-L 横段被它穿过 → 失败、回退走廊）
+    const blocked = memberIds.some((oid) => {
+      if (oid === e.source) return false;
+      const o = nodes.get(oid)!;
+      return overlapsY(s, o) && o.x + o.w > s.x + s.w && o.x < tCx;
+    });
+    if (blocked) return BACKEDGE_TRANSIT_RESERVE;
+  }
+  return 0;
 }
 
 function resolveLaneOverlaps(outNodes: Map<string, NodeBox>, laneMembers: Map<string, string[]>): void {

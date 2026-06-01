@@ -175,4 +175,17 @@ describe('Stage 2 — LaneConstrainer', () => {
     expect(task.ioOutputCount).toBe(3);
     expect(reservedBottom).toBeLessThanOrEqual(lane.bottom);
   });
+
+  // fixture 44：经理审批(task_mgr)是 cross-lane-up 驳回边的源、在 lane 最左、网关(gw_amount)在其右挡道。
+  // edge-router 只剩 gap 走廊一条路，走廊默认贴 divider+24、会切穿源 task；lane 必须在顶行上方留
+  // 净空把节点压下去，让回边横段跑在节点上方干净带里（用户手调诉求：把泳道弄高点）。
+  it('reserves top headroom for a blocked cross-lane-up reject source (44-reimburse)', async () => {
+    const { constrain } = await runStage1And2('44-reimburse-amount-reject');
+    const lane = constrain.laneBoxes.get('lane_dept')!;
+    const mgr = constrain.nodes.get('task_mgr')!;
+    // 顶行节点与 lane 顶之间须留出 > 走廊偏移(24)+label，否则 y≈divider+24 的横段会切进 task。
+    expect(mgr.y - lane.top).toBeGreaterThan(40);
+    // 顶行下移后整条 lane 仍须装得下节点（N3：容器包住 children）。
+    expect(mgr.y + mgr.h).toBeLessThanOrEqual(lane.bottom);
+  });
 });

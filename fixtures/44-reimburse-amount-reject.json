@@ -1,0 +1,79 @@
+{
+  "id": "definitions_reimburse_amount_reject",
+  "bpmn": {
+    "targetNamespace": "http://example.com/reimburse-amount-reject",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": { "type": "collaboration", "name": "公司报销流程" },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": { "type": "participant", "name": "公司内部", "processRef": "process_company" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_staff",
+              "bpmn": { "type": "lane", "name": "员工" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                { "id": "start_apply", "width": 36, "height": 36, "bpmn": { "type": "startEvent", "name": "发起报销" }, "labels": [{ "text": "发起报销" }] },
+                { "id": "task_submit", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "提交报销单" }, "labels": [{ "text": "提交报销单" }] }
+              ]
+            },
+            {
+              "id": "lane_dept",
+              "bpmn": { "type": "lane", "name": "部门经理" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                { "id": "gw_amount", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "金额判断", "default": "f_lt5000" }, "labels": [{ "text": "金额判断" }] },
+                { "id": "task_mgr", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "经理审批" }, "labels": [{ "text": "经理审批" }] }
+              ]
+            },
+            {
+              "id": "lane_director",
+              "bpmn": { "type": "lane", "name": "总监" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                { "id": "task_director", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "总监审批" }, "labels": [{ "text": "总监审批" }] }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                { "id": "task_pay", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "财务打款" }, "labels": [{ "text": "财务打款" }] },
+                { "id": "end_done", "width": 36, "height": 36, "bpmn": { "type": "endEvent", "name": "报销完成" }, "labels": [{ "text": "报销完成" }] }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_start_submit", "sources": ["start_apply"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_submit_gw", "sources": ["task_submit"], "targets": ["gw_amount"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_ge5000", "sources": ["gw_amount"], "targets": ["task_mgr"], "bpmn": { "type": "sequenceFlow", "name": "金额≥5000" }, "labels": [{ "text": "金额≥5000" }] },
+            { "id": "f_lt5000", "sources": ["gw_amount"], "targets": ["task_director"], "bpmn": { "type": "sequenceFlow", "name": "金额＜5000" }, "labels": [{ "text": "金额＜5000" }] },
+            { "id": "f_mgr_pass", "sources": ["task_mgr"], "targets": ["task_director"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_mgr_reject", "sources": ["task_mgr"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_director_pass", "sources": ["task_director"], "targets": ["task_pay"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_director_reject", "sources": ["task_director"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_pay_end", "sources": ["task_pay"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}
