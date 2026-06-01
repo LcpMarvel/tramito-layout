@@ -1,5 +1,7 @@
 import { layoutAndSerialize as serializeLayout } from './service.ts';
 import { runPipeline as runLayoutPipeline } from './pipeline.ts';
+import { flatToNested } from './loader/flat-builder.ts';
+import type { FlatBpmn } from './loader/flat-types.ts';
 import { warmup, isReady } from './layout/elk-singleton.ts';
 import {
   relayoutBpmnXml as relayoutBpmnXmlFromXml,
@@ -8,6 +10,9 @@ import {
 } from './relayout/relayout.ts';
 import { withCompileErrors } from './errors.ts';
 export { validateGraph, formatIssuesForFeedback } from './loader/validate-graph.ts';
+export { flatToNested } from './loader/flat-builder.ts';
+export { validateFlat } from './loader/flat.ts';
+export type { FlatBpmn, FlatPool, FlatLane, FlatNode, FlatEdge } from './loader/flat-types.ts';
 export type { ValidationIssue, Severity, ValidationProfile } from './loader/validate-graph.ts';
 export { InternalCompilerError } from './errors.ts';
 
@@ -89,6 +94,16 @@ export async function layoutBpmnXml(
   options: LayoutOptions = {},
 ): Promise<LayoutXmlResult> {
   return serializeLayout(rawJson, fixtureLabel, options);
+}
+
+// 扁平前门：flat → nested（代码确定性装配）→ 复用整条嵌套布局/序列化管线。
+// 校验、AggregateError 抛出、ICE 包装全部沿用 layoutBpmnXml，扁平路径与嵌套路径输出一致。
+export async function layoutBpmnFlat(
+  flat: FlatBpmn,
+  fixtureLabel = 'request',
+  options: LayoutOptions = {},
+): Promise<LayoutXmlResult> {
+  return serializeLayout(flatToNested(flat), fixtureLabel, options);
 }
 
 export const layoutAndSerialize = layoutBpmnXml;
