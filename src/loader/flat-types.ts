@@ -6,9 +6,9 @@
 // 扁平格式把「归属」全降成节点上的平铺 ID 字段（pool / lane / attachedTo），嵌套交给 flatToNested
 // 用代码确定性生成——结构类错误从构造上不可能再发生，且扁平数组对坏 JSON 修复远比深树健壮。
 //
-// 覆盖范围（trunk）：单/多 pool、泳道（含嵌套）、event/task/gateway、边界事件、io、messageFlow、
-// artifact（dataObject/textAnnotation/group）、association。subProcess 的展开内部流为二期；
-// subProcess 类型节点本期作为折叠框渲染（无内部子流程）。
+// 覆盖范围：单/多 pool、泳道（含嵌套）、event/task/gateway、边界事件、io、messageFlow、
+// artifact（dataObject/textAnnotation/group）、association、子流程（subProcess/adHocSubProcess/
+// transaction，内部节点用 parent 指向、支持任意层嵌套）。
 
 export interface FlatBpmn {
   /** definitions id，默认 'definitions_1'。 */
@@ -63,7 +63,10 @@ export interface FlatNode {
   isInterrupting?: boolean;
   /** exclusiveGateway 的默认分支：指向某条出向 edge 的 id。 */
   default?: string;
-  /** subProcess 是否展开（二期；本期忽略，按折叠框渲染）。 */
+  /** 父子流程节点 id：填了表示「本节点在该 subProcess 内部」。系统据此把它收进子流程的 children，
+   *  并把两端都在同一子流程内的边收进该子流程的 edges。支持任意层嵌套。 */
+  parent?: string;
+  /** subProcess 是否展开。有内部节点（被别的 node 用 parent 指向）时自动展开；无内部节点时按本值，默认折叠。 */
   isExpanded?: boolean;
   /** 节点输入/输出物（友好写法）。代码编译成 ioSpecification 的 dataInputs/dataOutputs。 */
   io?: { inputs?: string[]; outputs?: string[] };

@@ -131,6 +131,69 @@ describe('flatToNested — 结构装配', () => {
   });
 });
 
+const SUBPROC: FlatBpmn = {
+  nodes: [
+    { id: 'start_1', type: 'startEvent', name: '开始' },
+    { id: 'sub_2', type: 'subProcess', name: '审批子流程' },
+    { id: 's_start', type: 'startEvent', name: '子开始', parent: 'sub_2' },
+    { id: 's_task', type: 'userTask', name: '内部审核', parent: 'sub_2' },
+    { id: 's_end', type: 'endEvent', name: '子结束', parent: 'sub_2' },
+    { id: 'end_3', type: 'endEvent', name: '结束' },
+  ],
+  edges: [
+    { id: 'f1', source: 'start_1', target: 'sub_2' },
+    { id: 'f2', source: 'sub_2', target: 'end_3' },
+    { id: 'sf1', source: 's_start', target: 's_task' },
+    { id: 'sf2', source: 's_task', target: 's_end' },
+  ],
+};
+
+describe('flatToNested — 子流程（parent 指向，内部流收进 children/edges）', () => {
+  it('内部节点收进 subProcess.children、内部边收进 subProcess.edges、isExpanded=true', () => {
+    expect(errs(SUBPROC)).toEqual([]);
+    const nested = flatToNested(SUBPROC) as any;
+    const proc = nested.children[0];
+    const sub = proc.children.find((c: any) => c.id === 'sub_2');
+    expect(sub.bpmn.isExpanded).toBe(true);
+    expect(sub.children.map((c: any) => c.id)).toEqual(['s_start', 's_task', 's_end']);
+    expect(sub.edges.map((e: any) => e.id)).toEqual(['sf1', 'sf2']);
+    // 内部节点不出现在顶层；顶层只剩 start/sub/end 和外层两条边
+    expect(proc.children.map((c: any) => c.id)).toEqual(['start_1', 'sub_2', 'end_3']);
+    expect(proc.edges.map((e: any) => e.id)).toEqual(['f1', 'f2']);
+  });
+
+  it('loadFixture 产模：subProcesses 正确，外层 flowNodes 含子流程节点本身', () => {
+    const m = model(SUBPROC);
+    expect(m.processes[0]!.flowNodes.map((n) => n.id)).toEqual(['start_1', 'sub_2', 'end_3']);
+    expect(m.processes[0]!.subProcesses.length).toBe(1);
+    const inner = m.processes[0]!.subProcesses[0]!;
+    expect(inner.flowNodes.map((n) => n.id)).toEqual(['s_start', 's_task', 's_end']);
+    expect(inner.sequenceFlows.map((f) => f.id)).toEqual(['sf1', 'sf2']);
+  });
+
+  it('任意层嵌套（子流程套子流程）', () => {
+    const nested: FlatBpmn = {
+      nodes: [
+        { id: 'start_1', type: 'startEvent' },
+        { id: 'sub_2', type: 'subProcess', name: '外层' },
+        { id: 'sub_3', type: 'subProcess', name: '内层', parent: 'sub_2' },
+        { id: 'leaf_4', type: 'userTask', name: '最内', parent: 'sub_3' },
+        { id: 'end_5', type: 'endEvent' },
+      ],
+      edges: [
+        { id: 'f1', source: 'start_1', target: 'sub_2' },
+        { id: 'f2', source: 'sub_2', target: 'end_5' },
+      ],
+    };
+    expect(errs(nested)).toEqual([]);
+    const out = flatToNested(nested) as any;
+    const outer = out.children[0].children.find((c: any) => c.id === 'sub_2');
+    expect(outer.children.map((c: any) => c.id)).toEqual(['sub_3']);
+    const innerSub = outer.children.find((c: any) => c.id === 'sub_3');
+    expect(innerSub.children.map((c: any) => c.id)).toEqual(['leaf_4']);
+  });
+});
+
 describe('validateFlat — 只剩语义错（结构错已被构造消灭）', () => {
   it('悬空边端点 → EDGE_ENDPOINT_MISSING', () => {
     const bad: FlatBpmn = {
@@ -158,7 +221,7 @@ describe('validateFlat — 只剩语义错（结构错已被构造消灭）', ()
 
 describe('layoutBpmnFlat — 端到端出 XML', () => {
   it('四类图都能编译出非空 BPMN XML', async () => {
-    for (const f of [SIMPLE, LANES, BOUNDARY, CROSS_POOL]) {
+    for (const f of [SIMPLE, LANES, BOUNDARY, CROSS_POOL, SUBPROC]) {
       const { xml } = await layoutBpmnFlat(f);
       expect(xml.length).toBeGreaterThan(500);
       expect(xml).toContain('BPMNDiagram');

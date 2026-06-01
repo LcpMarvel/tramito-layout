@@ -8,6 +8,9 @@
 //
 // 健壮性约定：本函数不为「语义错」兜底——遇到 attachedTo/lane 指向不存在节点等情况，安全地产出
 // 一个能被 validateGraph 抓住并给出可读 feedback 的形态，而不是 throw（早抛留给真正的非法结构）。
+//
+// 子流程：内部节点用 node.parent 指向子流程节点 id；同 parent 的节点收进该子流程的 children、两端都在
+// 该子流程内的边收进它的 edges、isExpanded 置 true。支持任意层嵌套（内部节点本身也可是子流程）。
 
 import type { FlatBpmn, FlatNode, FlatEdge } from './flat-types.ts';
 
@@ -26,6 +29,7 @@ const EVENT_TYPES = new Set([
 ]);
 // none 对 catch/boundary 非法（必须有触发器）；start/end/throw 的 none 合法，缺省补 none。
 const EVENT_DEF_DEFAULTS_NONE = new Set(['startEvent', 'endEvent', 'intermediateThrowEvent']);
+const SUBPROCESS_TYPES = new Set(['subProcess', 'adHocSubProcess', 'transaction']);
 const ARTIFACT_TYPES = new Set([
   'dataObject',
   'dataObjectReference',
@@ -66,12 +70,23 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
   const isBoundary = (n: FlatNode) =>
     n.type === 'boundaryEvent' || (typeof n.attachedTo === 'string' && n.attachedTo.length > 0);
 
-  // 节点 → 所属泳池 id。boundary 跟随宿主；endpoint 是 pool id 本身（黑盒池 messageFlow）也算它自己。
+  // 子流程内部节点：node.parent 指向一个存在的（子流程）节点。
+  const isInner = (n: FlatNode) => typeof n.parent === 'string' && nodeById.has(n.parent);
+  // 节点所在的最内层子流程 id（不在任何子流程内则 null）。boundary 跟随宿主。
+  const subOf = (id: string): string | null => {
+    const n = nodeById.get(id);
+    if (!n) return null;
+    if (isBoundary(n) && typeof n.attachedTo === 'string') return subOf(n.attachedTo);
+    return isInner(n) ? n.parent! : null;
+  };
+
+  // 节点 → 所属泳池 id。boundary 跟随宿主；子流程内部节点继承父节点；endpoint 是 pool id 本身（黑盒池 messageFlow）也算它自己。
   const poolOfNode = (id: string): string | undefined => {
     if (pools.some((p) => p.id === id)) return id; // pool 本身作端点
     const n = nodeById.get(id);
     if (!n) return undefined;
     if (isBoundary(n) && typeof n.attachedTo === 'string') return poolOfNode(n.attachedTo);
+    if (isInner(n)) return poolOfNode(n.parent!); // 内部节点的池 = 子流程的池
     if (n.pool) return n.pool;
     if (n.lane) {
       const lane = laneById.get(n.lane);
@@ -92,8 +107,9 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
       if (edt !== undefined) bpmn.eventDefinitionType = edt;
     }
     if (n.type === 'exclusiveGateway' && n.default !== undefined) bpmn.default = n.default;
-    if (n.type === 'subProcess' || n.type === 'adHocSubProcess' || n.type === 'transaction') {
-      bpmn.isExpanded = false; // 二期才支持展开内部流；本期折叠框
+    if (SUBPROCESS_TYPES.has(n.type)) {
+      // 有内部节点（childrenOfParent 命中）就展开，否则按 isExpanded 显式值、默认折叠。
+      bpmn.isExpanded = childrenOfParent.has(n.id) ? true : n.isExpanded === true;
     }
     if (n.io && (n.io.inputs?.length || n.io.outputs?.length)) {
       const dataInputs = (n.io.inputs ?? []).map((name, i) => ({ id: `${n.id}_di_${i + 1}`, name }));
@@ -111,6 +127,13 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
     }
     const bes = boundaryByHost.get(n.id);
     if (bes && bes.length > 0) node.boundaryEvents = bes;
+    // 展开的子流程：把内部节点收进 children、内部边收进 edges（递归，支持任意层嵌套）。
+    // 结构同 process body，loader 会递归成 subProcesses（见 walkChildren 的 subProcess 分支）。
+    const inner = childrenOfParent.get(n.id);
+    if (inner && inner.length > 0) {
+      node.children = inner.filter((c) => !isBoundary(c)).map(buildNode);
+      node.edges = edgesBySub.get(n.id) ?? [];
+    }
     return node;
   };
 
@@ -137,8 +160,20 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
     }
   }
 
-  // 普通流程节点（非已归集的 boundary）。
-  const flowNodes = nodes.filter((n) => !isBoundary(n) || orphanBoundaries.includes(n));
+  // 子流程内部节点按 parent 归集（含递归：内部节点本身也可是带 children 的子流程）。
+  const childrenOfParent = new Map<string, FlatNode[]>();
+  for (const n of nodes) {
+    if (isBoundary(n) || !isInner(n)) continue;
+    const list = childrenOfParent.get(n.parent!) ?? [];
+    list.push(n);
+    childrenOfParent.set(n.parent!, list);
+  }
+
+  // 顶层流程节点：非 boundary、且不在任何子流程内部（内部节点由其父子流程的 children 承载）。
+  // 无宿主的 orphan boundary 仍留在顶层，让 validate 报错而不是静默吞掉。
+  const flowNodes = nodes.filter(
+    (n) => (!isBoundary(n) && !isInner(n)) || orphanBoundaries.includes(n)
+  );
 
   // ---- 容器装配 ----
   // 在某 pool（或单 process）内，按 lane 把 flowNodes 分组成 children；无 lane 则平铺。
@@ -192,10 +227,16 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
   // ---- 边分桶 ----
   const collabEdges: NestedEdge[] = [];
   const edgesByPool = new Map<string, NestedEdge[]>();
+  const edgesBySub = new Map<string, NestedEdge[]>(); // 子流程内部边（buildNode 读它挂到 subProcess.edges）
   const pushPoolEdge = (poolId: string, e: NestedEdge) => {
     const list = edgesByPool.get(poolId) ?? [];
     list.push(e);
     edgesByPool.set(poolId, list);
+  };
+  const pushSubEdge = (subId: string, e: NestedEdge) => {
+    const list = edgesBySub.get(subId) ?? [];
+    list.push(e);
+    edgesBySub.set(subId, list);
   };
 
   const buildEdgeBpmn = (e: FlatEdge, resolvedType: string): Record<string, unknown> => {
@@ -214,6 +255,14 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
     const tp = poolOfNode(e.target);
     const explicit = e.type;
     const isAssoc = explicit !== undefined && ASSOCIATION_TYPES.has(explicit);
+
+    // 两端在同一个子流程内部 → 归该子流程的 edges（结构同 process body 的边）。
+    const ssub = subOf(e.source);
+    if (ssub !== null && ssub === subOf(e.target)) {
+      const type = explicit ?? 'sequenceFlow';
+      pushSubEdge(ssub, { id: e.id, sources: [e.source], targets: [e.target], bpmn: buildEdgeBpmn(e, type) });
+      continue;
+    }
 
     if (!hasPools) {
       // 单 process：所有边进该 process。
