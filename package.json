@@ -1,6 +1,6 @@
 {
   "name": "tramito-layout",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "ELK-BPMN JSON → laid-out BPMN 2.0 XML. ELK 摆位 + 自研 EdgeRouter.",
   "type": "module",
   "main": "./dist/index.js",

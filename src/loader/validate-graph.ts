@@ -19,14 +19,15 @@ export interface ValidationIssue {
 }
 
 // 流程体内允许直接出现的 child 类型。WHY 单点定义：UNKNOWN_NODE_TYPE 的判定源头只此一处。
-const EVENT_TYPES = new Set([
+// WHY export：flatToNested / validate-flat 复用同一份类型集，避免「校验器认得、构造器不认」的漂移。
+export const EVENT_TYPES = new Set([
   'startEvent',
   'endEvent',
   'intermediateCatchEvent',
   'intermediateThrowEvent',
 ]);
 
-const TASK_TYPES = new Set([
+export const TASK_TYPES = new Set([
   'task',
   'userTask',
   'serviceTask',
@@ -38,7 +39,7 @@ const TASK_TYPES = new Set([
   'callActivity',
 ]);
 
-const GATEWAY_TYPES = new Set([
+export const GATEWAY_TYPES = new Set([
   'exclusiveGateway',
   'parallelGateway',
   'inclusiveGateway',
@@ -46,9 +47,9 @@ const GATEWAY_TYPES = new Set([
   'complexGateway',
 ]);
 
-const SUBPROCESS_TYPES = new Set(['subProcess', 'adHocSubProcess', 'transaction']);
+export const SUBPROCESS_TYPES = new Set(['subProcess', 'adHocSubProcess', 'transaction']);
 
-const ARTIFACT_TYPES = new Set([
+export const ARTIFACT_TYPES = new Set([
   'dataObject',
   'dataObjectReference',
   'dataStoreReference',
@@ -71,7 +72,7 @@ const EVENT_DEF_REQUIRED = new Set(['intermediateCatchEvent', 'boundaryEvent']);
 
 // 各容器允许的 edge 类型（对齐 loader 构建期的 throw，使两条 unknown-edge throw 也走 validateGraph）。
 // messageFlow 单独处理：collaboration 内合法、process/lane 内属 MSGFLOW_NOT_IN_COLLABORATION，不在此集合。
-const ASSOCIATION_EDGE_TYPES = ['association', 'dataInputAssociation', 'dataOutputAssociation'] as const;
+export const ASSOCIATION_EDGE_TYPES = ['association', 'dataInputAssociation', 'dataOutputAssociation'] as const;
 const COLLABORATION_EDGE_TYPES = new Set<string>([...ASSOCIATION_EDGE_TYPES]);
 const FLOW_EDGE_TYPES = new Set<string>(['sequenceFlow', ...ASSOCIATION_EDGE_TYPES]);
 

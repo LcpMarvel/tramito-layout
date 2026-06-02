@@ -1,6 +1,8 @@
 import { layoutAndSerialize as serializeLayout } from './service.ts';
 import { runPipeline as runLayoutPipeline } from './pipeline.ts';
 import { flatToNested } from './loader/flat-builder.ts';
+import { validateFlatStructure } from './loader/validate-flat.ts';
+import { formatIssuesForFeedback } from './loader/validate-graph.ts';
 import type { FlatBpmn } from './loader/flat-types.ts';
 import { warmup, isReady } from './layout/elk-singleton.ts';
 import {
@@ -97,12 +99,22 @@ export async function layoutBpmnXml(
 }
 
 // 扁平前门：flat → nested（代码确定性装配）→ 复用整条嵌套布局/序列化管线。
-// 校验、AggregateError 抛出、ICE 包装全部沿用 layoutBpmnXml，扁平路径与嵌套路径输出一致。
+// WHY 先 validateFlatStructure 再转换：扁平专属的引用错（attachedTo/parent/lane/pool/parentLane 悬空、
+// 成环、指向错类型）必须在转换前用扁平词汇抛清楚——这是用户/模型可改的「校验错」，以 AggregateError
+// 透传（不进 withCompileErrors，不会被误判成 ICE），与 loader 抛嵌套校验错的形态一致。改完后，嵌套层
+// 其余语义错由下游 serializeLayout→loadFixture 继续抛出。两路径错误处理与输出一致。
 export async function layoutBpmnFlat(
   flat: FlatBpmn,
   fixtureLabel = 'request',
   options: LayoutOptions = {},
 ): Promise<LayoutXmlResult> {
+  const flatErrors = validateFlatStructure(flat).filter((i) => i.severity === 'error');
+  if (flatErrors.length > 0) {
+    throw new AggregateError(
+      flatErrors.map((e) => new Error(`${e.code}${e.id ? ` (id=${e.id})` : ''}: ${e.message}`)),
+      `[flat] ${fixtureLabel} has ${flatErrors.length} structural error(s):\n${formatIssuesForFeedback(flatErrors)}`,
+    );
+  }
   return serializeLayout(flatToNested(flat), fixtureLabel, options);
 }
 

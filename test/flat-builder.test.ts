@@ -228,3 +228,102 @@ describe('layoutBpmnFlat — 端到端出 XML', () => {
     }
   });
 });
+
+// 回归：扁平专属引用错必须在「扁平词汇」层报清楚，而不是静默吞节点 / 崩进程 / 冒误导性 EDGE_ENDPOINT_MISSING。
+// 对应 code-review 发现的 #1~#10：见 src/loader/validate-flat.ts。
+describe('validateFlat — 扁平层引用诊断（不静默丢、不崩）', () => {
+  const code = (f: FlatBpmn) => errs(f).map((i) => i.code);
+
+  it('attachedTo/parent 成环不死循环，且报 *_SELF_* / REFERENCE_CYCLE', () => {
+    // 自指 attachedTo + 边引用它：旧实现会爆栈 / 挂死，这里必须秒回且带错。
+    const t0 = Date.now();
+    const selfBe = code({
+      nodes: [{ id: 'be', type: 'boundaryEvent', attachedTo: 'be' }, { id: 't', type: 'task' }],
+      edges: [{ id: 'e', source: 'be', target: 't' }],
+    });
+    expect(Date.now() - t0).toBeLessThan(1000);
+    expect(selfBe).toContain('BOUNDARY_SELF_ATTACHED');
+
+    const cycle = code({
+      nodes: [{ id: 'a', type: 'subProcess', parent: 'b' }, { id: 'b', type: 'subProcess', parent: 'a' }, { id: 's', type: 'startEvent' }],
+      edges: [{ id: 'e', source: 's', target: 'a' }],
+    });
+    expect(cycle).toContain('REFERENCE_CYCLE');
+  });
+
+  it('attachedTo 悬空 → BOUNDARY_HOST_MISSING；boundaryEvent 缺 attachedTo → BOUNDARY_NOT_ATTACHED', () => {
+    expect(code({
+      nodes: [{ id: 's', type: 'startEvent' }, { id: 'be', type: 'boundaryEvent', attachedTo: 'ghost' }, { id: 'e', type: 'endEvent' }],
+      edges: [{ id: 'f1', source: 's', target: 'e' }],
+    })).toContain('BOUNDARY_HOST_MISSING');
+    expect(code({
+      nodes: [{ id: 's', type: 'startEvent' }, { id: 'be', type: 'boundaryEvent' }, { id: 'e', type: 'endEvent' }],
+      edges: [{ id: 'f', source: 's', target: 'e' }],
+    })).toContain('BOUNDARY_NOT_ATTACHED');
+  });
+
+  it('parent 悬空/非子流程 → SUBPROCESS_PARENT_MISSING / _NOT_SUBPROCESS', () => {
+    expect(code({
+      nodes: [{ id: 't', type: 'task' }, { id: 'a', type: 'task', parent: 't' }, { id: 'e', type: 'endEvent' }],
+      edges: [{ id: 'f', source: 'a', target: 'e' }],
+    })).toContain('SUBPROCESS_PARENT_NOT_SUBPROCESS');
+    expect(code({
+      nodes: [{ id: 'a', type: 'task', parent: 'ghost' }, { id: 'e', type: 'endEvent' }],
+      edges: [],
+    })).toContain('SUBPROCESS_PARENT_MISSING');
+  });
+
+  it('泳道引用：非叶子泳道放节点 → LANE_NOT_LEAF；parentLane 悬空 → LANE_PARENT_MISSING', () => {
+    expect(code({
+      pools: [{ id: 'P' }],
+      lanes: [{ id: 'L', pool: 'P' }, { id: 'L1', pool: 'P', parentLane: 'L' }],
+      nodes: [{ id: 'n', type: 'task', lane: 'L' }, { id: 'm', type: 'task', lane: 'L1' }],
+    })).toContain('LANE_NOT_LEAF');
+    expect(code({
+      pools: [{ id: 'P' }],
+      lanes: [{ id: 'L1', pool: 'P', parentLane: 'ghost' }],
+      nodes: [{ id: 'n', type: 'task', lane: 'L1' }],
+    })).toContain('LANE_PARENT_MISSING');
+  });
+
+  it('多池节点无可解析归属 → NODE_POOL_UNRESOLVED（不再冒误导性 EDGE_ENDPOINT_MISSING）', () => {
+    const c = code({
+      pools: [{ id: 'A' }, { id: 'B' }],
+      nodes: [{ id: 'n1', type: 'task' }, { id: 'n2', type: 'task', pool: 'B' }],
+      edges: [{ id: 'e', source: 'n1', target: 'n2' }],
+    });
+    expect(c).toContain('NODE_POOL_UNRESOLVED');
+    // 短路：根因报清楚后，不叠加在残缺嵌套产物上跑出来的 EDGE_ENDPOINT_MISSING。
+    expect(c).not.toContain('EDGE_ENDPOINT_MISSING');
+  });
+
+  it('sequenceFlow 跨子流程边界 → SEQFLOW_CROSS_SUBPROCESS', () => {
+    expect(code({
+      nodes: [
+        { id: 'sub', type: 'subProcess' }, { id: 'a', type: 'task', parent: 'sub' },
+        { id: 'top', type: 'task' }, { id: 's', type: 'startEvent' }, { id: 'en', type: 'endEvent' },
+      ],
+      edges: [
+        { id: 'f0', source: 's', target: 'sub' },
+        { id: 'f1', source: 'a', target: 'top' },
+        { id: 'f2', source: 'sub', target: 'en' },
+      ],
+    })).toContain('SEQFLOW_CROSS_SUBPROCESS');
+  });
+
+  it('子流程显式 isExpanded:false 被尊重，children 仍保留', () => {
+    const nested = flatToNested({
+      nodes: [{ id: 's', type: 'startEvent' }, { id: 'sub', type: 'subProcess', isExpanded: false }, { id: 'inner', type: 'task', parent: 'sub' }, { id: 'e', type: 'endEvent' }],
+      edges: [{ id: 'f1', source: 's', target: 'sub' }, { id: 'f2', source: 'sub', target: 'e' }],
+    }) as any;
+    const sub = nested.children[0].children.find((c: any) => c.id === 'sub');
+    expect(sub.bpmn.isExpanded).toBe(false);
+    expect(sub.children.map((c: any) => c.id)).toEqual(['inner']);
+  });
+
+  it('layoutBpmnFlat 对扁平层错抛 AggregateError（不当 ICE）', async () => {
+    await expect(
+      layoutBpmnFlat({ pools: [{ id: 'A' }, { id: 'B' }], nodes: [{ id: 'x', type: 'task' }], edges: [] }),
+    ).rejects.toBeInstanceOf(AggregateError);
+  });
+});
