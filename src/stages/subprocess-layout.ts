@@ -10,6 +10,7 @@
 
 import type { ProcessUnit } from '../loader/types.ts';
 import { layoutHeightWithIoSpec, nodeSizeOf } from '../layout/node-sizes.ts';
+import { resolveBackEdgesForElk } from './back-edge-resolver.ts';
 import { elkPlacement } from './elk-placement.ts';
 import type { NodeBox } from './types.ts';
 
@@ -80,9 +81,13 @@ export async function collectSubprocessLayouts(
         };
       });
     const innerNodeIds = new Set(elkNodes.map(n => n.id));
-    const elkEdges = sub.sequenceFlows
-      .filter(sf => innerNodeIds.has(sf.source) && innerNodeIds.has(sf.target))
-      .map(sf => ({ id: sf.id, source: sf.source, target: sf.target }));
+    const innerFlows = sub.sequenceFlows
+      .filter(sf => innerNodeIds.has(sf.source) && innerNodeIds.has(sf.target));
+    // subprocess 内部同样可能有驳回环，断环策略与主流程一致
+    const { edges: elkEdges } = resolveBackEdgesForElk(
+      sub.flowNodes.filter(n => innerNodeIds.has(n.id)),
+      innerFlows,
+    );
 
     const placement = await elkPlacement({
       processId: `${proc.id}::sub::${sub.id}`,

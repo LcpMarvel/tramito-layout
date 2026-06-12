@@ -9,7 +9,7 @@
 import type { Anchor, EdgeRoute, NodeBox, Waypoint } from './types.ts';
 import { anchorPoint } from './edge-router/anchor.ts';
 import type { ArtifactSide } from './artifact-placer.ts';
-import { detourAroundLocalObstacles } from './edge-router/local-obstacle-detour.ts';
+import { detourAroundLocalObstacles, segmentCrossesBoxInterior } from './edge-router/local-obstacle-detour.ts';
 import { makeBoxPort } from './edge-router/port.ts';
 
 export interface AssociationRouteInput {
@@ -44,12 +44,23 @@ export function routeAssociations(input: AssociationRouteInput): AssociationRout
     const end = anchorPoint(e.targetBox, tgtAnchor);
 
     const waypoints = buildWaypoints(start, end, srcAnchor, tgtAnchor);
+    const obstacles = (input.obstacles ?? []).filter(
+      (box) => !sameBox(box, e.sourceBox) && !sameBox(box, e.targetBox),
+    );
+    // 2 点直线两端都锚在节点边上，detour 对单段路由直接放弃（无中段可滑）。穿障时先插
+    // 中点拆成两段，detour 才有得绕（06-artifacts-extended：两个 dataStore 之间的
+    // association 直穿第三个 annotation）。
+    if (waypoints.length === 2
+      && obstacles.some((box) => segmentCrossesBoxInterior(waypoints[0]!, waypoints[1]!, box))) {
+      waypoints.splice(1, 0, {
+        x: (waypoints[0]!.x + waypoints[1]!.x) / 2,
+        y: (waypoints[0]!.y + waypoints[1]!.y) / 2,
+      });
+    }
     const detoured = detourAroundLocalObstacles({
       edgeId: e.id,
       waypoints,
-      obstacles: (input.obstacles ?? []).filter(
-        (box) => !sameBox(box, e.sourceBox) && !sameBox(box, e.targetBox),
-      ),
+      obstacles,
       sourceSelf: e.sourceBox,
       targetSelf: e.targetBox,
     });

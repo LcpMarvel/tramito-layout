@@ -118,6 +118,13 @@ export function detourAroundLocalObstacles(input: LocalObstacleDetourInput): Loc
         b[slide] = newVal;
       } else {
         const bends = endpointPreservingBendsFromStart(a, b, slide, newVal, input.obstacles, input.sourceSelf, input.targetSelf);
+        // 活锁保护：bends 只移走了 b 之后的路径，端点 stub [a → bends[0]] 仍可能压着
+        // 触发滑动的障碍（如 boundary event 把 source 出边整条盖住——23 的 3 个 BE 占满
+        // host 底边）。stub 仍穿障 ⇒ 这次滑动什么也修不了，下一轮还会对同一段重试，
+        // 无限插点直到 MAX_ITERS 抛 ICE。此时放弃本段，让上层（锚点改道）兜。
+        if (bends && allObstacles.some((obs) => segmentCrossesBoxInterior(a, bends[0]!, obs))) {
+          return false;
+        }
         if (bends) {
           b[slide] = newVal;
           waypoints.splice(i + 1, 0, ...bends);
@@ -185,7 +192,8 @@ export function detourAroundLocalObstacles(input: LocalObstacleDetourInput): Loc
     if (!changedThisIter) return { waypoints, changed };
   }
 
-  throw new Error(`[edge-router] local obstacle detour did not converge${input.edgeId ? ` for ${input.edgeId}` : ''}`);
+  throw new Error(`[edge-router] local obstacle detour did not converge${input.edgeId ? ` for ${input.edgeId}` : ''}`
+    + ` waypoints=${JSON.stringify(waypoints)} obstacles=${JSON.stringify(input.obstacles)} src=${JSON.stringify(input.sourceSelf)} tgt=${JSON.stringify(input.targetSelf)}`);
 }
 
 function chooseEndpointSafeClearance(input: {
@@ -461,7 +469,14 @@ function chooseOutwardEndpointApproachSpan(
   return preferred;
 }
 
-function segmentCrossesBoxInterior(a: Waypoint, b: Waypoint, box: NodeBox): boolean {
+/** 点在 box 内部（贴边不算）——与 segmentCrossesBoxInterior 同一 TOL=1 内缩语义。 */
+export function pointInsideBoxInterior(p: Waypoint, box: NodeBox): boolean {
+  const TOL = 1;
+  return p.x > box.x + TOL && p.x < box.x + box.w - TOL
+    && p.y > box.y + TOL && p.y < box.y + box.h - TOL;
+}
+
+export function segmentCrossesBoxInterior(a: Waypoint, b: Waypoint, box: NodeBox): boolean {
   const TOL = 1;
   const left = box.x + TOL;
   const right = box.x + box.w - TOL;

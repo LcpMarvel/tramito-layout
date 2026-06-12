@@ -241,7 +241,16 @@ export class DiagramBuilder {
         let nx = shaftX + 6;
         if (pool && nx + lw > pool.x + pool.width) nx = pool.x + pool.width - lw;
         if (pool && nx < pool.x) nx = pool.x;
-        lb.x = nx; lb.y = b.y - lh - 4;
+        let ny = b.y - lh - 4;
+        // shaft 旁也可能被「贴 gateway 出口」的 edge label 占住（37 的「拒绝」）→ 抬到冲突
+        // label 之上。只在抬高后仍贴着 gateway（gap ≤ 28，留 L1 的 30px 容差）才采用，
+        // 否则宁可轻微堆叠也不把 name 甩离节点触发 L1。
+        if (hitsEdgeLabel(nx, ny, lw, lh)) {
+          const colliding = edgeLabels.filter((el) => overlaps(nx, ny, lw, lh, el.x, el.y, el.width, el.height));
+          const liftedY = Math.min(...colliding.map((el) => el.y)) - 4 - lh;
+          if (b.y - (liftedY + lh) <= 28 && !hitsEdgeLabel(nx, liftedY, lw, lh)) ny = liftedY;
+        }
+        lb.x = nx; lb.y = ny;
       }
     }
   }

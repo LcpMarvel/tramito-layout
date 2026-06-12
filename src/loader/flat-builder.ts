@@ -96,7 +96,7 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
   // boundary 节点先归集到宿主；attachedTo 悬空 / 缺失的 boundary 落入 orphanBoundaries，平铺进 body，
   // 由 validate-flat 报 BOUNDARY_HOST_MISSING / BOUNDARY_NOT_ATTACHED（带原始 attachedTo 值），不静默吞掉。
   const boundaryByHost = new Map<string, NestedNode[]>();
-  const orphanBoundaries: FlatNode[] = [];
+  const orphanBoundaryIds = new Set<string>();
   for (const n of nodes) {
     if (!isBoundary(n)) continue;
     if (typeof n.attachedTo === 'string' && nodeById.has(n.attachedTo)) {
@@ -113,7 +113,7 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
       list.push(be);
       boundaryByHost.set(n.attachedTo, list);
     } else {
-      orphanBoundaries.push(n);
+      orphanBoundaryIds.add(n.id);
     }
   }
 
@@ -129,7 +129,7 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
   // 顶层流程节点：非 boundary、且不在任何子流程内部（内部节点由其父子流程的 children 承载）。
   // 无宿主的 orphan boundary 仍留在顶层，让 validate 报错而不是静默吞掉。
   const flowNodes = nodes.filter(
-    (n) => (!isBoundary(n) && !isInner(n)) || orphanBoundaries.includes(n)
+    (n) => (!isBoundary(n) && !isInner(n)) || orphanBoundaryIds.has(n.id)
   );
 
   // ---- 容器装配 ----
@@ -152,13 +152,13 @@ export function flatToNested(flat: FlatBpmn): Record<string, unknown> {
       l.parentLane && laneIdsHere.has(l.parentLane) ? l.parentLane : undefined;
     const childrenLaneIds = (parent: string | undefined) =>
       lanesHere.filter((l) => normParent(l) === parent).map((l) => l.id);
-    const isLeaf = (laneId: string) => !lanesHere.some((l) => normParent(l) === laneId);
 
     // placed：被某个叶子泳道收纳的节点 id。未被收纳者（无 lane / lane 悬空 / lane 是非叶子泳道）落到 stray，
     // 绝不静默丢弃——validate-flat 会针对其成因报 LANE_REF_MISSING / LANE_NOT_LEAF。
+    // membersOf 只会被叶子泳道调用（buildLane 仅在 subLaneIds 为空时取成员），非叶子泳道的成员自然落 stray。
     const placed = new Set<string>();
     const membersOf = (laneId: string) =>
-      flowNodes.filter((n) => inPool(n) && n.lane === laneId && isLeaf(laneId));
+      flowNodes.filter((n) => inPool(n) && n.lane === laneId);
 
     const buildLane = (laneId: string, partition: number): NestedNode => {
       const lane = laneById.get(laneId)!;

@@ -1056,6 +1056,87 @@ function checkF8(p: ParsedFixture): SoftMetric {
   };
 }
 
+/**
+ * F9 X 顺序与拓扑顺序一致：feedback-2026-06-11 的蛇形回归（gateway 被甩到最左、其拓扑前驱
+ * 在最右）E/N/B/L 全过、F3 也量不到——F3 只看比例，蛇形图的回头边占比可能不高，且它把
+ * 真回头边和被画反的主干边混在一起。F9 把两者分开：先在边图上 DFS 标记**真**回头边
+ * （成环边），剩下的 DAG 边都是主干/分支，要求 X 单调向前；同排（cy 接近）却明显向左的
+ * DAG 边即「拓扑顺序被画反」。折行链的换行边（target 掉到下一排）不算——那是有意换行。
+ */
+const F9_BACKWARD_TOL = 10;
+const F9_SAME_ROW_TOL = 60;
+function checkF9(p: ParsedFixture): SoftMetric {
+  const beIds = new Set(p.beHost.keys());
+  interface Cand { id: string; source: string; target: string }
+  const adj = new Map<string, Cand[]>();
+  const inDeg = new Map<string, number>();
+  const candidates: Cand[] = [];
+  for (const e of p.edges) {
+    if (beIds.has(e.source)) continue;
+    const sb = p.boxes.get(e.source);
+    const tb = p.boxes.get(e.target);
+    if (!sb || !tb) continue;
+    const sk = p.kindOf.get(e.source);
+    const tk = p.kindOf.get(e.target);
+    if (sk === 'dataObject' || tk === 'dataObject' || sk === 'textAnnotation' || tk === 'textAnnotation') continue;
+    if (!sameOwnerPool(p, e.source, e.target)) continue;
+    const cand: Cand = { id: e.id, source: e.source, target: e.target };
+    candidates.push(cand);
+    if (!adj.has(e.source)) adj.set(e.source, []);
+    adj.get(e.source)!.push(cand);
+    inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
+  }
+  if (candidates.length === 0) {
+    return { rule: 'F9', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  }
+
+  // DFS 标记成环边。根选 in-degree 0 的节点（start event）优先，保证沿主流方向走，
+  // 标出来的 back 边贴近 BPMN 语义（驳回/重做 loop）。
+  const back = new Set<string>();
+  const state = new Map<string, 0 | 1 | 2>();
+  const dfs = (u: string): void => {
+    state.set(u, 1);
+    for (const c of adj.get(u) ?? []) {
+      const st = state.get(c.target) ?? 0;
+      if (st === 1) back.add(c.id);
+      else if (st === 0) dfs(c.target);
+    }
+    state.set(u, 2);
+  };
+  const roots = [...adj.keys()].sort((a, b) => (inDeg.get(a) ?? 0) - (inDeg.get(b) ?? 0));
+  for (const u of roots) if ((state.get(u) ?? 0) === 0) dfs(u);
+
+  const cxOf = (id: string): number => {
+    const b = p.boxes.get(id)!;
+    return b.x + b.w / 2;
+  };
+  let reversed = 0;
+  let ex = '';
+  for (const c of candidates) {
+    if (back.has(c.id)) continue;
+    const sb = p.boxes.get(c.source)!;
+    const tb = p.boxes.get(c.target)!;
+    const sCx = sb.x + sb.w / 2;
+    const tCx = tb.x + tb.w / 2;
+    const sCy = sb.y + sb.h / 2;
+    const tCy = tb.y + tb.h / 2;
+    if (sCx - tCx <= F9_BACKWARD_TOL) continue;          // X 向前或几乎平
+    if (Math.abs(sCy - tCy) > F9_SAME_ROW_TOL) continue; // 换排（折行/分支落行）不算画反
+    // 收敛豁免（同 CLAUDE.md F3 注）：target 另有非回头入边从左侧正常进入 → 本边是两侧
+    // 分支汇入居中 sink 的 fan-in（fixture 23 双 handler 汇入 end_error），不是主干画反。
+    const isConvergence = candidates.some((o) =>
+      o !== c && o.target === c.target && !back.has(o.id) && cxOf(o.source) < tCx - F9_BACKWARD_TOL);
+    if (isConvergence) continue;
+    reversed++;
+    if (!ex) ex = `${c.id} (${c.source}→${c.target}, cx ${Math.round(sCx)}→${Math.round(tCx)})`;
+  }
+  return {
+    rule: 'F9', fixture: p.fixture, value: reversed,
+    display: `${reversed}`, pass: reversed === 0,
+    detail: reversed === 0 ? undefined : `${reversed} 条非回头边同排却向左（拓扑顺序被画反），如 ${ex}`,
+  };
+}
+
 // lane 上/下边界 Y（去重、取整）。供 F7 判断边是否贴泳道线。
 function laneDividerYs(p: ParsedFixture): number[] {
   const ys: number[] = [];
@@ -1075,6 +1156,7 @@ export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetr
   { rule: 'F6', fn: checkF6 },
   { rule: 'F7', fn: checkF7 },
   { rule: 'F8', fn: checkF8 },
+  { rule: 'F9', fn: checkF9 },
 ];
 
 // ============================================================

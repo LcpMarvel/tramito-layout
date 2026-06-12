@@ -49,6 +49,8 @@ import {
   translateSubprocesses,
   // PoolOverflowRebalancer
   rebalancePoolOverflow,
+  // BackEdgeResolver
+  resolveBackEdgesForElk,
   // ElkPlacement
   elkPlacement,
   type PlacementInput,
@@ -200,15 +202,33 @@ export async function runPipeline(
     }
     mainReachablePerProc.set(proc.id, mainReachable);
     const flowNodesForElk = proc.flowNodes.filter(n => mainReachable.has(n.id));
+    const elkFlows = proc.sequenceFlows
+      .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target));
+
+    // 自主断环：识别回头边并预反转，保证喂 ELK 的图无环（ELK GREEDY 对双环结构会断错）。
+    const { edges: elkEdges, reversedIds: reversedEdgeIds } = resolveBackEdgesForElk(flowNodesForElk, elkFlows);
+    for (const sf of elkFlows) {
+      if (!reversedEdgeIds.has(sf.id)) continue;
+      layoutDecisions.push({
+        stage: 'BackEdgeResolver',
+        kind: 'back-edge-reverse',
+        subject: { kind: 'edge', id: sf.id },
+        reason: 'Semantic back-edge detection reversed this loop edge before ELK to keep the fed graph acyclic',
+        input: { source: sf.source, target: sf.target, isDefault: sf.isDefault, label: sf.name ?? null },
+        output: { reversedForElk: true },
+      });
+    }
 
     // B3: 算 in/out degree——ELK 的 layerConstraint=FIRST 要求 0 入度、LAST 要求 0 出度。
     // BPMN 中偶尔会有"end event 后还连了 boundary 补偿"等异常拓扑（见 fixture 37），不能盲加约束。
+    // 用预反转后的有效方向算（ELK 看到的就是这个方向）。
     const inDegElk = new Map<string, number>();
     const outDegElk = new Map<string, number>();
-    for (const sf of proc.sequenceFlows) {
-      if (!mainReachable.has(sf.source) || !mainReachable.has(sf.target)) continue;
-      outDegElk.set(sf.source, (outDegElk.get(sf.source) ?? 0) + 1);
-      inDegElk.set(sf.target, (inDegElk.get(sf.target) ?? 0) + 1);
+    for (const sf of elkFlows) {
+      const src = reversedEdgeIds.has(sf.id) ? sf.target : sf.source;
+      const tgt = reversedEdgeIds.has(sf.id) ? sf.source : sf.target;
+      outDegElk.set(src, (outDegElk.get(src) ?? 0) + 1);
+      inDegElk.set(tgt, (inDegElk.get(tgt) ?? 0) + 1);
     }
 
     const placementIn: PlacementInput = {
@@ -267,9 +287,7 @@ export async function runPipeline(
           layerConstraint,
         };
       }),
-      edges: proc.sequenceFlows
-        .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target))
-        .map(sf => ({ id: sf.id, source: sf.source, target: sf.target })),
+      edges: elkEdges,
     };
     const tp = performance.now();
     const placement = await elkPlacement(placementIn);
@@ -316,11 +334,13 @@ export async function runPipeline(
 
     // B2: 压缩明显的层间空白。Y 不动、节点大小不动，仅减少 X 间距。
     // 跑在 lane-constrainer 后是关键：lane 高度已确定，X 收紧不会让节点出 lane。
+    // no-lane pool 的 ELK wrap 已全局 OFF（见 elk-placement.ts），超长纯单链统一由
+    // compactor 的 wrapLinearChain 保守折行控宽。
     const compacted = compact({
       nodes: constrain.nodes,
       edges: edgesForLane,
       nodeMeta: nodeMetaForLane,
-      wrapLinearChain: proc.lanes.length === 0 && proc.decorations.some(d => d.kind === 'boundaryEvent'),
+      wrapLinearChain: proc.lanes.length === 0,
     });
     const finalNodes = compacted.trimmedPx > 0 ? compacted.nodes : constrain.nodes;
     const finalWidth = compacted.trimmedPx > 0
@@ -516,9 +536,10 @@ export async function runPipeline(
             layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
           };
         });
-      const handlerEdges = sg.edges
-        .filter(e => sg.nodes.has(e.source) && sg.nodes.has(e.target))
-        .map(e => ({ id: e.id, source: e.source, target: e.target }));
+      const handlerFlows = sg.edges
+        .filter(e => sg.nodes.has(e.source) && sg.nodes.has(e.target));
+      // handler 子图内同样可能有重试环，断环策略与主流程一致
+      const { edges: handlerEdges } = resolveBackEdgesForElk(handlerNodes, handlerFlows);
       const placement = await elkPlacement({
         processId: `${proc.id}::handler::${dec.id}`,
         nodes: handlerNodes,
@@ -850,6 +871,15 @@ export async function runPipeline(
       for (const sub of p.subProcesses) walk(sub);
     })(proc);
   }
+  // artifact（annotation / dataObject）对 sequence flow 同样是障碍——E2 检测把它们当节点。
+  // 折行链的回绕下行段会从 annotation 正中穿过（06-artifacts-extended flow_4 切 annotation_sla）。
+  // 归属 pool 取 host 节点的 pool。
+  for (const [aid, box] of artifactOut.artifactBoxes) {
+    const hostId = artifactOut.artifactSides.get(aid)?.hostId;
+    const poolId = hostId ? (compose.nodeToPool.get(hostId) ?? innerNodeOwnerPool.get(hostId)) : undefined;
+    if (!poolId) continue;
+    routeObstacles.push({ box, poolId });
+  }
 
   const routeInput: RouteInput = {
     nodes: routeNodes,
@@ -887,6 +917,9 @@ export async function runPipeline(
     ...decoration.boundaryEventBoxes.values(),
     ...decoration.handlerNodeBoxes.values(),
     ...expandedInnerNodes.values(),
+    // artifact 自身（annotation / dataObject）也是障碍：两个 artifact 之间的 association
+    // 不能直穿第三个 artifact（06-artifacts-extended 的 E2）。router 会排除边的两端 box。
+    ...artifactOut.artifactBoxes.values(),
   ];
   const assocRoutes = routeAssociations({ edges: assocEdgesIn, obstacles: associationObstacles });
 

@@ -1,0 +1,68 @@
+{
+  "id": "definitions_1",
+  "bpmn": {
+    "targetNamespace": "http://bpmn.io/schema/bpmn",
+    "exporter": "bpmn-elk-layout",
+    "exporterVersion": "1.0.0"
+  },
+  "children": [
+    {
+      "id": "process_root",
+      "bpmn": { "type": "process", "name": "流程", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "修图专员修图" },
+          "labels": [{ "text": "修图专员修图" }]
+        },
+        {
+          "id": "task_3",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "部门经理审核" },
+          "labels": [{ "text": "部门经理审核" }]
+        },
+        {
+          "id": "gateway_4",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "部门经理审核结果", "default": "flow_12" },
+          "labels": [{ "text": "部门经理审核结果" }]
+        },
+        {
+          "id": "task_5",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "客户审核" },
+          "labels": [{ "text": "客户审核" }]
+        },
+        {
+          "id": "gateway_6",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "客户审核结果", "default": "flow_9" },
+          "labels": [{ "text": "客户审核结果" }]
+        },
+        {
+          "id": "end_7",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "完成" },
+          "labels": [{ "text": "完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_8", "sources": ["start_1"], "targets": ["task_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_9b", "sources": ["task_2"], "targets": ["task_3"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_10", "sources": ["task_3"], "targets": ["gateway_4"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_11", "sources": ["gateway_4"], "targets": ["task_5"], "bpmn": { "type": "sequenceFlow", "conditionExpression": "部门经理审核通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_12", "sources": ["gateway_4"], "targets": ["task_2"], "bpmn": { "type": "sequenceFlow" }, "labels": [{ "text": "不通过" }] },
+        { "id": "flow_13", "sources": ["task_5"], "targets": ["gateway_6"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_14", "sources": ["gateway_6"], "targets": ["end_7"], "bpmn": { "type": "sequenceFlow", "conditionExpression": "客户审核通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_9", "sources": ["gateway_6"], "targets": ["task_3"], "bpmn": { "type": "sequenceFlow" }, "labels": [{ "text": "不通过" }] }
+      ]
+    }
+  ]
+}

@@ -39,6 +39,13 @@ export interface PathShapeInput {
   directTolerance?: number;
   /** Same-row forward skip routes normally arch above; gateway fan-out labels sit above, so some routes prefer below. */
   forwardSkipObstacleSide?: 'above' | 'below';
+  /**
+   * 小台阶 jog 吸收（feedback-2026-06-11 docx#4）：相邻层 Y 差十几 px 的 right→left 边默认走
+   * Z 形，画出来像「线在抖」。允许把小 dy 拉成一条水平直线，端点沿各自竖直边微移。
+   * gateway 端点必须落菱形顶点（off-center 落斜面判 E1）→ 该端 fixed，直线只能取它的 Y；
+   * 两端都 fixed 时无法吸收（保持 Z）。
+   */
+  absorbSmallJog?: { sourceFixed: boolean; targetFixed: boolean };
 }
 
 export function shapePath(input: PathShapeInput): Waypoint[] {
@@ -129,6 +136,11 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
 
   // 3. Z 形：right ↔ left 但 cy 不同
   if (sourceAnchor === 'right' && targetAnchor === 'left') {
+    // 3a. 小台阶 jog 吸收：dy 小到两端节点的边带都能消化时，直接拉平成一条水平直线。
+    if (input.absorbSmallJog) {
+      const flat = absorbSmallJogToStraight(input, start, end);
+      if (flat) return flat;
+    }
     // 默认中点；若中点垂直段穿过中间节点的 X 区间，提前推到障碍外。
     // 不做这一步时，下游 routeAroundLocalObstacles 会"水平段+垂直段都各自滑动"，
     // 把 Z 拐成绕过障碍上方/下方的 5~6 段路径（fixture 17 的 cancel→end 即是）。
@@ -222,6 +234,36 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
 
 function approxEq(a: number, b: number): boolean {
   return Math.abs(a - b) < 0.5;
+}
+
+// 小台阶吸收的触发上限：相邻层 Y 差超过这个值就是真分层，该走 Z 形；以内是布局误差级别的抖动。
+const JOG_ABSORB_MAX_DY = 16;
+
+/**
+ * 把小 dy 的 right→left 边拉平成一条水平直线。fixed 端（gateway 顶点）锁定直线 Y；两端都
+ * 自由时取中点。自由端的落点要在该节点的「边带」内（cy ± min(h*0.3, 14)）——超出边带的
+ * 入点太贴节点角、视觉像扎进角落（E3 精神）。端点 x 不变（left/right 边是竖直的，沿边滑 Y
+ * 不破坏 E1 贴边）。撞障碍则放弃回退 Z。
+ */
+function absorbSmallJogToStraight(
+  input: PathShapeInput,
+  start: Waypoint,
+  end: Waypoint,
+): Waypoint[] | null {
+  const cfg = input.absorbSmallJog!;
+  if (cfg.sourceFixed && cfg.targetFixed) return null;
+  const dy = Math.abs(start.y - end.y);
+  if (dy < 0.5 || dy > JOG_ABSORB_MAX_DY) return null;
+  const sharedY = cfg.sourceFixed ? start.y : cfg.targetFixed ? end.y : (start.y + end.y) / 2;
+  const band = (b: NodeBox): number => Math.min(b.h * 0.3, 14);
+  const sCy = input.source.y + input.source.h / 2;
+  const tCy = input.target.y + input.target.h / 2;
+  if (!cfg.sourceFixed && Math.abs(sharedY - sCy) > band(input.source)) return null;
+  if (!cfg.targetFixed && Math.abs(sharedY - tCy) > band(input.target)) return null;
+  const a = { x: start.x, y: sharedY };
+  const b = { x: end.x, y: sharedY };
+  if (segmentHitsObstacle(a, b, input.obstacles, input.source, input.target)) return null;
+  return [a, b];
 }
 
 /**
@@ -407,7 +449,9 @@ function clearHorizontalArchY(
     for (const o of obstacles) {
       if (o === src || o === tgt) continue;
       if (o.x + o.w <= lo || o.x >= hi) continue;
-      if (archY <= o.y || archY >= o.y + o.h) continue;
+      // 判定带按 ARCH_CLEAR_MARGIN 外扩：archY 擦着障碍边跑（如 fixture 45 回环拱距「客户审核」
+      // 底边仅 0.33px）和穿过内部一样要推开——避障只查 bbox 内部时，贴边线视觉上粘在节点上。
+      if (archY <= o.y - ARCH_CLEAR_MARGIN || archY >= o.y + o.h + ARCH_CLEAR_MARGIN) continue;
       archY = side === 'above'
         ? o.y - ARCH_CLEAR_MARGIN
         : o.y + o.h + ARCH_CLEAR_MARGIN;

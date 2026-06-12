@@ -40,9 +40,17 @@ export interface CompactOutput {
 const LAYER_EPS = 10;          // 同列容差：cx 差 ≤ 10 视为同列
 const NORMAL_LAYER_GAP = 80;   // 期望层间距（ELK 默认 layered.spacing.nodeNodeBetweenLayers=100，留点呼吸）
 const TERMINAL_ADJACENCY_GAP = 30;
-const LONG_CHAIN_WRAP_MIN_NODES = 12;
-const LONG_CHAIN_TARGET_ROW_SIZE = 8;
 const LONG_CHAIN_ROW_GAP = HANDLER_VERTICAL_GAP + 180;
+// 单行链宽高比超过该值才折行（与 check:layout F4 的 6:1 阈值对齐，留一点余量），
+// 折行后目标宽高比 ≤ 4（CLAUDE.md F4 的字面期望）。
+const LONG_CHAIN_WRAP_ASPECT = 6;
+const LONG_CHAIN_TARGET_ASPECT = 4;
+const LONG_CHAIN_MIN_ROW_NODES = 3;
+// 纯像素宽高比对短链失真：单行链高度只有一个节点行（~80px），4 节点链 600/80=7.5 也会
+// 触发折行，把 01-simple-process 这种最基础直链折出 back edge（F1/F3 回归 + 05/06 E2）。
+// 折行只为治「长链」（feedback Problem 2 的 ~20 节点链）；7 取自 09-multiinstance（需要折）
+// 与 05-artifacts（不能折，5 节点）之间。
+const LONG_CHAIN_MIN_WRAP_NODES = 7;
 
 export function compact(input: CompactInput): CompactOutput {
   if (input.nodes.size <= 1) {
@@ -189,11 +197,23 @@ function wrapLongLinearChain(
   nodes: Map<string, NodeBox>,
   edges: Array<{ source: string; target: string }>,
 ): Map<string, NodeBox> | null {
-  if (nodes.size < LONG_CHAIN_WRAP_MIN_NODES) return null;
   const order = linearOrder(nodes, edges);
-  if (!order) return null;
+  if (!order || order.length < LONG_CHAIN_MIN_WRAP_NODES) return null;
 
-  const rowCount = Math.ceil(order.length / LONG_CHAIN_TARGET_ROW_SIZE);
+  // 宽高比驱动：单行摆得下（≤ 6:1）就不折；要折则选能把宽高比压到 ≤ 4 的最小行数。
+  const boxes = Array.from(nodes.values());
+  const singleW = Math.max(...boxes.map(b => b.x + b.w)) - Math.min(...boxes.map(b => b.x));
+  const singleH = Math.max(...boxes.map(b => b.y + b.h)) - Math.min(...boxes.map(b => b.y));
+  if (singleH <= 0 || singleW / singleH <= LONG_CHAIN_WRAP_ASPECT) return null;
+
+  let rowCount = 2;
+  const maxRows = Math.max(2, Math.floor(order.length / LONG_CHAIN_MIN_ROW_NODES));
+  while (
+    rowCount < maxRows
+    && (singleW / rowCount) / (rowCount * LONG_CHAIN_ROW_GAP) > LONG_CHAIN_TARGET_ASPECT
+  ) {
+    rowCount++;
+  }
   if (rowCount < 2) return null;
   const rowSize = Math.ceil(order.length / rowCount);
 

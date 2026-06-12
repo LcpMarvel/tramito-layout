@@ -74,6 +74,18 @@ export type {
 } from './subprocess-translator.ts';
 
 // ───────────────────────────────────────────────────────────
+// BackEdgeResolver — BPMN 语义加权断环：识别回头边，ELK 前预反转
+// （在每次 elkPlacement 调用前跑：主流程 / subprocess mini-ELK / handler 子图）
+// ───────────────────────────────────────────────────────────
+export { resolveBackEdges, resolveBackEdgesForElk } from './back-edge-resolver.ts';
+export type {
+  BackEdgeInput,
+  BackEdgeInputNode,
+  BackEdgeInputEdge,
+  BackEdgeFlow,
+} from './back-edge-resolver.ts';
+
+// ───────────────────────────────────────────────────────────
 // ElkPlacement — elkjs 摆位（局部坐标）
 // ───────────────────────────────────────────────────────────
 export { elkPlacement } from './elk-placement.ts';

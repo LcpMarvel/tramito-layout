@@ -152,6 +152,11 @@ function loadProcessBody(
 
   walkChildren(raw.children ?? [], unit, /* parentLaneId */ null);
 
+  // gateway 的 bpmn.default 指向的 sequenceFlow 也算 default flow（用户输入常用这种写法，
+  // 边自身不带 isDefault）。只收本 process body 这一层（lane 嵌套要进，subProcess 不进——
+  // 它的边在自己的 body 里处理）。
+  const defaultFlowIds = collectDefaultFlowIds(raw.children ?? []);
+
   for (const edge of raw.edges ?? []) {
     const et = edge.bpmn?.type;
     if (et === 'sequenceFlow') {
@@ -160,7 +165,8 @@ function loadProcessBody(
         id: edge.id,
         source,
         target,
-        isDefault: edge.bpmn?.isDefault === true,
+        isDefault: edge.bpmn?.isDefault === true || defaultFlowIds.has(edge.id),
+        name: readEdgeLabel(edge),
       });
     } else if (et === 'association' || et === 'dataInputAssociation' || et === 'dataOutputAssociation') {
       const { source, target } = readEdgeEndpoints(edge);
@@ -192,6 +198,28 @@ function formatIssue(fixturePath: string, issue: ValidationIssue): string {
   const where = issue.id ? ` (id=${issue.id})` : '';
   const hint = issue.hint ? ` — ${issue.hint}` : '';
   return `[loader] ${fixturePath} ${issue.code}${where}: ${issue.message}${hint}`;
+}
+
+function collectDefaultFlowIds(children: RawNode[]): Set<string> {
+  const out = new Set<string>();
+  for (const child of children) {
+    const t = child.bpmn?.type as string | undefined;
+    if (typeof child.bpmn?.default === 'string' && child.bpmn.default.length > 0) {
+      out.add(child.bpmn.default);
+    }
+    // lane 嵌套节点与本 body 同层；subProcess 内的边归它自己的 loadProcessBody
+    if (t === 'lane' && child.children) {
+      for (const id of collectDefaultFlowIds(child.children)) out.add(id);
+    }
+  }
+  return out;
+}
+
+function readEdgeLabel(edge: RawEdge): string | undefined {
+  const labelText = edge.labels?.find(l => typeof l?.text === 'string' && l.text.length > 0)?.text;
+  if (typeof labelText === 'string') return labelText;
+  const name = edge.bpmn?.name;
+  return typeof name === 'string' && name.length > 0 ? name : undefined;
 }
 
 function readEdgeEndpoints(edge: RawEdge): { source: string; target: string } {

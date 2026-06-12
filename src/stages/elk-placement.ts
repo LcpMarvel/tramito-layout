@@ -33,6 +33,12 @@ export interface PlacementInputEdge {
   id: string;
   source: string;
   target: string;
+  /**
+   * BackEdgeResolver 判定的回头边：喂 ELK 时 source/target 对调，保证 ELK 看到的是
+   * 无环图（GREEDY cycle breaking 对双环结构会断错，见 back-edge-resolver.ts）。
+   * 只影响 ELK 分层，EdgeRouter 仍按真实方向路由。
+   */
+  reversed?: boolean;
 }
 
 export interface PlacementInput {
@@ -75,14 +81,29 @@ const ELK_OPTIONS_BASE = {
   'elk.alignment': 'CENTER',
 };
 
-// 无 lane 的 pool：允许长链 wrap，避免画布超宽。
+// 无 lane 的小图（< NO_LANE_WRAP_MIN_NODES 节点）：ELK wrap OFF。
+// 历史上这里无条件开 MULTI_EDGE（aspectRatio 4.0），但它对"分支扇出 + 回头边"会误判折行：
+// 7 节点审批双环被折成两行、主干断成蛇形（fixture 45 / docs/feedback-2026-06-11.md 问题一、二）。
+// 小图天然不需要折行；超长纯单链（如 02-all-tasks）由 Compactor 的 wrapLinearChain
+// 按宽高比保守折行兜底。aspectRatio 4.0 仍保留：它同时控制多连通分量的 packing
+// （03-all-events 的 27 个孤立 event 靠它排成多行）。
 const ELK_OPTIONS_NO_LANE = {
   ...ELK_OPTIONS_BASE,
-  // 4.0 让 4-8 节点单行链不 wrap，>15 节点的 13-boundary 才会折成 snake。
+  'elk.aspectRatio': '4.0',
+  'elk.layered.wrapping.strategy': 'OFF',
+};
+
+// 无 lane 的大图：保留 MULTI_EDGE wrap 控宽（38-egg-fried-rice 22 节点不折会拉到 7:1）。
+// 喂进来的图已被 BackEdgeResolver 预反转成无环，wrap 判定不再被回头边干扰。
+const ELK_OPTIONS_NO_LANE_LARGE = {
+  ...ELK_OPTIONS_BASE,
   'elk.aspectRatio': '4.0',
   'elk.layered.wrapping.strategy': 'MULTI_EDGE',
   'elk.layered.wrapping.additionalEdgeSpacing': '30',
 };
+
+/** no-lane pool 启用 ELK MULTI_EDGE wrap 的最小节点数。 */
+const NO_LANE_WRAP_MIN_NODES = 12;
 
 // 有 lane 的 pool：禁用 wrap，aspectRatio 拉大让 ELK 别折行。
 const ELK_OPTIONS_LANES = {
@@ -118,7 +139,9 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
     ? ELK_OPTIONS_LANES
     : input.hasBoundaryHandlers
       ? ELK_OPTIONS_HANDLERS
-      : ELK_OPTIONS_NO_LANE;
+      : input.nodes.length >= NO_LANE_WRAP_MIN_NODES
+        ? ELK_OPTIONS_NO_LANE_LARGE
+        : ELK_OPTIONS_NO_LANE;
   const layoutOptions = baseOptions;
 
   const inputNodeById = new Map(input.nodes.map(n => [n.id, n]));
@@ -144,8 +167,8 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
     }),
     edges: input.edges.map(e => ({
       id: e.id,
-      sources: [e.source],
-      targets: [e.target],
+      sources: [e.reversed ? e.target : e.source],
+      targets: [e.reversed ? e.source : e.target],
     })),
   };
 

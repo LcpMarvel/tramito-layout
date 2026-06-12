@@ -75,7 +75,10 @@ export interface SequenceFlow {
   id: string;
   source: string;
   target: string;
+  /** edge 自身 bpmn.isDefault，或 source gateway 的 bpmn.default 指向本边。 */
   isDefault: boolean;
+  /** edge label 文本（labels[0].text / bpmn.name）。back-edge 语义加权用（"不通过/驳回"）。 */
+  name?: string;
 }
 
 export interface MessageFlow {

@@ -6,12 +6,12 @@
 import type { FlowNodeType } from '../../loader/types.ts';
 import type { Anchor, EdgeRoute, LaneBox, NodeBox, PoolBox, Waypoint } from '../types.ts';
 import { classify, type ClassifierEdge, type ClassifierNode } from './classifier.ts';
-import { selectAnchors } from './anchor.ts';
+import { anchorPoint, selectAnchors } from './anchor.ts';
 import { shapePath, segmentHitsObstacle } from './path-shaper.ts';
 import { allocateChannels, type ChannelEdge } from './channel.ts';
 import { detectFanInBundles, type FanInBundle } from './bundle.ts';
 import { SHAPER_MARGIN, edgeStyleRules, type BpmnEdgeKind } from '../bpmn-rules.ts';
-import { detourAroundLocalObstacles } from './local-obstacle-detour.ts';
+import { detourAroundLocalObstacles, pointInsideBoxInterior } from './local-obstacle-detour.ts';
 import { finalizeRoutePorts, makeBoxPort } from './port.ts';
 
 export interface RouteInputNode {
@@ -139,9 +139,10 @@ export function routeEdges(input: RouteInput): RouteOutput {
     const styleRule = edgeStyleRules[e.bpmnType];
     const geomAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box);
     const reverseTargetOverride = reversePairTargetOverrides.get(e.id);
-    const resolvedAnchors = reverseTargetOverride
+    const preBlockAnchors = reverseTargetOverride
       ? { source: geomAnchors.source, target: reverseTargetOverride }
       : geomAnchors;
+    const resolvedAnchors = avoidBlockedSourceAnchor(preBlockAnchors, src.box, obstacles);
     const waypoints = shapePath({
       edgeType,
       sourceAnchor: resolvedAnchors.source,
@@ -155,6 +156,8 @@ export function routeEdges(input: RouteInput): RouteOutput {
       routerStyle: styleRule.routerStyle,
       directTolerance: styleRule.directTolerance,
       forwardSkipObstacleSide: preferForwardSkipBelow(edgeType, src, tgt, obstacles) ? 'below' : 'above',
+      // gateway 端点必须落菱形顶点（off-center 落斜面判 E1）→ 该端 fixed，直线 Y 只能取它的
+      absorbSmallJog: { sourceFixed: isGatewayNode(src), targetFixed: isGatewayNode(tgt) },
     });
 
     const sourceSide = inferEndpointSide(src.box, waypoints[0]!, resolvedAnchors.source);
@@ -235,6 +238,30 @@ function keepIntraLaneBackEdgeInsideLane(routes: Map<string, EdgeRoute>, input: 
       wps[2]!.y = orig2;
     }
   }
+}
+
+/**
+ * Boundary event 把 source 出边那一侧整条盖住时（fixture 23：3 个 BE 平铺 call activity 底边，
+ * back-row-down 的 bottom 锚点正落在中间 BE 体内），从该侧出的第一段必然切 BE（E2），而
+ * detour 修不了——端点必须贴 host 边，BE 之间的缝隙只有几 px。翻到对侧出（bottom↔top），
+ * 让 path-shaper 的同侧拱（top↔top / bottom↔bottom）绕过 BE 行。
+ * 窄触发：锚点被障碍盖住 && 对侧锚点干净 && 翻转后恰好落进 path-shaper 的拱 case。
+ */
+function avoidBlockedSourceAnchor(
+  anchors: { source: Anchor; target: Anchor },
+  srcBox: NodeBox,
+  obstacles: NodeBox[],
+): { source: Anchor; target: Anchor } {
+  const flip: Partial<Record<Anchor, Anchor>> = { bottom: 'top', top: 'bottom' };
+  const flipped = flip[anchors.source];
+  // 只在翻转后形成 top↔top / bottom↔bottom 拱时动——其它组合 path-shaper 没有专门 case，
+  // 会跌进直连兜底反而更糟。
+  if (!flipped || flipped !== anchors.target) return anchors;
+  const cur = anchorPoint(srcBox, anchors.source);
+  if (!obstacles.some((o) => pointInsideBoxInterior(cur, o))) return anchors;
+  const alt = anchorPoint(srcBox, flipped);
+  if (obstacles.some((o) => pointInsideBoxInterior(alt, o))) return anchors;
+  return { source: flipped, target: anchors.target };
 }
 
 function resolveAnchorsForGeometry(
