@@ -528,15 +528,15 @@ const SEGMENT_HIT_TOL = 1;
 // （label 在 BE 下方 4px 起、高 14），否则水平段会从 label 正中穿过。
 const BE_DIVE_CLEAR = 22;
 
-// 「先潜后横」三形态（corridor = BE 底 + 潜行深度 + channel 错开）：
-//   corridor 高于 handler 顶 → null（handler 之上留有 gap，泛用 L 走得通，不要抢）
-//   corridor 落在 handler 行带内 → 从近侧（左/右）进入
-//   corridor 低于 handler 底 → 从底边向上进入
-// 任一形态若撞第三方节点 → null，回退泛用 L + 局部绕障。
+// 「先潜后横」按 handler 行带与 BE 的垂直关系分三形态：
+//   A 浅窗：handler 行带与 BE 同排重叠（77 的 记录支付异常）→ 走廊取在「host 底边之下、
+//     BE label 之上」的浅窗，能取 BE 底（start.y）就取（零 stub 直行）；近侧进入。
+//     浅窗被兄弟 BE/节点挡住时落深窗（13 的横段会穿 消息中断 BE）。
+//   B 深窗：handler 在下方且行带含深潜道（label 底 + 净空 + channel 错开）→ 深窗近侧进入。
+//   C handler 底在深潜道之上 → 从底边向上进入。
+// 任一形态若撞第三方节点 → 继续往下试或回退泛用 L + 局部绕障。
 function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypoint): Waypoint[] | null {
   const { target, channel } = input;
-  const corridorY = start.y + BE_DIVE_CLEAR + channel * BE_CHANNEL_GAP;
-  if (corridorY <= target.y) return null;
   const tgtCx = target.x + target.w / 2;
   if (approxEq(start.x, tgtCx)) return null; // 同 cx：泛用竖直直线（case 2）已处理
   const hits = (wps: Waypoint[]): boolean => {
@@ -545,15 +545,35 @@ function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypo
     }
     return false;
   };
-  if (corridorY <= target.y + target.h) {
+  const sideEntry = (corridorY: number): Waypoint[] => {
     const entryX = tgtCx > start.x ? target.x : target.x + target.w;
     const wps: Waypoint[] = [start, { x: start.x, y: corridorY }, { x: entryX, y: corridorY }];
+    return wps.filter((p, i) => i === 0 || Math.abs(p.x - wps[i - 1]!.x) > 0.5 || Math.abs(p.y - wps[i - 1]!.y) > 0.5);
+  };
+
+  // A 浅窗：host 底 = BE 中心（start.y − 18），F12 净空 +4 → lo = start.y − 14；
+  // label 顶 = BE 底 + 4 → hi = start.y + 4。走廊只能落在这个 18px 窗口内。
+  const shallowLo = Math.max(start.y - 14, target.y);
+  const shallowHi = Math.min(start.y + 4, target.y + target.h);
+  if (shallowLo <= shallowHi) {
+    const corridorY = Math.min(Math.max(start.y, shallowLo), shallowHi);
+    const wps = sideEntry(corridorY);
+    if (!hits(wps)) return wps;
+  }
+
+  // B 深窗（label 之下，channel 错开）
+  const deepY = start.y + BE_DIVE_CLEAR + channel * BE_CHANNEL_GAP;
+  if (deepY >= target.y && deepY <= target.y + target.h) {
+    const wps = sideEntry(deepY);
     return hits(wps) ? null : wps;
   }
+  if (deepY <= target.y) return null; // handler 顶在深潜道之下：泛用 L 的 gap 走得通
+
+  // C 深窗低于 handler 底 → 底边向上进入
   const wps: Waypoint[] = [
     start,
-    { x: start.x, y: corridorY },
-    { x: tgtCx, y: corridorY },
+    { x: start.x, y: deepY },
+    { x: tgtCx, y: deepY },
     { x: tgtCx, y: target.y + target.h },
   ];
   return hits(wps) ? null : wps;

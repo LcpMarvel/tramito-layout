@@ -344,9 +344,7 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_error_di" bpmnElement="flow_error">
         <di:waypoint x="458" y="634" />
-        <di:waypoint x="458" y="680" />
-        <di:waypoint x="1828" y="680" />
-        <di:waypoint x="1828" y="644" />
+        <di:waypoint x="1778" y="634" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_error_end_di" bpmnElement="flow_error_end">
         <di:waypoint x="1878" y="604" />

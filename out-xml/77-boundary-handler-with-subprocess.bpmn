@@ -197,10 +197,7 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="handler_flow_1_di" bpmnElement="handler_flow_1">
         <di:waypoint x="198" y="242" />
-        <di:waypoint x="198" y="264" />
-        <di:waypoint x="198" y="272" />
-        <di:waypoint x="944" y="272" />
-        <di:waypoint x="944" y="252" />
+        <di:waypoint x="894" y="242" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="handler_flow_2_di" bpmnElement="handler_flow_2">
         <di:waypoint x="994" y="212" />

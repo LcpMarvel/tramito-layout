@@ -187,8 +187,7 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_bd_timer_remind_di" bpmnElement="flow_bd_timer_remind">
         <di:waypoint x="198" y="210.83333333333331" />
-        <di:waypoint x="198" y="232.83333333333331" />
-        <di:waypoint x="358" y="232.83333333333331" />
+        <di:waypoint x="358" y="210.83333333333331" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_remind_end_di" bpmnElement="flow_remind_end">
         <di:waypoint x="458" y="215.33333333333331" />

@@ -400,8 +400,7 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_timer_non_int_di" bpmnElement="flow_timer_non_int">
         <di:waypoint x="378" y="416" />
-        <di:waypoint x="378" y="450" />
-        <di:waypoint x="538" y="450" />
+        <di:waypoint x="538" y="416" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_error_handler_di" bpmnElement="flow_error_handler">
         <di:waypoint x="918" y="230" />
