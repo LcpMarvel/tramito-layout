@@ -20,6 +20,26 @@ export const BE_INSET = 20;
 /** 多个 boundary event 时，相邻两个 BE 中心点的水平间距 */
 export const BE_HORIZONTAL_STEP = 40;
 
+/**
+ * host 底边能容纳的 BE 中心点数：cx = BE_INSET + i*STEP 必须 ≤ hostWidth。
+ * 末个 BE 允许骑到右下角点（与 fixture 13 三位 BE 在 100 宽 host 上的既有形态一致——
+ * B1 只要求中心在边上）。所以 100 宽容 3 个（20/60/100），
+ * 想更宽余量就撑宽 host（hostWidthForBoundaries），不要改这两个常量。
+ */
+export function boundaryCapacityOnBottom(hostWidth: number): number {
+  return Math.max(1, Math.floor((hostWidth - BE_INSET) / BE_HORIZONTAL_STEP) + 1);
+}
+
+/**
+ * 容纳 count 个 BE 所需的最小 host 宽（末个 BE 中心恰好落在右边缘）。
+ * 撑宽必须发生在 ELK 摆位之前（PlacementInputNode.w），否则 BE 排布和 lane/pool
+ * 尺寸会按旧宽算。count=0 返回 0（不撑）。
+ */
+export function hostWidthForBoundaries(count: number): number {
+  if (count <= 0) return 0;
+  return BE_INSET + (count - 1) * BE_HORIZONTAL_STEP;
+}
+
 // ============================================================
 // Boundary handler 子图摆位
 // ============================================================

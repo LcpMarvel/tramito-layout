@@ -34,7 +34,7 @@ import {
   type StageSnapshot,
 } from './debug/ai-debug.ts';
 import type { LayoutedGraph } from './serializer/types/elk-output.ts';
-import { boundaryRuleFor, type BpmnEdgeKind } from './stages/bpmn-rules.ts';
+import { boundaryRuleFor, hostWidthForBoundaries, type BpmnEdgeKind } from './stages/bpmn-rules.ts';
 // 所有 stage 入口从契约注册表 (./stages/index.ts) 单点 import
 import {
   // HandlerSubgraph（纯图算法，已从 pipeline 抽出）
@@ -279,11 +279,16 @@ export async function runPipeline(
           }
         }
         const size = nodeSizeOf(n.type);
+        // B1：BE 中心要骑在 host 底边上，host 太窄装不下所有 BE 时按 BE 数撑宽
+        // （83：5 个 BE 在 100 宽 host 上，后两个中心掉出右边缘）。撑宽必须发生在
+        // ELK 之前，lane/pool 尺寸才按真宽算。
+        const w = Math.max(size.w, hostWidthForBoundaries(n.boundaryEventIds.length));
         return {
           id: n.id,
           type: n.type,
-          ...size,
-          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
+          w,
+          h: size.h,
+          layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, w),
           layerConstraint,
         };
       }),
@@ -530,11 +535,13 @@ export async function runPipeline(
             }
           }
           const size = nodeSizeOf(n.type);
+          const w = Math.max(size.w, hostWidthForBoundaries(n.boundaryEventIds.length));
           return {
             id: n.id,
             type: n.type,
-            ...size,
-            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, size.w),
+            w,
+            h: size.h,
+            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, w),
           };
         });
       const handlerFlows = sg.edges
