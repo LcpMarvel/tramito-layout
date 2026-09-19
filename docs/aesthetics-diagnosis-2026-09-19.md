@@ -87,6 +87,39 @@ F1–F9 里没有边交叉数、拐点数、空白率；F1/F3 把语义上必须
 - [ ] P5 路由升级（卡 5.0 盘点 → 5.1 竖直轨道 → 5.2 水平走廊 → 5.3 删 pass）
 - [ ] P6 宽高比（lane 内长链 snake；71/49/74/76/88/93 + P3 后新增 77/80/81 的 handler 链拉宽）
 
+### 下一轮工作块的任务规格（人审通过当前状态后启动）
+
+> 启动前置：`docs/layout-baseline.json` 已按 P0–P3 后的 PNG 状态由人手动更新
+> （`--save-baseline` + 单独 commit）。之后每张卡以 `--compare` 自证不退步。
+
+**P4 卡 4.3 spine-aligner（首个，修 F14 的 14 个 fail + 101 的「构建掉出主干」）**
+- 位置：ELK 之后、Compactor 之前，新 `src/stages/spine-aligner.ts`（经 stages/index.ts re-export）。
+- 主干判定：图级 start→end 最重路径（卡 4.1 的定义；回边不算——evaluator 已有同款
+  BFS 可参照）。lane-constrainer 的 lane-local 主干判定语义不同（lane 成员内 X 序最长链），
+  不要强行合并（P3 commit message 有记录）。
+- 只对**无 lane 的 pool** 生效（有 lane 的归 lane-constrainer）：spine 节点 Y 统一到加权
+  中位数；每层非 spine 节点保持原侧别向外推；每步做 N1 检查，撞就回退该节点。
+- 验收：F14 fail 归 0 或接近 0；101 PNG 主干一条直线、构建回到 fork 网关同 Y；
+  F10 不涨；04 不能变差。
+- 卡 4.4 扇出对称随后：fork 奇数分支中间支与网关同 Y，偶数上下各半；验收 04/56/57/101。
+
+**P5 路由升级（最大剩余收益：101 缠线、F8/F12 残余、pass 减半）**
+- 卡 5.0 先只读盘点 `edge-router/index.ts` 全部 pass → `docs/edge-router-pass-inventory.md`。
+- 卡 5.1 层间隙竖直轨道分配（接管同 pool forward 边）：从节点 X 反推层，间隙内按
+  (y_from, y_to) 冲突图分配轨道 x；edge label 放独占轨旁（L3 同源叠放从源头消失）。
+  验收：F10 ≤ baseline 且 101/56/57/59 明显下降；F12 101/56 归 0；硬标准 0。
+- 卡 5.2 回边/跳边的行间走廊轨道（内环内轨，间距 ≥12px）；48/47/49/54 验收。
+- 卡 5.3 每接管一类删一个对应 pass；目标 index.ts ≤ 600 行。
+- 已知交互点：dive-first 的 BE 潜行道（697de56）与 fan-in 归一走廊（busifyFanInToSink）
+  是两条"自带走廊语义"的边类，轨道分配接管 forward 边时不要抢它们。
+
+**P6 宽高比（F4 的 12 个 fail）**
+- lane 内纯串行长链 snake 折行（lane-constrainer 的 MULTI_ROW_* 已有基础）；
+  71 ≤ 8:1 为验收锚点。
+- P3 新增的三张（77/80/81）是 handler 链单层展开拉宽：先评估是否该让 handler 链
+  在无 lane pool 里参与折行（wrapLinearChain 目前因无边节点介入而 return null）。
+- F9 要顺带改成按行判定（snake 第二行 X 是反的，roadmap 卡 6 已注明）。
+
 ### 当前状态（P3 完成时）
 
 - **硬标准：98 fixture 全 0**（起点：24 处违例 / 8 fixture 脏）。
