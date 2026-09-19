@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_subprocess_5_level" targetNamespace="http://example.com/test-subprocess-5-level" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_5_level" name="集团合同五级审批" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="发起合同">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_prepare" name="准备合同材料">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="sub_level1" name="集团审批">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+      <bpmn:outgoing>main_flow_3</bpmn:outgoing>
+      <bpmn:startEvent id="l1_start" name="集团受理">
+        <bpmn:outgoing>l1_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="l1_task" name="集团法务初审">
+        <bpmn:incoming>l1_flow_1</bpmn:incoming>
+        <bpmn:outgoing>l1_flow_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:subProcess id="sub_level2" name="公司审批">
+        <bpmn:incoming>l1_flow_2</bpmn:incoming>
+        <bpmn:outgoing>l1_flow_3</bpmn:outgoing>
+        <bpmn:startEvent id="l2_start" name="公司受理">
+          <bpmn:outgoing>l2_flow_1</bpmn:outgoing>
+        </bpmn:startEvent>
+        <bpmn:userTask id="l2_task" name="公司总经理审批">
+          <bpmn:incoming>l2_flow_1</bpmn:incoming>
+          <bpmn:outgoing>l2_flow_2</bpmn:outgoing>
+        </bpmn:userTask>
+        <bpmn:subProcess id="sub_level3" name="部门审批">
+          <bpmn:incoming>l2_flow_2</bpmn:incoming>
+          <bpmn:outgoing>l2_flow_3</bpmn:outgoing>
+          <bpmn:startEvent id="l3_start" name="部门受理">
+            <bpmn:outgoing>l3_flow_1</bpmn:outgoing>
+          </bpmn:startEvent>
+          <bpmn:userTask id="l3_task" name="部门经理审批">
+            <bpmn:incoming>l3_flow_1</bpmn:incoming>
+            <bpmn:outgoing>l3_flow_2</bpmn:outgoing>
+          </bpmn:userTask>
+          <bpmn:subProcess id="sub_level4" name="团队审批">
+            <bpmn:incoming>l3_flow_2</bpmn:incoming>
+            <bpmn:outgoing>l3_flow_3</bpmn:outgoing>
+            <bpmn:startEvent id="l4_start" name="团队受理">
+              <bpmn:outgoing>l4_flow_1</bpmn:outgoing>
+            </bpmn:startEvent>
+            <bpmn:userTask id="l4_task" name="团队负责人审批">
+              <bpmn:incoming>l4_flow_1</bpmn:incoming>
+              <bpmn:outgoing>l4_flow_2</bpmn:outgoing>
+            </bpmn:userTask>
+            <bpmn:subProcess id="sub_level5" name="个人确认">
+              <bpmn:incoming>l4_flow_2</bpmn:incoming>
+              <bpmn:outgoing>l4_flow_3</bpmn:outgoing>
+              <bpmn:startEvent id="l5_start" name="待确认">
+                <bpmn:outgoing>l5_flow_1</bpmn:outgoing>
+              </bpmn:startEvent>
+              <bpmn:userTask id="l5_task" name="经办人核对条款">
+                <bpmn:incoming>l5_flow_1</bpmn:incoming>
+                <bpmn:outgoing>l5_flow_2</bpmn:outgoing>
+              </bpmn:userTask>
+              <bpmn:endEvent id="l5_end" name="确认完成">
+                <bpmn:incoming>l5_flow_2</bpmn:incoming>
+              </bpmn:endEvent>
+              <bpmn:sequenceFlow id="l5_flow_1" sourceRef="l5_start" targetRef="l5_task" />
+              <bpmn:sequenceFlow id="l5_flow_2" sourceRef="l5_task" targetRef="l5_end" />
+            </bpmn:subProcess>
+            <bpmn:endEvent id="l4_end" name="团队完成">
+              <bpmn:incoming>l4_flow_3</bpmn:incoming>
+            </bpmn:endEvent>
+            <bpmn:sequenceFlow id="l4_flow_1" sourceRef="l4_start" targetRef="l4_task" />
+            <bpmn:sequenceFlow id="l4_flow_2" sourceRef="l4_task" targetRef="sub_level5" />
+            <bpmn:sequenceFlow id="l4_flow_3" sourceRef="sub_level5" targetRef="l4_end" />
+          </bpmn:subProcess>
+          <bpmn:endEvent id="l3_end" name="部门完成">
+            <bpmn:incoming>l3_flow_3</bpmn:incoming>
+          </bpmn:endEvent>
+          <bpmn:sequenceFlow id="l3_flow_1" sourceRef="l3_start" targetRef="l3_task" />
+          <bpmn:sequenceFlow id="l3_flow_2" sourceRef="l3_task" targetRef="sub_level4" />
+          <bpmn:sequenceFlow id="l3_flow_3" sourceRef="sub_level4" targetRef="l3_end" />
+        </bpmn:subProcess>
+        <bpmn:endEvent id="l2_end" name="公司完成">
+          <bpmn:incoming>l2_flow_3</bpmn:incoming>
+        </bpmn:endEvent>
+        <bpmn:sequenceFlow id="l2_flow_1" sourceRef="l2_start" targetRef="l2_task" />
+        <bpmn:sequenceFlow id="l2_flow_2" sourceRef="l2_task" targetRef="sub_level3" />
+        <bpmn:sequenceFlow id="l2_flow_3" sourceRef="sub_level3" targetRef="l2_end" />
+      </bpmn:subProcess>
+      <bpmn:endEvent id="l1_end" name="集团完成">
+        <bpmn:incoming>l1_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="l1_flow_1" sourceRef="l1_start" targetRef="l1_task" />
+      <bpmn:sequenceFlow id="l1_flow_2" sourceRef="l1_task" targetRef="sub_level2" />
+      <bpmn:sequenceFlow id="l1_flow_3" sourceRef="sub_level2" targetRef="l1_end" />
+    </bpmn:subProcess>
+    <bpmn:serviceTask id="task_archive" name="归档合同">
+      <bpmn:incoming>main_flow_3</bpmn:incoming>
+      <bpmn:outgoing>main_flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_main" name="审批结束">
+      <bpmn:incoming>main_flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="task_prepare" targetRef="sub_level1" />
+    <bpmn:sequenceFlow id="main_flow_3" sourceRef="sub_level1" targetRef="task_archive" />
+    <bpmn:sequenceFlow id="main_flow_4" sourceRef="task_archive" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_subprocess_5_level" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_subprocess_5_level" bpmnElement="process_5_level">
+      <bpmndi:BPMNShape id="process_5_level_di" bpmnElement="process_5_level">
+        <dc:Bounds x="0" y="0" width="3254" height="564" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="264" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="304" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="242" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_level1_di" bpmnElement="sub_level1" isExpanded="true">
+        <dc:Bounds x="358" y="32" width="2580" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l1_start_di" bpmnElement="l1_start">
+        <dc:Bounds x="390" y="274" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="314" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l1_task_di" bpmnElement="l1_task">
+        <dc:Bounds x="526" y="252" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_level2_di" bpmnElement="sub_level2" isExpanded="true">
+        <dc:Bounds x="726" y="84" width="2044" height="416" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l2_start_di" bpmnElement="l2_start">
+        <dc:Bounds x="758" y="284" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="726" y="324" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l2_task_di" bpmnElement="l2_task">
+        <dc:Bounds x="894" y="262" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_level3_di" bpmnElement="sub_level3" isExpanded="true">
+        <dc:Bounds x="1094" y="136" width="1508" height="332" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l3_start_di" bpmnElement="l3_start">
+        <dc:Bounds x="1126" y="294" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1094" y="334" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l3_task_di" bpmnElement="l3_task">
+        <dc:Bounds x="1262" y="272" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_level4_di" bpmnElement="sub_level4" isExpanded="true">
+        <dc:Bounds x="1462" y="188" width="972" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l4_start_di" bpmnElement="l4_start">
+        <dc:Bounds x="1494" y="304" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1462" y="344" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l4_task_di" bpmnElement="l4_task">
+        <dc:Bounds x="1630" y="282" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_level5_di" bpmnElement="sub_level5" isExpanded="true">
+        <dc:Bounds x="1830" y="240" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l5_start_di" bpmnElement="l5_start">
+        <dc:Bounds x="1862" y="314" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1830" y="354" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l5_task_di" bpmnElement="l5_task">
+        <dc:Bounds x="1998" y="292" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l5_end_di" bpmnElement="l5_end">
+        <dc:Bounds x="2198" y="314" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2166" y="354" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l4_end_di" bpmnElement="l4_end">
+        <dc:Bounds x="2366" y="304" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2334" y="344" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l3_end_di" bpmnElement="l3_end">
+        <dc:Bounds x="2534" y="294" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2502" y="334" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l2_end_di" bpmnElement="l2_end">
+        <dc:Bounds x="2702" y="284" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2670" y="324" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="l1_end_di" bpmnElement="l1_end">
+        <dc:Bounds x="2870" y="274" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2838" y="314" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_archive_di" bpmnElement="task_archive">
+        <dc:Bounds x="3018" y="242" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="3198" y="264" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3166" y="304" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="l5_flow_1_di" bpmnElement="l5_flow_1">
+        <di:waypoint x="1898" y="332" />
+        <di:waypoint x="1998" y="332" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l5_flow_2_di" bpmnElement="l5_flow_2">
+        <di:waypoint x="2098" y="332" />
+        <di:waypoint x="2198" y="332" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l4_flow_1_di" bpmnElement="l4_flow_1">
+        <di:waypoint x="1530" y="322" />
+        <di:waypoint x="1630" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l4_flow_2_di" bpmnElement="l4_flow_2">
+        <di:waypoint x="1730" y="322" />
+        <di:waypoint x="1830" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l4_flow_3_di" bpmnElement="l4_flow_3">
+        <di:waypoint x="2266" y="322" />
+        <di:waypoint x="2366" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l3_flow_1_di" bpmnElement="l3_flow_1">
+        <di:waypoint x="1162" y="312" />
+        <di:waypoint x="1262" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l3_flow_2_di" bpmnElement="l3_flow_2">
+        <di:waypoint x="1362" y="312" />
+        <di:waypoint x="1462" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l3_flow_3_di" bpmnElement="l3_flow_3">
+        <di:waypoint x="2434" y="312" />
+        <di:waypoint x="2534" y="312" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l2_flow_1_di" bpmnElement="l2_flow_1">
+        <di:waypoint x="794" y="302" />
+        <di:waypoint x="894" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l2_flow_2_di" bpmnElement="l2_flow_2">
+        <di:waypoint x="994" y="302" />
+        <di:waypoint x="1094" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l2_flow_3_di" bpmnElement="l2_flow_3">
+        <di:waypoint x="2602" y="302" />
+        <di:waypoint x="2702" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l1_flow_1_di" bpmnElement="l1_flow_1">
+        <di:waypoint x="426" y="292" />
+        <di:waypoint x="526" y="292" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l1_flow_2_di" bpmnElement="l1_flow_2">
+        <di:waypoint x="626" y="292" />
+        <di:waypoint x="726" y="292" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="l1_flow_3_di" bpmnElement="l1_flow_3">
+        <di:waypoint x="2770" y="292" />
+        <di:waypoint x="2870" y="292" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="282" />
+        <di:waypoint x="178" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="278" y="282" />
+        <di:waypoint x="358" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_3_di" bpmnElement="main_flow_3">
+        <di:waypoint x="2938" y="282" />
+        <di:waypoint x="3018" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_4_di" bpmnElement="main_flow_4">
+        <di:waypoint x="3118" y="282" />
+        <di:waypoint x="3198" y="282" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,177 @@
+{
+  "id": "definitions_mixed_cjk_latin_labels",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-mixed-cjk-latin-labels",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_webhook", "name": "Webhook 回调消息" }
+  ],
+  "children": [
+    {
+      "id": "process_mixed_labels",
+      "bpmn": {
+        "type": "process",
+        "name": "中英混排 label 测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "message",
+            "name": "收到 POST /api/v2/orders 请求",
+            "messageRef": "msg_webhook"
+          },
+          "labels": [{ "text": "收到 POST /api/v2/orders 请求" }]
+        },
+        {
+          "id": "task_validate",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "校验 JWT token 与 X-Request-Id 幂等键"
+          },
+          "labels": [{ "text": "校验 JWT token 与 X-Request-Id 幂等键" }]
+        },
+        {
+          "id": "task_sync_sku",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "调用 ERP-API 同步 SKU 库存数据"
+          },
+          "labels": [{ "text": "调用 ERP-API 同步 SKU 库存数据" }]
+        },
+        {
+          "id": "gateway_stock",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "库存 >= qty 且 status == 'ACTIVE' ?",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "库存 >= qty 且 status == 'ACTIVE' ?" }]
+        },
+        {
+          "id": "catch_webhook",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "等待 Webhook 回调 (timeout 30s)",
+            "messageRef": "msg_webhook"
+          },
+          "labels": [{ "text": "等待 Webhook 回调 (timeout 30s)" }]
+        },
+        {
+          "id": "task_mq",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "推送 OrderCreated 事件到 Kafka topic: order.v1"
+          },
+          "labels": [{ "text": "推送 OrderCreated 事件到 Kafka topic: order.v1" }]
+        },
+        {
+          "id": "task_fallback",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "人工介入处理 OOS（缺货）工单 via Jira"
+          },
+          "labels": [{ "text": "人工介入处理 OOS（缺货）工单 via Jira" }]
+        },
+        {
+          "id": "gateway_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "merge 两条分支后统一 ACK",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "merge 两条分支后统一 ACK" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "返回 HTTP 201 Created 并写入 audit_log 表"
+          },
+          "labels": [{ "text": "返回 HTTP 201 Created 并写入 audit_log 表" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": ["start_1"], "targets": ["task_validate"],
+          "bpmn": { "type": "sequenceFlow", "name": "payload 反序列化成功" },
+          "labels": [{ "text": "payload 反序列化成功" }]
+        },
+        {
+          "id": "flow_2",
+          "sources": ["task_validate"], "targets": ["task_sync_sku"],
+          "bpmn": { "type": "sequenceFlow", "name": "token 有效且未命中 idempotency cache" },
+          "labels": [{ "text": "token 有效且未命中 idempotency cache" }]
+        },
+        {
+          "id": "flow_3",
+          "sources": ["task_sync_sku"], "targets": ["gateway_stock"],
+          "bpmn": { "type": "sequenceFlow", "name": "ERP-API 返回 200 OK" },
+          "labels": [{ "text": "ERP-API 返回 200 OK" }]
+        },
+        {
+          "id": "flow_in_stock",
+          "sources": ["gateway_stock"], "targets": ["catch_webhook"],
+          "bpmn": { "type": "sequenceFlow", "name": "有货：走 async 支付确认链路" },
+          "labels": [{ "text": "有货：走 async 支付确认链路" }]
+        },
+        {
+          "id": "flow_oos",
+          "sources": ["gateway_stock"], "targets": ["task_fallback"],
+          "bpmn": { "type": "sequenceFlow", "name": "缺货 / status != 'ACTIVE' → fallback" },
+          "labels": [{ "text": "缺货 / status != 'ACTIVE' → fallback" }]
+        },
+        {
+          "id": "flow_webhook_mq",
+          "sources": ["catch_webhook"], "targets": ["task_mq"],
+          "bpmn": { "type": "sequenceFlow", "name": "回调签名验证通过（HMAC-SHA256）" },
+          "labels": [{ "text": "回调签名验证通过（HMAC-SHA256）" }]
+        },
+        {
+          "id": "flow_mq_merge",
+          "sources": ["task_mq"], "targets": ["gateway_merge"],
+          "bpmn": { "type": "sequenceFlow", "name": "Kafka ack: all ISR 已确认" },
+          "labels": [{ "text": "Kafka ack: all ISR 已确认" }]
+        },
+        {
+          "id": "flow_fallback_merge",
+          "sources": ["task_fallback"], "targets": ["gateway_merge"],
+          "bpmn": { "type": "sequenceFlow", "name": "Jira 工单 resolved 后回流" },
+          "labels": [{ "text": "Jira 工单 resolved 后回流" }]
+        },
+        {
+          "id": "flow_end",
+          "sources": ["gateway_merge"], "targets": ["end_1"],
+          "bpmn": { "type": "sequenceFlow", "name": "response 序列化 + trace span 关闭" },
+          "labels": [{ "text": "response 序列化 + trace span 关闭" }]
+        }
+      ]
+    }
+  ]
+}

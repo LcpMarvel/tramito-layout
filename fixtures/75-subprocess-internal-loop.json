@@ -1,0 +1,103 @@
+{
+  "id": "definitions_subprocess_internal_loop",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-subprocess-internal-loop",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_internal_loop",
+      "bpmn": {
+        "type": "process",
+        "name": "报销审核（子流程内驳回环）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起报销" },
+          "labels": [{ "text": "发起报销" }]
+        },
+        {
+          "id": "sub_audit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "报销审核子流程", "isExpanded": true },
+          "labels": [{ "text": "报销审核子流程" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "audit_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始审核" },
+              "labels": [{ "text": "开始审核" }]
+            },
+            {
+              "id": "audit_task_fill",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "填写报销单" },
+              "labels": [{ "text": "填写报销单" }]
+            },
+            {
+              "id": "audit_task_review",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "经理审核" },
+              "labels": [{ "text": "经理审核" }]
+            },
+            {
+              "id": "audit_gateway_pass",
+              "width": 50, "height": 50,
+              "bpmn": {
+                "type": "exclusiveGateway",
+                "name": "审核通过?",
+                "gatewayDirection": "Diverging"
+              },
+              "labels": [{ "text": "审核通过?" }]
+            },
+            {
+              "id": "audit_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "审核完成" },
+              "labels": [{ "text": "审核完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "audit_flow_1", "sources": ["audit_start"], "targets": ["audit_task_fill"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "audit_flow_2", "sources": ["audit_task_fill"], "targets": ["audit_task_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "audit_flow_3", "sources": ["audit_task_review"], "targets": ["audit_gateway_pass"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "audit_flow_pass", "sources": ["audit_gateway_pass"], "targets": ["audit_end"], "bpmn": { "type": "sequenceFlow", "name": "通过", "conditionExpression": { "body": "${approved == true}" } }, "labels": [{ "text": "通过" }] },
+            { "id": "audit_flow_reject", "sources": ["audit_gateway_pass"], "targets": ["audit_task_fill"], "bpmn": { "type": "sequenceFlow", "name": "驳回修改", "conditionExpression": { "body": "${approved == false}" } }, "labels": [{ "text": "驳回修改" }] }
+          ]
+        },
+        {
+          "id": "task_pay",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "财务打款" },
+          "labels": [{ "text": "财务打款" }]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "报销完成" },
+          "labels": [{ "text": "报销完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["sub_audit"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["sub_audit"], "targets": ["task_pay"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["task_pay"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "id": "definitions_cross_lane_updown",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-cross-lane-updown-backedges",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_updown",
+      "bpmn": { "type": "collaboration", "name": "跨泳道双向回边" },
+      "children": [
+        {
+          "id": "pool_service",
+          "bpmn": { "type": "participant", "name": "业务办理中心", "processRef": "process_service" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_customer",
+              "bpmn": { "type": "lane", "name": "客户" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                { "id": "start_req", "width": 36, "height": 36, "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起办理" }, "labels": [{ "text": "发起办理" }] },
+                { "id": "task_submit", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "提交申请材料" }, "labels": [{ "text": "提交申请材料" }] }
+              ]
+            },
+            {
+              "id": "lane_agent",
+              "bpmn": { "type": "lane", "name": "客服专员" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                { "id": "task_accept", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "客服受理" }, "labels": [{ "text": "客服受理" }] },
+                { "id": "gw_complete", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "登记无误" }, "labels": [{ "text": "登记无误" }] }
+              ]
+            },
+            {
+              "id": "lane_auditor",
+              "bpmn": { "type": "lane", "name": "审核员" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                { "id": "task_audit", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "资格审核" }, "labels": [{ "text": "资格审核" }] },
+                { "id": "gw_audit", "width": 50, "height": 50, "bpmn": { "type": "exclusiveGateway", "name": "审核通过" }, "labels": [{ "text": "审核通过" }] }
+              ]
+            },
+            {
+              "id": "lane_system",
+              "bpmn": { "type": "lane", "name": "业务系统" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                { "id": "task_register", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "系统预登记" }, "labels": [{ "text": "系统预登记" }] },
+                { "id": "task_archive", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "系统归档" }, "labels": [{ "text": "系统归档" }] },
+                { "id": "end_done", "width": 36, "height": 36, "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "办结" }, "labels": [{ "text": "办结" }] }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_start_submit", "sources": ["start_req"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_submit_register", "sources": ["task_submit"], "targets": ["task_register"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_register_accept", "sources": ["task_register"], "targets": ["task_accept"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_accept_gw", "sources": ["task_accept"], "targets": ["gw_complete"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_complete_audit", "sources": ["gw_complete"], "targets": ["task_audit"], "bpmn": { "type": "sequenceFlow", "name": "无误" }, "labels": [{ "text": "无误" }] },
+            { "id": "f_complete_back_register", "sources": ["gw_complete"], "targets": ["task_register"], "bpmn": { "type": "sequenceFlow", "name": "登记有误" }, "labels": [{ "text": "登记有误" }] },
+            { "id": "f_audit_gw", "sources": ["task_audit"], "targets": ["gw_audit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_audit_pass", "sources": ["gw_audit"], "targets": ["task_archive"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_audit_back_submit", "sources": ["gw_audit"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "材料不符" }, "labels": [{ "text": "材料不符" }] },
+            { "id": "f_archive_end", "sources": ["task_archive"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_cross_lane_updown" targetNamespace="http://example.com/test-cross-lane-updown-backedges" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_updown" name="跨泳道双向回边">
+    <bpmn:participant id="pool_service" name="业务办理中心" processRef="process_service" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_service" name="业务办理中心" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_customer" name="客户">
+        <bpmn:flowNodeRef>start_req</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_submit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_agent" name="客服专员">
+        <bpmn:flowNodeRef>task_accept</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_complete</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_auditor" name="审核员">
+        <bpmn:flowNodeRef>task_audit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_audit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_system" name="业务系统">
+        <bpmn:flowNodeRef>task_register</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_archive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_done</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_req" name="发起办理">
+      <bpmn:outgoing>f_start_submit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="提交申请材料">
+      <bpmn:incoming>f_start_submit</bpmn:incoming>
+      <bpmn:incoming>f_audit_back_submit</bpmn:incoming>
+      <bpmn:outgoing>f_submit_register</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_accept" name="客服受理">
+      <bpmn:incoming>f_register_accept</bpmn:incoming>
+      <bpmn:outgoing>f_accept_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_complete" name="登记无误">
+      <bpmn:incoming>f_accept_gw</bpmn:incoming>
+      <bpmn:outgoing>f_complete_audit</bpmn:outgoing>
+      <bpmn:outgoing>f_complete_back_register</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_audit" name="资格审核">
+      <bpmn:incoming>f_complete_audit</bpmn:incoming>
+      <bpmn:outgoing>f_audit_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_audit" name="审核通过">
+      <bpmn:incoming>f_audit_gw</bpmn:incoming>
+      <bpmn:outgoing>f_audit_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_audit_back_submit</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_register" name="系统预登记">
+      <bpmn:incoming>f_submit_register</bpmn:incoming>
+      <bpmn:incoming>f_complete_back_register</bpmn:incoming>
+      <bpmn:outgoing>f_register_accept</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_archive" name="系统归档">
+      <bpmn:incoming>f_audit_pass</bpmn:incoming>
+      <bpmn:outgoing>f_archive_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_done" name="办结">
+      <bpmn:incoming>f_archive_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_submit" sourceRef="start_req" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_submit_register" sourceRef="task_submit" targetRef="task_register" />
+    <bpmn:sequenceFlow id="f_register_accept" sourceRef="task_register" targetRef="task_accept" />
+    <bpmn:sequenceFlow id="f_accept_gw" sourceRef="task_accept" targetRef="gw_complete" />
+    <bpmn:sequenceFlow id="f_complete_audit" name="无误" sourceRef="gw_complete" targetRef="task_audit" />
+    <bpmn:sequenceFlow id="f_complete_back_register" name="登记有误" sourceRef="gw_complete" targetRef="task_register" />
+    <bpmn:sequenceFlow id="f_audit_gw" sourceRef="task_audit" targetRef="gw_audit" />
+    <bpmn:sequenceFlow id="f_audit_pass" name="通过" sourceRef="gw_audit" targetRef="task_archive" />
+    <bpmn:sequenceFlow id="f_audit_back_submit" name="材料不符" sourceRef="gw_audit" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_archive_end" sourceRef="task_archive" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_cross_lane_updown" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_cross_lane_updown" bpmnElement="collaboration_updown">
+      <bpmndi:BPMNShape id="collaboration_updown_di" bpmnElement="collaboration_updown">
+        <dc:Bounds x="0" y="0" width="1394" height="630" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_service_di" bpmnElement="pool_service" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1394" height="630" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_customer_di" bpmnElement="lane_customer" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1364" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_req_di" bpmnElement="start_req">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_agent_di" bpmnElement="lane_agent" isHorizontal="true">
+        <dc:Bounds x="30" y="132" width="1364" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_accept_di" bpmnElement="task_accept">
+        <dc:Bounds x="538" y="151" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_complete_di" bpmnElement="gw_complete">
+        <dc:Bounds x="718" y="166" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="715" y="148" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_auditor_di" bpmnElement="lane_auditor" isHorizontal="true">
+        <dc:Bounds x="30" y="247" width="1364" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_audit_di" bpmnElement="task_audit">
+        <dc:Bounds x="848" y="266" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_audit_di" bpmnElement="gw_audit">
+        <dc:Bounds x="1028" y="281" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1082" y="299" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_system_di" bpmnElement="lane_system" isHorizontal="true">
+        <dc:Bounds x="30" y="362" width="1364" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_register_di" bpmnElement="task_register">
+        <dc:Bounds x="358" y="378" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_archive_di" bpmnElement="task_archive">
+        <dc:Bounds x="1158" y="514" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="1338" y="536" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="576" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_submit_di" bpmnElement="f_start_submit">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_submit_register_di" bpmnElement="f_submit_register">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="418" />
+        <di:waypoint x="358" y="418" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_register_accept_di" bpmnElement="f_register_accept">
+        <di:waypoint x="408" y="378" />
+        <di:waypoint x="408" y="191" />
+        <di:waypoint x="538" y="191" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_accept_gw_di" bpmnElement="f_accept_gw">
+        <di:waypoint x="638" y="191" />
+        <di:waypoint x="718" y="191" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_complete_audit_di" bpmnElement="f_complete_audit">
+        <di:waypoint x="743" y="216" />
+        <di:waypoint x="743" y="306" />
+        <di:waypoint x="848" y="306" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="688" y="231" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_complete_back_register_di" bpmnElement="f_complete_back_register">
+        <di:waypoint x="743" y="216" />
+        <di:waypoint x="743" y="418" />
+        <di:waypoint x="458" y="418" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="748" y="231" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_audit_gw_di" bpmnElement="f_audit_gw">
+        <di:waypoint x="948" y="306" />
+        <di:waypoint x="1028" y="306" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_audit_pass_di" bpmnElement="f_audit_pass">
+        <di:waypoint x="1053" y="331" />
+        <di:waypoint x="1053" y="554" />
+        <di:waypoint x="1158" y="554" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="998" y="346" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_audit_back_submit_di" bpmnElement="f_audit_back_submit">
+        <di:waypoint x="1053" y="281" />
+        <di:waypoint x="1053" y="237" />
+        <di:waypoint x="228" y="237" />
+        <di:waypoint x="228" y="116" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1058" y="252" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_archive_end_di" bpmnElement="f_archive_end">
+        <di:waypoint x="1258" y="554" />
+        <di:waypoint x="1338" y="554" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

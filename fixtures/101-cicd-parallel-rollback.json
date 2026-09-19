@@ -1,0 +1,136 @@
+{
+  "id": "definitions_cicd_parallel_rollback",
+  "bpmn": {
+    "targetNamespace": "http://example.com/cicd-parallel-rollback",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_cicd",
+      "bpmn": { "type": "process", "name": "持续集成发布流水线", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_commit",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "代码提交" },
+          "labels": [{ "text": "代码提交" }]
+        },
+        {
+          "id": "task_build",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "构建" },
+          "labels": [{ "text": "构建" }]
+        },
+        {
+          "id": "gw_fork_tests",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "parallelGateway", "name": "并行测试", "gatewayDirection": "Diverging" },
+          "labels": [{ "text": "并行测试" }]
+        },
+        {
+          "id": "task_test_unit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "单元测试" },
+          "labels": [{ "text": "单元测试" }]
+        },
+        {
+          "id": "task_test_integration",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "集成测试" },
+          "labels": [{ "text": "集成测试" }]
+        },
+        {
+          "id": "task_test_api",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "接口测试" },
+          "labels": [{ "text": "接口测试" }]
+        },
+        {
+          "id": "task_test_ui",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "界面测试" },
+          "labels": [{ "text": "界面测试" }]
+        },
+        {
+          "id": "task_test_perf",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "性能测试" },
+          "labels": [{ "text": "性能测试" }]
+        },
+        {
+          "id": "task_test_security",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "安全扫描" },
+          "labels": [{ "text": "安全扫描" }]
+        },
+        {
+          "id": "task_test_compat",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "兼容性测试" },
+          "labels": [{ "text": "兼容性测试" }]
+        },
+        {
+          "id": "task_test_regression",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "回归测试" },
+          "labels": [{ "text": "回归测试" }]
+        },
+        {
+          "id": "gw_join_tests",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "parallelGateway", "name": "测试汇合", "gatewayDirection": "Converging" },
+          "labels": [{ "text": "测试汇合" }]
+        },
+        {
+          "id": "gw_check_result",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "测试是否全部通过", "gatewayDirection": "Diverging" },
+          "labels": [{ "text": "测试是否全部通过" }]
+        },
+        {
+          "id": "task_deploy",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "部署预发布环境" },
+          "labels": [{ "text": "部署预发布环境" }]
+        },
+        {
+          "id": "end_released",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "发布完成" },
+          "labels": [{ "text": "发布完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "f_commit_build", "sources": ["start_commit"], "targets": ["task_build"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_build_fork", "sources": ["task_build"], "targets": ["gw_fork_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_unit", "sources": ["gw_fork_tests"], "targets": ["task_test_unit"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_integration", "sources": ["gw_fork_tests"], "targets": ["task_test_integration"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_api", "sources": ["gw_fork_tests"], "targets": ["task_test_api"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_ui", "sources": ["gw_fork_tests"], "targets": ["task_test_ui"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_perf", "sources": ["gw_fork_tests"], "targets": ["task_test_perf"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_security", "sources": ["gw_fork_tests"], "targets": ["task_test_security"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_compat", "sources": ["gw_fork_tests"], "targets": ["task_test_compat"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_fork_regression", "sources": ["gw_fork_tests"], "targets": ["task_test_regression"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_unit_join", "sources": ["task_test_unit"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_integration_join", "sources": ["task_test_integration"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_api_join", "sources": ["task_test_api"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_ui_join", "sources": ["task_test_ui"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_perf_join", "sources": ["task_test_perf"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_security_join", "sources": ["task_test_security"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_compat_join", "sources": ["task_test_compat"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_regression_join", "sources": ["task_test_regression"], "targets": ["gw_join_tests"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_join_check", "sources": ["gw_join_tests"], "targets": ["gw_check_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_check_fail", "sources": ["gw_check_result"], "targets": ["task_build"], "bpmn": { "type": "sequenceFlow", "name": "存在失败重新构建" }, "labels": [{ "text": "存在失败重新构建" }] },
+        { "id": "f_check_pass", "sources": ["gw_check_result"], "targets": ["task_deploy"], "bpmn": { "type": "sequenceFlow", "name": "全部通过" }, "labels": [{ "text": "全部通过" }] },
+        { "id": "f_deploy_release", "sources": ["task_deploy"], "targets": ["end_released"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

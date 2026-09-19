@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_five_boundaries_one_host" targetNamespace="http://example.com/test-five-boundaries-one-host" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:message id="msg_terms_change" name="条款变更" />
+  <bpmn:signal id="sig_policy_update" name="政策更新" />
+  <bpmn:error id="err_contract" name="合同错误" errorCode="CT_001" />
+  <bpmn:escalation id="esc_overdue" name="严重逾期" escalationCode="ESC_001" />
+  <bpmn:process id="process_contract_approval" name="合同审批（单任务五边界）" isExecutable="true">
+    <bpmn:startEvent id="start_contract" name="提交合同">
+      <bpmn:outgoing>flow_start_approve</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_approve_contract" name="合同审批">
+      <bpmn:incoming>flow_start_approve</bpmn:incoming>
+      <bpmn:outgoing>flow_approve_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_approve_timer" name="审批催办" cancelActivity="false" attachedToRef="task_approve_contract">
+      <bpmn:outgoing>flow_bd_timer_remind</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT24H</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="boundary_approve_error" name="合同错误" attachedToRef="task_approve_contract">
+      <bpmn:outgoing>flow_bd_error_fix</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="err_contract" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="boundary_approve_message" name="条款变更" attachedToRef="task_approve_contract">
+      <bpmn:outgoing>flow_bd_msg_update</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_terms_change" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="boundary_approve_signal" name="政策更新" cancelActivity="false" attachedToRef="task_approve_contract">
+      <bpmn:outgoing>flow_bd_signal_log</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="sig_policy_update" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="boundary_approve_escalation" name="严重逾期" cancelActivity="false" attachedToRef="task_approve_contract">
+      <bpmn:outgoing>flow_bd_esc_escalate</bpmn:outgoing>
+      <bpmn:escalationEventDefinition escalationRef="esc_overdue" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="end_approved" name="审批通过">
+      <bpmn:incoming>flow_approve_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="task_h_remind" name="发送催办">
+      <bpmn:incoming>flow_bd_timer_remind</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:userTask id="task_h_fix" name="修正合同">
+      <bpmn:incoming>flow_bd_error_fix</bpmn:incoming>
+      <bpmn:outgoing>flow_fix_abort</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_fix_abort" name="退回重签">
+      <bpmn:incoming>flow_fix_abort</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_h_update_terms" name="更新合同条款">
+      <bpmn:incoming>flow_bd_msg_update</bpmn:incoming>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_h_log_policy" name="记录政策变更">
+      <bpmn:incoming>flow_bd_signal_log</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_h_escalate" name="上报部门主管">
+      <bpmn:incoming>flow_bd_esc_escalate</bpmn:incoming>
+      <bpmn:outgoing>flow_escalate_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_escalated" name="上报完成">
+      <bpmn:incoming>flow_escalate_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start_approve" sourceRef="start_contract" targetRef="task_approve_contract" />
+    <bpmn:sequenceFlow id="flow_approve_end" sourceRef="task_approve_contract" targetRef="end_approved" />
+    <bpmn:sequenceFlow id="flow_bd_timer_remind" sourceRef="boundary_approve_timer" targetRef="task_h_remind" />
+    <bpmn:sequenceFlow id="flow_bd_error_fix" sourceRef="boundary_approve_error" targetRef="task_h_fix" />
+    <bpmn:sequenceFlow id="flow_fix_abort" sourceRef="task_h_fix" targetRef="end_fix_abort" />
+    <bpmn:sequenceFlow id="flow_bd_msg_update" sourceRef="boundary_approve_message" targetRef="task_h_update_terms" />
+    <bpmn:sequenceFlow id="flow_bd_signal_log" sourceRef="boundary_approve_signal" targetRef="task_h_log_policy" />
+    <bpmn:sequenceFlow id="flow_bd_esc_escalate" sourceRef="boundary_approve_escalation" targetRef="task_h_escalate" />
+    <bpmn:sequenceFlow id="flow_escalate_end" sourceRef="task_h_escalate" targetRef="end_escalated" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_five_boundaries_one_host" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_five_boundaries_one_host" bpmnElement="process_contract_approval">
+      <bpmndi:BPMNShape id="process_contract_approval_di" bpmnElement="process_contract_approval">
+        <dc:Bounds x="0" y="0" width="782" height="344" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_contract_di" bpmnElement="start_contract">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_approve_contract_di" bpmnElement="task_approve_contract">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_approve_timer_di" bpmnElement="boundary_approve_timer">
+        <dc:Bounds x="180" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="171" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_approve_error_di" bpmnElement="boundary_approve_error">
+        <dc:Bounds x="220" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="211" y="152" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_approve_message_di" bpmnElement="boundary_approve_message">
+        <dc:Bounds x="260" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="251" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_approve_signal_di" bpmnElement="boundary_approve_signal">
+        <dc:Bounds x="300" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="291" y="152" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_approve_escalation_di" bpmnElement="boundary_approve_escalation">
+        <dc:Bounds x="340" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="331" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_approved_di" bpmnElement="end_approved">
+        <dc:Bounds x="358" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_h_remind_di" bpmnElement="task_h_remind">
+        <dc:Bounds x="-286" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_h_fix_di" bpmnElement="task_h_fix">
+        <dc:Bounds x="-122" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_fix_abort_di" bpmnElement="end_fix_abort">
+        <dc:Bounds x="78" y="246" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="46" y="286" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_h_update_terms_di" bpmnElement="task_h_update_terms">
+        <dc:Bounds x="178" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_h_log_policy_di" bpmnElement="task_h_log_policy">
+        <dc:Bounds x="342" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_h_escalate_di" bpmnElement="task_h_escalate">
+        <dc:Bounds x="506" y="224" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_escalated_di" bpmnElement="end_escalated">
+        <dc:Bounds x="706" y="246" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="674" y="286" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_approve_di" bpmnElement="flow_start_approve">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_approve_end_di" bpmnElement="flow_approve_end">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_timer_remind_di" bpmnElement="flow_bd_timer_remind">
+        <di:waypoint x="198" y="130" />
+        <di:waypoint x="198" y="153" />
+        <di:waypoint x="-236" y="153" />
+        <di:waypoint x="-236" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_error_fix_di" bpmnElement="flow_bd_error_fix">
+        <di:waypoint x="238" y="130" />
+        <di:waypoint x="238" y="165" />
+        <di:waypoint x="-72" y="165" />
+        <di:waypoint x="-72" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fix_abort_di" bpmnElement="flow_fix_abort">
+        <di:waypoint x="-22" y="264" />
+        <di:waypoint x="78" y="264" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_msg_update_di" bpmnElement="flow_bd_msg_update">
+        <di:waypoint x="278" y="130" />
+        <di:waypoint x="278" y="177" />
+        <di:waypoint x="228" y="177" />
+        <di:waypoint x="228" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_signal_log_di" bpmnElement="flow_bd_signal_log">
+        <di:waypoint x="318" y="130" />
+        <di:waypoint x="318" y="189" />
+        <di:waypoint x="392" y="189" />
+        <di:waypoint x="392" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_esc_escalate_di" bpmnElement="flow_bd_esc_escalate">
+        <di:waypoint x="358" y="130" />
+        <di:waypoint x="358" y="201" />
+        <di:waypoint x="556" y="201" />
+        <di:waypoint x="556" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_escalate_end_di" bpmnElement="flow_escalate_end">
+        <di:waypoint x="606" y="264" />
+        <di:waypoint x="706" y="264" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

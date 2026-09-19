@@ -1,0 +1,195 @@
+{
+  "id": "definitions_ten_lane_waterfall",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-ten-lane-waterfall",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "十级部门逐级审批瀑布"
+      },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": {
+            "type": "participant",
+            "name": "大型集团",
+            "processRef": "process_waterfall"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_01_employee",
+              "bpmn": { "type": "lane", "name": "员工" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_apply",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "发起申请" },
+                  "labels": [{ "text": "发起申请" }]
+                },
+                {
+                  "id": "task_fill_form",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "填写申请单" },
+                  "labels": [{ "text": "填写申请单" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_02_leader",
+              "bpmn": { "type": "lane", "name": "组长" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_leader_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "组长初审" },
+                  "labels": [{ "text": "组长初审" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_03_supervisor",
+              "bpmn": { "type": "lane", "name": "主管" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_supervisor_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "主管复核" },
+                  "labels": [{ "text": "主管复核" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_04_manager",
+              "bpmn": { "type": "lane", "name": "部门经理" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                {
+                  "id": "task_manager_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "经理审批" },
+                  "labels": [{ "text": "经理审批" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_05_hr",
+              "bpmn": { "type": "lane", "name": "人力资源" },
+              "layoutOptions": { "elk.partitioning.partition": 4 },
+              "children": [
+                {
+                  "id": "task_hr_record",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "人事备案" },
+                  "labels": [{ "text": "人事备案" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_06_finance",
+              "bpmn": { "type": "lane", "name": "财务部" },
+              "layoutOptions": { "elk.partitioning.partition": 5 },
+              "children": [
+                {
+                  "id": "task_budget_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "预算核对" },
+                  "labels": [{ "text": "预算核对" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_07_legal",
+              "bpmn": { "type": "lane", "name": "法务部" },
+              "layoutOptions": { "elk.partitioning.partition": 6 },
+              "children": [
+                {
+                  "id": "task_legal_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "合规审查" },
+                  "labels": [{ "text": "合规审查" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_08_vp",
+              "bpmn": { "type": "lane", "name": "副总裁" },
+              "layoutOptions": { "elk.partitioning.partition": 7 },
+              "children": [
+                {
+                  "id": "task_vp_approve",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "副总裁批示" },
+                  "labels": [{ "text": "副总裁批示" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_09_ceo",
+              "bpmn": { "type": "lane", "name": "总裁办" },
+              "layoutOptions": { "elk.partitioning.partition": 8 },
+              "children": [
+                {
+                  "id": "task_ceo_sign",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "总裁签批" },
+                  "labels": [{ "text": "总裁签批" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_10_archive",
+              "bpmn": { "type": "lane", "name": "档案室" },
+              "layoutOptions": { "elk.partitioning.partition": 9 },
+              "children": [
+                {
+                  "id": "task_archive",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "归档存证" },
+                  "labels": [{ "text": "归档存证" }]
+                },
+                {
+                  "id": "end_done",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "流程结束" },
+                  "labels": [{ "text": "流程结束" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_apply"], "targets": ["task_fill_form"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_fill_form"], "targets": ["task_leader_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_leader_check"], "targets": ["task_supervisor_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_supervisor_check"], "targets": ["task_manager_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_5", "sources": ["task_manager_check"], "targets": ["task_hr_record"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_6", "sources": ["task_hr_record"], "targets": ["task_budget_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_7", "sources": ["task_budget_check"], "targets": ["task_legal_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_8", "sources": ["task_legal_review"], "targets": ["task_vp_approve"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_9", "sources": ["task_vp_approve"], "targets": ["task_ceo_sign"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_10", "sources": ["task_ceo_sign"], "targets": ["task_archive"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_11", "sources": ["task_archive"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

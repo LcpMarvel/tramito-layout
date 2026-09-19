@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_gateway_chain" targetNamespace="http://example.com/test-gateway-chain" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_gateway_chain" name="网关直连链路风控筛查" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="交易发起">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gw_1_div" name="黑名单筛查" gatewayDirection="Diverging" default="flow_gw1_pass">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_gw1_hit</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw1_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_2_div" name="额度筛查" gatewayDirection="Diverging" default="flow_gw2_pass">
+      <bpmn:incoming>flow_gw1_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_gw2_hit</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw2_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_3_div" name="异地筛查" gatewayDirection="Diverging" default="flow_gw3_pass">
+      <bpmn:incoming>flow_gw2_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_gw3_hit</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw3_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_blacklist" name="人工核查身份">
+      <bpmn:incoming>flow_gw1_hit</bpmn:incoming>
+      <bpmn:outgoing>flow_blacklist_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_overlimit" name="提交超额申请">
+      <bpmn:incoming>flow_gw2_hit</bpmn:incoming>
+      <bpmn:outgoing>flow_overlimit_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_remote" name="短信二次验证">
+      <bpmn:incoming>flow_gw3_hit</bpmn:incoming>
+      <bpmn:outgoing>flow_remote_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_pass" name="直接放行">
+      <bpmn:incoming>flow_gw3_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_pass_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gw_3_conv" name="异地汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_remote_conv</bpmn:incoming>
+      <bpmn:incoming>flow_pass_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_gw3c_gw2c</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_2_conv" name="额度汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_gw3c_gw2c</bpmn:incoming>
+      <bpmn:incoming>flow_overlimit_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_gw2c_gw1c</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_1_conv" name="筛查汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_gw2c_gw1c</bpmn:incoming>
+      <bpmn:incoming>flow_blacklist_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_to_execute</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_execute" name="执行交易">
+      <bpmn:incoming>flow_to_execute</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="交易完成">
+      <bpmn:incoming>flow_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="gw_1_div" />
+    <bpmn:sequenceFlow id="flow_gw1_hit" name="命中黑名单" sourceRef="gw_1_div" targetRef="task_blacklist">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${blacklisted == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_gw1_pass" name="未命中" sourceRef="gw_1_div" targetRef="gw_2_div" />
+    <bpmn:sequenceFlow id="flow_gw2_hit" name="超出额度" sourceRef="gw_2_div" targetRef="task_overlimit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt; limit}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_gw2_pass" name="额度内" sourceRef="gw_2_div" targetRef="gw_3_div" />
+    <bpmn:sequenceFlow id="flow_gw3_hit" name="异地登录" sourceRef="gw_3_div" targetRef="task_remote">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${remoteLogin == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_gw3_pass" name="本地登录" sourceRef="gw_3_div" targetRef="task_pass" />
+    <bpmn:sequenceFlow id="flow_remote_conv" sourceRef="task_remote" targetRef="gw_3_conv" />
+    <bpmn:sequenceFlow id="flow_pass_conv" sourceRef="task_pass" targetRef="gw_3_conv" />
+    <bpmn:sequenceFlow id="flow_gw3c_gw2c" sourceRef="gw_3_conv" targetRef="gw_2_conv" />
+    <bpmn:sequenceFlow id="flow_overlimit_conv" sourceRef="task_overlimit" targetRef="gw_2_conv" />
+    <bpmn:sequenceFlow id="flow_gw2c_gw1c" sourceRef="gw_2_conv" targetRef="gw_1_conv" />
+    <bpmn:sequenceFlow id="flow_blacklist_conv" sourceRef="task_blacklist" targetRef="gw_1_conv" />
+    <bpmn:sequenceFlow id="flow_to_execute" sourceRef="gw_1_conv" targetRef="task_execute" />
+    <bpmn:sequenceFlow id="flow_to_end" sourceRef="task_execute" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_gateway_chain" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_gateway_chain" bpmnElement="process_gateway_chain">
+      <bpmndi:BPMNShape id="process_gateway_chain_di" bpmnElement="process_gateway_chain">
+        <dc:Bounds x="0" y="0" width="1474" height="418.8333333333333" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="166.66666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="206.66666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_1_div_di" bpmnElement="gw_1_div">
+        <dc:Bounds x="178" y="159.66666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="232" y="177.66666666666669" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_2_div_di" bpmnElement="gw_2_div">
+        <dc:Bounds x="308" y="189.33333333333331" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="362" y="207.33333333333331" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_3_div_di" bpmnElement="gw_3_div">
+        <dc:Bounds x="471.3333333333333" y="251.83333333333334" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="525.3333333333333" y="269.83333333333337" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_blacklist_di" bpmnElement="task_blacklist">
+        <dc:Bounds x="798" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_overlimit_di" bpmnElement="task_overlimit">
+        <dc:Bounds x="438" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_remote_di" bpmnElement="task_remote">
+        <dc:Bounds x="618" y="166.83333333333331" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pass_di" bpmnElement="task_pass">
+        <dc:Bounds x="618" y="306.8333333333333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_3_conv_di" bpmnElement="gw_3_conv">
+        <dc:Bounds x="814.6666666666666" y="251.83333333333334" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="811.6666666666666" y="233.83333333333334" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_2_conv_di" bpmnElement="gw_2_conv">
+        <dc:Bounds x="978" y="189.33333333333331" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="975" y="171.33333333333331" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_1_conv_di" bpmnElement="gw_1_conv">
+        <dc:Bounds x="1108" y="159.66666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1105" y="213.66666666666669" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_execute_di" bpmnElement="task_execute">
+        <dc:Bounds x="1238" y="144.66666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1418" y="166.66666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="206.66666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="184.66666666666669" />
+        <di:waypoint x="178" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw1_hit_di" bpmnElement="flow_gw1_hit">
+        <di:waypoint x="203" y="159.66666666666669" />
+        <di:waypoint x="203" y="72" />
+        <di:waypoint x="798" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="130.66666666666669" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw1_pass_di" bpmnElement="flow_gw1_pass">
+        <di:waypoint x="203" y="209.66666666666669" />
+        <di:waypoint x="203" y="214.33333333333331" />
+        <di:waypoint x="308" y="214.33333333333331" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="219.33333333333331" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw2_hit_di" bpmnElement="flow_gw2_hit">
+        <di:waypoint x="333" y="189.33333333333331" />
+        <di:waypoint x="333" y="123" />
+        <di:waypoint x="438" y="123" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="338" y="160.33333333333331" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw2_pass_di" bpmnElement="flow_gw2_pass">
+        <di:waypoint x="333" y="239.33333333333331" />
+        <di:waypoint x="333" y="276.83333333333337" />
+        <di:waypoint x="471.3333333333333" y="276.83333333333337" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="278" y="251.08333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw3_hit_di" bpmnElement="flow_gw3_hit">
+        <di:waypoint x="496.3333333333333" y="251.83333333333337" />
+        <di:waypoint x="496.3333333333333" y="206.83333333333331" />
+        <di:waypoint x="618" y="206.83333333333331" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="501.33333333333326" y="222.83333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw3_pass_di" bpmnElement="flow_gw3_pass">
+        <di:waypoint x="496.3333333333333" y="301.83333333333337" />
+        <di:waypoint x="496.3333333333333" y="346.8333333333333" />
+        <di:waypoint x="618" y="346.8333333333333" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="441.3333333333333" y="316.83333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_remote_conv_di" bpmnElement="flow_remote_conv">
+        <di:waypoint x="718" y="206.83333333333331" />
+        <di:waypoint x="766.3333333333333" y="206.83333333333331" />
+        <di:waypoint x="766.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="814.6666666666666" y="276.83333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_pass_conv_di" bpmnElement="flow_pass_conv">
+        <di:waypoint x="718" y="346.8333333333333" />
+        <di:waypoint x="766.3333333333333" y="346.8333333333333" />
+        <di:waypoint x="766.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="814.6666666666666" y="276.83333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw3c_gw2c_di" bpmnElement="flow_gw3c_gw2c">
+        <di:waypoint x="864.6666666666666" y="276.83333333333337" />
+        <di:waypoint x="921.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="921.3333333333333" y="214.33333333333331" />
+        <di:waypoint x="978" y="214.33333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_overlimit_conv_di" bpmnElement="flow_overlimit_conv">
+        <di:waypoint x="538" y="123" />
+        <di:waypoint x="758" y="123" />
+        <di:waypoint x="758" y="214.33333333333331" />
+        <di:waypoint x="978" y="214.33333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw2c_gw1c_di" bpmnElement="flow_gw2c_gw1c">
+        <di:waypoint x="1028" y="214.33333333333331" />
+        <di:waypoint x="1068" y="214.33333333333331" />
+        <di:waypoint x="1068" y="184.66666666666669" />
+        <di:waypoint x="1108" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_blacklist_conv_di" bpmnElement="flow_blacklist_conv">
+        <di:waypoint x="848" y="112" />
+        <di:waypoint x="848" y="135.83333333333334" />
+        <di:waypoint x="1133" y="135.83333333333334" />
+        <di:waypoint x="1133" y="159.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_execute_di" bpmnElement="flow_to_execute">
+        <di:waypoint x="1158" y="184.66666666666669" />
+        <di:waypoint x="1238" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_di" bpmnElement="flow_to_end">
+        <di:waypoint x="1338" y="184.66666666666669" />
+        <di:waypoint x="1418" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

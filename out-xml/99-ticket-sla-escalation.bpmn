@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_ticket_sla_escalation" targetNamespace="http://example.com/ticket-sla-escalation" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_ticket" name="工单SLA升级流程">
+    <bpmn:participant id="pool_support" name="技术支持中心" processRef="process_ticket" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_ticket" name="技术支持中心" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_level1" name="一线支持">
+        <bpmn:flowNodeRef>start_ticket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_l1_handle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>boundary_l1_sla</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l1_solved</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_level2" name="二线支持">
+        <bpmn:flowNodeRef>task_l2_handle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>boundary_l2_sla</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l2_solved</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_level3" name="三线支持">
+        <bpmn:flowNodeRef>task_l3_handle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>boundary_l3_sla</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l3_solved</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_manager" name="经理">
+        <bpmn:flowNodeRef>task_mgr_handle</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_merge_solved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_close_ticket</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_closed</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_ticket" name="工单创建">
+      <bpmn:outgoing>f_start_l1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_l1_handle" name="一线处理">
+      <bpmn:incoming>f_start_l1</bpmn:incoming>
+      <bpmn:outgoing>f_l1_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_l1_sla" name="一线SLA超时" cancelActivity="false" attachedToRef="task_l1_handle">
+      <bpmn:outgoing>f_l1_timeout</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="gw_l1_solved" name="一线是否解决" gatewayDirection="Diverging">
+      <bpmn:incoming>f_l1_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l1_solved</bpmn:outgoing>
+      <bpmn:outgoing>f_l1_unsolved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l2_handle" name="二线处理">
+      <bpmn:incoming>f_l1_unsolved</bpmn:incoming>
+      <bpmn:incoming>f_l1_timeout</bpmn:incoming>
+      <bpmn:outgoing>f_l2_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_l2_sla" name="二线SLA超时" cancelActivity="false" attachedToRef="task_l2_handle">
+      <bpmn:outgoing>f_l2_timeout</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT4H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="gw_l2_solved" name="二线是否解决" gatewayDirection="Diverging">
+      <bpmn:incoming>f_l2_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l2_solved</bpmn:outgoing>
+      <bpmn:outgoing>f_l2_unsolved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l3_handle" name="三线处理">
+      <bpmn:incoming>f_l2_unsolved</bpmn:incoming>
+      <bpmn:incoming>f_l2_timeout</bpmn:incoming>
+      <bpmn:outgoing>f_l3_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_l3_sla" name="三线SLA超时" cancelActivity="false" attachedToRef="task_l3_handle">
+      <bpmn:outgoing>f_l3_timeout</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT8H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="gw_l3_solved" name="三线是否解决" gatewayDirection="Diverging">
+      <bpmn:incoming>f_l3_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l3_solved</bpmn:outgoing>
+      <bpmn:outgoing>f_l3_unsolved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_mgr_handle" name="经理协调处理">
+      <bpmn:incoming>f_l3_unsolved</bpmn:incoming>
+      <bpmn:incoming>f_l3_timeout</bpmn:incoming>
+      <bpmn:outgoing>f_mgr_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_merge_solved" name="汇总解决结果" gatewayDirection="Converging">
+      <bpmn:incoming>f_l1_solved</bpmn:incoming>
+      <bpmn:incoming>f_l2_solved</bpmn:incoming>
+      <bpmn:incoming>f_l3_solved</bpmn:incoming>
+      <bpmn:incoming>f_mgr_merge</bpmn:incoming>
+      <bpmn:outgoing>f_merge_close</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_close_ticket" name="关单">
+      <bpmn:incoming>f_merge_close</bpmn:incoming>
+      <bpmn:outgoing>f_close_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_closed" name="工单关闭">
+      <bpmn:incoming>f_close_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_l1" sourceRef="start_ticket" targetRef="task_l1_handle" />
+    <bpmn:sequenceFlow id="f_l1_gw" sourceRef="task_l1_handle" targetRef="gw_l1_solved" />
+    <bpmn:sequenceFlow id="f_l1_solved" name="已解决" sourceRef="gw_l1_solved" targetRef="gw_merge_solved" />
+    <bpmn:sequenceFlow id="f_l1_unsolved" name="未解决" sourceRef="gw_l1_solved" targetRef="task_l2_handle" />
+    <bpmn:sequenceFlow id="f_l1_timeout" name="超时升级二线" sourceRef="boundary_l1_sla" targetRef="task_l2_handle" />
+    <bpmn:sequenceFlow id="f_l2_gw" sourceRef="task_l2_handle" targetRef="gw_l2_solved" />
+    <bpmn:sequenceFlow id="f_l2_solved" name="已解决" sourceRef="gw_l2_solved" targetRef="gw_merge_solved" />
+    <bpmn:sequenceFlow id="f_l2_unsolved" name="未解决" sourceRef="gw_l2_solved" targetRef="task_l3_handle" />
+    <bpmn:sequenceFlow id="f_l2_timeout" name="超时升级三线" sourceRef="boundary_l2_sla" targetRef="task_l3_handle" />
+    <bpmn:sequenceFlow id="f_l3_gw" sourceRef="task_l3_handle" targetRef="gw_l3_solved" />
+    <bpmn:sequenceFlow id="f_l3_solved" name="已解决" sourceRef="gw_l3_solved" targetRef="gw_merge_solved" />
+    <bpmn:sequenceFlow id="f_l3_unsolved" name="未解决" sourceRef="gw_l3_solved" targetRef="task_mgr_handle" />
+    <bpmn:sequenceFlow id="f_l3_timeout" name="超时升级经理" sourceRef="boundary_l3_sla" targetRef="task_mgr_handle" />
+    <bpmn:sequenceFlow id="f_mgr_merge" sourceRef="task_mgr_handle" targetRef="gw_merge_solved" />
+    <bpmn:sequenceFlow id="f_merge_close" sourceRef="gw_merge_solved" targetRef="task_close_ticket" />
+    <bpmn:sequenceFlow id="f_close_end" sourceRef="task_close_ticket" targetRef="end_closed" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_ticket_sla_escalation" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_ticket_sla_escalation" bpmnElement="collaboration_ticket">
+      <bpmndi:BPMNShape id="collaboration_ticket_di" bpmnElement="collaboration_ticket">
+        <dc:Bounds x="0" y="0" width="1654" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_support_di" bpmnElement="pool_support" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1654" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_level1_di" bpmnElement="lane_level1" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1624" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_ticket_di" bpmnElement="start_ticket">
+        <dc:Bounds x="62" y="61" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="101" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l1_handle_di" bpmnElement="task_l1_handle">
+        <dc:Bounds x="178" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_l1_sla_di" bpmnElement="boundary_l1_sla">
+        <dc:Bounds x="180" y="101" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="160.5" y="141" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l1_solved_di" bpmnElement="gw_l1_solved">
+        <dc:Bounds x="358" y="54" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="341" y="36" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_level2_di" bpmnElement="lane_level2" isHorizontal="true">
+        <dc:Bounds x="30" y="135" width="1624" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l2_handle_di" bpmnElement="task_l2_handle">
+        <dc:Bounds x="488" y="154" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_l2_sla_di" bpmnElement="boundary_l2_sla">
+        <dc:Bounds x="490" y="216" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="470.5" y="256" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l2_solved_di" bpmnElement="gw_l2_solved">
+        <dc:Bounds x="668" y="169" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="151" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_level3_di" bpmnElement="lane_level3" isHorizontal="true">
+        <dc:Bounds x="30" y="250" width="1624" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l3_handle_di" bpmnElement="task_l3_handle">
+        <dc:Bounds x="798" y="269" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_l3_sla_di" bpmnElement="boundary_l3_sla">
+        <dc:Bounds x="800" y="331" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="780.5" y="371" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l3_solved_di" bpmnElement="gw_l3_solved">
+        <dc:Bounds x="978" y="284" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="961" y="266" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_manager_di" bpmnElement="lane_manager" isHorizontal="true">
+        <dc:Bounds x="30" y="365" width="1624" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mgr_handle_di" bpmnElement="task_mgr_handle">
+        <dc:Bounds x="1108" y="384" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_merge_solved_di" bpmnElement="gw_merge_solved">
+        <dc:Bounds x="1288" y="399" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1271" y="453" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_close_ticket_di" bpmnElement="task_close_ticket">
+        <dc:Bounds x="1418" y="384" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_closed_di" bpmnElement="end_closed">
+        <dc:Bounds x="1598" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1566" y="446" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_l1_di" bpmnElement="f_start_l1">
+        <di:waypoint x="98" y="79" />
+        <di:waypoint x="178" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_gw_di" bpmnElement="f_l1_gw">
+        <di:waypoint x="278" y="79" />
+        <di:waypoint x="358" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_solved_di" bpmnElement="f_l1_solved">
+        <di:waypoint x="383" y="104" />
+        <di:waypoint x="383" y="375.5" />
+        <di:waypoint x="1313" y="375.5" />
+        <di:waypoint x="1313" y="399" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="328" y="119" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_unsolved_di" bpmnElement="f_l1_unsolved">
+        <di:waypoint x="383" y="104" />
+        <di:waypoint x="383" y="194" />
+        <di:waypoint x="488" y="194" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="388" y="119" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_timeout_di" bpmnElement="f_l1_timeout">
+        <di:waypoint x="198" y="137" />
+        <di:waypoint x="170" y="137" />
+        <di:waypoint x="170" y="125" />
+        <di:waypoint x="538" y="125" />
+        <di:waypoint x="538" y="154" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="329" y="148" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_gw_di" bpmnElement="f_l2_gw">
+        <di:waypoint x="588" y="194" />
+        <di:waypoint x="668" y="194" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_solved_di" bpmnElement="f_l2_solved">
+        <di:waypoint x="693" y="219" />
+        <di:waypoint x="693" y="375.5" />
+        <di:waypoint x="1313" y="375.5" />
+        <di:waypoint x="1313" y="399" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="638" y="234" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_unsolved_di" bpmnElement="f_l2_unsolved">
+        <di:waypoint x="693" y="219" />
+        <di:waypoint x="693" y="309" />
+        <di:waypoint x="798" y="309" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="698" y="234" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_timeout_di" bpmnElement="f_l2_timeout">
+        <di:waypoint x="508" y="252" />
+        <di:waypoint x="508" y="260.5" />
+        <di:waypoint x="508" y="240" />
+        <di:waypoint x="848" y="240" />
+        <di:waypoint x="848" y="269" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="653" y="263" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_gw_di" bpmnElement="f_l3_gw">
+        <di:waypoint x="898" y="309" />
+        <di:waypoint x="978" y="309" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_solved_di" bpmnElement="f_l3_solved">
+        <di:waypoint x="1003" y="334" />
+        <di:waypoint x="1003" y="375.5" />
+        <di:waypoint x="1313" y="375.5" />
+        <di:waypoint x="1313" y="399" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="948" y="347.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_unsolved_di" bpmnElement="f_l3_unsolved">
+        <di:waypoint x="1003" y="334" />
+        <di:waypoint x="1003" y="424" />
+        <di:waypoint x="1108" y="424" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1008" y="349" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_timeout_di" bpmnElement="f_l3_timeout">
+        <di:waypoint x="818" y="367" />
+        <di:waypoint x="818" y="387.5" />
+        <di:waypoint x="1098" y="387.5" />
+        <di:waypoint x="1098" y="355" />
+        <di:waypoint x="1158" y="355" />
+        <di:waypoint x="1158" y="384" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="933" y="368.5" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mgr_merge_di" bpmnElement="f_mgr_merge">
+        <di:waypoint x="1208" y="424" />
+        <di:waypoint x="1288" y="424" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_merge_close_di" bpmnElement="f_merge_close">
+        <di:waypoint x="1338" y="424" />
+        <di:waypoint x="1418" y="424" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_close_end_di" bpmnElement="f_close_end">
+        <di:waypoint x="1518" y="424" />
+        <di:waypoint x="1598" y="424" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

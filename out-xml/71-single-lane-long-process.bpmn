@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_single_lane_long_process" targetNamespace="http://example.com/test-single-lane-long-process" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="外贸出运超长串行流程">
+    <bpmn:participant id="pool_forwarder" name="货运代理" processRef="process_forwarder" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_forwarder" name="货运代理" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_ops" name="操作部">
+        <bpmn:flowNodeRef>start_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_03</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_04</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_05</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_06</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_07</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_08</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_09</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_10</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_11</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_12</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_13</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_14</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_15</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_16</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_17</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_18</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_19</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_20</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_21</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_22</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_23</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_24</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_1" name="接单">
+      <bpmn:outgoing>flow_00</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_01" name="接收委托">
+      <bpmn:incoming>flow_00</bpmn:incoming>
+      <bpmn:outgoing>flow_01</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_02" name="审核合同">
+      <bpmn:incoming>flow_01</bpmn:incoming>
+      <bpmn:outgoing>flow_02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_03" name="录入订单">
+      <bpmn:incoming>flow_02</bpmn:incoming>
+      <bpmn:outgoing>flow_03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_04" name="制作箱单">
+      <bpmn:incoming>flow_03</bpmn:incoming>
+      <bpmn:outgoing>flow_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_05" name="制作发票">
+      <bpmn:incoming>flow_04</bpmn:incoming>
+      <bpmn:outgoing>flow_05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_06" name="申报舱单">
+      <bpmn:incoming>flow_05</bpmn:incoming>
+      <bpmn:outgoing>flow_06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_07" name="订舱配载">
+      <bpmn:incoming>flow_06</bpmn:incoming>
+      <bpmn:outgoing>flow_07</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_08" name="安排拖车">
+      <bpmn:incoming>flow_07</bpmn:incoming>
+      <bpmn:outgoing>flow_08</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_09" name="工厂装柜">
+      <bpmn:incoming>flow_08</bpmn:incoming>
+      <bpmn:outgoing>flow_09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_10" name="称重核验">
+      <bpmn:incoming>flow_09</bpmn:incoming>
+      <bpmn:outgoing>flow_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_11" name="录入报关单">
+      <bpmn:incoming>flow_10</bpmn:incoming>
+      <bpmn:outgoing>flow_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_12" name="申报海关">
+      <bpmn:incoming>flow_11</bpmn:incoming>
+      <bpmn:outgoing>flow_12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_13" name="配合查验">
+      <bpmn:incoming>flow_12</bpmn:incoming>
+      <bpmn:outgoing>flow_13</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_14" name="缴纳税费">
+      <bpmn:incoming>flow_13</bpmn:incoming>
+      <bpmn:outgoing>flow_14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_15" name="海关放行">
+      <bpmn:incoming>flow_14</bpmn:incoming>
+      <bpmn:outgoing>flow_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_16" name="码头进港">
+      <bpmn:incoming>flow_15</bpmn:incoming>
+      <bpmn:outgoing>flow_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_17" name="装船出运">
+      <bpmn:incoming>flow_16</bpmn:incoming>
+      <bpmn:outgoing>flow_17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_18" name="签发提单">
+      <bpmn:incoming>flow_17</bpmn:incoming>
+      <bpmn:outgoing>flow_18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_19" name="寄送单据">
+      <bpmn:incoming>flow_18</bpmn:incoming>
+      <bpmn:outgoing>flow_19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_20" name="目的港换单">
+      <bpmn:incoming>flow_19</bpmn:incoming>
+      <bpmn:outgoing>flow_20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_21" name="进口清关">
+      <bpmn:incoming>flow_20</bpmn:incoming>
+      <bpmn:outgoing>flow_21</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_22" name="提货派送">
+      <bpmn:incoming>flow_21</bpmn:incoming>
+      <bpmn:outgoing>flow_22</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_23" name="收货确认">
+      <bpmn:incoming>flow_22</bpmn:incoming>
+      <bpmn:outgoing>flow_23</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_24" name="结算费用">
+      <bpmn:incoming>flow_23</bpmn:incoming>
+      <bpmn:outgoing>flow_24</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="委托完成">
+      <bpmn:incoming>flow_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_00" sourceRef="start_1" targetRef="task_01" />
+    <bpmn:sequenceFlow id="flow_01" sourceRef="task_01" targetRef="task_02" />
+    <bpmn:sequenceFlow id="flow_02" sourceRef="task_02" targetRef="task_03" />
+    <bpmn:sequenceFlow id="flow_03" sourceRef="task_03" targetRef="task_04" />
+    <bpmn:sequenceFlow id="flow_04" sourceRef="task_04" targetRef="task_05" />
+    <bpmn:sequenceFlow id="flow_05" sourceRef="task_05" targetRef="task_06" />
+    <bpmn:sequenceFlow id="flow_06" sourceRef="task_06" targetRef="task_07" />
+    <bpmn:sequenceFlow id="flow_07" sourceRef="task_07" targetRef="task_08" />
+    <bpmn:sequenceFlow id="flow_08" sourceRef="task_08" targetRef="task_09" />
+    <bpmn:sequenceFlow id="flow_09" sourceRef="task_09" targetRef="task_10" />
+    <bpmn:sequenceFlow id="flow_10" sourceRef="task_10" targetRef="task_11" />
+    <bpmn:sequenceFlow id="flow_11" sourceRef="task_11" targetRef="task_12" />
+    <bpmn:sequenceFlow id="flow_12" sourceRef="task_12" targetRef="task_13" />
+    <bpmn:sequenceFlow id="flow_13" sourceRef="task_13" targetRef="task_14" />
+    <bpmn:sequenceFlow id="flow_14" sourceRef="task_14" targetRef="task_15" />
+    <bpmn:sequenceFlow id="flow_15" sourceRef="task_15" targetRef="task_16" />
+    <bpmn:sequenceFlow id="flow_16" sourceRef="task_16" targetRef="task_17" />
+    <bpmn:sequenceFlow id="flow_17" sourceRef="task_17" targetRef="task_18" />
+    <bpmn:sequenceFlow id="flow_18" sourceRef="task_18" targetRef="task_19" />
+    <bpmn:sequenceFlow id="flow_19" sourceRef="task_19" targetRef="task_20" />
+    <bpmn:sequenceFlow id="flow_20" sourceRef="task_20" targetRef="task_21" />
+    <bpmn:sequenceFlow id="flow_21" sourceRef="task_21" targetRef="task_22" />
+    <bpmn:sequenceFlow id="flow_22" sourceRef="task_22" targetRef="task_23" />
+    <bpmn:sequenceFlow id="flow_23" sourceRef="task_23" targetRef="task_24" />
+    <bpmn:sequenceFlow id="flow_24" sourceRef="task_24" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_single_lane_long_process" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_single_lane_long_process" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="4554" height="152" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_forwarder_di" bpmnElement="pool_forwarder" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="4554" height="152" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_ops_di" bpmnElement="lane_ops" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="4524" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_01_di" bpmnElement="task_01">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_02_di" bpmnElement="task_02">
+        <dc:Bounds x="358" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_03_di" bpmnElement="task_03">
+        <dc:Bounds x="538" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_04_di" bpmnElement="task_04">
+        <dc:Bounds x="718" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_05_di" bpmnElement="task_05">
+        <dc:Bounds x="898" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_06_di" bpmnElement="task_06">
+        <dc:Bounds x="1078" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_07_di" bpmnElement="task_07">
+        <dc:Bounds x="1258" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_08_di" bpmnElement="task_08">
+        <dc:Bounds x="1438" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_09_di" bpmnElement="task_09">
+        <dc:Bounds x="1618" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_10_di" bpmnElement="task_10">
+        <dc:Bounds x="1798" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_11_di" bpmnElement="task_11">
+        <dc:Bounds x="1978" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_12_di" bpmnElement="task_12">
+        <dc:Bounds x="2158" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_13_di" bpmnElement="task_13">
+        <dc:Bounds x="2338" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_14_di" bpmnElement="task_14">
+        <dc:Bounds x="2518" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_15_di" bpmnElement="task_15">
+        <dc:Bounds x="2698" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_16_di" bpmnElement="task_16">
+        <dc:Bounds x="2878" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_17_di" bpmnElement="task_17">
+        <dc:Bounds x="3058" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_18_di" bpmnElement="task_18">
+        <dc:Bounds x="3238" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_19_di" bpmnElement="task_19">
+        <dc:Bounds x="3418" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_20_di" bpmnElement="task_20">
+        <dc:Bounds x="3598" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_21_di" bpmnElement="task_21">
+        <dc:Bounds x="3778" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_22_di" bpmnElement="task_22">
+        <dc:Bounds x="3958" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_23_di" bpmnElement="task_23">
+        <dc:Bounds x="4138" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_24_di" bpmnElement="task_24">
+        <dc:Bounds x="4318" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="4498" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4466" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_00_di" bpmnElement="flow_00">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_01_di" bpmnElement="flow_01">
+        <di:waypoint x="278" y="76" />
+        <di:waypoint x="358" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_02_di" bpmnElement="flow_02">
+        <di:waypoint x="458" y="76" />
+        <di:waypoint x="538" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_03_di" bpmnElement="flow_03">
+        <di:waypoint x="638" y="76" />
+        <di:waypoint x="718" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_04_di" bpmnElement="flow_04">
+        <di:waypoint x="818" y="76" />
+        <di:waypoint x="898" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_05_di" bpmnElement="flow_05">
+        <di:waypoint x="998" y="76" />
+        <di:waypoint x="1078" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_06_di" bpmnElement="flow_06">
+        <di:waypoint x="1178" y="76" />
+        <di:waypoint x="1258" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_07_di" bpmnElement="flow_07">
+        <di:waypoint x="1358" y="76" />
+        <di:waypoint x="1438" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_08_di" bpmnElement="flow_08">
+        <di:waypoint x="1538" y="76" />
+        <di:waypoint x="1618" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_09_di" bpmnElement="flow_09">
+        <di:waypoint x="1718" y="76" />
+        <di:waypoint x="1798" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_10_di" bpmnElement="flow_10">
+        <di:waypoint x="1898" y="76" />
+        <di:waypoint x="1978" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_11_di" bpmnElement="flow_11">
+        <di:waypoint x="2078" y="76" />
+        <di:waypoint x="2158" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_12_di" bpmnElement="flow_12">
+        <di:waypoint x="2258" y="76" />
+        <di:waypoint x="2338" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_13_di" bpmnElement="flow_13">
+        <di:waypoint x="2438" y="76" />
+        <di:waypoint x="2518" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_14_di" bpmnElement="flow_14">
+        <di:waypoint x="2618" y="76" />
+        <di:waypoint x="2698" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_15_di" bpmnElement="flow_15">
+        <di:waypoint x="2798" y="76" />
+        <di:waypoint x="2878" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_16_di" bpmnElement="flow_16">
+        <di:waypoint x="2978" y="76" />
+        <di:waypoint x="3058" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_17_di" bpmnElement="flow_17">
+        <di:waypoint x="3158" y="76" />
+        <di:waypoint x="3238" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_18_di" bpmnElement="flow_18">
+        <di:waypoint x="3338" y="76" />
+        <di:waypoint x="3418" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_19_di" bpmnElement="flow_19">
+        <di:waypoint x="3518" y="76" />
+        <di:waypoint x="3598" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_20_di" bpmnElement="flow_20">
+        <di:waypoint x="3698" y="76" />
+        <di:waypoint x="3778" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_21_di" bpmnElement="flow_21">
+        <di:waypoint x="3878" y="76" />
+        <di:waypoint x="3958" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_22_di" bpmnElement="flow_22">
+        <di:waypoint x="4058" y="76" />
+        <di:waypoint x="4138" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_23_di" bpmnElement="flow_23">
+        <di:waypoint x="4238" y="76" />
+        <di:waypoint x="4318" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_24_di" bpmnElement="flow_24">
+        <di:waypoint x="4418" y="76" />
+        <di:waypoint x="4498" y="76" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

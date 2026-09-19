@@ -1,0 +1,104 @@
+{
+  "id": "definitions_dataobject_star",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-dataobject-star"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "dataObjects": [
+    { "id": "dataObject_contract_file", "name": "合同档案对象" }
+  ],
+  "children": [
+    {
+      "id": "process_contract_lifecycle",
+      "bpmn": {
+        "type": "process",
+        "name": "合同档案星形读写",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_draft",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起合同" },
+          "labels": [{ "text": "发起合同" }]
+        },
+        {
+          "id": "task_draft",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "起草合同" },
+          "labels": [{ "text": "起草合同" }]
+        },
+        {
+          "id": "task_legal_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "法务批注" },
+          "labels": [{ "text": "法务批注" }]
+        },
+        {
+          "id": "task_archive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "归档合同" },
+          "labels": [{ "text": "归档合同" }]
+        },
+        {
+          "id": "task_execute",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "履约执行" },
+          "labels": [{ "text": "履约执行" }]
+        },
+        {
+          "id": "end_done",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "合同完结" },
+          "labels": [{ "text": "合同完结" }]
+        },
+        {
+          "id": "data_contract",
+          "width": 36, "height": 50,
+          "bpmn": {
+            "type": "dataObjectReference",
+            "name": "合同档案",
+            "dataObjectRef": "dataObject_contract_file"
+          },
+          "labels": [{ "text": "合同档案" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_draft", "sources": ["start_draft"], "targets": ["task_draft"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_draft_review", "sources": ["task_draft"], "targets": ["task_legal_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_review_archive", "sources": ["task_legal_review"], "targets": ["task_archive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_archive_execute", "sources": ["task_archive"], "targets": ["task_execute"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_execute_end", "sources": ["task_execute"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "data_out_draft",
+          "sources": ["task_draft"],
+          "targets": ["data_contract"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "data_out_review",
+          "sources": ["task_legal_review"],
+          "targets": ["data_contract"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        },
+        {
+          "id": "data_in_archive",
+          "sources": ["data_contract"],
+          "targets": ["task_archive"],
+          "bpmn": { "type": "dataInputAssociation" }
+        },
+        {
+          "id": "data_in_execute",
+          "sources": ["data_contract"],
+          "targets": ["task_execute"],
+          "bpmn": { "type": "dataInputAssociation" }
+        }
+      ]
+    }
+  ]
+}

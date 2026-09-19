@@ -1,0 +1,72 @@
+{
+  "id": "definitions_isolated_node",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-isolated-node",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_isolated_node",
+      "bpmn": {
+        "type": "process",
+        "name": "孤立节点测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_main",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "主流程任务"
+          },
+          "labels": [{ "text": "主流程任务" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "结束"
+          },
+          "labels": [{ "text": "结束" }]
+        },
+        {
+          "id": "task_isolated",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "孤立任务（无任何连线）"
+          },
+          "labels": [{ "text": "孤立任务（无任何连线）" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_1", "sources": ["start_1"], "targets": ["task_main"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_main"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

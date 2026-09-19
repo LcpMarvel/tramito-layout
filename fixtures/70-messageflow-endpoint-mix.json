@@ -1,0 +1,163 @@
+{
+  "id": "definitions_messageflow_endpoint_mix",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-messageflow-endpoint-mix",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "支付链路混合端点"
+      },
+      "children": [
+        {
+          "id": "pool_app",
+          "bpmn": {
+            "type": "participant",
+            "name": "电商平台",
+            "processRef": "process_app"
+          },
+          "children": [
+            {
+              "id": "start_app",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "用户下单" },
+              "labels": [{ "text": "用户下单" }]
+            },
+            {
+              "id": "task_app_pay_req",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "发起支付请求" },
+              "labels": [{ "text": "发起支付请求" }]
+            },
+            {
+              "id": "task_app_notify_bank",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "同步对账明细" },
+              "labels": [{ "text": "同步对账明细" }]
+            },
+            {
+              "id": "catch_app_result",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "等待支付结果"
+              },
+              "labels": [{ "text": "等待支付结果" }]
+            },
+            {
+              "id": "end_app",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "订单关闭" },
+              "labels": [{ "text": "订单关闭" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_a1", "sources": ["start_app"], "targets": ["task_app_pay_req"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_a2", "sources": ["task_app_pay_req"], "targets": ["task_app_notify_bank"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_a3", "sources": ["task_app_notify_bank"], "targets": ["catch_app_result"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_a4", "sources": ["catch_app_result"], "targets": ["end_app"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_gateway",
+          "bpmn": {
+            "type": "participant",
+            "name": "第三方支付网关（黑盒）",
+            "isBlackBox": true
+          }
+        },
+        {
+          "id": "pool_bank",
+          "bpmn": {
+            "type": "participant",
+            "name": "银行核心系统",
+            "processRef": "process_bank"
+          },
+          "children": [
+            {
+              "id": "start_bank",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到对账明细"
+              },
+              "labels": [{ "text": "收到对账明细" }]
+            },
+            {
+              "id": "task_bank_clear",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "清算入账" },
+              "labels": [{ "text": "清算入账" }]
+            },
+            {
+              "id": "task_bank_callback",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "回传清算状态" },
+              "labels": [{ "text": "回传清算状态" }]
+            },
+            {
+              "id": "end_bank",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "清算完成" },
+              "labels": [{ "text": "清算完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_b1", "sources": ["start_bank"], "targets": ["task_bank_clear"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_b2", "sources": ["task_bank_clear"], "targets": ["task_bank_callback"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_b3", "sources": ["task_bank_callback"], "targets": ["end_bank"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_node_to_node",
+          "sources": ["task_app_notify_bank"],
+          "targets": ["start_bank"],
+          "bpmn": { "type": "messageFlow", "name": "对账明细" },
+          "labels": [{ "text": "对账明细" }]
+        },
+        {
+          "id": "msgflow_node_to_pool",
+          "sources": ["task_app_pay_req"],
+          "targets": ["pool_gateway"],
+          "bpmn": { "type": "messageFlow", "name": "支付请求" },
+          "labels": [{ "text": "支付请求" }]
+        },
+        {
+          "id": "msgflow_pool_to_node_app",
+          "sources": ["pool_gateway"],
+          "targets": ["catch_app_result"],
+          "bpmn": { "type": "messageFlow", "name": "支付结果" },
+          "labels": [{ "text": "支付结果" }]
+        },
+        {
+          "id": "msgflow_node_to_pool_bank",
+          "sources": ["task_bank_callback"],
+          "targets": ["pool_gateway"],
+          "bpmn": { "type": "messageFlow", "name": "清算状态" },
+          "labels": [{ "text": "清算状态" }]
+        },
+        {
+          "id": "msgflow_pool_to_node_bank",
+          "sources": ["pool_gateway"],
+          "targets": ["task_bank_clear"],
+          "bpmn": { "type": "messageFlow", "name": "扣款指令" },
+          "labels": [{ "text": "扣款指令" }]
+        }
+      ]
+    }
+  ]
+}

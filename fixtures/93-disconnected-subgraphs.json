@@ -1,0 +1,102 @@
+{
+  "id": "definitions_disconnected_subgraphs",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-disconnected-subgraphs",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_disconnected",
+      "bpmn": {
+        "type": "process",
+        "name": "不连通双链测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_a",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "链A开始"
+          },
+          "labels": [{ "text": "链A开始" }]
+        },
+        {
+          "id": "task_a1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "链A任务1" },
+          "labels": [{ "text": "链A任务1" }]
+        },
+        {
+          "id": "task_a2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "链A任务2" },
+          "labels": [{ "text": "链A任务2" }]
+        },
+        {
+          "id": "end_a",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "链A结束"
+          },
+          "labels": [{ "text": "链A结束" }]
+        },
+        {
+          "id": "start_b",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "链B开始"
+          },
+          "labels": [{ "text": "链B开始" }]
+        },
+        {
+          "id": "task_b1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "链B任务1" },
+          "labels": [{ "text": "链B任务1" }]
+        },
+        {
+          "id": "task_b2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "链B任务2" },
+          "labels": [{ "text": "链B任务2" }]
+        },
+        {
+          "id": "end_b",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "链B结束"
+          },
+          "labels": [{ "text": "链B结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_a1", "sources": ["start_a"], "targets": ["task_a1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_a2", "sources": ["task_a1"], "targets": ["task_a2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_a3", "sources": ["task_a2"], "targets": ["end_a"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_b1", "sources": ["start_b"], "targets": ["task_b1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_b2", "sources": ["task_b1"], "targets": ["task_b2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_b3", "sources": ["task_b2"], "targets": ["end_b"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

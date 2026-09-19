@@ -1,0 +1,96 @@
+{
+  "id": "definitions_triple_nested_loops",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-triple-nested-loops",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_triple_nested",
+      "bpmn": { "type": "process", "name": "研发三重返工环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_requirement",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "需求分析" },
+          "labels": [{ "text": "需求分析" }]
+        },
+        {
+          "id": "task_design",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "方案设计" },
+          "labels": [{ "text": "方案设计" }]
+        },
+        {
+          "id": "task_coding",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "编码实现" },
+          "labels": [{ "text": "编码实现" }]
+        },
+        {
+          "id": "gw_selftest",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "自测通过" },
+          "labels": [{ "text": "自测通过" }]
+        },
+        {
+          "id": "task_codereview",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "代码评审" },
+          "labels": [{ "text": "代码评审" }]
+        },
+        {
+          "id": "gw_review",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "评审通过" },
+          "labels": [{ "text": "评审通过" }]
+        },
+        {
+          "id": "task_acceptance",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "验收测试" },
+          "labels": [{ "text": "验收测试" }]
+        },
+        {
+          "id": "gw_acceptance",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "验收通过" },
+          "labels": [{ "text": "验收通过" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "发布" },
+          "labels": [{ "text": "发布" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_requirement"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_req_design", "sources": ["task_requirement"], "targets": ["task_design"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_design_coding", "sources": ["task_design"], "targets": ["task_coding"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_coding_gw", "sources": ["task_coding"], "targets": ["gw_selftest"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_selftest_back", "sources": ["gw_selftest"], "targets": ["task_coding"], "bpmn": { "type": "sequenceFlow", "name": "修复缺陷" }, "labels": [{ "text": "修复缺陷" }] },
+        { "id": "flow_selftest_pass", "sources": ["gw_selftest"], "targets": ["task_codereview"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_review_gw", "sources": ["task_codereview"], "targets": ["gw_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_review_back", "sources": ["gw_review"], "targets": ["task_design"], "bpmn": { "type": "sequenceFlow", "name": "返工设计" }, "labels": [{ "text": "返工设计" }] },
+        { "id": "flow_review_pass", "sources": ["gw_review"], "targets": ["task_acceptance"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_acceptance_gw", "sources": ["task_acceptance"], "targets": ["gw_acceptance"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_acceptance_back", "sources": ["gw_acceptance"], "targets": ["task_requirement"], "bpmn": { "type": "sequenceFlow", "name": "需求变更" }, "labels": [{ "text": "需求变更" }] },
+        { "id": "flow_acceptance_pass", "sources": ["gw_acceptance"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] }
+      ]
+    }
+  ]
+}

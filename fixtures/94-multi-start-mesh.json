@@ -1,0 +1,176 @@
+{
+  "id": "definitions_multi_start_mesh",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-multi-start-mesh",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_multi_start_mesh",
+      "bpmn": {
+        "type": "process",
+        "name": "多起点网状汇合测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_web",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "网页渠道发起"
+          },
+          "labels": [{ "text": "网页渠道发起" }]
+        },
+        {
+          "id": "start_app",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "App渠道发起"
+          },
+          "labels": [{ "text": "App渠道发起" }]
+        },
+        {
+          "id": "start_phone",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "电话渠道发起"
+          },
+          "labels": [{ "text": "电话渠道发起" }]
+        },
+        {
+          "id": "start_counter",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "柜面渠道发起"
+          },
+          "labels": [{ "text": "柜面渠道发起" }]
+        },
+        {
+          "id": "task_web_check",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "网页表单校验" },
+          "labels": [{ "text": "网页表单校验" }]
+        },
+        {
+          "id": "task_app_check",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "App实名核验" },
+          "labels": [{ "text": "App实名核验" }]
+        },
+        {
+          "id": "task_phone_record",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "电话录音登记" },
+          "labels": [{ "text": "电话录音登记" }]
+        },
+        {
+          "id": "gateway_online_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "线上渠道汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "线上渠道汇合" }]
+        },
+        {
+          "id": "gateway_offline_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "线下渠道汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "线下渠道汇合" }]
+        },
+        {
+          "id": "task_online_process",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "线上统一受理" },
+          "labels": [{ "text": "线上统一受理" }]
+        },
+        {
+          "id": "task_offline_process",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "线下人工受理" },
+          "labels": [{ "text": "线下人工受理" }]
+        },
+        {
+          "id": "gateway_route",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "是否自动审批",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "是否自动审批" }]
+        },
+        {
+          "id": "gateway_manual_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "人工通道汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "人工通道汇合" }]
+        },
+        {
+          "id": "end_auto",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "自动办结"
+          },
+          "labels": [{ "text": "自动办结" }]
+        },
+        {
+          "id": "end_manual",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "人工办结"
+          },
+          "labels": [{ "text": "人工办结" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_web", "sources": ["start_web"], "targets": ["task_web_check"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_app", "sources": ["start_app"], "targets": ["task_app_check"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_phone", "sources": ["start_phone"], "targets": ["task_phone_record"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_counter", "sources": ["start_counter"], "targets": ["gateway_offline_merge"], "bpmn": { "type": "sequenceFlow", "name": "柜面直接受理" }, "labels": [{ "text": "柜面直接受理" }] },
+        { "id": "flow_web_merge", "sources": ["task_web_check"], "targets": ["gateway_online_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_app_merge", "sources": ["task_app_check"], "targets": ["gateway_online_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_phone_merge", "sources": ["task_phone_record"], "targets": ["gateway_offline_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_online_process", "sources": ["gateway_online_merge"], "targets": ["task_online_process"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_offline_process", "sources": ["gateway_offline_merge"], "targets": ["task_offline_process"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_online_route", "sources": ["task_online_process"], "targets": ["gateway_route"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_route_auto", "sources": ["gateway_route"], "targets": ["end_auto"], "bpmn": { "type": "sequenceFlow", "name": "满足自动审批规则" }, "labels": [{ "text": "满足自动审批规则" }] },
+        { "id": "flow_route_manual", "sources": ["gateway_route"], "targets": ["gateway_manual_merge"], "bpmn": { "type": "sequenceFlow", "name": "需人工复核" }, "labels": [{ "text": "需人工复核" }] },
+        { "id": "flow_offline_manual", "sources": ["task_offline_process"], "targets": ["gateway_manual_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_manual_end", "sources": ["gateway_manual_merge"], "targets": ["end_manual"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

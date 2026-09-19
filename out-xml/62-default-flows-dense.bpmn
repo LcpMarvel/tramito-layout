@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_default_flows_dense" targetNamespace="http://example.com/test-default-flows-dense" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_default_dense" name="密集默认流工单分派" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="工单创建">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gw_urgent" name="紧急程度" gatewayDirection="Diverging" default="flow_urgent_default">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_urgent_hit</bpmn:outgoing>
+      <bpmn:outgoing>flow_urgent_default</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_urgent" name="紧急通道处理">
+      <bpmn:incoming>flow_urgent_hit</bpmn:incoming>
+      <bpmn:outgoing>flow_urgent_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_vip" name="客户等级" gatewayDirection="Diverging" default="flow_vip_default">
+      <bpmn:incoming>flow_urgent_default</bpmn:incoming>
+      <bpmn:outgoing>flow_vip_hit</bpmn:outgoing>
+      <bpmn:outgoing>flow_vip_default</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_vip" name="VIP专员跟进">
+      <bpmn:incoming>flow_vip_hit</bpmn:incoming>
+      <bpmn:outgoing>flow_vip_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_category" name="问题类别" gatewayDirection="Diverging" default="flow_category_default">
+      <bpmn:incoming>flow_vip_default</bpmn:incoming>
+      <bpmn:outgoing>flow_category_tech</bpmn:outgoing>
+      <bpmn:outgoing>flow_category_default</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_tech" name="技术组处理">
+      <bpmn:incoming>flow_category_tech</bpmn:incoming>
+      <bpmn:outgoing>flow_tech_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_general" name="普通客服处理">
+      <bpmn:incoming>flow_category_default</bpmn:incoming>
+      <bpmn:outgoing>flow_general_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_merge" name="处理汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_urgent_merge</bpmn:incoming>
+      <bpmn:incoming>flow_vip_merge</bpmn:incoming>
+      <bpmn:incoming>flow_tech_merge</bpmn:incoming>
+      <bpmn:incoming>flow_general_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_to_feedback</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_feedback" name="回访满意度">
+      <bpmn:incoming>flow_to_feedback</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="工单关闭">
+      <bpmn:incoming>flow_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="gw_urgent" />
+    <bpmn:sequenceFlow id="flow_urgent_hit" name="特急工单" sourceRef="gw_urgent" targetRef="task_urgent">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${priority == 'urgent'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_urgent_default" name="常规优先级" sourceRef="gw_urgent" targetRef="gw_vip" />
+    <bpmn:sequenceFlow id="flow_vip_hit" name="VIP客户" sourceRef="gw_vip" targetRef="task_vip">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level == 'vip'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_vip_default" name="普通客户" sourceRef="gw_vip" targetRef="gw_category" />
+    <bpmn:sequenceFlow id="flow_category_tech" name="技术问题" sourceRef="gw_category" targetRef="task_tech">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${category == 'tech'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_category_default" name="其他问题" sourceRef="gw_category" targetRef="task_general" />
+    <bpmn:sequenceFlow id="flow_urgent_merge" sourceRef="task_urgent" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_vip_merge" sourceRef="task_vip" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_tech_merge" sourceRef="task_tech" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_general_merge" sourceRef="task_general" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_to_feedback" sourceRef="gw_merge" targetRef="task_feedback" />
+    <bpmn:sequenceFlow id="flow_to_end" sourceRef="task_feedback" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_default_flows_dense" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_default_flows_dense" bpmnElement="process_default_dense">
+      <bpmndi:BPMNShape id="process_default_dense_di" bpmnElement="process_default_dense">
+        <dc:Bounds x="0" y="0" width="1214" height="451.6666666666667" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="166.66666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="206.66666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_urgent_di" bpmnElement="gw_urgent">
+        <dc:Bounds x="178" y="159.66666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="232" y="177.66666666666669" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_urgent_di" bpmnElement="task_urgent">
+        <dc:Bounds x="308" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_vip_di" bpmnElement="gw_vip">
+        <dc:Bounds x="341.3333333333333" y="222.16666666666666" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="395.3333333333333" y="240.16666666666666" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_vip_di" bpmnElement="task_vip">
+        <dc:Bounds x="488" y="115.83333333333334" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_category_di" bpmnElement="gw_category">
+        <dc:Bounds x="521.3333333333334" y="284.6666666666667" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="575.3333333333334" y="302.6666666666667" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tech_di" bpmnElement="task_tech">
+        <dc:Bounds x="668" y="199.66666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_general_di" bpmnElement="task_general">
+        <dc:Bounds x="668" y="339.6666666666667" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_merge_di" bpmnElement="gw_merge">
+        <dc:Bounds x="848" y="156.33333333333334" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="879" y="138.33333333333334" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_feedback_di" bpmnElement="task_feedback">
+        <dc:Bounds x="978" y="141.33333333333334" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1158" y="163.33333333333334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1126" y="203.33333333333334" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="184.66666666666669" />
+        <di:waypoint x="178" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_urgent_hit_di" bpmnElement="flow_urgent_hit">
+        <di:waypoint x="203" y="159.66666666666669" />
+        <di:waypoint x="203" y="72" />
+        <di:waypoint x="308" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="130.66666666666669" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_urgent_default_di" bpmnElement="flow_urgent_default">
+        <di:waypoint x="203" y="209.66666666666669" />
+        <di:waypoint x="203" y="247.16666666666666" />
+        <di:waypoint x="341.3333333333333" y="247.16666666666666" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="148" y="221.41666666666669" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vip_hit_di" bpmnElement="flow_vip_hit">
+        <di:waypoint x="366.3333333333333" y="222.16666666666666" />
+        <di:waypoint x="366.3333333333333" y="155.83333333333334" />
+        <di:waypoint x="488" y="155.83333333333334" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="371.3333333333333" y="193.16666666666666" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vip_default_di" bpmnElement="flow_vip_default">
+        <di:waypoint x="366.3333333333333" y="272.16666666666663" />
+        <di:waypoint x="366.3333333333333" y="309.6666666666667" />
+        <di:waypoint x="521.3333333333334" y="309.6666666666667" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="311.3333333333333" y="283.91666666666663" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_category_tech_di" bpmnElement="flow_category_tech">
+        <di:waypoint x="546.3333333333334" y="284.6666666666667" />
+        <di:waypoint x="546.3333333333334" y="239.66666666666669" />
+        <di:waypoint x="668" y="239.66666666666669" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="551.3333333333334" y="255.66666666666669" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_category_default_di" bpmnElement="flow_category_default">
+        <di:waypoint x="546.3333333333334" y="334.6666666666667" />
+        <di:waypoint x="546.3333333333334" y="379.6666666666667" />
+        <di:waypoint x="668" y="379.6666666666667" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="491.33333333333337" y="349.6666666666667" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_urgent_merge_di" bpmnElement="flow_urgent_merge">
+        <di:waypoint x="358" y="112" />
+        <di:waypoint x="298" y="112" />
+        <di:waypoint x="298" y="105.83333333333334" />
+        <di:waypoint x="873" y="105.83333333333334" />
+        <di:waypoint x="873" y="156.33333333333334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_vip_merge_di" bpmnElement="flow_vip_merge">
+        <di:waypoint x="588" y="155.83333333333334" />
+        <di:waypoint x="718" y="155.83333333333334" />
+        <di:waypoint x="718" y="181.33333333333334" />
+        <di:waypoint x="848" y="181.33333333333334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tech_merge_di" bpmnElement="flow_tech_merge">
+        <di:waypoint x="768" y="239.66666666666669" />
+        <di:waypoint x="808" y="239.66666666666669" />
+        <di:waypoint x="808" y="181.33333333333334" />
+        <di:waypoint x="848" y="181.33333333333334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_general_merge_di" bpmnElement="flow_general_merge">
+        <di:waypoint x="718" y="339.6666666666667" />
+        <di:waypoint x="718" y="289.6666666666667" />
+        <di:waypoint x="873" y="289.6666666666667" />
+        <di:waypoint x="873" y="206.33333333333334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_feedback_di" bpmnElement="flow_to_feedback">
+        <di:waypoint x="898" y="181.33333333333334" />
+        <di:waypoint x="978" y="181.33333333333334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_di" bpmnElement="flow_to_end">
+        <di:waypoint x="1078" y="181.33333333333334" />
+        <di:waypoint x="1158" y="181.33333333333334" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

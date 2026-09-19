@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_backedge_into_gateway" targetNamespace="http://example.com/test-backedge-into-gateway" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_backedge_gateway" name="订单分流复核回环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_receive" name="接收订单">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_receive_split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_split" name="渠道分流">
+      <bpmn:incoming>flow_receive_split</bpmn:incoming>
+      <bpmn:incoming>flow_check_back</bpmn:incoming>
+      <bpmn:outgoing>flow_split_online</bpmn:outgoing>
+      <bpmn:outgoing>flow_split_offline</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_online" name="线上渠道处理">
+      <bpmn:incoming>flow_split_online</bpmn:incoming>
+      <bpmn:outgoing>flow_online_merge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_offline" name="线下网点处理">
+      <bpmn:incoming>flow_split_offline</bpmn:incoming>
+      <bpmn:outgoing>flow_offline_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_merge" name="处理汇聚">
+      <bpmn:incoming>flow_online_merge</bpmn:incoming>
+      <bpmn:incoming>flow_offline_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_merge_review</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_review" name="汇总复核">
+      <bpmn:incoming>flow_merge_review</bpmn:incoming>
+      <bpmn:outgoing>flow_review_check</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_check" name="复核通过">
+      <bpmn:incoming>flow_review_check</bpmn:incoming>
+      <bpmn:outgoing>flow_check_pass</bpmn:outgoing>
+      <bpmn:outgoing>flow_check_back</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="end_1" name="完成">
+      <bpmn:incoming>flow_check_pass</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_receive" />
+    <bpmn:sequenceFlow id="flow_receive_split" sourceRef="task_receive" targetRef="gw_split" />
+    <bpmn:sequenceFlow id="flow_split_online" name="线上" sourceRef="gw_split" targetRef="task_online" />
+    <bpmn:sequenceFlow id="flow_split_offline" name="线下" sourceRef="gw_split" targetRef="task_offline" />
+    <bpmn:sequenceFlow id="flow_online_merge" sourceRef="task_online" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_offline_merge" sourceRef="task_offline" targetRef="gw_merge" />
+    <bpmn:sequenceFlow id="flow_merge_review" sourceRef="gw_merge" targetRef="task_review" />
+    <bpmn:sequenceFlow id="flow_review_check" sourceRef="task_review" targetRef="gw_check" />
+    <bpmn:sequenceFlow id="flow_check_pass" name="通过" sourceRef="gw_check" targetRef="end_1" />
+    <bpmn:sequenceFlow id="flow_check_back" name="重新分流" sourceRef="gw_check" targetRef="gw_split" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_backedge_into_gateway" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_backedge_into_gateway" bpmnElement="process_backedge_gateway">
+      <bpmndi:BPMNShape id="process_backedge_gateway_di" bpmnElement="process_backedge_gateway">
+        <dc:Bounds x="0" y="0" width="1164" height="295" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receive_di" bpmnElement="task_receive">
+        <dc:Bounds x="178" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_split_di" bpmnElement="gw_split">
+        <dc:Bounds x="358" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="355" y="241" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_online_di" bpmnElement="task_online">
+        <dc:Bounds x="488" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_offline_di" bpmnElement="task_offline">
+        <dc:Bounds x="488" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_merge_di" bpmnElement="gw_merge">
+        <dc:Bounds x="668" y="111.58333333333333" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="665" y="93.58333333333333" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_review_di" bpmnElement="task_review">
+        <dc:Bounds x="798" y="96.58333333333331" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_check_di" bpmnElement="gw_check">
+        <dc:Bounds x="978" y="140.75" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="975" y="194.75" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1108" y="147.75" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1076" y="187.75" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_receive_split_di" bpmnElement="flow_receive_split">
+        <di:waypoint x="278" y="212" />
+        <di:waypoint x="358" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_split_online_di" bpmnElement="flow_split_online">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="448" y="72" />
+        <di:waypoint x="488" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="217" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_split_offline_di" bpmnElement="flow_split_offline">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="488" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_online_merge_di" bpmnElement="flow_online_merge">
+        <di:waypoint x="588" y="72" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="628" y="136.58333333333331" />
+        <di:waypoint x="668" y="136.58333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_offline_merge_di" bpmnElement="flow_offline_merge">
+        <di:waypoint x="588" y="212" />
+        <di:waypoint x="628" y="212" />
+        <di:waypoint x="628" y="136.58333333333331" />
+        <di:waypoint x="668" y="136.58333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_merge_review_di" bpmnElement="flow_merge_review">
+        <di:waypoint x="718" y="136.58333333333331" />
+        <di:waypoint x="798" y="136.58333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_check_di" bpmnElement="flow_review_check">
+        <di:waypoint x="898" y="136.58333333333331" />
+        <di:waypoint x="938" y="136.58333333333331" />
+        <di:waypoint x="938" y="165.75" />
+        <di:waypoint x="978" y="165.75" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_check_pass_di" bpmnElement="flow_check_pass">
+        <di:waypoint x="1028" y="165.75" />
+        <di:waypoint x="1108" y="165.75" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1037" y="170.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_check_back_di" bpmnElement="flow_check_back">
+        <di:waypoint x="1003" y="140.75" />
+        <di:waypoint x="1003" y="16" />
+        <di:waypoint x="383" y="16" />
+        <di:waypoint x="383" y="187" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1008" y="111.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

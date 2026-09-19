@@ -1,0 +1,156 @@
+{
+  "id": "definitions_long_chinese_labels",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-long-chinese-labels",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_long_labels",
+      "bpmn": {
+        "type": "process",
+        "name": "超长中文标签压力测试流程",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "员工在企业自助门户系统中发起差旅费用报销申请并上传全部原始票据影像"
+          },
+          "labels": [{ "text": "员工在企业自助门户系统中发起差旅费用报销申请并上传全部原始票据影像" }]
+        },
+        {
+          "id": "task_submit",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "申请人逐项填写差旅明细并对每张发票的真实性与关联性作出书面承诺"
+          },
+          "labels": [{ "text": "申请人逐项填写差旅明细并对每张发票的真实性与关联性作出书面承诺" }]
+        },
+        {
+          "id": "task_dept_review",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "由部门负责人对提交的报销单据进行真实性与合规性双重审查确认无误"
+          },
+          "labels": [{ "text": "由部门负责人对提交的报销单据进行真实性与合规性双重审查确认无误" }]
+        },
+        {
+          "id": "gateway_amount",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "根据报销金额是否超过五千元人民币的阈值判断是否需要财务总监复核",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "根据报销金额是否超过五千元人民币的阈值判断是否需要财务总监复核" }]
+        },
+        {
+          "id": "task_cfo_review",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "userTask",
+            "name": "财务总监结合年度预算执行进度对大额报销事项进行专项复核并签署意见"
+          },
+          "labels": [{ "text": "财务总监结合年度预算执行进度对大额报销事项进行专项复核并签署意见" }]
+        },
+        {
+          "id": "gateway_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "汇聚大额复核分支与小额直通分支后统一进入财务付款处理环节",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "汇聚大额复核分支与小额直通分支后统一进入财务付款处理环节" }]
+        },
+        {
+          "id": "task_payment",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "serviceTask",
+            "name": "财务共享中心通过银企直联通道将报销款项支付至员工本人工资卡账户"
+          },
+          "labels": [{ "text": "财务共享中心通过银企直联通道将报销款项支付至员工本人工资卡账户" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "报销流程全部办结并将电子凭证归档至企业财务档案管理系统长期保存"
+          },
+          "labels": [{ "text": "报销流程全部办结并将电子凭证归档至企业财务档案管理系统长期保存" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_1",
+          "sources": ["start_1"], "targets": ["task_submit"],
+          "bpmn": { "type": "sequenceFlow", "name": "申请发起后立即进入差旅明细填写与票据承诺确认环节继续办理" },
+          "labels": [{ "text": "申请发起后立即进入差旅明细填写与票据承诺确认环节继续办理" }]
+        },
+        {
+          "id": "flow_2",
+          "sources": ["task_submit"], "targets": ["task_dept_review"],
+          "bpmn": { "type": "sequenceFlow", "name": "明细填写完整且票据影像清晰可辨后转交部门负责人开展双重审查" },
+          "labels": [{ "text": "明细填写完整且票据影像清晰可辨后转交部门负责人开展双重审查" }]
+        },
+        {
+          "id": "flow_3",
+          "sources": ["task_dept_review"], "targets": ["gateway_amount"],
+          "bpmn": { "type": "sequenceFlow", "name": "部门审查通过后依据单据合计金额自动进入分级审批路由判断节点" },
+          "labels": [{ "text": "部门审查通过后依据单据合计金额自动进入分级审批路由判断节点" }]
+        },
+        {
+          "id": "flow_large",
+          "sources": ["gateway_amount"], "targets": ["task_cfo_review"],
+          "bpmn": { "type": "sequenceFlow", "name": "报销金额超过五千元人民币阈值必须提交财务总监进行专项复核审批" },
+          "labels": [{ "text": "报销金额超过五千元人民币阈值必须提交财务总监进行专项复核审批" }]
+        },
+        {
+          "id": "flow_small",
+          "sources": ["gateway_amount"], "targets": ["gateway_merge"],
+          "bpmn": { "type": "sequenceFlow", "name": "报销金额未超过五千元人民币阈值可跳过专项复核直接进入付款环节" },
+          "labels": [{ "text": "报销金额未超过五千元人民币阈值可跳过专项复核直接进入付款环节" }]
+        },
+        {
+          "id": "flow_cfo_merge",
+          "sources": ["task_cfo_review"], "targets": ["gateway_merge"],
+          "bpmn": { "type": "sequenceFlow", "name": "财务总监签署同意意见后大额分支汇入统一付款处理主干流程继续" },
+          "labels": [{ "text": "财务总监签署同意意见后大额分支汇入统一付款处理主干流程继续" }]
+        },
+        {
+          "id": "flow_pay",
+          "sources": ["gateway_merge"], "targets": ["task_payment"],
+          "bpmn": { "type": "sequenceFlow", "name": "审批链路全部完成后系统自动生成付款指令并推送至银企直联通道" },
+          "labels": [{ "text": "审批链路全部完成后系统自动生成付款指令并推送至银企直联通道" }]
+        },
+        {
+          "id": "flow_end",
+          "sources": ["task_payment"], "targets": ["end_1"],
+          "bpmn": { "type": "sequenceFlow", "name": "付款成功回执到达后流程办结并触发电子会计凭证自动归档动作" },
+          "labels": [{ "text": "付款成功回执到达后流程办结并触发电子会计凭证自动归档动作" }]
+        }
+      ]
+    }
+  ]
+}

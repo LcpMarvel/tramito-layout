@@ -1,0 +1,173 @@
+{
+  "id": "definitions_boundary_handler_with_subprocess",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-handler-with-subprocess",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "errors": [
+    { "id": "err_payment", "name": "支付失败", "errorCode": "PAY_ERR_001" }
+  ],
+  "children": [
+    {
+      "id": "process_order_payment",
+      "bpmn": {
+        "type": "process",
+        "name": "订单支付（边界处理链含子流程）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "提交订单" },
+          "labels": [{ "text": "提交订单" }]
+        },
+        {
+          "id": "sub_payment",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "支付处理", "isExpanded": true },
+          "labels": [{ "text": "支付处理" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "boundaryEvents": [
+            {
+              "id": "boundary_payment_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "sub_payment",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "支付失败",
+                "cancelActivity": true,
+                "errorRef": "err_payment"
+              },
+              "labels": [{ "text": "支付失败" }]
+            }
+          ],
+          "children": [
+            {
+              "id": "payment_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始支付" },
+              "labels": [{ "text": "开始支付" }]
+            },
+            {
+              "id": "payment_task_deduct",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "调用支付网关" },
+              "labels": [{ "text": "调用支付网关" }]
+            },
+            {
+              "id": "payment_task_verify",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "核验支付结果" },
+              "labels": [{ "text": "核验支付结果" }]
+            },
+            {
+              "id": "payment_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "支付成功" },
+              "labels": [{ "text": "支付成功" }]
+            }
+          ],
+          "edges": [
+            { "id": "payment_flow_1", "sources": ["payment_start"], "targets": ["payment_task_deduct"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "payment_flow_2", "sources": ["payment_task_deduct"], "targets": ["payment_task_verify"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "payment_flow_3", "sources": ["payment_task_verify"], "targets": ["payment_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "task_ship",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "安排发货" },
+          "labels": [{ "text": "安排发货" }]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "订单完成" },
+          "labels": [{ "text": "订单完成" }]
+        },
+        {
+          "id": "task_log_failure",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "记录支付异常" },
+          "labels": [{ "text": "记录支付异常" }]
+        },
+        {
+          "id": "sub_refund",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "退款处理", "isExpanded": true },
+          "labels": [{ "text": "退款处理" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "refund_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始退款" },
+              "labels": [{ "text": "开始退款" }]
+            },
+            {
+              "id": "refund_task_freeze",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "冻结订单" },
+              "labels": [{ "text": "冻结订单" }]
+            },
+            {
+              "id": "refund_task_return",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "退回已扣款项" },
+              "labels": [{ "text": "退回已扣款项" }]
+            },
+            {
+              "id": "refund_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "退款完成" },
+              "labels": [{ "text": "退款完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "refund_flow_1", "sources": ["refund_start"], "targets": ["refund_task_freeze"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "refund_flow_2", "sources": ["refund_task_freeze"], "targets": ["refund_task_return"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "refund_flow_3", "sources": ["refund_task_return"], "targets": ["refund_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "task_notify_customer",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "通知客户" },
+          "labels": [{ "text": "通知客户" }]
+        },
+        {
+          "id": "end_failure",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "订单关闭" },
+          "labels": [{ "text": "订单关闭" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["sub_payment"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["sub_payment"], "targets": ["task_ship"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["task_ship"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "handler_flow_1", "sources": ["boundary_payment_error"], "targets": ["task_log_failure"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "handler_flow_2", "sources": ["task_log_failure"], "targets": ["sub_refund"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "handler_flow_3", "sources": ["sub_refund"], "targets": ["task_notify_customer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "handler_flow_4", "sources": ["task_notify_customer"], "targets": ["end_failure"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

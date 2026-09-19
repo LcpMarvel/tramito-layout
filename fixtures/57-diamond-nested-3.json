@@ -1,0 +1,148 @@
+{
+  "id": "definitions_diamond_nested_3",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-diamond-nested-3",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_diamond_nested",
+      "bpmn": {
+        "type": "process",
+        "name": "三层嵌套菱形贷款审批",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "贷款申请" },
+          "labels": [{ "text": "贷款申请" }]
+        },
+        {
+          "id": "gw_l1_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "客户类型",
+            "gatewayDirection": "Diverging",
+            "default": "flow_l1_personal"
+          },
+          "labels": [{ "text": "客户类型" }]
+        },
+        {
+          "id": "task_personal",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "个人资质审核" },
+          "labels": [{ "text": "个人资质审核" }]
+        },
+        {
+          "id": "gw_l2_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "企业规模",
+            "gatewayDirection": "Diverging",
+            "default": "flow_l2_small"
+          },
+          "labels": [{ "text": "企业规模" }]
+        },
+        {
+          "id": "task_small_biz",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "小微企业评估" },
+          "labels": [{ "text": "小微企业评估" }]
+        },
+        {
+          "id": "gw_l3_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "授信额度",
+            "gatewayDirection": "Diverging",
+            "default": "flow_l3_normal"
+          },
+          "labels": [{ "text": "授信额度" }]
+        },
+        {
+          "id": "task_high_credit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "风控部尽调" },
+          "labels": [{ "text": "风控部尽调" }]
+        },
+        {
+          "id": "task_normal_credit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "系统自动评级" },
+          "labels": [{ "text": "系统自动评级" }]
+        },
+        {
+          "id": "gw_l3_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "额度汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "额度汇合" }]
+        },
+        {
+          "id": "gw_l2_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "规模汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "规模汇合" }]
+        },
+        {
+          "id": "gw_l1_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "类型汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "类型汇合" }]
+        },
+        {
+          "id": "task_sign",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "签署合同" },
+          "labels": [{ "text": "签署合同" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "放款完成" },
+          "labels": [{ "text": "放款完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gw_l1_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_l1_personal", "sources": ["gw_l1_div"], "targets": ["task_personal"], "bpmn": { "type": "sequenceFlow", "name": "个人客户", "isDefault": true }, "labels": [{ "text": "个人客户" }] },
+        { "id": "flow_l1_corp", "sources": ["gw_l1_div"], "targets": ["gw_l2_div"], "bpmn": { "type": "sequenceFlow", "name": "企业客户", "conditionExpression": { "body": "${customerType == 'corp'}" } }, "labels": [{ "text": "企业客户" }] },
+        { "id": "flow_l2_small", "sources": ["gw_l2_div"], "targets": ["task_small_biz"], "bpmn": { "type": "sequenceFlow", "name": "小微企业", "isDefault": true }, "labels": [{ "text": "小微企业" }] },
+        { "id": "flow_l2_large", "sources": ["gw_l2_div"], "targets": ["gw_l3_div"], "bpmn": { "type": "sequenceFlow", "name": "规模以上", "conditionExpression": { "body": "${scale == 'large'}" } }, "labels": [{ "text": "规模以上" }] },
+        { "id": "flow_l3_high", "sources": ["gw_l3_div"], "targets": ["task_high_credit"], "bpmn": { "type": "sequenceFlow", "name": "超500万", "conditionExpression": { "body": "${credit > 5000000}" } }, "labels": [{ "text": "超500万" }] },
+        { "id": "flow_l3_normal", "sources": ["gw_l3_div"], "targets": ["task_normal_credit"], "bpmn": { "type": "sequenceFlow", "name": "500万以内", "isDefault": true }, "labels": [{ "text": "500万以内" }] },
+        { "id": "flow_l3_high_conv", "sources": ["task_high_credit"], "targets": ["gw_l3_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_l3_normal_conv", "sources": ["task_normal_credit"], "targets": ["gw_l3_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_l3_to_l2", "sources": ["gw_l3_conv"], "targets": ["gw_l2_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_small_to_l2", "sources": ["task_small_biz"], "targets": ["gw_l2_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_l2_to_l1", "sources": ["gw_l2_conv"], "targets": ["gw_l1_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_personal_to_l1", "sources": ["task_personal"], "targets": ["gw_l1_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_sign", "sources": ["gw_l1_conv"], "targets": ["task_sign"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end", "sources": ["task_sign"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_long_chinese_labels" targetNamespace="http://example.com/test-long-chinese-labels" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_long_labels" name="超长中文标签压力测试流程" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="员工在企业自助门户系统中发起差旅费用报销申请并上传全部原始票据影像">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="申请人逐项填写差旅明细并对每张发票的真实性与关联性作出书面承诺">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_dept_review" name="由部门负责人对提交的报销单据进行真实性与合规性双重审查确认无误">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_amount" name="根据报销金额是否超过五千元人民币的阈值判断是否需要财务总监复核" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_large</bpmn:outgoing>
+      <bpmn:outgoing>flow_small</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_cfo_review" name="财务总监结合年度预算执行进度对大额报销事项进行专项复核并签署意见">
+      <bpmn:incoming>flow_large</bpmn:incoming>
+      <bpmn:outgoing>flow_cfo_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_merge" name="汇聚大额复核分支与小额直通分支后统一进入财务付款处理环节" gatewayDirection="Converging">
+      <bpmn:incoming>flow_small</bpmn:incoming>
+      <bpmn:incoming>flow_cfo_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_pay</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_payment" name="财务共享中心通过银企直联通道将报销款项支付至员工本人工资卡账户">
+      <bpmn:incoming>flow_pay</bpmn:incoming>
+      <bpmn:outgoing>flow_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="报销流程全部办结并将电子凭证归档至企业财务档案管理系统长期保存">
+      <bpmn:incoming>flow_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" name="申请发起后立即进入差旅明细填写与票据承诺确认环节继续办理" sourceRef="start_1" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="flow_2" name="明细填写完整且票据影像清晰可辨后转交部门负责人开展双重审查" sourceRef="task_submit" targetRef="task_dept_review" />
+    <bpmn:sequenceFlow id="flow_3" name="部门审查通过后依据单据合计金额自动进入分级审批路由判断节点" sourceRef="task_dept_review" targetRef="gateway_amount" />
+    <bpmn:sequenceFlow id="flow_large" name="报销金额超过五千元人民币阈值必须提交财务总监进行专项复核审批" sourceRef="gateway_amount" targetRef="task_cfo_review" />
+    <bpmn:sequenceFlow id="flow_small" name="报销金额未超过五千元人民币阈值可跳过专项复核直接进入付款环节" sourceRef="gateway_amount" targetRef="gateway_merge" />
+    <bpmn:sequenceFlow id="flow_cfo_merge" name="财务总监签署同意意见后大额分支汇入统一付款处理主干流程继续" sourceRef="task_cfo_review" targetRef="gateway_merge" />
+    <bpmn:sequenceFlow id="flow_pay" name="审批链路全部完成后系统自动生成付款指令并推送至银企直联通道" sourceRef="gateway_merge" targetRef="task_payment" />
+    <bpmn:sequenceFlow id="flow_end" name="付款成功回执到达后流程办结并触发电子会计凭证自动归档动作" sourceRef="task_payment" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_long_chinese_labels" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_long_chinese_labels" bpmnElement="process_long_labels">
+      <bpmndi:BPMNShape id="process_long_labels_di" bpmnElement="process_long_labels">
+        <dc:Bounds x="0" y="0" width="1214" height="169" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_dept_review_di" bpmnElement="task_dept_review">
+        <dc:Bounds x="358" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_amount_di" bpmnElement="gateway_amount">
+        <dc:Bounds x="538" y="72" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="488" y="12" width="150" height="56" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cfo_review_di" bpmnElement="task_cfo_review">
+        <dc:Bounds x="668" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_merge_di" bpmnElement="gateway_merge">
+        <dc:Bounds x="848" y="72" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="798" y="26" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_payment_di" bpmnElement="task_payment">
+        <dc:Bounds x="978" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1158" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1126" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="97" />
+        <di:waypoint x="178" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="113" y="78" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="97" />
+        <di:waypoint x="358" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="293" y="78" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="458" y="97" />
+        <di:waypoint x="538" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="473" y="78" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_large_di" bpmnElement="flow_large">
+        <di:waypoint x="588" y="97" />
+        <di:waypoint x="628" y="97" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="668" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="595" y="102" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_small_di" bpmnElement="flow_small">
+        <di:waypoint x="563" y="122" />
+        <di:waypoint x="563" y="132" />
+        <di:waypoint x="563" y="142" />
+        <di:waypoint x="873" y="142" />
+        <di:waypoint x="873" y="122" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="560" y="147" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_cfo_merge_di" bpmnElement="flow_cfo_merge">
+        <di:waypoint x="768" y="72" />
+        <di:waypoint x="808" y="72" />
+        <di:waypoint x="808" y="97" />
+        <di:waypoint x="848" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="763" y="17" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_pay_di" bpmnElement="flow_pay">
+        <di:waypoint x="898" y="97" />
+        <di:waypoint x="978" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="907" y="102" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_end_di" bpmnElement="flow_end">
+        <di:waypoint x="1078" y="97" />
+        <di:waypoint x="1158" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1093" y="78" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

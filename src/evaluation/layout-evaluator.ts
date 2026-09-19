@@ -9,13 +9,16 @@
 // 设计：每个 rule 是独立函数 (parsed) -> Violation[]，互不依赖。
 // 解析层一次性把 BPMN XML 拍成 plain object 喂给所有 rule。
 
+import { resolveBackEdges } from '../stages/back-edge-resolver.ts';
+import type { FlowNodeType } from '../loader/types.ts';
+
 // ============================================================
 // 解析层
 // ============================================================
 
 export interface Box { id: string; x: number; y: number; w: number; h: number }
 export interface Point { x: number; y: number }
-export interface EdgeRoute { id: string; source: string; target: string; waypoints: Point[]; labelBounds?: Box; bpmnType: EdgeBpmnTag }
+export interface EdgeRoute { id: string; source: string; target: string; waypoints: Point[]; labelBounds?: Box; bpmnType: EdgeBpmnTag; name?: string }
 export type EdgeBpmnTag = 'sequenceFlow' | 'messageFlow' | 'association' | 'dataInputAssociation' | 'dataOutputAssociation';
 export type NodeKind =
   | 'task' | 'event' | 'gateway' | 'subProcess' | 'dataObject' | 'boundaryEvent'
@@ -35,6 +38,8 @@ export interface ParsedFixture {
   flowNodeRefs: Map<string, Set<string>>; // lane id → set of node ids it declares
   childLanesOf: Map<string, string[]>; // parent lane id → ordered sub-lane ids
   participantOrder: string[];         // collaboration's participants in declared order
+  nodeOrder: string[];                // flow node ids in XML declaration order（断环的声明序加权用）
+  backEdges: Set<string>;             // 语义回边集（BackEdgeResolver 同一套算法）：F1/F3 从分母剔除
 }
 
 const TAG_KIND: Record<string, NodeKind> = {
@@ -127,6 +132,16 @@ export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
   const partRe = /<bpmn:participant\s[^>]*id="([^"]+)"/g;
   while ((m = partRe.exec(xml)) !== null) participantOrder.push(m[1]!);
 
+  // gateway default 出边（驳回循环常建模为 default flow——BackEdgeResolver 语义加权需要）
+  const gatewayDefault = new Map<string, string>();
+  const gwRe = /<bpmn:\w+Gateway\b([^>]*)>/g;
+  while ((m = gwRe.exec(xml)) !== null) {
+    const attrs = m[1]!;
+    const id = /\bid="([^"]+)"/.exec(attrs)?.[1];
+    const def = /\bdefault="([^"]+)"/.exec(attrs)?.[1];
+    if (id && def) gatewayDefault.set(id, def);
+  }
+
   // BPMNShape bounds + 内嵌 BPMNLabel bounds
   const shapeRe = /<bpmndi:BPMNShape\s[^>]*bpmnElement="([^"]+)"[^>]*>([\s\S]*?)<\/bpmndi:BPMNShape>/g;
   while ((m = shapeRe.exec(xml)) !== null) {
@@ -139,11 +154,20 @@ export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
     if (lm) labels.set(id, { id: `${id}_label`, x: +lm[1]!, y: +lm[2]!, w: +lm[3]!, h: +lm[4]! });
   }
 
-  // Edges + waypoints + inline labels
-  const refIdx = new Map<string, { source: string; target: string; bpmnType: EdgeBpmnTag }>();
-  const refRe = /<bpmn:(sequenceFlow|messageFlow|association|dataInputAssociation|dataOutputAssociation)\s+id="([^"]+)"[^>]*sourceRef="([^"]+)"[^>]*targetRef="([^"]+)"/g;
+  // Edges + waypoints + inline labels。属性顺序不作假设（name 可插在 id 与 sourceRef 之间），
+  // 先整段截 attrs 再逐个取。
+  const attr = (attrs: string, key: string): string | undefined =>
+    new RegExp(`\\b${key}="([^"]*)"`).exec(attrs)?.[1];
+  const refIdx = new Map<string, { source: string; target: string; bpmnType: EdgeBpmnTag; name?: string }>();
+  const refRe = /<bpmn:(sequenceFlow|messageFlow|association|dataInputAssociation|dataOutputAssociation)\s([^>]*)>/g;
   while ((m = refRe.exec(xml)) !== null) {
-    refIdx.set(m[2]!, { source: m[3]!, target: m[4]!, bpmnType: m[1]! as EdgeBpmnTag });
+    const attrs = m[2]!;
+    const id = attr(attrs, 'id');
+    const source = attr(attrs, 'sourceRef');
+    const target = attr(attrs, 'targetRef');
+    if (!id || !source || !target) continue;
+    const name = attr(attrs, 'name');
+    refIdx.set(id, { source, target, bpmnType: m[1]! as EdgeBpmnTag, ...(name !== undefined ? { name } : {}) });
   }
   const edgeRe = /<bpmndi:BPMNEdge\s[^>]*bpmnElement="([^"]+)"[^>]*>([\s\S]*?)<\/bpmndi:BPMNEdge>/g;
   while ((m = edgeRe.exec(xml)) !== null) {
@@ -162,7 +186,7 @@ export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
       labelBounds = { id: `${id}_label`, x: +lm[1]!, y: +lm[2]!, w: +lm[3]!, h: +lm[4]! };
       labels.set(id, labelBounds);
     }
-    edges.push({ id, source: refs.source, target: refs.target, bpmnType: refs.bpmnType, waypoints: wps, labelBounds });
+    edges.push({ id, source: refs.source, target: refs.target, bpmnType: refs.bpmnType, waypoints: wps, labelBounds, ...(refs.name !== undefined ? { name: refs.name } : {}) });
   }
 
   // 顶层 plane bounds
@@ -173,7 +197,29 @@ export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
     for (const b of boxes.values()) { totalW = Math.max(totalW, b.x + b.w); totalH = Math.max(totalH, b.y + b.h); }
   }
 
-  return { fixture: name, totalW, totalH, boxes, labels, edges, kindOf, bpmnTagOf, beHost, laneOrder, flowNodeRefs, childLanesOf, participantOrder };
+  // 语义回边集：与 pipeline 同一套 BackEdgeResolver（直接 import，不复制算法——两处漂移会让
+  // F1/F3 的"剔除"与 router 实际当回边处理的边不一致）。evaluator 只有 XML，按声明顺序 +
+  // gateway default + edge name 重建 resolver 输入；messageFlow/association 不喂。
+  // 跨 process / subprocess 内部的 sequenceFlow 一起喂：它们在图上是独立连通分量，DFS 各走各的。
+  const CONTAINER_TAGS = new Set(['lane', 'participant', 'process', 'collaboration']);
+  const nodeOrder = [...kindOf.keys()].filter(id => !CONTAINER_TAGS.has(bpmnTagOf.get(id) ?? ''));
+  const seqFlows = edges.filter(e => e.bpmnType === 'sequenceFlow');
+  const involved = new Set<string>();
+  for (const e of seqFlows) { involved.add(e.source); involved.add(e.target); }
+  const backEdges = resolveBackEdges({
+    nodes: nodeOrder
+      .filter(id => involved.has(id))
+      .map(id => ({ id, type: (bpmnTagOf.get(id) ?? 'other') as FlowNodeType })),
+    edges: seqFlows.map(e => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      isDefault: gatewayDefault.get(e.source) === e.id,
+      label: e.name,
+    })),
+  });
+
+  return { fixture: name, totalW, totalH, boxes, labels, edges, kindOf, bpmnTagOf, beHost, laneOrder, flowNodeRefs, childLanesOf, participantOrder, nodeOrder, backEdges };
 }
 
 // ============================================================
@@ -660,13 +706,17 @@ export interface SoftMetric {
 /**
  * F1 主流方向一致：sequence flow（同 pool 内）target.x > source.x 的比例 ≥ 85%。
  * 排除：boundary BE→handler 边、cross-pool（messageFlow / 跨 participant 节点）、artifact 关联。
+ * 排除：语义回边（p.backEdges——循环结构里**必须**向后的边，如驳回循环）。回边留在分母里
+ * 会让 45/47/48/54 这类 fixture 天然 fail，噪声淹没真正的 N 形回头（80 的"正常履约"）。
  */
 function checkF1(p: ParsedFixture): SoftMetric {
   let total = 0;
   let forward = 0;
+  let excluded = 0;
   const beIds = new Set(p.beHost.keys());
   for (const e of p.edges) {
     if (beIds.has(e.source)) continue;
+    if (p.backEdges.has(e.id)) { excluded++; continue; }
     const sb = p.boxes.get(e.source);
     const tb = p.boxes.get(e.target);
     if (!sb || !tb) continue;
@@ -682,11 +732,12 @@ function checkF1(p: ParsedFixture): SoftMetric {
   }
   const ratio = total > 0 ? forward / total : 1;
   const pass = ratio >= 0.8;  // CLAUDE.md 允许 convergence gateway 把分支收回（产生少量 back-edge）
+  const suffix = excluded > 0 ? `剔${excluded}` : '';
   return {
     rule: 'F1', fixture: p.fixture, value: ratio,
-    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%`,
+    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%${suffix}`,
     pass,
-    detail: pass ? undefined : `${forward}/${total} same-pool edges forward, ratio ${(ratio * 100).toFixed(0)}% < 80%`,
+    detail: pass ? undefined : `${forward}/${total} same-pool edges forward${excluded > 0 ? ` (剔 ${excluded} 语义回边)` : ''}, ratio ${(ratio * 100).toFixed(0)}% < 80%`,
   };
 }
 
@@ -796,10 +847,12 @@ function checkF2(p: ParsedFixture): SoftMetric {
 function checkF3(p: ParsedFixture): SoftMetric {
   let total = 0;
   let back = 0;
+  let excluded = 0;
   const beIds = new Set(p.beHost.keys());
   const examples: string[] = [];
   for (const e of p.edges) {
     if (beIds.has(e.source)) continue;
+    if (p.backEdges.has(e.id)) { excluded++; continue; }
     const sb = p.boxes.get(e.source);
     const tb = p.boxes.get(e.target);
     if (!sb || !tb) continue;
@@ -817,11 +870,12 @@ function checkF3(p: ParsedFixture): SoftMetric {
   }
   const ratio = total > 0 ? back / total : 0;
   const pass = ratio <= 0.15;  // 收敛 gateway / handler 回主线常产生少量 back edge
+  const suffix = excluded > 0 ? `剔${excluded}` : '';
   return {
     rule: 'F3', fixture: p.fixture, value: ratio,
-    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%`,
+    display: total === 0 ? 'n/a' : `${(ratio * 100).toFixed(0)}%${suffix}`,
     pass,
-    detail: pass ? undefined : `${back}/${total} back edges (${examples.join(', ')})`,
+    detail: pass ? undefined : `${back}/${total} back edges${excluded > 0 ? ` (剔 ${excluded} 语义回边)` : ''} (${examples.join(', ')})`,
   };
 }
 
@@ -1147,6 +1201,224 @@ function laneDividerYs(p: ParsedFixture): number[] {
   return [...new Set(ys.map((y) => Math.round(y)))];
 }
 
+/**
+ * F10 边交叉数：sequenceFlow 两两线段求交（正交折线，只算横×竖的**真交叉**——严格不等式，
+ * T 型汇入/共享端点/共线重叠都不算：fan-in 归一的合流是视觉正确，共线重叠归 F8）。
+ * messageFlow 不喂（跨池虚线交叉是 BPMN 常态，入了只会制造噪声）。
+ *
+ * 只观测、不设固定阈值（同 F6）：交叉数没有绝对合格线，门禁是 card 0.3 的 baseline 对比。
+ */
+function checkF10(p: ParsedFixture): SoftMetric {
+  interface Seg { edgeId: string; horizontal: boolean; x1: number; y1: number; x2: number; y2: number }
+  const segs: Seg[] = [];
+  for (const e of p.edges) {
+    if (e.bpmnType !== 'sequenceFlow') continue;
+    for (let i = 0; i < e.waypoints.length - 1; i++) {
+      const a = e.waypoints[i]!, b = e.waypoints[i + 1]!;
+      if (Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5) continue; // 零长段
+      const horizontal = Math.abs(a.y - b.y) <= 0.5;
+      segs.push({
+        edgeId: e.id, horizontal,
+        x1: Math.min(a.x, b.x), y1: Math.min(a.y, b.y),
+        x2: Math.max(a.x, b.x), y2: Math.max(a.y, b.y),
+      });
+    }
+  }
+  let crossings = 0;
+  let ex = '';
+  for (let i = 0; i < segs.length; i++) {
+    for (let j = i + 1; j < segs.length; j++) {
+      const s = segs[i]!, t = segs[j]!;
+      if (s.edgeId === t.edgeId) continue;
+      if (s.horizontal === t.horizontal) continue; // 平行/共线不算交叉
+      const h = s.horizontal ? s : t;
+      const v = s.horizontal ? t : s;
+      // 严格不等式：交点必须落在两段的**内部**，端点接触（fan-in 合流、共享节点出口）不算
+      if (v.x1 > h.x1 && v.x1 < h.x2 && h.y1 > v.y1 && h.y1 < v.y2) {
+        crossings++;
+        if (!ex) ex = `${s.edgeId} × ${t.edgeId} @(${Math.round(v.x1)},${Math.round(h.y1)})`;
+      }
+    }
+  }
+  return {
+    rule: 'F10', fixture: p.fixture, value: crossings,
+    display: `${crossings}`, pass: true,
+    detail: crossings === 0 ? undefined : `${crossings} 处边交叉，如 ${ex}`,
+  };
+}
+
+/**
+ * F11 平均拐点数：Σ(waypoints−2)/edges ≤ 2.0。每条边平均多于 2 个弯说明路由在绕远——
+ * 要么摆位没给边留路（P4 主干），要么路由在互相打架（P5 轨道）。
+ */
+function checkF11(p: ParsedFixture): SoftMetric {
+  const flowEdges = p.edges.filter(e => e.bpmnType === 'sequenceFlow');
+  if (flowEdges.length === 0) return { rule: 'F11', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  const bends = flowEdges.reduce((s, e) => s + Math.max(0, e.waypoints.length - 2), 0);
+  const avg = bends / flowEdges.length;
+  const pass = avg <= 2.0;
+  return {
+    rule: 'F11', fixture: p.fixture, value: avg,
+    display: avg.toFixed(1), pass,
+    detail: pass ? undefined : `avg bends ${avg.toFixed(2)} > 2.0 (${bends} bends / ${flowEdges.length} edges)`,
+  };
+}
+
+/**
+ * F12 骑行段：水平段贴着**非端点**节点的顶/底边线跑（±4px 带内、不含内部——内部归 E2），
+ * 且与该节点 x 区间重叠 ≥ 50% 节点宽。没穿过节点，但视觉上像穿过那一行——101 的
+ * f_integration_join 沿 task_test_api 边线跑满 100px 就是这类（E2 全过）。
+ */
+function checkF12(p: ParsedFixture): SoftMetric {
+  const obstacles: Box[] = [];
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k || CONTAINER_KINDS.has(k)) continue;
+    obstacles.push(b);
+  }
+  let riding = 0;
+  let ex = '';
+  for (const e of p.edges) {
+    for (let i = 0; i < e.waypoints.length - 1; i++) {
+      const a = e.waypoints[i]!, b = e.waypoints[i + 1]!;
+      if (Math.abs(a.y - b.y) > 1) continue;                 // 仅水平段
+      if (Math.abs(a.x - b.x) < 20) continue;                // 忽略短 stub
+      const sx1 = Math.min(a.x, b.x), sx2 = Math.max(a.x, b.x);
+      for (const o of obstacles) {
+        if (o.id === e.source || o.id === e.target) continue;
+        const insideY = a.y > o.y + 1 && a.y < o.y + o.h - 1; // 穿内部 = E2 的活，不重复记
+        if (insideY) continue;
+        const dy = a.y <= o.y ? o.y - a.y : a.y - (o.y + o.h);
+        if (dy > 4) continue;                                 // 只算贴边线 ±4px
+        const overlap = Math.min(sx2, o.x + o.w) - Math.max(sx1, o.x);
+        if (overlap >= 0.5 * o.w) {
+          riding++;
+          if (!ex) ex = `${e.id} 贴 ${o.id} 边线 (y=${Math.round(a.y)}, overlap=${Math.round(overlap)}/${Math.round(o.w)})`;
+          break;                                              // 一段只记一次
+        }
+      }
+    }
+  }
+  return {
+    rule: 'F12', fixture: p.fixture, value: riding,
+    display: `${riding}`, pass: riding === 0,
+    detail: riding === 0 ? undefined : `${riding} 段贴节点边线骑行，如 ${ex}`,
+  };
+}
+
+/**
+ * F13 空白率：1 − Σ节点面积 / 内容 bbox 面积 ≤ 0.85。pool/lane/process 不算节点；
+ * subProcess 整体算一个节点（children 不重复计）。空白率过高说明布局松散/被拉长。
+ */
+function checkF13(p: ParsedFixture): SoftMetric {
+  let nodeArea = 0;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let counted = 0;
+  for (const b of p.boxes.values()) {
+    const k = p.kindOf.get(b.id);
+    if (!k || k === 'lane' || k === 'pool' || k === 'process' || k === 'collaboration') continue;
+    if (CONTAINER_KINDS.has(k) && k !== 'subProcess') continue;
+    // subProcess 的 children 不再单独计（面积已含在 subProcess 内）
+    let insideSub = false;
+    for (const [sid, sb] of p.boxes) {
+      if (p.kindOf.get(sid) !== 'subProcess' || sid === b.id) continue;
+      if (boxContains(sb, b, 1)) { insideSub = true; break; }
+    }
+    if (insideSub) continue;
+    nodeArea += b.w * b.h;
+    counted++;
+    minX = Math.min(minX, b.x); minY = Math.min(minY, b.y);
+    maxX = Math.max(maxX, b.x + b.w); maxY = Math.max(maxY, b.y + b.h);
+  }
+  if (counted === 0 || maxX <= minX || maxY <= minY) {
+    return { rule: 'F13', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  }
+  const bboxArea = (maxX - minX) * (maxY - minY);
+  const ratio = 1 - nodeArea / bboxArea;
+  const pass = ratio <= 0.85;
+  return {
+    rule: 'F13', fixture: p.fixture, value: ratio,
+    display: `${(ratio * 100).toFixed(0)}%`, pass,
+    detail: pass ? undefined : `whitespace ${(ratio * 100).toFixed(0)}% > 85% (nodes ${Math.round(nodeArea)} / bbox ${Math.round(bboxArea)})`,
+  };
+}
+
+/**
+ * F14 主干拐点：start→end 最短路径（BFS，sequenceFlow 有向图）上所有边的拐点总数
+ * ≤ 2 × 路径上 gateway 数。主干是观众眼睛走的那条线——它每多一个弯，图就难读一分；
+ * gateway 是合法拐点的唯一来源（进出分支换行各 1）。多 start/end 取各对里最差。
+ * 换行边（source/target cy 差 > 60px，如 13 的整行 wrap）免 2 个弯——折行本身就要 2 弯，
+ * 那是有意换行不是 spine 抖动（同 F9 的换排豁免）。
+ */
+const F14_ROW_CHANGE_TOL = 60;
+function checkF14(p: ParsedFixture): SoftMetric {
+  const adj = new Map<string, { edgeId: string; target: string }[]>();
+  const edgeBends = new Map<string, number>();
+  for (const e of p.edges) {
+    if (e.bpmnType !== 'sequenceFlow') continue;
+    const sb = p.boxes.get(e.source);
+    const tb = p.boxes.get(e.target);
+    if (!sb || !tb) continue;
+    if (!adj.has(e.source)) adj.set(e.source, []);
+    adj.get(e.source)!.push({ edgeId: e.id, target: e.target });
+    const raw = Math.max(0, e.waypoints.length - 2);
+    const rowChange = Math.abs((sb.y + sb.h / 2) - (tb.y + tb.h / 2)) > F14_ROW_CHANGE_TOL;
+    edgeBends.set(e.id, rowChange ? Math.max(0, raw - 2) : raw);
+  }
+  const starts = p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'startEvent');
+  const ends = new Set(p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'endEvent'));
+  if (starts.length === 0 || ends.size === 0) {
+    return { rule: 'F14', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  }
+  let worstBends = -1;
+  let worstGateways = 0;
+  let worstPath = '';
+  for (const s of starts) {
+    // BFS 最短路径（边数最少）；parent 记录回溯
+    const parent = new Map<string, { via: string; from: string }>();
+    const queue: string[] = [s];
+    const seen = new Set([s]);
+    while (queue.length > 0) {
+      const u = queue.shift()!;
+      if (ends.has(u)) break;
+      for (const { edgeId, target } of adj.get(u) ?? []) {
+        if (seen.has(target)) continue;
+        seen.add(target);
+        parent.set(target, { via: edgeId, from: u });
+        queue.push(target);
+      }
+    }
+    for (const e of ends) {
+      if (!parent.has(e)) continue;
+      // 回溯
+      const nodes: string[] = [e];
+      let bends = 0;
+      let cur = e;
+      while (cur !== s) {
+        const pr = parent.get(cur)!;
+        bends += edgeBends.get(pr.via) ?? 0;
+        cur = pr.from;
+        nodes.push(cur);
+      }
+      nodes.reverse();
+      const gateways = nodes.filter(n => p.kindOf.get(n) === 'gateway').length;
+      if (bends > worstBends) {
+        worstBends = bends;
+        worstGateways = gateways;
+        worstPath = `${s}→${e}`;
+      }
+    }
+  }
+  if (worstBends < 0) return { rule: 'F14', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
+  const limit = 2 * worstGateways;
+  const pass = worstBends <= limit;
+  return {
+    rule: 'F14', fixture: p.fixture, value: worstBends,
+    display: `${worstBends}/${limit}`, pass,
+    detail: pass ? undefined : `spine ${worstPath}: ${worstBends} bends > 2 × ${worstGateways} gateways`,
+  };
+}
+
 export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetric }[] = [
   { rule: 'F1', fn: checkF1 },
   { rule: 'F2', fn: checkF2 },
@@ -1157,6 +1429,11 @@ export const ALL_SOFT_CHECKS: { rule: string; fn: (p: ParsedFixture) => SoftMetr
   { rule: 'F7', fn: checkF7 },
   { rule: 'F8', fn: checkF8 },
   { rule: 'F9', fn: checkF9 },
+  { rule: 'F10', fn: checkF10 },
+  { rule: 'F11', fn: checkF11 },
+  { rule: 'F12', fn: checkF12 },
+  { rule: 'F13', fn: checkF13 },
+  { rule: 'F14', fn: checkF14 },
 ];
 
 // ============================================================
@@ -1399,6 +1676,123 @@ export function serializeLayoutEvaluation(result: LayoutEvaluation, generatedAt 
 
 export function formatEvaluationJson(result: LayoutEvaluation): string {
   return `${JSON.stringify(serializeLayoutEvaluation(result), null, 2)}\n`;
+}
+
+// ============================================================
+// Baseline 对比（卡 0.3）
+// ============================================================
+//
+// baseline 是"人看过 PNG 确认好看"那一刻的快照；--compare 是之后所有改动的门禁。
+// 容差按指标类型分档（%类 ±2 点 / 计数类 +1 / 比值类 +5%）；pass→fail 翻转不受容差保护。
+
+export interface FixtureBaseline {
+  hard: Record<string, number>;
+  soft: Record<string, number>;
+}
+
+export interface LayoutBaseline {
+  generatedAt: string;
+  fixtures: Record<string, FixtureBaseline>;
+}
+
+export function buildBaseline(result: LayoutEvaluation, generatedAt = new Date().toISOString()): LayoutBaseline {
+  const fixtures: Record<string, FixtureBaseline> = {};
+  for (const p of result.parsed) {
+    const hard: Record<string, number> = {};
+    for (const c of result.hard?.checks ?? []) {
+      hard[c.rule] = result.hard?.cells.get(p.fixture)?.get(c.rule)?.length ?? 0;
+    }
+    const soft: Record<string, number> = {};
+    for (const c of result.soft?.checks ?? []) {
+      const m = result.soft?.cells.get(p.fixture)?.get(c.rule);
+      if (m) soft[c.rule] = m.value;
+    }
+    fixtures[p.fixture] = { hard, soft };
+  }
+  return { generatedAt, fixtures };
+}
+
+/** 软指标方向与容差表。lowerBetter=false 的指标（F1/F5/F6 是"好的占比"）下降才算变差。 */
+const SOFT_DIRECTION: Record<string, { lowerBetter: boolean; tolerance: (base: number) => number }> = {
+  F1: { lowerBetter: false, tolerance: () => 0.02 },
+  F2: { lowerBetter: true, tolerance: () => 0.02 },
+  F3: { lowerBetter: true, tolerance: () => 0.02 },
+  F4: { lowerBetter: true, tolerance: (b) => b * 0.05 },
+  F5: { lowerBetter: false, tolerance: () => 0.02 },
+  F6: { lowerBetter: false, tolerance: () => 0.02 },
+  F7: { lowerBetter: true, tolerance: () => 1 },
+  F8: { lowerBetter: true, tolerance: () => 1 },
+  F9: { lowerBetter: true, tolerance: () => 1 },
+  F10: { lowerBetter: true, tolerance: () => 1 },
+  F11: { lowerBetter: true, tolerance: (b) => b * 0.05 },
+  F12: { lowerBetter: true, tolerance: () => 1 },
+  F13: { lowerBetter: true, tolerance: () => 0.02 },
+  F14: { lowerBetter: true, tolerance: () => 1 },
+};
+
+export interface BaselineDiff {
+  hardRegressions: { fixture: string; rule: string; before: number; after: number }[];
+  softRegressions: { fixture: string; rule: string; before: number; after: number }[];
+  improvements: { fixture: string; rule: string; before: number; after: number }[];
+  missingFixtures: string[];   // baseline 有、当前跑不到（被删/改名）
+  newFixtures: string[];       // 当前有、baseline 没有（新增 fixture，提示人审后补 baseline）
+}
+
+export function compareWithBaseline(result: LayoutEvaluation, baseline: LayoutBaseline): BaselineDiff {
+  const diff: BaselineDiff = { hardRegressions: [], softRegressions: [], improvements: [], missingFixtures: [], newFixtures: [] };
+  const current = buildBaseline(result, baseline.generatedAt);
+  for (const fx of Object.keys(baseline.fixtures)) {
+    if (!current.fixtures[fx]) diff.missingFixtures.push(fx);
+  }
+  for (const [fx, cur] of Object.entries(current.fixtures)) {
+    const base = baseline.fixtures[fx];
+    if (!base) { diff.newFixtures.push(fx); continue; }
+    for (const [rule, after] of Object.entries(cur.hard)) {
+      const before = base.hard[rule] ?? 0;
+      if (after > before) diff.hardRegressions.push({ fixture: fx, rule, before, after });
+      else if (after < before) diff.improvements.push({ fixture: fx, rule, before, after });
+    }
+    for (const [rule, after] of Object.entries(cur.soft)) {
+      const before = base.soft[rule];
+      if (before === undefined) continue;
+      const dir = SOFT_DIRECTION[rule] ?? { lowerBetter: true, tolerance: () => 0 };
+      const delta = after - before;
+      const worse = dir.lowerBetter ? delta > 0 : delta < 0;
+      const better = dir.lowerBetter ? delta < 0 : delta > 0;
+      if (worse && Math.abs(delta) > dir.tolerance(before)) {
+        diff.softRegressions.push({ fixture: fx, rule, before, after });
+      } else if (better && Math.abs(delta) > dir.tolerance(before)) {
+        diff.improvements.push({ fixture: fx, rule, before, after });
+      }
+    }
+  }
+  return diff;
+}
+
+export function formatCompareReport(diff: BaselineDiff, baselinePath: string): string {
+  const out: string[] = [];
+  out.push(`\nCompare vs baseline ${baselinePath}`);
+  out.push('='.repeat(60));
+  if (diff.hardRegressions.length > 0) {
+    out.push(`\n✗ 硬标准新增违例 ${diff.hardRegressions.length} 处：`);
+    for (const r of diff.hardRegressions) out.push(`  [${r.rule}] ${r.fixture}: ${r.before} → ${r.after}`);
+  } else {
+    out.push('\n✓ 硬标准无新增违例');
+  }
+  if (diff.softRegressions.length > 0) {
+    out.push(`\n✗ 软指标变差 ${diff.softRegressions.length} 项（超容差）：`);
+    for (const r of diff.softRegressions) out.push(`  [${r.rule}] ${r.fixture}: ${r.before} → ${r.after}`);
+  } else {
+    out.push('✓ 软指标无变差');
+  }
+  if (diff.improvements.length > 0) {
+    out.push(`\n↑ 变好 ${diff.improvements.length} 项：`);
+    for (const r of diff.improvements) out.push(`  [${r.rule}] ${r.fixture}: ${r.before} → ${r.after}`);
+  }
+  if (diff.missingFixtures.length > 0) out.push(`\n⚠ baseline 有但当前缺失：${diff.missingFixtures.join(', ')}`);
+  if (diff.newFixtures.length > 0) out.push(`⚠ 新 fixture（人审 PNG 后 --save-baseline 补录）：${diff.newFixtures.join(', ')}`);
+  out.push('');
+  return out.join('\n');
 }
 
 export function collectAiViolations(result: LayoutEvaluation): AiLayoutViolation[] {

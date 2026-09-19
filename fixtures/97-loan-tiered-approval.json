@@ -1,0 +1,138 @@
+{
+  "id": "definitions_loan_tiered_approval",
+  "bpmn": {
+    "targetNamespace": "http://example.com/loan-tiered-approval",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_loan",
+      "bpmn": { "type": "process", "name": "贷款分档审批", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_loan",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "贷款申请" },
+          "labels": [{ "text": "贷款申请" }]
+        },
+        {
+          "id": "task_intake",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "录入申请资料" },
+          "labels": [{ "text": "录入申请资料" }]
+        },
+        {
+          "id": "gw_amount_split",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "inclusiveGateway", "name": "按金额分档", "gatewayDirection": "Diverging" },
+          "labels": [{ "text": "按金额分档" }]
+        },
+        {
+          "id": "task_small_approve",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "小额快速审批" },
+          "labels": [{ "text": "小额快速审批" }]
+        },
+        {
+          "id": "task_mid_first",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "中额初审" },
+          "labels": [{ "text": "中额初审" }]
+        },
+        {
+          "id": "task_mid_second",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "中额复审" },
+          "labels": [{ "text": "中额复审" }]
+        },
+        {
+          "id": "task_mid_risk",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "中额风控审核" },
+          "labels": [{ "text": "中额风控审核" }]
+        },
+        {
+          "id": "task_large_manager",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "客户经理初审" },
+          "labels": [{ "text": "客户经理初审" }]
+        },
+        {
+          "id": "task_large_credit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "信贷部审核" },
+          "labels": [{ "text": "信贷部审核" }]
+        },
+        {
+          "id": "task_large_risk",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "风控评估" },
+          "labels": [{ "text": "风控评估" }]
+        },
+        {
+          "id": "task_large_committee",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "贷审会审议" },
+          "labels": [{ "text": "贷审会审议" }]
+        },
+        {
+          "id": "gw_committee",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "审议结论", "gatewayDirection": "Diverging" },
+          "labels": [{ "text": "审议结论" }]
+        },
+        {
+          "id": "task_large_president",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "行长终审" },
+          "labels": [{ "text": "行长终审" }]
+        },
+        {
+          "id": "gw_merge_tiers",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "inclusiveGateway", "name": "汇总审批结果", "gatewayDirection": "Converging" },
+          "labels": [{ "text": "汇总审批结果" }]
+        },
+        {
+          "id": "task_disburse",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "放款" },
+          "labels": [{ "text": "放款" }]
+        },
+        {
+          "id": "end_loan_done",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "放款完成" },
+          "labels": [{ "text": "放款完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "f_start_intake", "sources": ["start_loan"], "targets": ["task_intake"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_intake_split", "sources": ["task_intake"], "targets": ["gw_amount_split"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_split_small", "sources": ["gw_amount_split"], "targets": ["task_small_approve"], "bpmn": { "type": "sequenceFlow", "name": "小额" }, "labels": [{ "text": "小额" }] },
+        { "id": "f_split_mid", "sources": ["gw_amount_split"], "targets": ["task_mid_first"], "bpmn": { "type": "sequenceFlow", "name": "中额" }, "labels": [{ "text": "中额" }] },
+        { "id": "f_split_large", "sources": ["gw_amount_split"], "targets": ["task_large_manager"], "bpmn": { "type": "sequenceFlow", "name": "大额" }, "labels": [{ "text": "大额" }] },
+        { "id": "f_small_merge", "sources": ["task_small_approve"], "targets": ["gw_merge_tiers"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_mid_1_2", "sources": ["task_mid_first"], "targets": ["task_mid_second"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_mid_2_3", "sources": ["task_mid_second"], "targets": ["task_mid_risk"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_mid_merge", "sources": ["task_mid_risk"], "targets": ["gw_merge_tiers"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_large_1_2", "sources": ["task_large_manager"], "targets": ["task_large_credit"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_large_2_3", "sources": ["task_large_credit"], "targets": ["task_large_risk"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_large_3_4", "sources": ["task_large_risk"], "targets": ["task_large_committee"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_large_4_gw", "sources": ["task_large_committee"], "targets": ["gw_committee"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_committee_reject", "sources": ["gw_committee"], "targets": ["task_large_manager"], "bpmn": { "type": "sequenceFlow", "name": "驳回补件" }, "labels": [{ "text": "驳回补件" }] },
+        { "id": "f_committee_pass", "sources": ["gw_committee"], "targets": ["task_large_president"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "f_large_merge", "sources": ["task_large_president"], "targets": ["gw_merge_tiers"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_merge_disburse", "sources": ["gw_merge_tiers"], "targets": ["task_disburse"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_disburse_end", "sources": ["task_disburse"], "targets": ["end_loan_done"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

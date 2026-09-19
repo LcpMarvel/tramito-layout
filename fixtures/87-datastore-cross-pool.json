@@ -1,0 +1,139 @@
+{
+  "id": "definitions_datastore_cross_pool",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-datastore-cross-pool"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_outbound_notice", "name": "出库通知" }
+  ],
+  "children": [
+    {
+      "id": "collaboration_order_wms",
+      "bpmn": { "type": "collaboration", "name": "订单与仓储共享数据库" },
+      "children": [
+        {
+          "id": "pool_order_center",
+          "bpmn": {
+            "type": "participant",
+            "name": "订单中心",
+            "processRef": "process_order_center"
+          },
+          "children": [
+            {
+              "id": "start_order",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "客户下单" },
+              "labels": [{ "text": "客户下单" }]
+            },
+            {
+              "id": "task_create_order",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "创建订单" },
+              "labels": [{ "text": "创建订单" }]
+            },
+            {
+              "id": "task_notify_wms",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "通知仓库出库" },
+              "labels": [{ "text": "通知仓库出库" }]
+            },
+            {
+              "id": "end_order_placed",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "下单完成" },
+              "labels": [{ "text": "下单完成" }]
+            },
+            {
+              "id": "data_store_orders",
+              "width": 50, "height": 50,
+              "bpmn": { "type": "dataStoreReference", "name": "订单数据库" },
+              "labels": [{ "text": "订单数据库" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_o1", "sources": ["start_order"], "targets": ["task_create_order"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_o2", "sources": ["task_create_order"], "targets": ["task_notify_wms"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_o3", "sources": ["task_notify_wms"], "targets": ["end_order_placed"], "bpmn": { "type": "sequenceFlow" } },
+            {
+              "id": "data_out_create_orders",
+              "sources": ["task_create_order"],
+              "targets": ["data_store_orders"],
+              "bpmn": { "type": "dataOutputAssociation" }
+            }
+          ]
+        },
+        {
+          "id": "pool_wms",
+          "bpmn": {
+            "type": "participant",
+            "name": "仓储系统",
+            "processRef": "process_wms"
+          },
+          "children": [
+            {
+              "id": "start_wms",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到出库通知",
+                "messageRef": "msg_outbound_notice"
+              },
+              "labels": [{ "text": "收到出库通知" }]
+            },
+            {
+              "id": "task_pick_goods",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "拣货出库" },
+              "labels": [{ "text": "拣货出库" }]
+            },
+            {
+              "id": "task_update_stock",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "回写库存状态" },
+              "labels": [{ "text": "回写库存状态" }]
+            },
+            {
+              "id": "end_wms_done",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "出库完成" },
+              "labels": [{ "text": "出库完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_w1", "sources": ["start_wms"], "targets": ["task_pick_goods"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_w2", "sources": ["task_pick_goods"], "targets": ["task_update_stock"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_w3", "sources": ["task_update_stock"], "targets": ["end_wms_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_outbound",
+          "sources": ["task_notify_wms"],
+          "targets": ["start_wms"],
+          "bpmn": { "type": "messageFlow", "name": "出库通知", "messageRef": "msg_outbound_notice" },
+          "labels": [{ "text": "出库通知" }]
+        },
+        {
+          "id": "data_in_pick_orders",
+          "sources": ["data_store_orders"],
+          "targets": ["task_pick_goods"],
+          "bpmn": { "type": "dataInputAssociation" }
+        },
+        {
+          "id": "data_out_stock_orders",
+          "sources": ["task_update_stock"],
+          "targets": ["data_store_orders"],
+          "bpmn": { "type": "dataOutputAssociation" }
+        }
+      ]
+    }
+  ]
+}

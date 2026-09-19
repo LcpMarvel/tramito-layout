@@ -1,0 +1,243 @@
+{
+  "id": "definitions_five_pool_collab",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-five-pool-collab",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "五方供应链协作"
+      },
+      "children": [
+        {
+          "id": "pool_customer",
+          "bpmn": {
+            "type": "participant",
+            "name": "客户",
+            "processRef": "process_customer"
+          },
+          "children": [
+            {
+              "id": "start_customer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "产生需求" },
+              "labels": [{ "text": "产生需求" }]
+            },
+            {
+              "id": "task_place_order",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "下单" },
+              "labels": [{ "text": "下单" }]
+            },
+            {
+              "id": "task_receive_goods",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "receiveTask", "name": "收货签收" },
+              "labels": [{ "text": "收货签收" }]
+            },
+            {
+              "id": "end_customer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "购买完成" },
+              "labels": [{ "text": "购买完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_c1", "sources": ["start_customer"], "targets": ["task_place_order"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c2", "sources": ["task_place_order"], "targets": ["task_receive_goods"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_c3", "sources": ["task_receive_goods"], "targets": ["end_customer"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_store",
+          "bpmn": {
+            "type": "participant",
+            "name": "门店",
+            "processRef": "process_store"
+          },
+          "children": [
+            {
+              "id": "start_store",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "message", "name": "收到订单" },
+              "labels": [{ "text": "收到订单" }]
+            },
+            {
+              "id": "task_store_forward",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "转交区域中心" },
+              "labels": [{ "text": "转交区域中心" }]
+            },
+            {
+              "id": "end_store",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "门店处理完" },
+              "labels": [{ "text": "门店处理完" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_s1", "sources": ["start_store"], "targets": ["task_store_forward"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s2", "sources": ["task_store_forward"], "targets": ["end_store"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_region",
+          "bpmn": {
+            "type": "participant",
+            "name": "区域中心",
+            "processRef": "process_region"
+          },
+          "children": [
+            {
+              "id": "start_region",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "message", "name": "收到调拨单" },
+              "labels": [{ "text": "收到调拨单" }]
+            },
+            {
+              "id": "task_region_alloc",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "库存调拨" },
+              "labels": [{ "text": "库存调拨" }]
+            },
+            {
+              "id": "task_region_report",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "上报总部" },
+              "labels": [{ "text": "上报总部" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_r1", "sources": ["start_region"], "targets": ["task_region_alloc"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_r2", "sources": ["task_region_alloc"], "targets": ["task_region_report"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_hq",
+          "bpmn": {
+            "type": "participant",
+            "name": "总部",
+            "processRef": "process_hq"
+          },
+          "children": [
+            {
+              "id": "start_hq",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "message", "name": "收到上报" },
+              "labels": [{ "text": "收到上报" }]
+            },
+            {
+              "id": "task_hq_dispatch",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "派发物流指令" },
+              "labels": [{ "text": "派发物流指令" }]
+            },
+            {
+              "id": "end_hq",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "指令下发完" },
+              "labels": [{ "text": "指令下发完" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_h1", "sources": ["start_hq"], "targets": ["task_hq_dispatch"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_h2", "sources": ["task_hq_dispatch"], "targets": ["end_hq"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_logistics",
+          "bpmn": {
+            "type": "participant",
+            "name": "物流公司",
+            "processRef": "process_logistics"
+          },
+          "children": [
+            {
+              "id": "start_logistics",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "message", "name": "收到运单" },
+              "labels": [{ "text": "收到运单" }]
+            },
+            {
+              "id": "task_deliver",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "配送上门" },
+              "labels": [{ "text": "配送上门" }]
+            },
+            {
+              "id": "end_logistics",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "配送完成" },
+              "labels": [{ "text": "配送完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_l1", "sources": ["start_logistics"], "targets": ["task_deliver"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_l2", "sources": ["task_deliver"], "targets": ["end_logistics"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_order",
+          "sources": ["task_place_order"],
+          "targets": ["start_store"],
+          "bpmn": { "type": "messageFlow", "name": "订单" },
+          "labels": [{ "text": "订单" }]
+        },
+        {
+          "id": "msgflow_transfer",
+          "sources": ["task_store_forward"],
+          "targets": ["start_region"],
+          "bpmn": { "type": "messageFlow", "name": "调拨单" },
+          "labels": [{ "text": "调拨单" }]
+        },
+        {
+          "id": "msgflow_report",
+          "sources": ["task_region_report"],
+          "targets": ["start_hq"],
+          "bpmn": { "type": "messageFlow", "name": "调拨上报" },
+          "labels": [{ "text": "调拨上报" }]
+        },
+        {
+          "id": "msgflow_dispatch",
+          "sources": ["task_hq_dispatch"],
+          "targets": ["start_logistics"],
+          "bpmn": { "type": "messageFlow", "name": "运单" },
+          "labels": [{ "text": "运单" }]
+        },
+        {
+          "id": "msgflow_deliver",
+          "sources": ["task_deliver"],
+          "targets": ["task_receive_goods"],
+          "bpmn": { "type": "messageFlow", "name": "送达通知" },
+          "labels": [{ "text": "送达通知" }]
+        },
+        {
+          "id": "msgflow_hq_notify_customer",
+          "sources": ["task_hq_dispatch"],
+          "targets": ["task_receive_goods"],
+          "bpmn": { "type": "messageFlow", "name": "发货短信" },
+          "labels": [{ "text": "发货短信" }]
+        },
+        {
+          "id": "msgflow_store_notify_logistics",
+          "sources": ["task_store_forward"],
+          "targets": ["task_deliver"],
+          "bpmn": { "type": "messageFlow", "name": "门店自提信息" },
+          "labels": [{ "text": "门店自提信息" }]
+        }
+      ]
+    }
+  ]
+}

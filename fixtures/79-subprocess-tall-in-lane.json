@@ -1,0 +1,179 @@
+{
+  "id": "definitions_subprocess_tall_in_lane",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-subprocess-tall-in-lane",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_claims",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "保险理赔协作"
+      },
+      "children": [
+        {
+          "id": "pool_claims_center",
+          "bpmn": {
+            "type": "participant",
+            "name": "理赔中心",
+            "processRef": "process_claims_center"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_service",
+              "bpmn": { "type": "lane", "name": "客服部" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_report",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "接到报案" },
+                  "labels": [{ "text": "接到报案" }]
+                },
+                {
+                  "id": "task_register",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "登记报案信息" },
+                  "labels": [{ "text": "登记报案信息" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_claims",
+              "bpmn": { "type": "lane", "name": "理赔部" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "sub_investigation",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "subProcess", "name": "理赔调查", "isExpanded": true },
+                  "labels": [{ "text": "理赔调查" }],
+                  "layoutOptions": {
+                    "elk.algorithm": "layered",
+                    "elk.direction": "RIGHT",
+                    "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+                  },
+                  "children": [
+                    {
+                      "id": "inv_start",
+                      "width": 36, "height": 36,
+                      "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始调查" },
+                      "labels": [{ "text": "开始调查" }]
+                    },
+                    {
+                      "id": "inv_gateway_fork",
+                      "width": 50, "height": 50,
+                      "bpmn": {
+                        "type": "parallelGateway",
+                        "name": "并行取证",
+                        "gatewayDirection": "Diverging"
+                      },
+                      "labels": [{ "text": "并行取证" }]
+                    },
+                    {
+                      "id": "inv_task_scene",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "现场查勘" },
+                      "labels": [{ "text": "现场查勘" }]
+                    },
+                    {
+                      "id": "inv_task_phone",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "电话核实" },
+                      "labels": [{ "text": "电话核实" }]
+                    },
+                    {
+                      "id": "inv_task_docs",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "单证审查" },
+                      "labels": [{ "text": "单证审查" }]
+                    },
+                    {
+                      "id": "inv_task_thirdparty",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "serviceTask", "name": "第三方鉴定" },
+                      "labels": [{ "text": "第三方鉴定" }]
+                    },
+                    {
+                      "id": "inv_gateway_join",
+                      "width": 50, "height": 50,
+                      "bpmn": {
+                        "type": "parallelGateway",
+                        "name": "取证汇总",
+                        "gatewayDirection": "Converging"
+                      },
+                      "labels": [{ "text": "取证汇总" }]
+                    },
+                    {
+                      "id": "inv_end",
+                      "width": 36, "height": 36,
+                      "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "调查完成" },
+                      "labels": [{ "text": "调查完成" }]
+                    }
+                  ],
+                  "edges": [
+                    { "id": "inv_flow_1", "sources": ["inv_start"], "targets": ["inv_gateway_fork"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_scene", "sources": ["inv_gateway_fork"], "targets": ["inv_task_scene"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_phone", "sources": ["inv_gateway_fork"], "targets": ["inv_task_phone"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_docs", "sources": ["inv_gateway_fork"], "targets": ["inv_task_docs"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_thirdparty", "sources": ["inv_gateway_fork"], "targets": ["inv_task_thirdparty"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_join_1", "sources": ["inv_task_scene"], "targets": ["inv_gateway_join"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_join_2", "sources": ["inv_task_phone"], "targets": ["inv_gateway_join"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_join_3", "sources": ["inv_task_docs"], "targets": ["inv_gateway_join"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_join_4", "sources": ["inv_task_thirdparty"], "targets": ["inv_gateway_join"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "inv_flow_end", "sources": ["inv_gateway_join"], "targets": ["inv_end"], "bpmn": { "type": "sequenceFlow" } }
+                  ]
+                },
+                {
+                  "id": "task_assess",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "核定赔付金额" },
+                  "labels": [{ "text": "核定赔付金额" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务部" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_pay_claim",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "支付赔款" },
+                  "labels": [{ "text": "支付赔款" }]
+                },
+                {
+                  "id": "end_claim",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "理赔结案" },
+                  "labels": [{ "text": "理赔结案" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_report"], "targets": ["task_register"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_register"], "targets": ["sub_investigation"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["sub_investigation"], "targets": ["task_assess"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_assess"], "targets": ["task_pay_claim"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_5", "sources": ["task_pay_claim"], "targets": ["end_claim"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

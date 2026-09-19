@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_diamond_nested_3" targetNamespace="http://example.com/test-diamond-nested-3" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_diamond_nested" name="三层嵌套菱形贷款审批" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="贷款申请">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gw_l1_div" name="客户类型" gatewayDirection="Diverging" default="flow_l1_personal">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_l1_personal</bpmn:outgoing>
+      <bpmn:outgoing>flow_l1_corp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_personal" name="个人资质审核">
+      <bpmn:incoming>flow_l1_personal</bpmn:incoming>
+      <bpmn:outgoing>flow_personal_to_l1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l2_div" name="企业规模" gatewayDirection="Diverging" default="flow_l2_small">
+      <bpmn:incoming>flow_l1_corp</bpmn:incoming>
+      <bpmn:outgoing>flow_l2_small</bpmn:outgoing>
+      <bpmn:outgoing>flow_l2_large</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_small_biz" name="小微企业评估">
+      <bpmn:incoming>flow_l2_small</bpmn:incoming>
+      <bpmn:outgoing>flow_small_to_l2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l3_div" name="授信额度" gatewayDirection="Diverging" default="flow_l3_normal">
+      <bpmn:incoming>flow_l2_large</bpmn:incoming>
+      <bpmn:outgoing>flow_l3_high</bpmn:outgoing>
+      <bpmn:outgoing>flow_l3_normal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_high_credit" name="风控部尽调">
+      <bpmn:incoming>flow_l3_high</bpmn:incoming>
+      <bpmn:outgoing>flow_l3_high_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_normal_credit" name="系统自动评级">
+      <bpmn:incoming>flow_l3_normal</bpmn:incoming>
+      <bpmn:outgoing>flow_l3_normal_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gw_l3_conv" name="额度汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_l3_high_conv</bpmn:incoming>
+      <bpmn:incoming>flow_l3_normal_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_l3_to_l2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_l2_conv" name="规模汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_l3_to_l2</bpmn:incoming>
+      <bpmn:incoming>flow_small_to_l2</bpmn:incoming>
+      <bpmn:outgoing>flow_l2_to_l1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_l1_conv" name="类型汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_l2_to_l1</bpmn:incoming>
+      <bpmn:incoming>flow_personal_to_l1</bpmn:incoming>
+      <bpmn:outgoing>flow_to_sign</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_sign" name="签署合同">
+      <bpmn:incoming>flow_to_sign</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_1" name="放款完成">
+      <bpmn:incoming>flow_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="gw_l1_div" />
+    <bpmn:sequenceFlow id="flow_l1_personal" name="个人客户" sourceRef="gw_l1_div" targetRef="task_personal" />
+    <bpmn:sequenceFlow id="flow_l1_corp" name="企业客户" sourceRef="gw_l1_div" targetRef="gw_l2_div">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${customerType == 'corp'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_l2_small" name="小微企业" sourceRef="gw_l2_div" targetRef="task_small_biz" />
+    <bpmn:sequenceFlow id="flow_l2_large" name="规模以上" sourceRef="gw_l2_div" targetRef="gw_l3_div">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${scale == 'large'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_l3_high" name="超500万" sourceRef="gw_l3_div" targetRef="task_high_credit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${credit &gt; 5000000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_l3_normal" name="500万以内" sourceRef="gw_l3_div" targetRef="task_normal_credit" />
+    <bpmn:sequenceFlow id="flow_l3_high_conv" sourceRef="task_high_credit" targetRef="gw_l3_conv" />
+    <bpmn:sequenceFlow id="flow_l3_normal_conv" sourceRef="task_normal_credit" targetRef="gw_l3_conv" />
+    <bpmn:sequenceFlow id="flow_l3_to_l2" sourceRef="gw_l3_conv" targetRef="gw_l2_conv" />
+    <bpmn:sequenceFlow id="flow_small_to_l2" sourceRef="task_small_biz" targetRef="gw_l2_conv" />
+    <bpmn:sequenceFlow id="flow_l2_to_l1" sourceRef="gw_l2_conv" targetRef="gw_l1_conv" />
+    <bpmn:sequenceFlow id="flow_personal_to_l1" sourceRef="task_personal" targetRef="gw_l1_conv" />
+    <bpmn:sequenceFlow id="flow_to_sign" sourceRef="gw_l1_conv" targetRef="task_sign" />
+    <bpmn:sequenceFlow id="flow_to_end" sourceRef="task_sign" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_diamond_nested_3" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_diamond_nested_3" bpmnElement="process_diamond_nested">
+      <bpmndi:BPMNShape id="process_diamond_nested_di" bpmnElement="process_diamond_nested">
+        <dc:Bounds x="0" y="0" width="1474" height="418.8333333333333" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="166.66666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="206.66666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l1_div_di" bpmnElement="gw_l1_div">
+        <dc:Bounds x="178" y="159.66666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="232" y="177.66666666666669" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_personal_di" bpmnElement="task_personal">
+        <dc:Bounds x="798" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l2_div_di" bpmnElement="gw_l2_div">
+        <dc:Bounds x="308" y="189.33333333333331" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="362" y="207.33333333333331" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_small_biz_di" bpmnElement="task_small_biz">
+        <dc:Bounds x="438" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l3_div_di" bpmnElement="gw_l3_div">
+        <dc:Bounds x="471.3333333333333" y="251.83333333333334" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="525.3333333333333" y="269.83333333333337" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_high_credit_di" bpmnElement="task_high_credit">
+        <dc:Bounds x="618" y="166.83333333333331" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_normal_credit_di" bpmnElement="task_normal_credit">
+        <dc:Bounds x="618" y="306.8333333333333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l3_conv_di" bpmnElement="gw_l3_conv">
+        <dc:Bounds x="814.6666666666666" y="251.83333333333334" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="811.6666666666666" y="233.83333333333334" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l2_conv_di" bpmnElement="gw_l2_conv">
+        <dc:Bounds x="978" y="189.33333333333331" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="975" y="171.33333333333331" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l1_conv_di" bpmnElement="gw_l1_conv">
+        <dc:Bounds x="1108" y="159.66666666666669" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1105" y="213.66666666666669" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_sign_di" bpmnElement="task_sign">
+        <dc:Bounds x="1238" y="144.66666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1418" y="166.66666666666669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="206.66666666666669" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="184.66666666666669" />
+        <di:waypoint x="178" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l1_personal_di" bpmnElement="flow_l1_personal">
+        <di:waypoint x="203" y="159.66666666666669" />
+        <di:waypoint x="203" y="72" />
+        <di:waypoint x="798" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="130.66666666666669" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l1_corp_di" bpmnElement="flow_l1_corp">
+        <di:waypoint x="203" y="209.66666666666669" />
+        <di:waypoint x="203" y="214.33333333333331" />
+        <di:waypoint x="308" y="214.33333333333331" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="200" y="219.33333333333331" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l2_small_di" bpmnElement="flow_l2_small">
+        <di:waypoint x="333" y="189.33333333333331" />
+        <di:waypoint x="333" y="123" />
+        <di:waypoint x="438" y="123" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="338" y="160.33333333333331" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l2_large_di" bpmnElement="flow_l2_large">
+        <di:waypoint x="333" y="239.33333333333331" />
+        <di:waypoint x="333" y="276.83333333333337" />
+        <di:waypoint x="471.3333333333333" y="276.83333333333337" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="278" y="251.08333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l3_high_di" bpmnElement="flow_l3_high">
+        <di:waypoint x="496.3333333333333" y="251.83333333333337" />
+        <di:waypoint x="496.3333333333333" y="206.83333333333331" />
+        <di:waypoint x="618" y="206.83333333333331" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="501.33333333333326" y="222.83333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l3_normal_di" bpmnElement="flow_l3_normal">
+        <di:waypoint x="496.3333333333333" y="301.83333333333337" />
+        <di:waypoint x="496.3333333333333" y="346.8333333333333" />
+        <di:waypoint x="618" y="346.8333333333333" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="441.3333333333333" y="316.83333333333337" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l3_high_conv_di" bpmnElement="flow_l3_high_conv">
+        <di:waypoint x="718" y="206.83333333333331" />
+        <di:waypoint x="766.3333333333333" y="206.83333333333331" />
+        <di:waypoint x="766.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="814.6666666666666" y="276.83333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l3_normal_conv_di" bpmnElement="flow_l3_normal_conv">
+        <di:waypoint x="718" y="346.8333333333333" />
+        <di:waypoint x="766.3333333333333" y="346.8333333333333" />
+        <di:waypoint x="766.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="814.6666666666666" y="276.83333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l3_to_l2_di" bpmnElement="flow_l3_to_l2">
+        <di:waypoint x="864.6666666666666" y="276.83333333333337" />
+        <di:waypoint x="921.3333333333333" y="276.83333333333337" />
+        <di:waypoint x="921.3333333333333" y="214.33333333333331" />
+        <di:waypoint x="978" y="214.33333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_small_to_l2_di" bpmnElement="flow_small_to_l2">
+        <di:waypoint x="538" y="123" />
+        <di:waypoint x="758" y="123" />
+        <di:waypoint x="758" y="214.33333333333331" />
+        <di:waypoint x="978" y="214.33333333333331" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l2_to_l1_di" bpmnElement="flow_l2_to_l1">
+        <di:waypoint x="1028" y="214.33333333333331" />
+        <di:waypoint x="1068" y="214.33333333333331" />
+        <di:waypoint x="1068" y="184.66666666666669" />
+        <di:waypoint x="1108" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_personal_to_l1_di" bpmnElement="flow_personal_to_l1">
+        <di:waypoint x="848" y="112" />
+        <di:waypoint x="848" y="135.83333333333334" />
+        <di:waypoint x="1133" y="135.83333333333334" />
+        <di:waypoint x="1133" y="159.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_sign_di" bpmnElement="flow_to_sign">
+        <di:waypoint x="1158" y="184.66666666666669" />
+        <di:waypoint x="1238" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_di" bpmnElement="flow_to_end">
+        <di:waypoint x="1338" y="184.66666666666669" />
+        <di:waypoint x="1418" y="184.66666666666669" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

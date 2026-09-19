@@ -1,0 +1,131 @@
+{
+  "id": "definitions_terminate_mid_branch",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-terminate-mid-branch",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_terminate_mid_branch",
+      "bpmn": {
+        "type": "process",
+        "name": "分支中途终止测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "开始"
+          },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "准备合同材料" },
+          "labels": [{ "text": "准备合同材料" }]
+        },
+        {
+          "id": "task_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "法务审核合同" },
+          "labels": [{ "text": "法务审核合同" }]
+        },
+        {
+          "id": "gateway_decision",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "审核结论",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "审核结论" }]
+        },
+        {
+          "id": "task_sign",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "双方签署合同" },
+          "labels": [{ "text": "双方签署合同" }]
+        },
+        {
+          "id": "task_record_reject",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "记录否决原因" },
+          "labels": [{ "text": "记录否决原因" }]
+        },
+        {
+          "id": "task_revise",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "按意见修订条款" },
+          "labels": [{ "text": "按意见修订条款" }]
+        },
+        {
+          "id": "end_signed",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "签署完成"
+          },
+          "labels": [{ "text": "签署完成" }]
+        },
+        {
+          "id": "end_terminated",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "terminate",
+            "name": "合同否决立即终止"
+          },
+          "labels": [{ "text": "合同否决立即终止" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_prepare_review", "sources": ["task_prepare"], "targets": ["task_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_review_gw", "sources": ["task_review"], "targets": ["gateway_decision"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "flow_approve",
+          "sources": ["gateway_decision"], "targets": ["task_sign"],
+          "bpmn": { "type": "sequenceFlow", "name": "审核通过" },
+          "labels": [{ "text": "审核通过" }]
+        },
+        {
+          "id": "flow_reject",
+          "sources": ["gateway_decision"], "targets": ["task_record_reject"],
+          "bpmn": { "type": "sequenceFlow", "name": "存在重大风险" },
+          "labels": [{ "text": "存在重大风险" }]
+        },
+        {
+          "id": "flow_rework",
+          "sources": ["gateway_decision"], "targets": ["task_revise"],
+          "bpmn": { "type": "sequenceFlow", "name": "需修订后重审" },
+          "labels": [{ "text": "需修订后重审" }]
+        },
+        { "id": "flow_sign_end", "sources": ["task_sign"], "targets": ["end_signed"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_reject_terminate", "sources": ["task_record_reject"], "targets": ["end_terminated"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "flow_revise_back",
+          "sources": ["task_revise"], "targets": ["task_review"],
+          "bpmn": { "type": "sequenceFlow", "name": "回到法务重新审核" },
+          "labels": [{ "text": "回到法务重新审核" }]
+        }
+      ]
+    }
+  ]
+}

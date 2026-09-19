@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_message_pingpong" targetNamespace="http://example.com/test-message-pingpong" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_inquiry" name="询价单" />
+  <bpmn:message id="msg_quote" name="报价单" />
+  <bpmn:message id="msg_order" name="采购订单" />
+  <bpmn:message id="msg_confirm" name="订单确认" />
+  <bpmn:message id="msg_payment" name="付款凭证" />
+  <bpmn:message id="msg_receipt" name="收款收据" />
+  <bpmn:collaboration id="collaboration_1" name="采购六轮消息乒乓">
+    <bpmn:participant id="pool_purchaser" name="采购方" processRef="process_purchaser" />
+    <bpmn:participant id="pool_supplier" name="供应商" processRef="process_supplier" />
+    <bpmn:messageFlow id="msgflow_1_inquiry" sourceRef="task_a_inquiry" targetRef="start_b" messageRef="msg_inquiry" />
+    <bpmn:messageFlow id="msgflow_2_quote" sourceRef="task_b_quote" targetRef="catch_a_quote" messageRef="msg_quote" />
+    <bpmn:messageFlow id="msgflow_3_order" sourceRef="task_a_order" targetRef="catch_b_order" messageRef="msg_order" />
+    <bpmn:messageFlow id="msgflow_4_confirm" sourceRef="task_b_confirm" targetRef="catch_a_confirm" messageRef="msg_confirm" />
+    <bpmn:messageFlow id="msgflow_5_payment" sourceRef="task_a_pay" targetRef="catch_b_payment" messageRef="msg_payment" />
+    <bpmn:messageFlow id="msgflow_6_receipt" sourceRef="task_b_receipt" targetRef="catch_a_receipt" messageRef="msg_receipt" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_purchaser" name="采购方" isExecutable="true">
+    <bpmn:startEvent id="start_a" name="采购启动">
+      <bpmn:outgoing>flow_a1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_a_inquiry" name="发送询价">
+      <bpmn:incoming>flow_a1</bpmn:incoming>
+      <bpmn:outgoing>flow_a2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_a_quote" name="等待报价">
+      <bpmn:incoming>flow_a2</bpmn:incoming>
+      <bpmn:outgoing>flow_a3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_quote" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="task_a_order" name="发送订单">
+      <bpmn:incoming>flow_a3</bpmn:incoming>
+      <bpmn:outgoing>flow_a4</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_a_confirm" name="等待确认">
+      <bpmn:incoming>flow_a4</bpmn:incoming>
+      <bpmn:outgoing>flow_a5</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_confirm" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="task_a_pay" name="支付货款">
+      <bpmn:incoming>flow_a5</bpmn:incoming>
+      <bpmn:outgoing>flow_a6</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_a_receipt" name="等待收据">
+      <bpmn:incoming>flow_a6</bpmn:incoming>
+      <bpmn:outgoing>flow_a7</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_receipt" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="end_a" name="采购完成">
+      <bpmn:incoming>flow_a7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_a1" sourceRef="start_a" targetRef="task_a_inquiry" />
+    <bpmn:sequenceFlow id="flow_a2" sourceRef="task_a_inquiry" targetRef="catch_a_quote" />
+    <bpmn:sequenceFlow id="flow_a3" sourceRef="catch_a_quote" targetRef="task_a_order" />
+    <bpmn:sequenceFlow id="flow_a4" sourceRef="task_a_order" targetRef="catch_a_confirm" />
+    <bpmn:sequenceFlow id="flow_a5" sourceRef="catch_a_confirm" targetRef="task_a_pay" />
+    <bpmn:sequenceFlow id="flow_a6" sourceRef="task_a_pay" targetRef="catch_a_receipt" />
+    <bpmn:sequenceFlow id="flow_a7" sourceRef="catch_a_receipt" targetRef="end_a" />
+  </bpmn:process>
+  <bpmn:process id="process_supplier" name="供应商" isExecutable="true">
+    <bpmn:startEvent id="start_b" name="收到询价">
+      <bpmn:outgoing>flow_b1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_inquiry" />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_b_quote" name="回复报价">
+      <bpmn:incoming>flow_b1</bpmn:incoming>
+      <bpmn:outgoing>flow_b2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_b_order" name="等待订单">
+      <bpmn:incoming>flow_b2</bpmn:incoming>
+      <bpmn:outgoing>flow_b3</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_order" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="task_b_confirm" name="确认订单">
+      <bpmn:incoming>flow_b3</bpmn:incoming>
+      <bpmn:outgoing>flow_b4</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_b_payment" name="等待付款">
+      <bpmn:incoming>flow_b4</bpmn:incoming>
+      <bpmn:outgoing>flow_b5</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_payment" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="task_b_receipt" name="开具收据">
+      <bpmn:incoming>flow_b5</bpmn:incoming>
+      <bpmn:outgoing>flow_b6</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_b" name="销售完成">
+      <bpmn:incoming>flow_b6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_b1" sourceRef="start_b" targetRef="task_b_quote" />
+    <bpmn:sequenceFlow id="flow_b2" sourceRef="task_b_quote" targetRef="catch_b_order" />
+    <bpmn:sequenceFlow id="flow_b3" sourceRef="catch_b_order" targetRef="task_b_confirm" />
+    <bpmn:sequenceFlow id="flow_b4" sourceRef="task_b_confirm" targetRef="catch_b_payment" />
+    <bpmn:sequenceFlow id="flow_b5" sourceRef="catch_b_payment" targetRef="task_b_receipt" />
+    <bpmn:sequenceFlow id="flow_b6" sourceRef="task_b_receipt" targetRef="end_b" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_message_pingpong" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_message_pingpong" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="742" height="854" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_purchaser_di" bpmnElement="pool_purchaser" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="594" height="412" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_a_di" bpmnElement="start_a">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_a_inquiry_di" bpmnElement="task_a_inquiry">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_a_quote_di" bpmnElement="catch_a_quote">
+        <dc:Bounds x="358" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_a_order_di" bpmnElement="task_a_order">
+        <dc:Bounds x="474" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_a_confirm_di" bpmnElement="catch_a_confirm">
+        <dc:Bounds x="62" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_a_pay_di" bpmnElement="task_a_pay">
+        <dc:Bounds x="178" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_a_receipt_di" bpmnElement="catch_a_receipt">
+        <dc:Bounds x="358" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_a_di" bpmnElement="end_a">
+        <dc:Bounds x="474" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="442" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_supplier_di" bpmnElement="pool_supplier" isHorizontal="true">
+        <dc:Bounds x="148" y="442" width="594" height="412" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_b_di" bpmnElement="start_b">
+        <dc:Bounds x="210" y="496" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="536" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_b_quote_di" bpmnElement="task_b_quote">
+        <dc:Bounds x="326" y="474" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_b_order_di" bpmnElement="catch_b_order">
+        <dc:Bounds x="506" y="496" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="474" y="536" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_b_confirm_di" bpmnElement="task_b_confirm">
+        <dc:Bounds x="622" y="474" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_b_payment_di" bpmnElement="catch_b_payment">
+        <dc:Bounds x="210" y="776" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="816" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_b_receipt_di" bpmnElement="task_b_receipt">
+        <dc:Bounds x="326" y="754" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_b_di" bpmnElement="end_b">
+        <dc:Bounds x="506" y="776" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="474" y="816" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_a1_di" bpmnElement="flow_a1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a2_di" bpmnElement="flow_a2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a3_di" bpmnElement="flow_a3">
+        <di:waypoint x="394" y="72" />
+        <di:waypoint x="474" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a4_di" bpmnElement="flow_a4">
+        <di:waypoint x="524" y="112" />
+        <di:waypoint x="524" y="223" />
+        <di:waypoint x="80" y="223" />
+        <di:waypoint x="80" y="334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a5_di" bpmnElement="flow_a5">
+        <di:waypoint x="98" y="352" />
+        <di:waypoint x="178" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a6_di" bpmnElement="flow_a6">
+        <di:waypoint x="278" y="352" />
+        <di:waypoint x="358" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a7_di" bpmnElement="flow_a7">
+        <di:waypoint x="394" y="352" />
+        <di:waypoint x="474" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b1_di" bpmnElement="flow_b1">
+        <di:waypoint x="246" y="514" />
+        <di:waypoint x="326" y="514" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b2_di" bpmnElement="flow_b2">
+        <di:waypoint x="426" y="514" />
+        <di:waypoint x="506" y="514" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b3_di" bpmnElement="flow_b3">
+        <di:waypoint x="542" y="514" />
+        <di:waypoint x="622" y="514" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b4_di" bpmnElement="flow_b4">
+        <di:waypoint x="672" y="554" />
+        <di:waypoint x="672" y="665" />
+        <di:waypoint x="228" y="665" />
+        <di:waypoint x="228" y="776" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b5_di" bpmnElement="flow_b5">
+        <di:waypoint x="246" y="794" />
+        <di:waypoint x="326" y="794" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b6_di" bpmnElement="flow_b6">
+        <di:waypoint x="426" y="794" />
+        <di:waypoint x="506" y="794" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_1_inquiry_di" bpmnElement="msgflow_1_inquiry">
+        <di:waypoint x="228" y="112" />
+        <di:waypoint x="288" y="128" />
+        <di:waypoint x="288" y="476" />
+        <di:waypoint x="228" y="476" />
+        <di:waypoint x="228" y="496" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="293" y="242.8" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_2_quote_di" bpmnElement="msgflow_2_quote">
+        <di:waypoint x="376" y="474" />
+        <di:waypoint x="404" y="458" />
+        <di:waypoint x="404" y="110" />
+        <di:waypoint x="376" y="110" />
+        <di:waypoint x="376" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="409" y="329.2" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_3_order_di" bpmnElement="msgflow_3_order">
+        <di:waypoint x="524" y="112" />
+        <di:waypoint x="524" y="496" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="239.39999999999998" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_4_confirm_di" bpmnElement="msgflow_4_confirm">
+        <di:waypoint x="672" y="474" />
+        <di:waypoint x="672" y="445" />
+        <di:waypoint x="80" y="445" />
+        <di:waypoint x="80" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351" y="426" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_5_payment_di" bpmnElement="msgflow_5_payment">
+        <di:waypoint x="228" y="392" />
+        <di:waypoint x="256" y="408" />
+        <di:waypoint x="256" y="756" />
+        <di:waypoint x="228" y="756" />
+        <di:waypoint x="228" y="776" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="261" y="522.8" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_6_receipt_di" bpmnElement="msgflow_6_receipt">
+        <di:waypoint x="376" y="754" />
+        <di:waypoint x="436" y="738" />
+        <di:waypoint x="436" y="390" />
+        <di:waypoint x="376" y="390" />
+        <di:waypoint x="376" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="441" y="609.2" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

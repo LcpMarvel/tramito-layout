@@ -1,0 +1,141 @@
+{
+  "id": "definitions_blackbox_middle",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-blackbox-middle",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "经清算所的双边交易"
+      },
+      "children": [
+        {
+          "id": "pool_buyer",
+          "bpmn": {
+            "type": "participant",
+            "name": "买方券商",
+            "processRef": "process_buyer"
+          },
+          "children": [
+            {
+              "id": "start_buyer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "name": "交易日开始" },
+              "labels": [{ "text": "交易日开始" }]
+            },
+            {
+              "id": "task_submit_trade",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "提交交易申报" },
+              "labels": [{ "text": "提交交易申报" }]
+            },
+            {
+              "id": "task_send_contract",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "直发成交回执" },
+              "labels": [{ "text": "直发成交回执" }]
+            },
+            {
+              "id": "end_buyer",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "买方完成" },
+              "labels": [{ "text": "买方完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_b1", "sources": ["start_buyer"], "targets": ["task_submit_trade"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_b2", "sources": ["task_submit_trade"], "targets": ["task_send_contract"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_b3", "sources": ["task_send_contract"], "targets": ["end_buyer"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_clearing",
+          "bpmn": {
+            "type": "participant",
+            "name": "清算所（外部黑盒）",
+            "isBlackBox": true
+          }
+        },
+        {
+          "id": "pool_seller",
+          "bpmn": {
+            "type": "participant",
+            "name": "卖方券商",
+            "processRef": "process_seller"
+          },
+          "children": [
+            {
+              "id": "start_seller",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "message", "name": "收到成交回执" },
+              "labels": [{ "text": "收到成交回执" }]
+            },
+            {
+              "id": "task_confirm_settle",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "确认交收指令" },
+              "labels": [{ "text": "确认交收指令" }]
+            },
+            {
+              "id": "task_receive_funds",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "receiveTask", "name": "接收清算款项" },
+              "labels": [{ "text": "接收清算款项" }]
+            },
+            {
+              "id": "end_seller",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "name": "卖方完成" },
+              "labels": [{ "text": "卖方完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_s1", "sources": ["start_seller"], "targets": ["task_confirm_settle"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s2", "sources": ["task_confirm_settle"], "targets": ["task_receive_funds"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_s3", "sources": ["task_receive_funds"], "targets": ["end_seller"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "msgflow_buyer_to_clearing",
+          "sources": ["task_submit_trade"],
+          "targets": ["pool_clearing"],
+          "bpmn": { "type": "messageFlow", "name": "交易申报" },
+          "labels": [{ "text": "交易申报" }]
+        },
+        {
+          "id": "msgflow_seller_to_clearing",
+          "sources": ["task_confirm_settle"],
+          "targets": ["pool_clearing"],
+          "bpmn": { "type": "messageFlow", "name": "交收指令" },
+          "labels": [{ "text": "交收指令" }]
+        },
+        {
+          "id": "msgflow_clearing_to_seller",
+          "sources": ["pool_clearing"],
+          "targets": ["task_receive_funds"],
+          "bpmn": { "type": "messageFlow", "name": "清算款项" },
+          "labels": [{ "text": "清算款项" }]
+        },
+        {
+          "id": "msgflow_buyer_to_seller_direct",
+          "sources": ["task_send_contract"],
+          "targets": ["start_seller"],
+          "bpmn": { "type": "messageFlow", "name": "成交回执（直连）" },
+          "labels": [{ "text": "成交回执（直连）" }]
+        }
+      ]
+    }
+  ]
+}

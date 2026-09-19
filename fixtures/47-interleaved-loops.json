@@ -1,0 +1,81 @@
+{
+  "id": "definitions_interleaved_loops",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-interleaved-loops",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_interleaved",
+      "bpmn": { "type": "process", "name": "数据流水线交错返工", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_collect",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "数据采集" },
+          "labels": [{ "text": "数据采集" }]
+        },
+        {
+          "id": "task_clean",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "数据清洗" },
+          "labels": [{ "text": "数据清洗" }]
+        },
+        {
+          "id": "task_sample_check",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "质量抽检" },
+          "labels": [{ "text": "质量抽检" }]
+        },
+        {
+          "id": "gw_sample",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "抽检合格" },
+          "labels": [{ "text": "抽检合格" }]
+        },
+        {
+          "id": "task_model",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "建模分析" },
+          "labels": [{ "text": "建模分析" }]
+        },
+        {
+          "id": "gw_model",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "模型达标" },
+          "labels": [{ "text": "模型达标" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "结束" },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_collect"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_collect_clean", "sources": ["task_collect"], "targets": ["task_clean"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_clean_check", "sources": ["task_clean"], "targets": ["task_sample_check"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_check_gw", "sources": ["task_sample_check"], "targets": ["gw_sample"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_sample_pass", "sources": ["gw_sample"], "targets": ["task_model"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] },
+        { "id": "flow_sample_back", "sources": ["gw_sample"], "targets": ["task_collect"], "bpmn": { "type": "sequenceFlow", "name": "重新采集" }, "labels": [{ "text": "重新采集" }] },
+        { "id": "flow_model_gw", "sources": ["task_model"], "targets": ["gw_model"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_model_pass", "sources": ["gw_model"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow", "name": "达标" }, "labels": [{ "text": "达标" }] },
+        { "id": "flow_model_back", "sources": ["gw_model"], "targets": ["task_clean"], "bpmn": { "type": "sequenceFlow", "name": "重新清洗" }, "labels": [{ "text": "重新清洗" }] }
+      ]
+    }
+  ]
+}

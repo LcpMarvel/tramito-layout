@@ -1,0 +1,136 @@
+{
+  "id": "definitions_boundary_long_chain_merge",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-long-chain-merge"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "errors": [
+    { "id": "err_payment", "name": "扣款失败", "errorCode": "PAY_001" }
+  ],
+  "children": [
+    {
+      "id": "process_order_fulfillment",
+      "bpmn": {
+        "type": "process",
+        "name": "订单履约（扣款失败长链恢复）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_order",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "接到订单" },
+          "labels": [{ "text": "接到订单" }]
+        },
+        {
+          "id": "task_receive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "校验订单信息" },
+          "labels": [{ "text": "校验订单信息" }]
+        },
+        {
+          "id": "task_pay",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "执行扣款" },
+          "labels": [{ "text": "执行扣款" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_pay_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_pay",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "扣款失败",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "errorRef": "err_payment"
+              },
+              "labels": [{ "text": "扣款失败" }]
+            }
+          ]
+        },
+        {
+          "id": "task_ship",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "安排发货" },
+          "labels": [{ "text": "安排发货" }]
+        },
+        {
+          "id": "gw_merge",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "履约汇聚" },
+          "labels": [{ "text": "履约汇聚" }]
+        },
+        {
+          "id": "task_notify_customer",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "通知客户" },
+          "labels": [{ "text": "通知客户" }]
+        },
+        {
+          "id": "end_done",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "履约完成" },
+          "labels": [{ "text": "履约完成" }]
+        },
+        {
+          "id": "task_h1_log",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "记录扣款失败" },
+          "labels": [{ "text": "记录扣款失败" }]
+        },
+        {
+          "id": "task_h2_reverse",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "冲正交易" },
+          "labels": [{ "text": "冲正交易" }]
+        },
+        {
+          "id": "task_h3_contact",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "客服联系客户" },
+          "labels": [{ "text": "客服联系客户" }]
+        },
+        {
+          "id": "task_h4_update",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "更新支付方式" },
+          "labels": [{ "text": "更新支付方式" }]
+        },
+        {
+          "id": "task_h5_retry",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "重新发起扣款" },
+          "labels": [{ "text": "重新发起扣款" }]
+        },
+        {
+          "id": "task_h6_reship",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "重排发货计划" },
+          "labels": [{ "text": "重排发货计划" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_receive", "sources": ["start_order"], "targets": ["task_receive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_receive_pay", "sources": ["task_receive"], "targets": ["task_pay"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_pay_ship", "sources": ["task_pay"], "targets": ["task_ship"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ship_merge", "sources": ["task_ship"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow", "name": "正常履约" }, "labels": [{ "text": "正常履约" }] },
+        { "id": "flow_merge_notify", "sources": ["gw_merge"], "targets": ["task_notify_customer"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_notify_end", "sources": ["task_notify_customer"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_h1", "sources": ["boundary_pay_error"], "targets": ["task_h1_log"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h1_h2", "sources": ["task_h1_log"], "targets": ["task_h2_reverse"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h2_h3", "sources": ["task_h2_reverse"], "targets": ["task_h3_contact"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h3_h4", "sources": ["task_h3_contact"], "targets": ["task_h4_update"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h4_h5", "sources": ["task_h4_update"], "targets": ["task_h5_retry"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h5_h6", "sources": ["task_h5_retry"], "targets": ["task_h6_reship"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_h6_merge", "sources": ["task_h6_reship"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow", "name": "恢复后回归" }, "labels": [{ "text": "恢复后回归" }] }
+      ]
+    }
+  ]
+}

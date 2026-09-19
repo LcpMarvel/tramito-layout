@@ -1,0 +1,189 @@
+{
+  "id": "definitions_collapsed_expanded_mix",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-collapsed-expanded-mix",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_onboarding",
+      "bpmn": {
+        "type": "process",
+        "name": "员工入职（折叠/展开交替）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "录用确认" },
+          "labels": [{ "text": "录用确认" }]
+        },
+        {
+          "id": "sub_background_check",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "背景调查", "isExpanded": false },
+          "labels": [{ "text": "背景调查" }],
+          "children": [
+            {
+              "id": "bg_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始调查" },
+              "labels": [{ "text": "开始调查" }]
+            },
+            {
+              "id": "bg_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "委托第三方核查" },
+              "labels": [{ "text": "委托第三方核查" }]
+            },
+            {
+              "id": "bg_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "调查完成" },
+              "labels": [{ "text": "调查完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "bg_flow_1", "sources": ["bg_start"], "targets": ["bg_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "bg_flow_2", "sources": ["bg_task"], "targets": ["bg_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "sub_profile_entry",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "资料录入", "isExpanded": true },
+          "labels": [{ "text": "资料录入" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "profile_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始录入" },
+              "labels": [{ "text": "开始录入" }]
+            },
+            {
+              "id": "profile_task_collect",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "收集证件资料" },
+              "labels": [{ "text": "收集证件资料" }]
+            },
+            {
+              "id": "profile_task_entry",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "录入人事系统" },
+              "labels": [{ "text": "录入人事系统" }]
+            },
+            {
+              "id": "profile_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "录入完成" },
+              "labels": [{ "text": "录入完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "profile_flow_1", "sources": ["profile_start"], "targets": ["profile_task_collect"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "profile_flow_2", "sources": ["profile_task_collect"], "targets": ["profile_task_entry"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "profile_flow_3", "sources": ["profile_task_entry"], "targets": ["profile_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "sub_access_grant",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "权限开通", "isExpanded": false },
+          "labels": [{ "text": "权限开通" }],
+          "children": [
+            {
+              "id": "access_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始开通" },
+              "labels": [{ "text": "开始开通" }]
+            },
+            {
+              "id": "access_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "开通账号权限" },
+              "labels": [{ "text": "开通账号权限" }]
+            },
+            {
+              "id": "access_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "开通完成" },
+              "labels": [{ "text": "开通完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "access_flow_1", "sources": ["access_start"], "targets": ["access_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "access_flow_2", "sources": ["access_task"], "targets": ["access_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "sub_training",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "入职培训", "isExpanded": true },
+          "labels": [{ "text": "入职培训" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "training_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始培训" },
+              "labels": [{ "text": "开始培训" }]
+            },
+            {
+              "id": "training_task_course",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "学习企业文化课" },
+              "labels": [{ "text": "学习企业文化课" }]
+            },
+            {
+              "id": "training_task_exam",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "完成安全考试" },
+              "labels": [{ "text": "完成安全考试" }]
+            },
+            {
+              "id": "training_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "培训完成" },
+              "labels": [{ "text": "培训完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "training_flow_1", "sources": ["training_start"], "targets": ["training_task_course"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "training_flow_2", "sources": ["training_task_course"], "targets": ["training_task_exam"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "training_flow_3", "sources": ["training_task_exam"], "targets": ["training_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "入职完成" },
+          "labels": [{ "text": "入职完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["sub_background_check"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["sub_background_check"], "targets": ["sub_profile_entry"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["sub_profile_entry"], "targets": ["sub_access_grant"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_4", "sources": ["sub_access_grant"], "targets": ["sub_training"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_5", "sources": ["sub_training"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

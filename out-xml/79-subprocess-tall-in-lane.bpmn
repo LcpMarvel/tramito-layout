@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_subprocess_tall_in_lane" targetNamespace="http://example.com/test-subprocess-tall-in-lane" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_claims" name="保险理赔协作">
+    <bpmn:participant id="pool_claims_center" name="理赔中心" processRef="process_claims_center" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_claims_center" name="理赔中心" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_service" name="客服部">
+        <bpmn:flowNodeRef>start_report</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_register</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_claims" name="理赔部">
+        <bpmn:flowNodeRef>sub_investigation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_assess</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_finance" name="财务部">
+        <bpmn:flowNodeRef>task_pay_claim</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_claim</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_report" name="接到报案">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_register" name="登记报案信息">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="sub_investigation" name="理赔调查">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+      <bpmn:startEvent id="inv_start" name="开始调查">
+        <bpmn:outgoing>inv_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:parallelGateway id="inv_gateway_fork" name="并行取证" gatewayDirection="Diverging">
+        <bpmn:incoming>inv_flow_1</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_scene</bpmn:outgoing>
+        <bpmn:outgoing>inv_flow_phone</bpmn:outgoing>
+        <bpmn:outgoing>inv_flow_docs</bpmn:outgoing>
+        <bpmn:outgoing>inv_flow_thirdparty</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:userTask id="inv_task_scene" name="现场查勘">
+        <bpmn:incoming>inv_flow_scene</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_join_1</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="inv_task_phone" name="电话核实">
+        <bpmn:incoming>inv_flow_phone</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_join_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="inv_task_docs" name="单证审查">
+        <bpmn:incoming>inv_flow_docs</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_join_3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="inv_task_thirdparty" name="第三方鉴定">
+        <bpmn:incoming>inv_flow_thirdparty</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_join_4</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:parallelGateway id="inv_gateway_join" name="取证汇总" gatewayDirection="Converging">
+        <bpmn:incoming>inv_flow_join_1</bpmn:incoming>
+        <bpmn:incoming>inv_flow_join_2</bpmn:incoming>
+        <bpmn:incoming>inv_flow_join_3</bpmn:incoming>
+        <bpmn:incoming>inv_flow_join_4</bpmn:incoming>
+        <bpmn:outgoing>inv_flow_end</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:endEvent id="inv_end" name="调查完成">
+        <bpmn:incoming>inv_flow_end</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="inv_flow_1" sourceRef="inv_start" targetRef="inv_gateway_fork" />
+      <bpmn:sequenceFlow id="inv_flow_scene" sourceRef="inv_gateway_fork" targetRef="inv_task_scene" />
+      <bpmn:sequenceFlow id="inv_flow_phone" sourceRef="inv_gateway_fork" targetRef="inv_task_phone" />
+      <bpmn:sequenceFlow id="inv_flow_docs" sourceRef="inv_gateway_fork" targetRef="inv_task_docs" />
+      <bpmn:sequenceFlow id="inv_flow_thirdparty" sourceRef="inv_gateway_fork" targetRef="inv_task_thirdparty" />
+      <bpmn:sequenceFlow id="inv_flow_join_1" sourceRef="inv_task_scene" targetRef="inv_gateway_join" />
+      <bpmn:sequenceFlow id="inv_flow_join_2" sourceRef="inv_task_phone" targetRef="inv_gateway_join" />
+      <bpmn:sequenceFlow id="inv_flow_join_3" sourceRef="inv_task_docs" targetRef="inv_gateway_join" />
+      <bpmn:sequenceFlow id="inv_flow_join_4" sourceRef="inv_task_thirdparty" targetRef="inv_gateway_join" />
+      <bpmn:sequenceFlow id="inv_flow_end" sourceRef="inv_gateway_join" targetRef="inv_end" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="task_assess" name="核定赔付金额">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_pay_claim" name="支付赔款">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_claim" name="理赔结案">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_report" targetRef="task_register" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_register" targetRef="sub_investigation" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="sub_investigation" targetRef="task_assess" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_assess" targetRef="task_pay_claim" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_pay_claim" targetRef="end_claim" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_subprocess_tall_in_lane" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_subprocess_tall_in_lane" bpmnElement="collaboration_claims">
+      <bpmndi:BPMNShape id="collaboration_claims_di" bpmnElement="collaboration_claims">
+        <dc:Bounds x="0" y="0" width="1590" height="880" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_claims_center_di" bpmnElement="pool_claims_center" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1590" height="880" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_service_di" bpmnElement="lane_service" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1560" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_report_di" bpmnElement="start_report">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_register_di" bpmnElement="task_register">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_claims_di" bpmnElement="lane_claims" isHorizontal="true">
+        <dc:Bounds x="30" y="132" width="1560" height="616" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_investigation_di" bpmnElement="sub_investigation" isExpanded="true">
+        <dc:Bounds x="358" y="148" width="736" height="584" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_start_di" bpmnElement="inv_start">
+        <dc:Bounds x="390" y="432" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="472" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_gateway_fork_di" bpmnElement="inv_gateway_fork">
+        <dc:Bounds x="526" y="425" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="523" y="407" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_task_scene_di" bpmnElement="inv_task_scene">
+        <dc:Bounds x="676" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_task_phone_di" bpmnElement="inv_task_phone">
+        <dc:Bounds x="676" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_task_docs_di" bpmnElement="inv_task_docs">
+        <dc:Bounds x="676" y="480" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_task_thirdparty_di" bpmnElement="inv_task_thirdparty">
+        <dc:Bounds x="676" y="620" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_gateway_join_di" bpmnElement="inv_gateway_join">
+        <dc:Bounds x="876" y="425" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="907" y="407" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inv_end_di" bpmnElement="inv_end">
+        <dc:Bounds x="1026" y="432" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="994" y="472" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_assess_di" bpmnElement="task_assess">
+        <dc:Bounds x="1174" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_finance_di" bpmnElement="lane_finance" isHorizontal="true">
+        <dc:Bounds x="30" y="748" width="1560" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pay_claim_di" bpmnElement="task_pay_claim">
+        <dc:Bounds x="1354" y="764" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_claim_di" bpmnElement="end_claim">
+        <dc:Bounds x="1534" y="786" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1502" y="826" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="inv_flow_1_di" bpmnElement="inv_flow_1">
+        <di:waypoint x="426" y="450" />
+        <di:waypoint x="526" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_scene_di" bpmnElement="inv_flow_scene">
+        <di:waypoint x="576" y="450" />
+        <di:waypoint x="626" y="450" />
+        <di:waypoint x="626" y="240" />
+        <di:waypoint x="676" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_phone_di" bpmnElement="inv_flow_phone">
+        <di:waypoint x="576" y="450" />
+        <di:waypoint x="626" y="450" />
+        <di:waypoint x="626" y="380" />
+        <di:waypoint x="676" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_docs_di" bpmnElement="inv_flow_docs">
+        <di:waypoint x="576" y="450" />
+        <di:waypoint x="626" y="450" />
+        <di:waypoint x="626" y="520" />
+        <di:waypoint x="676" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_thirdparty_di" bpmnElement="inv_flow_thirdparty">
+        <di:waypoint x="576" y="450" />
+        <di:waypoint x="626" y="450" />
+        <di:waypoint x="626" y="660" />
+        <di:waypoint x="676" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_join_1_di" bpmnElement="inv_flow_join_1">
+        <di:waypoint x="726" y="280" />
+        <di:waypoint x="726" y="330" />
+        <di:waypoint x="901" y="330" />
+        <di:waypoint x="901" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_join_2_di" bpmnElement="inv_flow_join_2">
+        <di:waypoint x="776" y="380" />
+        <di:waypoint x="826" y="380" />
+        <di:waypoint x="826" y="450" />
+        <di:waypoint x="876" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_join_3_di" bpmnElement="inv_flow_join_3">
+        <di:waypoint x="776" y="520" />
+        <di:waypoint x="826" y="520" />
+        <di:waypoint x="826" y="450" />
+        <di:waypoint x="876" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_join_4_di" bpmnElement="inv_flow_join_4">
+        <di:waypoint x="726" y="620" />
+        <di:waypoint x="726" y="570" />
+        <di:waypoint x="901" y="570" />
+        <di:waypoint x="901" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="inv_flow_end_di" bpmnElement="inv_flow_end">
+        <di:waypoint x="926" y="450" />
+        <di:waypoint x="1026" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="440" />
+        <di:waypoint x="358" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="1094" y="440" />
+        <di:waypoint x="1174" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="1224" y="480" />
+        <di:waypoint x="1224" y="804" />
+        <di:waypoint x="1354" y="804" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="1454" y="804" />
+        <di:waypoint x="1534" y="804" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

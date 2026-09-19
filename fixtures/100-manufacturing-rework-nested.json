@@ -1,0 +1,122 @@
+{
+  "id": "definitions_manufacturing_rework",
+  "bpmn": {
+    "targetNamespace": "http://example.com/manufacturing-rework-nested",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_manufacturing",
+      "bpmn": { "type": "process", "name": "制造返工流程", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_order",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "生产工单下达" },
+          "labels": [{ "text": "生产工单下达" }]
+        },
+        {
+          "id": "task_prepare_material",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "备料" },
+          "labels": [{ "text": "备料" }]
+        },
+        {
+          "id": "subprocess_assembly",
+          "width": 500, "height": 220,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "装配工序",
+            "triggeredByEvent": false,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "装配工序" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "sub_start_assembly",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始装配" },
+              "labels": [{ "text": "开始装配" }]
+            },
+            {
+              "id": "sub_task_parts",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "部件装配" },
+              "labels": [{ "text": "部件装配" }]
+            },
+            {
+              "id": "sub_task_whole",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "整机组装" },
+              "labels": [{ "text": "整机组装" }]
+            },
+            {
+              "id": "sub_gw_selfcheck",
+              "width": 50, "height": 50,
+              "bpmn": { "type": "exclusiveGateway", "name": "自检是否合格", "gatewayDirection": "Diverging" },
+              "labels": [{ "text": "自检是否合格" }]
+            },
+            {
+              "id": "sub_end_assembly",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "装配完成" },
+              "labels": [{ "text": "装配完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_f_start_parts", "sources": ["sub_start_assembly"], "targets": ["sub_task_parts"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_f_parts_whole", "sources": ["sub_task_parts"], "targets": ["sub_task_whole"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_f_whole_check", "sources": ["sub_task_whole"], "targets": ["sub_gw_selfcheck"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_f_check_rework", "sources": ["sub_gw_selfcheck"], "targets": ["sub_task_parts"], "bpmn": { "type": "sequenceFlow", "name": "不合格返工" }, "labels": [{ "text": "不合格返工" }] },
+            { "id": "sub_f_check_done", "sources": ["sub_gw_selfcheck"], "targets": ["sub_end_assembly"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] }
+          ]
+        },
+        {
+          "id": "task_quality_inspect",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "成品质检" },
+          "labels": [{ "text": "成品质检" }]
+        },
+        {
+          "id": "gw_quality_result",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "质检是否合格", "gatewayDirection": "Diverging" },
+          "labels": [{ "text": "质检是否合格" }]
+        },
+        {
+          "id": "task_package_store",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "包装入库" },
+          "labels": [{ "text": "包装入库" }]
+        },
+        {
+          "id": "end_produced",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "生产完成" },
+          "labels": [{ "text": "生产完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "f_start_prepare", "sources": ["start_order"], "targets": ["task_prepare_material"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_prepare_assembly", "sources": ["task_prepare_material"], "targets": ["subprocess_assembly"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_assembly_inspect", "sources": ["subprocess_assembly"], "targets": ["task_quality_inspect"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_inspect_gw", "sources": ["task_quality_inspect"], "targets": ["gw_quality_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "f_quality_rework", "sources": ["gw_quality_result"], "targets": ["task_prepare_material"], "bpmn": { "type": "sequenceFlow", "name": "不合格重新备料" }, "labels": [{ "text": "不合格重新备料" }] },
+        { "id": "f_quality_pass", "sources": ["gw_quality_result"], "targets": ["task_package_store"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] },
+        { "id": "f_package_end", "sources": ["task_package_store"], "targets": ["end_produced"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

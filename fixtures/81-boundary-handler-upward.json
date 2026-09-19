@@ -1,0 +1,139 @@
+{
+  "id": "definitions_boundary_handler_upward",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-handler-upward"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "errors": [
+    { "id": "err_assess", "name": "评估异常", "errorCode": "RISK_001" }
+  ],
+  "children": [
+    {
+      "id": "process_loan_approval",
+      "bpmn": {
+        "type": "process",
+        "name": "贷款审批（handler 方向对比）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_apply",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "提交申请" },
+          "labels": [{ "text": "提交申请" }]
+        },
+        {
+          "id": "task_check_docs",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "资料审查" },
+          "labels": [{ "text": "资料审查" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_check_timer",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_check_docs",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "审查超时",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "timerEventDefinition": { "timeDuration": "PT4H" }
+              },
+              "labels": [{ "text": "4小时未完成" }]
+            }
+          ]
+        },
+        {
+          "id": "gw_route",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "额度分流" },
+          "labels": [{ "text": "额度分流" }]
+        },
+        {
+          "id": "task_fast_track",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "快速通道复核" },
+          "labels": [{ "text": "快速通道复核" }]
+        },
+        {
+          "id": "task_risk_assess",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "风险评估" },
+          "labels": [{ "text": "风险评估" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_assess_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_risk_assess",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "评估异常",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "errorRef": "err_assess"
+              },
+              "labels": [{ "text": "评估异常" }]
+            }
+          ]
+        },
+        {
+          "id": "gw_join",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "审批汇聚" },
+          "labels": [{ "text": "审批汇聚" }]
+        },
+        {
+          "id": "task_sign",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "签约放款" },
+          "labels": [{ "text": "签约放款" }]
+        },
+        {
+          "id": "end_done",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "放款完成" },
+          "labels": [{ "text": "放款完成" }]
+        },
+        {
+          "id": "task_remind",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "发送催办提醒" },
+          "labels": [{ "text": "发送催办提醒" }]
+        },
+        {
+          "id": "end_remind",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "催办结束" },
+          "labels": [{ "text": "催办结束" }]
+        },
+        {
+          "id": "task_manual_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "人工复评" },
+          "labels": [{ "text": "人工复评" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_check", "sources": ["start_apply"], "targets": ["task_check_docs"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_check_route", "sources": ["task_check_docs"], "targets": ["gw_route"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_route_fast", "sources": ["gw_route"], "targets": ["task_fast_track"], "bpmn": { "type": "sequenceFlow", "name": "小额" }, "labels": [{ "text": "小额" }] },
+        { "id": "flow_route_assess", "sources": ["gw_route"], "targets": ["task_risk_assess"], "bpmn": { "type": "sequenceFlow", "name": "大额" }, "labels": [{ "text": "大额" }] },
+        { "id": "flow_fast_join", "sources": ["task_fast_track"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_assess_join", "sources": ["task_risk_assess"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_join_sign", "sources": ["gw_join"], "targets": ["task_sign"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_sign_end", "sources": ["task_sign"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_timer_remind", "sources": ["boundary_check_timer"], "targets": ["task_remind"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_remind_end", "sources": ["task_remind"], "targets": ["end_remind"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_error_manual", "sources": ["boundary_assess_error"], "targets": ["task_manual_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_manual_fast", "sources": ["task_manual_review"], "targets": ["task_fast_track"], "bpmn": { "type": "sequenceFlow", "name": "转快速通道" }, "labels": [{ "text": "转快速通道" }] }
+      ]
+    }
+  ]
+}

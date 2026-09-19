@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_terminate_mid_branch" targetNamespace="http://example.com/test-terminate-mid-branch" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_terminate_mid_branch" name="分支中途终止测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="task_prepare" name="准备合同材料">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_prepare_review</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="task_review" name="法务审核合同">
+      <bpmn:incoming>flow_prepare_review</bpmn:incoming>
+      <bpmn:incoming>flow_revise_back</bpmn:incoming>
+      <bpmn:outgoing>flow_review_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_decision" name="审核结论" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_review_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_approve</bpmn:outgoing>
+      <bpmn:outgoing>flow_reject</bpmn:outgoing>
+      <bpmn:outgoing>flow_rework</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="task_sign" name="双方签署合同">
+      <bpmn:incoming>flow_approve</bpmn:incoming>
+      <bpmn:outgoing>flow_sign_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_record_reject" name="记录否决原因">
+      <bpmn:incoming>flow_reject</bpmn:incoming>
+      <bpmn:outgoing>flow_reject_terminate</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_revise" name="按意见修订条款">
+      <bpmn:incoming>flow_rework</bpmn:incoming>
+      <bpmn:outgoing>flow_revise_back</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_signed" name="签署完成">
+      <bpmn:incoming>flow_sign_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_terminated" name="合同否决立即终止">
+      <bpmn:incoming>flow_reject_terminate</bpmn:incoming>
+      <bpmn:terminateEventDefinition />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="flow_prepare_review" sourceRef="task_prepare" targetRef="task_review" />
+    <bpmn:sequenceFlow id="flow_review_gw" sourceRef="task_review" targetRef="gateway_decision" />
+    <bpmn:sequenceFlow id="flow_approve" name="审核通过" sourceRef="gateway_decision" targetRef="task_sign" />
+    <bpmn:sequenceFlow id="flow_reject" name="存在重大风险" sourceRef="gateway_decision" targetRef="task_record_reject" />
+    <bpmn:sequenceFlow id="flow_rework" name="需修订后重审" sourceRef="gateway_decision" targetRef="task_revise" />
+    <bpmn:sequenceFlow id="flow_sign_end" sourceRef="task_sign" targetRef="end_signed" />
+    <bpmn:sequenceFlow id="flow_reject_terminate" sourceRef="task_record_reject" targetRef="end_terminated" />
+    <bpmn:sequenceFlow id="flow_revise_back" name="回到法务重新审核" sourceRef="task_revise" targetRef="task_review" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_terminate_mid_branch" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_terminate_mid_branch" bpmnElement="process_terminate_mid_branch">
+      <bpmndi:BPMNShape id="process_terminate_mid_branch_di" bpmnElement="process_terminate_mid_branch">
+        <dc:Bounds x="0" y="0" width="904" height="424" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="270.66666666666663" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="310.66666666666663" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="248.66666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_review_di" bpmnElement="task_review">
+        <dc:Bounds x="358" y="248.66666666666669" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_decision_di" bpmnElement="gateway_decision">
+        <dc:Bounds x="538" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="569" y="169" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_sign_di" bpmnElement="task_sign">
+        <dc:Bounds x="668" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_record_reject_di" bpmnElement="task_record_reject">
+        <dc:Bounds x="668" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_revise_di" bpmnElement="task_revise">
+        <dc:Bounds x="668" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_signed_di" bpmnElement="end_signed">
+        <dc:Bounds x="848" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="816" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_terminated_di" bpmnElement="end_terminated">
+        <dc:Bounds x="848" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="816" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="288.66666666666663" />
+        <di:waypoint x="178" y="288.6666666666667" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_prepare_review_di" bpmnElement="flow_prepare_review">
+        <di:waypoint x="278" y="288.6666666666667" />
+        <di:waypoint x="358" y="288.6666666666667" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_gw_di" bpmnElement="flow_review_gw">
+        <di:waypoint x="458" y="288.6666666666667" />
+        <di:waypoint x="498" y="288.6666666666667" />
+        <di:waypoint x="498" y="212" />
+        <di:waypoint x="538" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_approve_di" bpmnElement="flow_approve">
+        <di:waypoint x="563" y="187" />
+        <di:waypoint x="563" y="72" />
+        <di:waypoint x="668" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="158" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject">
+        <di:waypoint x="588" y="212" />
+        <di:waypoint x="668" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="597" y="217" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_rework_di" bpmnElement="flow_rework">
+        <di:waypoint x="563" y="237" />
+        <di:waypoint x="563" y="352" />
+        <di:waypoint x="668" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="508" y="252" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sign_end_di" bpmnElement="flow_sign_end">
+        <di:waypoint x="768" y="72" />
+        <di:waypoint x="848" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_reject_terminate_di" bpmnElement="flow_reject_terminate">
+        <di:waypoint x="768" y="212" />
+        <di:waypoint x="848" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_revise_back_di" bpmnElement="flow_revise_back">
+        <di:waypoint x="718" y="392" />
+        <di:waypoint x="718" y="416" />
+        <di:waypoint x="408" y="416" />
+        <di:waypoint x="408" y="328.6666666666667" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="538" y="397" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

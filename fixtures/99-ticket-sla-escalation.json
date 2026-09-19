@@ -1,0 +1,193 @@
+{
+  "id": "definitions_ticket_sla_escalation",
+  "bpmn": {
+    "targetNamespace": "http://example.com/ticket-sla-escalation",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_ticket",
+      "bpmn": { "type": "collaboration", "name": "工单SLA升级流程" },
+      "children": [
+        {
+          "id": "pool_support",
+          "bpmn": { "type": "participant", "name": "技术支持中心", "processRef": "process_ticket" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_level1",
+              "bpmn": { "type": "lane", "name": "一线支持" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_ticket",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "工单创建" },
+                  "labels": [{ "text": "工单创建" }]
+                },
+                {
+                  "id": "task_l1_handle",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "一线处理" },
+                  "labels": [{ "text": "一线处理" }],
+                  "boundaryEvents": [
+                    {
+                      "id": "boundary_l1_sla",
+                      "width": 36, "height": 36,
+                      "attachedToRef": "task_l1_handle",
+                      "bpmn": {
+                        "type": "boundaryEvent",
+                        "eventDefinitionType": "timer",
+                        "name": "一线SLA超时",
+                        "isInterrupting": false,
+                        "cancelActivity": false,
+                        "timerEventDefinition": { "timeDuration": "PT2H" }
+                      },
+                      "labels": [{ "text": "2小时超时" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "gw_l1_solved",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "一线是否解决", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "一线是否解决" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_level2",
+              "bpmn": { "type": "lane", "name": "二线支持" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_l2_handle",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "二线处理" },
+                  "labels": [{ "text": "二线处理" }],
+                  "boundaryEvents": [
+                    {
+                      "id": "boundary_l2_sla",
+                      "width": 36, "height": 36,
+                      "attachedToRef": "task_l2_handle",
+                      "bpmn": {
+                        "type": "boundaryEvent",
+                        "eventDefinitionType": "timer",
+                        "name": "二线SLA超时",
+                        "isInterrupting": false,
+                        "cancelActivity": false,
+                        "timerEventDefinition": { "timeDuration": "PT4H" }
+                      },
+                      "labels": [{ "text": "4小时超时" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "gw_l2_solved",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "二线是否解决", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "二线是否解决" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_level3",
+              "bpmn": { "type": "lane", "name": "三线支持" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_l3_handle",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "三线处理" },
+                  "labels": [{ "text": "三线处理" }],
+                  "boundaryEvents": [
+                    {
+                      "id": "boundary_l3_sla",
+                      "width": 36, "height": 36,
+                      "attachedToRef": "task_l3_handle",
+                      "bpmn": {
+                        "type": "boundaryEvent",
+                        "eventDefinitionType": "timer",
+                        "name": "三线SLA超时",
+                        "isInterrupting": false,
+                        "cancelActivity": false,
+                        "timerEventDefinition": { "timeDuration": "PT8H" }
+                      },
+                      "labels": [{ "text": "8小时超时" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "gw_l3_solved",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "三线是否解决", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "三线是否解决" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_manager",
+              "bpmn": { "type": "lane", "name": "经理" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                {
+                  "id": "task_mgr_handle",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "经理协调处理" },
+                  "labels": [{ "text": "经理协调处理" }]
+                },
+                {
+                  "id": "gw_merge_solved",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "汇总解决结果", "gatewayDirection": "Converging" },
+                  "labels": [{ "text": "汇总解决结果" }]
+                },
+                {
+                  "id": "task_close_ticket",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "关单" },
+                  "labels": [{ "text": "关单" }]
+                },
+                {
+                  "id": "end_closed",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "工单关闭" },
+                  "labels": [{ "text": "工单关闭" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_start_l1", "sources": ["start_ticket"], "targets": ["task_l1_handle"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_l1_gw", "sources": ["task_l1_handle"], "targets": ["gw_l1_solved"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_l1_solved", "sources": ["gw_l1_solved"], "targets": ["gw_merge_solved"], "bpmn": { "type": "sequenceFlow", "name": "已解决" }, "labels": [{ "text": "已解决" }] },
+            { "id": "f_l1_unsolved", "sources": ["gw_l1_solved"], "targets": ["task_l2_handle"], "bpmn": { "type": "sequenceFlow", "name": "未解决" }, "labels": [{ "text": "未解决" }] },
+            { "id": "f_l1_timeout", "sources": ["boundary_l1_sla"], "targets": ["task_l2_handle"], "bpmn": { "type": "sequenceFlow", "name": "超时升级二线" }, "labels": [{ "text": "超时升级二线" }] },
+            { "id": "f_l2_gw", "sources": ["task_l2_handle"], "targets": ["gw_l2_solved"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_l2_solved", "sources": ["gw_l2_solved"], "targets": ["gw_merge_solved"], "bpmn": { "type": "sequenceFlow", "name": "已解决" }, "labels": [{ "text": "已解决" }] },
+            { "id": "f_l2_unsolved", "sources": ["gw_l2_solved"], "targets": ["task_l3_handle"], "bpmn": { "type": "sequenceFlow", "name": "未解决" }, "labels": [{ "text": "未解决" }] },
+            { "id": "f_l2_timeout", "sources": ["boundary_l2_sla"], "targets": ["task_l3_handle"], "bpmn": { "type": "sequenceFlow", "name": "超时升级三线" }, "labels": [{ "text": "超时升级三线" }] },
+            { "id": "f_l3_gw", "sources": ["task_l3_handle"], "targets": ["gw_l3_solved"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_l3_solved", "sources": ["gw_l3_solved"], "targets": ["gw_merge_solved"], "bpmn": { "type": "sequenceFlow", "name": "已解决" }, "labels": [{ "text": "已解决" }] },
+            { "id": "f_l3_unsolved", "sources": ["gw_l3_solved"], "targets": ["task_mgr_handle"], "bpmn": { "type": "sequenceFlow", "name": "未解决" }, "labels": [{ "text": "未解决" }] },
+            { "id": "f_l3_timeout", "sources": ["boundary_l3_sla"], "targets": ["task_mgr_handle"], "bpmn": { "type": "sequenceFlow", "name": "超时升级经理" }, "labels": [{ "text": "超时升级经理" }] },
+            { "id": "f_mgr_merge", "sources": ["task_mgr_handle"], "targets": ["gw_merge_solved"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_merge_close", "sources": ["gw_merge_solved"], "targets": ["task_close_ticket"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_close_end", "sources": ["task_close_ticket"], "targets": ["end_closed"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "id": "definitions_subprocess_5_level",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-subprocess-5-level",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_5_level",
+      "bpmn": {
+        "type": "process",
+        "name": "集团合同五级审批",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起合同" },
+          "labels": [{ "text": "发起合同" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "准备合同材料" },
+          "labels": [{ "text": "准备合同材料" }]
+        },
+        {
+          "id": "sub_level1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "集团审批", "isExpanded": true },
+          "labels": [{ "text": "集团审批" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "l1_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "集团受理" },
+              "labels": [{ "text": "集团受理" }]
+            },
+            {
+              "id": "l1_task",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "集团法务初审" },
+              "labels": [{ "text": "集团法务初审" }]
+            },
+            {
+              "id": "sub_level2",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "subProcess", "name": "公司审批", "isExpanded": true },
+              "labels": [{ "text": "公司审批" }],
+              "layoutOptions": {
+                "elk.algorithm": "layered",
+                "elk.direction": "RIGHT",
+                "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+              },
+              "children": [
+                {
+                  "id": "l2_start",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "公司受理" },
+                  "labels": [{ "text": "公司受理" }]
+                },
+                {
+                  "id": "l2_task",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "公司总经理审批" },
+                  "labels": [{ "text": "公司总经理审批" }]
+                },
+                {
+                  "id": "sub_level3",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "subProcess", "name": "部门审批", "isExpanded": true },
+                  "labels": [{ "text": "部门审批" }],
+                  "layoutOptions": {
+                    "elk.algorithm": "layered",
+                    "elk.direction": "RIGHT",
+                    "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+                  },
+                  "children": [
+                    {
+                      "id": "l3_start",
+                      "width": 36, "height": 36,
+                      "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "部门受理" },
+                      "labels": [{ "text": "部门受理" }]
+                    },
+                    {
+                      "id": "l3_task",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "部门经理审批" },
+                      "labels": [{ "text": "部门经理审批" }]
+                    },
+                    {
+                      "id": "sub_level4",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "subProcess", "name": "团队审批", "isExpanded": true },
+                      "labels": [{ "text": "团队审批" }],
+                      "layoutOptions": {
+                        "elk.algorithm": "layered",
+                        "elk.direction": "RIGHT",
+                        "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+                      },
+                      "children": [
+                        {
+                          "id": "l4_start",
+                          "width": 36, "height": 36,
+                          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "团队受理" },
+                          "labels": [{ "text": "团队受理" }]
+                        },
+                        {
+                          "id": "l4_task",
+                          "width": 100, "height": 80,
+                          "bpmn": { "type": "userTask", "name": "团队负责人审批" },
+                          "labels": [{ "text": "团队负责人审批" }]
+                        },
+                        {
+                          "id": "sub_level5",
+                          "width": 100, "height": 80,
+                          "bpmn": { "type": "subProcess", "name": "个人确认", "isExpanded": true },
+                          "labels": [{ "text": "个人确认" }],
+                          "layoutOptions": {
+                            "elk.algorithm": "layered",
+                            "elk.direction": "RIGHT",
+                            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+                          },
+                          "children": [
+                            {
+                              "id": "l5_start",
+                              "width": 36, "height": 36,
+                              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "待确认" },
+                              "labels": [{ "text": "待确认" }]
+                            },
+                            {
+                              "id": "l5_task",
+                              "width": 100, "height": 80,
+                              "bpmn": { "type": "userTask", "name": "经办人核对条款" },
+                              "labels": [{ "text": "经办人核对条款" }]
+                            },
+                            {
+                              "id": "l5_end",
+                              "width": 36, "height": 36,
+                              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "确认完成" },
+                              "labels": [{ "text": "确认完成" }]
+                            }
+                          ],
+                          "edges": [
+                            { "id": "l5_flow_1", "sources": ["l5_start"], "targets": ["l5_task"], "bpmn": { "type": "sequenceFlow" } },
+                            { "id": "l5_flow_2", "sources": ["l5_task"], "targets": ["l5_end"], "bpmn": { "type": "sequenceFlow" } }
+                          ]
+                        },
+                        {
+                          "id": "l4_end",
+                          "width": 36, "height": 36,
+                          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "团队完成" },
+                          "labels": [{ "text": "团队完成" }]
+                        }
+                      ],
+                      "edges": [
+                        { "id": "l4_flow_1", "sources": ["l4_start"], "targets": ["l4_task"], "bpmn": { "type": "sequenceFlow" } },
+                        { "id": "l4_flow_2", "sources": ["l4_task"], "targets": ["sub_level5"], "bpmn": { "type": "sequenceFlow" } },
+                        { "id": "l4_flow_3", "sources": ["sub_level5"], "targets": ["l4_end"], "bpmn": { "type": "sequenceFlow" } }
+                      ]
+                    },
+                    {
+                      "id": "l3_end",
+                      "width": 36, "height": 36,
+                      "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "部门完成" },
+                      "labels": [{ "text": "部门完成" }]
+                    }
+                  ],
+                  "edges": [
+                    { "id": "l3_flow_1", "sources": ["l3_start"], "targets": ["l3_task"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "l3_flow_2", "sources": ["l3_task"], "targets": ["sub_level4"], "bpmn": { "type": "sequenceFlow" } },
+                    { "id": "l3_flow_3", "sources": ["sub_level4"], "targets": ["l3_end"], "bpmn": { "type": "sequenceFlow" } }
+                  ]
+                },
+                {
+                  "id": "l2_end",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "公司完成" },
+                  "labels": [{ "text": "公司完成" }]
+                }
+              ],
+              "edges": [
+                { "id": "l2_flow_1", "sources": ["l2_start"], "targets": ["l2_task"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "l2_flow_2", "sources": ["l2_task"], "targets": ["sub_level3"], "bpmn": { "type": "sequenceFlow" } },
+                { "id": "l2_flow_3", "sources": ["sub_level3"], "targets": ["l2_end"], "bpmn": { "type": "sequenceFlow" } }
+              ]
+            },
+            {
+              "id": "l1_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "集团完成" },
+              "labels": [{ "text": "集团完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "l1_flow_1", "sources": ["l1_start"], "targets": ["l1_task"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "l1_flow_2", "sources": ["l1_task"], "targets": ["sub_level2"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "l1_flow_3", "sources": ["sub_level2"], "targets": ["l1_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "task_archive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "归档合同" },
+          "labels": [{ "text": "归档合同" }]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "审批结束" },
+          "labels": [{ "text": "审批结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["task_prepare"], "targets": ["sub_level1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["sub_level1"], "targets": ["task_archive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_4", "sources": ["task_archive"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

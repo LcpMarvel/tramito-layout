@@ -1,0 +1,78 @@
+{
+  "id": "definitions_boundary_retry_loop",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-retry-loop",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "errors": [
+    { "id": "err_remote", "name": "接口调用失败", "errorCode": "REMOTE_500" }
+  ],
+  "children": [
+    {
+      "id": "process_boundary_retry",
+      "bpmn": { "type": "process", "name": "接口调用重试环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "组装请求参数" },
+          "labels": [{ "text": "组装请求参数" }]
+        },
+        {
+          "id": "task_call",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "调用外部接口" },
+          "labels": [{ "text": "调用外部接口" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_call_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_call",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "调用失败",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "errorRef": "err_remote"
+              },
+              "labels": [{ "text": "调用失败" }]
+            }
+          ]
+        },
+        {
+          "id": "task_save",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "保存返回结果" },
+          "labels": [{ "text": "保存返回结果" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "结束" },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_prepare_call", "sources": ["task_prepare"], "targets": ["task_call"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_call_save", "sources": ["task_call"], "targets": ["task_save"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_save_end", "sources": ["task_save"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_retry", "sources": ["boundary_call_error"], "targets": ["task_prepare"], "bpmn": { "type": "sequenceFlow", "name": "重试" }, "labels": [{ "text": "重试" }] }
+      ]
+    }
+  ]
+}

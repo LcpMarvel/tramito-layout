@@ -1,0 +1,238 @@
+{
+  "id": "definitions_recruitment_interview",
+  "bpmn": {
+    "targetNamespace": "http://example.com/recruitment-interview-rounds",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_invite", "name": "面试邀约" },
+    { "id": "msg_confirm", "name": "面试确认" },
+    { "id": "msg_result", "name": "结果通知" },
+    { "id": "msg_offer", "name": "Offer通知" }
+  ],
+  "children": [
+    {
+      "id": "collaboration_recruit",
+      "bpmn": { "type": "collaboration", "name": "招聘面试流程" },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": { "type": "participant", "name": "公司", "processRef": "process_company" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_hr",
+              "bpmn": { "type": "lane", "name": "HR" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_resume",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "收到简历投递" },
+                  "labels": [{ "text": "收到简历投递" }]
+                },
+                {
+                  "id": "task_screen_resume",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "简历筛选" },
+                  "labels": [{ "text": "简历筛选" }]
+                },
+                {
+                  "id": "task_send_invite",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "sendTask", "name": "发送面试邀约" },
+                  "labels": [{ "text": "发送面试邀约" }]
+                },
+                {
+                  "id": "event_recv_confirm",
+                  "width": 36, "height": 36,
+                  "bpmn": {
+                    "type": "intermediateCatchEvent",
+                    "eventDefinitionType": "message",
+                    "name": "收到候选人确认",
+                    "messageRef": "msg_confirm"
+                  },
+                  "labels": [{ "text": "收到候选人确认" }]
+                },
+                {
+                  "id": "task_send_reject",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "sendTask", "name": "发送结果通知" },
+                  "labels": [{ "text": "发送结果通知" }]
+                },
+                {
+                  "id": "end_rejected",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "招聘终止" },
+                  "labels": [{ "text": "招聘终止" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_interviewer",
+              "bpmn": { "type": "lane", "name": "面试官" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_interview",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "面试评估" },
+                  "labels": [{ "text": "面试评估" }]
+                },
+                {
+                  "id": "gw_interview_result",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "面试结论", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "面试结论" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_hrbp",
+              "bpmn": { "type": "lane", "name": "HRBP" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_offer_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "Offer审批" },
+                  "labels": [{ "text": "Offer审批" }]
+                },
+                {
+                  "id": "task_send_offer",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "sendTask", "name": "发放Offer" },
+                  "labels": [{ "text": "发放Offer" }]
+                },
+                {
+                  "id": "end_hired",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "录用完成" },
+                  "labels": [{ "text": "录用完成" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_resume_screen", "sources": ["start_resume"], "targets": ["task_screen_resume"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_screen_invite", "sources": ["task_screen_resume"], "targets": ["task_send_invite"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_invite_confirm", "sources": ["task_send_invite"], "targets": ["event_recv_confirm"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_confirm_interview", "sources": ["event_recv_confirm"], "targets": ["task_interview"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_interview_gw", "sources": ["task_interview"], "targets": ["gw_interview_result"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_result_more", "sources": ["gw_interview_result"], "targets": ["task_send_invite"], "bpmn": { "type": "sequenceFlow", "name": "需加面" }, "labels": [{ "text": "需加面" }] },
+            { "id": "f_result_fail", "sources": ["gw_interview_result"], "targets": ["task_send_reject"], "bpmn": { "type": "sequenceFlow", "name": "不通过" }, "labels": [{ "text": "不通过" }] },
+            { "id": "f_reject_end", "sources": ["task_send_reject"], "targets": ["end_rejected"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_result_pass", "sources": ["gw_interview_result"], "targets": ["task_offer_review"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_review_offer", "sources": ["task_offer_review"], "targets": ["task_send_offer"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_offer_end", "sources": ["task_send_offer"], "targets": ["end_hired"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "pool_candidate",
+          "bpmn": { "type": "participant", "name": "候选人", "processRef": "process_candidate" },
+          "children": [
+            {
+              "id": "start_candidate",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到面试邀约",
+                "messageRef": "msg_invite"
+              },
+              "labels": [{ "text": "收到面试邀约" }]
+            },
+            {
+              "id": "task_confirm_time",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "sendTask", "name": "确认面试时间" },
+              "labels": [{ "text": "确认面试时间" }]
+            },
+            {
+              "id": "task_attend_interview",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "参加面试" },
+              "labels": [{ "text": "参加面试" }]
+            },
+            {
+              "id": "event_recv_result",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "收到结果通知",
+                "messageRef": "msg_result"
+              },
+              "labels": [{ "text": "收到结果通知" }]
+            },
+            {
+              "id": "event_recv_offer",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "intermediateCatchEvent",
+                "eventDefinitionType": "message",
+                "name": "收到Offer",
+                "messageRef": "msg_offer"
+              },
+              "labels": [{ "text": "收到Offer" }]
+            },
+            {
+              "id": "end_candidate",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "求职结束" },
+              "labels": [{ "text": "求职结束" }]
+            }
+          ],
+          "edges": [
+            { "id": "f_cand_confirm", "sources": ["start_candidate"], "targets": ["task_confirm_time"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cand_attend", "sources": ["task_confirm_time"], "targets": ["task_attend_interview"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cand_result", "sources": ["task_attend_interview"], "targets": ["event_recv_result"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cand_offer", "sources": ["event_recv_result"], "targets": ["event_recv_offer"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cand_end", "sources": ["event_recv_offer"], "targets": ["end_candidate"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "mf_invite",
+          "sources": ["task_send_invite"],
+          "targets": ["start_candidate"],
+          "bpmn": { "type": "messageFlow", "name": "面试邀约", "messageRef": "msg_invite" },
+          "labels": [{ "text": "面试邀约" }]
+        },
+        {
+          "id": "mf_confirm",
+          "sources": ["task_confirm_time"],
+          "targets": ["event_recv_confirm"],
+          "bpmn": { "type": "messageFlow", "name": "面试确认", "messageRef": "msg_confirm" },
+          "labels": [{ "text": "面试确认" }]
+        },
+        {
+          "id": "mf_result",
+          "sources": ["task_send_reject"],
+          "targets": ["event_recv_result"],
+          "bpmn": { "type": "messageFlow", "name": "结果通知", "messageRef": "msg_result" },
+          "labels": [{ "text": "结果通知" }]
+        },
+        {
+          "id": "mf_offer",
+          "sources": ["task_send_offer"],
+          "targets": ["event_recv_offer"],
+          "bpmn": { "type": "messageFlow", "name": "Offer通知", "messageRef": "msg_offer" },
+          "labels": [{ "text": "Offer通知" }]
+        }
+      ]
+    }
+  ]
+}

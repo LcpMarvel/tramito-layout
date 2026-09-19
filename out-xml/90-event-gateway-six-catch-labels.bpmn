@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_event_gateway_six_catch" targetNamespace="http://example.com/test-event-gateway-six-catch-labels" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_confirm" name="客户确认消息" />
+  <bpmn:message id="msg_modify" name="客户修改消息" />
+  <bpmn:message id="msg_complaint" name="客户投诉消息" />
+  <bpmn:signal id="sig_force_close" name="强制关单信号" />
+  <bpmn:signal id="sig_system_pause" name="系统停机维护信号" />
+  <bpmn:process id="process_six_catch" name="事件网关六分支长标签测试" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="工单创建完成">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="task_dispatch" name="客服坐席派单并通知客户">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_to_gateway</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:eventBasedGateway id="gateway_event" name="等待客户响应或系统超时等多种可能事件中最先到达的那一个" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>flow_g_confirm</bpmn:outgoing>
+      <bpmn:outgoing>flow_g_modify</bpmn:outgoing>
+      <bpmn:outgoing>flow_g_complaint</bpmn:outgoing>
+      <bpmn:outgoing>flow_g_timeout</bpmn:outgoing>
+      <bpmn:outgoing>flow_g_force</bpmn:outgoing>
+      <bpmn:outgoing>flow_g_pause</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="catch_confirm" name="客户通过移动端小程序确认服务方案与上门时间均无异议">
+      <bpmn:incoming>flow_g_confirm</bpmn:incoming>
+      <bpmn:outgoing>flow_confirm_serve</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_confirm" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_modify" name="客户提出修改预约时间或更换服务网点的变更请求消息">
+      <bpmn:incoming>flow_g_modify</bpmn:incoming>
+      <bpmn:outgoing>flow_modify_reschedule</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_modify" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_complaint" name="客户在等待期间发起服务态度或响应速度方面的投诉消息">
+      <bpmn:incoming>flow_g_complaint</bpmn:incoming>
+      <bpmn:outgoing>flow_complaint_handle</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_complaint" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_timeout_24h" name="客户超过二十四小时未作任何响应触发首次自动提醒定时器">
+      <bpmn:incoming>flow_g_timeout</bpmn:incoming>
+      <bpmn:outgoing>flow_timeout_remind</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT24H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_force_close" name="运营管理后台广播强制关单信号要求立即终止所有挂起工单">
+      <bpmn:incoming>flow_g_force</bpmn:incoming>
+      <bpmn:outgoing>flow_force_close</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="sig_force_close" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="catch_system_pause" name="接到系统停机维护广播信号需将工单转入离线待恢复队列">
+      <bpmn:incoming>flow_g_pause</bpmn:incoming>
+      <bpmn:outgoing>flow_pause_park</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="sig_system_pause" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="task_serve" name="按确认方案执行上门服务">
+      <bpmn:incoming>flow_confirm_serve</bpmn:incoming>
+      <bpmn:outgoing>flow_serve_done</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_reschedule" name="重新协商并改派服务资源">
+      <bpmn:incoming>flow_modify_reschedule</bpmn:incoming>
+      <bpmn:outgoing>flow_reschedule_done</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_handle_complaint" name="升级投诉专员介入安抚处理">
+      <bpmn:incoming>flow_complaint_handle</bpmn:incoming>
+      <bpmn:outgoing>flow_complaint_done</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_remind" name="外呼提醒客户尽快确认">
+      <bpmn:incoming>flow_timeout_remind</bpmn:incoming>
+      <bpmn:outgoing>flow_remind_done</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_close" name="执行关单并记录关闭原因">
+      <bpmn:incoming>flow_force_close</bpmn:incoming>
+      <bpmn:outgoing>flow_close_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_park" name="工单转入离线待恢复队列">
+      <bpmn:incoming>flow_pause_park</bpmn:incoming>
+      <bpmn:outgoing>flow_park_end</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_done" name="工单处理完毕">
+      <bpmn:incoming>flow_serve_done</bpmn:incoming>
+      <bpmn:incoming>flow_reschedule_done</bpmn:incoming>
+      <bpmn:incoming>flow_complaint_done</bpmn:incoming>
+      <bpmn:incoming>flow_remind_done</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_closed" name="工单已关闭">
+      <bpmn:incoming>flow_close_end</bpmn:incoming>
+      <bpmn:incoming>flow_park_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_dispatch" />
+    <bpmn:sequenceFlow id="flow_to_gateway" name="派单通知发送成功后进入多事件竞争等待状态" sourceRef="task_dispatch" targetRef="gateway_event" />
+    <bpmn:sequenceFlow id="flow_g_confirm" name="若客户确认消息最先到达则锁定服务方案进入执行分支" sourceRef="gateway_event" targetRef="catch_confirm" />
+    <bpmn:sequenceFlow id="flow_g_modify" name="若客户变更请求最先到达则进入重新协商改派处理分支" sourceRef="gateway_event" targetRef="catch_modify" />
+    <bpmn:sequenceFlow id="flow_g_complaint" name="若客户投诉消息最先到达则升级专员通道优先安抚处理" sourceRef="gateway_event" targetRef="catch_complaint" />
+    <bpmn:sequenceFlow id="flow_g_timeout" name="若二十四小时定时器最先触发则启动外呼提醒补救动作" sourceRef="gateway_event" targetRef="catch_timeout_24h" />
+    <bpmn:sequenceFlow id="flow_g_force" name="若强制关单广播信号最先到达则立即终止等待执行关单" sourceRef="gateway_event" targetRef="catch_force_close" />
+    <bpmn:sequenceFlow id="flow_g_pause" name="若系统停机维护信号最先到达则把工单挂起转离线队列" sourceRef="gateway_event" targetRef="catch_system_pause" />
+    <bpmn:sequenceFlow id="flow_confirm_serve" sourceRef="catch_confirm" targetRef="task_serve" />
+    <bpmn:sequenceFlow id="flow_modify_reschedule" sourceRef="catch_modify" targetRef="task_reschedule" />
+    <bpmn:sequenceFlow id="flow_complaint_handle" sourceRef="catch_complaint" targetRef="task_handle_complaint" />
+    <bpmn:sequenceFlow id="flow_timeout_remind" sourceRef="catch_timeout_24h" targetRef="task_remind" />
+    <bpmn:sequenceFlow id="flow_force_close" sourceRef="catch_force_close" targetRef="task_close" />
+    <bpmn:sequenceFlow id="flow_pause_park" sourceRef="catch_system_pause" targetRef="task_park" />
+    <bpmn:sequenceFlow id="flow_serve_done" sourceRef="task_serve" targetRef="end_done" />
+    <bpmn:sequenceFlow id="flow_reschedule_done" sourceRef="task_reschedule" targetRef="end_done" />
+    <bpmn:sequenceFlow id="flow_complaint_done" sourceRef="task_handle_complaint" targetRef="end_done" />
+    <bpmn:sequenceFlow id="flow_remind_done" sourceRef="task_remind" targetRef="end_done" />
+    <bpmn:sequenceFlow id="flow_close_end" sourceRef="task_close" targetRef="end_closed" />
+    <bpmn:sequenceFlow id="flow_park_end" sourceRef="task_park" targetRef="end_closed" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_event_gateway_six_catch" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_event_gateway_six_catch" bpmnElement="process_six_catch">
+      <bpmndi:BPMNShape id="process_six_catch_di" bpmnElement="process_six_catch">
+        <dc:Bounds x="0" y="0" width="840" height="844" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="404" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="444" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_dispatch_di" bpmnElement="task_dispatch">
+        <dc:Bounds x="178" y="382" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_event_di" bpmnElement="gateway_event">
+        <dc:Bounds x="358" y="397" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="308" y="351" width="150" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_confirm_di" bpmnElement="catch_confirm">
+        <dc:Bounds x="488" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_modify_di" bpmnElement="catch_modify">
+        <dc:Bounds x="488" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_complaint_di" bpmnElement="catch_complaint">
+        <dc:Bounds x="488" y="334" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="374" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_timeout_24h_di" bpmnElement="catch_timeout_24h">
+        <dc:Bounds x="488" y="474" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="514" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_force_close_di" bpmnElement="catch_force_close">
+        <dc:Bounds x="488" y="614" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="654" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_system_pause_di" bpmnElement="catch_system_pause">
+        <dc:Bounds x="488" y="754" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="794" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_serve_di" bpmnElement="task_serve">
+        <dc:Bounds x="604" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_reschedule_di" bpmnElement="task_reschedule">
+        <dc:Bounds x="604" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handle_complaint_di" bpmnElement="task_handle_complaint">
+        <dc:Bounds x="604" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_remind_di" bpmnElement="task_remind">
+        <dc:Bounds x="604" y="452" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_close_di" bpmnElement="task_close">
+        <dc:Bounds x="604" y="592" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_park_di" bpmnElement="task_park">
+        <dc:Bounds x="604" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="784" y="263.99999999999994" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="752" y="303.99999999999994" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_closed_di" bpmnElement="end_closed">
+        <dc:Bounds x="784" y="684" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="752" y="724" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="422" />
+        <di:waypoint x="178" y="422" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_gateway_di" bpmnElement="flow_to_gateway">
+        <di:waypoint x="278" y="422" />
+        <di:waypoint x="358" y="422" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="293" y="403" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_confirm_di" bpmnElement="flow_g_confirm">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="72" />
+        <di:waypoint x="488" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="427" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_modify_di" bpmnElement="flow_g_modify">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="488" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="403" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_complaint_di" bpmnElement="flow_g_complaint">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="352" />
+        <di:waypoint x="488" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="445" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_timeout_di" bpmnElement="flow_g_timeout">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="492" />
+        <di:waypoint x="488" y="492" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="385" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_force_di" bpmnElement="flow_g_force">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="632" />
+        <di:waypoint x="488" y="632" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="463" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_g_pause_di" bpmnElement="flow_g_pause">
+        <di:waypoint x="408" y="422" />
+        <di:waypoint x="448" y="422" />
+        <di:waypoint x="448" y="772" />
+        <di:waypoint x="488" y="772" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="367" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_confirm_serve_di" bpmnElement="flow_confirm_serve">
+        <di:waypoint x="524" y="72" />
+        <di:waypoint x="604" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_modify_reschedule_di" bpmnElement="flow_modify_reschedule">
+        <di:waypoint x="524" y="212" />
+        <di:waypoint x="604" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_complaint_handle_di" bpmnElement="flow_complaint_handle">
+        <di:waypoint x="524" y="352" />
+        <di:waypoint x="604" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_timeout_remind_di" bpmnElement="flow_timeout_remind">
+        <di:waypoint x="524" y="492" />
+        <di:waypoint x="604" y="492" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_force_close_di" bpmnElement="flow_force_close">
+        <di:waypoint x="524" y="632" />
+        <di:waypoint x="604" y="632" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_pause_park_di" bpmnElement="flow_pause_park">
+        <di:waypoint x="524" y="772" />
+        <di:waypoint x="604" y="772" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_serve_done_di" bpmnElement="flow_serve_done">
+        <di:waypoint x="704" y="72" />
+        <di:waypoint x="744" y="72" />
+        <di:waypoint x="744" y="281.99999999999994" />
+        <di:waypoint x="784" y="281.99999999999994" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_reschedule_done_di" bpmnElement="flow_reschedule_done">
+        <di:waypoint x="704" y="212" />
+        <di:waypoint x="744" y="212" />
+        <di:waypoint x="744" y="281.99999999999994" />
+        <di:waypoint x="784" y="281.99999999999994" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_complaint_done_di" bpmnElement="flow_complaint_done">
+        <di:waypoint x="704" y="352" />
+        <di:waypoint x="744" y="352" />
+        <di:waypoint x="744" y="281.99999999999994" />
+        <di:waypoint x="784" y="281.99999999999994" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_remind_done_di" bpmnElement="flow_remind_done">
+        <di:waypoint x="704" y="492" />
+        <di:waypoint x="744" y="492" />
+        <di:waypoint x="744" y="281.99999999999994" />
+        <di:waypoint x="784" y="281.99999999999994" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_close_end_di" bpmnElement="flow_close_end">
+        <di:waypoint x="704" y="632" />
+        <di:waypoint x="744" y="632" />
+        <di:waypoint x="744" y="702" />
+        <di:waypoint x="784" y="702" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_park_end_di" bpmnElement="flow_park_end">
+        <di:waypoint x="704" y="772" />
+        <di:waypoint x="744" y="772" />
+        <di:waypoint x="744" y="702" />
+        <di:waypoint x="784" y="702" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

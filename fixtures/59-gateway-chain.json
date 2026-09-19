@@ -1,0 +1,148 @@
+{
+  "id": "definitions_gateway_chain",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-gateway-chain",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_gateway_chain",
+      "bpmn": {
+        "type": "process",
+        "name": "网关直连链路风控筛查",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "交易发起" },
+          "labels": [{ "text": "交易发起" }]
+        },
+        {
+          "id": "gw_1_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "黑名单筛查",
+            "gatewayDirection": "Diverging",
+            "default": "flow_gw1_pass"
+          },
+          "labels": [{ "text": "黑名单筛查" }]
+        },
+        {
+          "id": "gw_2_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "额度筛查",
+            "gatewayDirection": "Diverging",
+            "default": "flow_gw2_pass"
+          },
+          "labels": [{ "text": "额度筛查" }]
+        },
+        {
+          "id": "gw_3_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "异地筛查",
+            "gatewayDirection": "Diverging",
+            "default": "flow_gw3_pass"
+          },
+          "labels": [{ "text": "异地筛查" }]
+        },
+        {
+          "id": "task_blacklist",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "人工核查身份" },
+          "labels": [{ "text": "人工核查身份" }]
+        },
+        {
+          "id": "task_overlimit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "提交超额申请" },
+          "labels": [{ "text": "提交超额申请" }]
+        },
+        {
+          "id": "task_remote",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "短信二次验证" },
+          "labels": [{ "text": "短信二次验证" }]
+        },
+        {
+          "id": "task_pass",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "直接放行" },
+          "labels": [{ "text": "直接放行" }]
+        },
+        {
+          "id": "gw_3_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "异地汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "异地汇合" }]
+        },
+        {
+          "id": "gw_2_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "额度汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "额度汇合" }]
+        },
+        {
+          "id": "gw_1_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "筛查汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "筛查汇合" }]
+        },
+        {
+          "id": "task_execute",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "执行交易" },
+          "labels": [{ "text": "执行交易" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "交易完成" },
+          "labels": [{ "text": "交易完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gw_1_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw1_hit", "sources": ["gw_1_div"], "targets": ["task_blacklist"], "bpmn": { "type": "sequenceFlow", "name": "命中黑名单", "conditionExpression": { "body": "${blacklisted == true}" } }, "labels": [{ "text": "命中黑名单" }] },
+        { "id": "flow_gw1_pass", "sources": ["gw_1_div"], "targets": ["gw_2_div"], "bpmn": { "type": "sequenceFlow", "name": "未命中", "isDefault": true }, "labels": [{ "text": "未命中" }] },
+        { "id": "flow_gw2_hit", "sources": ["gw_2_div"], "targets": ["task_overlimit"], "bpmn": { "type": "sequenceFlow", "name": "超出额度", "conditionExpression": { "body": "${amount > limit}" } }, "labels": [{ "text": "超出额度" }] },
+        { "id": "flow_gw2_pass", "sources": ["gw_2_div"], "targets": ["gw_3_div"], "bpmn": { "type": "sequenceFlow", "name": "额度内", "isDefault": true }, "labels": [{ "text": "额度内" }] },
+        { "id": "flow_gw3_hit", "sources": ["gw_3_div"], "targets": ["task_remote"], "bpmn": { "type": "sequenceFlow", "name": "异地登录", "conditionExpression": { "body": "${remoteLogin == true}" } }, "labels": [{ "text": "异地登录" }] },
+        { "id": "flow_gw3_pass", "sources": ["gw_3_div"], "targets": ["task_pass"], "bpmn": { "type": "sequenceFlow", "name": "本地登录", "isDefault": true }, "labels": [{ "text": "本地登录" }] },
+        { "id": "flow_remote_conv", "sources": ["task_remote"], "targets": ["gw_3_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_pass_conv", "sources": ["task_pass"], "targets": ["gw_3_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw3c_gw2c", "sources": ["gw_3_conv"], "targets": ["gw_2_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_overlimit_conv", "sources": ["task_overlimit"], "targets": ["gw_2_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw2c_gw1c", "sources": ["gw_2_conv"], "targets": ["gw_1_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_blacklist_conv", "sources": ["task_blacklist"], "targets": ["gw_1_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_execute", "sources": ["gw_1_conv"], "targets": ["task_execute"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end", "sources": ["task_execute"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_messageflow_endpoint_mix" targetNamespace="http://example.com/test-messageflow-endpoint-mix" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="支付链路混合端点">
+    <bpmn:participant id="pool_app" name="电商平台" processRef="process_app" />
+    <bpmn:participant id="pool_gateway" name="第三方支付网关（黑盒）" processRef="Process_pool_gateway" />
+    <bpmn:participant id="pool_bank" name="银行核心系统" processRef="process_bank" />
+    <bpmn:messageFlow id="msgflow_node_to_node" name="对账明细" sourceRef="task_app_notify_bank" targetRef="start_bank" />
+    <bpmn:messageFlow id="msgflow_node_to_pool" name="支付请求" sourceRef="task_app_pay_req" targetRef="pool_gateway" />
+    <bpmn:messageFlow id="msgflow_pool_to_node_app" name="支付结果" sourceRef="pool_gateway" targetRef="catch_app_result" />
+    <bpmn:messageFlow id="msgflow_node_to_pool_bank" name="清算状态" sourceRef="task_bank_callback" targetRef="pool_gateway" />
+    <bpmn:messageFlow id="msgflow_pool_to_node_bank" name="扣款指令" sourceRef="pool_gateway" targetRef="task_bank_clear" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_app" name="电商平台" isExecutable="true">
+    <bpmn:startEvent id="start_app" name="用户下单">
+      <bpmn:outgoing>flow_a1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_app_pay_req" name="发起支付请求">
+      <bpmn:incoming>flow_a1</bpmn:incoming>
+      <bpmn:outgoing>flow_a2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="task_app_notify_bank" name="同步对账明细">
+      <bpmn:incoming>flow_a2</bpmn:incoming>
+      <bpmn:outgoing>flow_a3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="catch_app_result" name="等待支付结果">
+      <bpmn:incoming>flow_a3</bpmn:incoming>
+      <bpmn:outgoing>flow_a4</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="end_app" name="订单关闭">
+      <bpmn:incoming>flow_a4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_a1" sourceRef="start_app" targetRef="task_app_pay_req" />
+    <bpmn:sequenceFlow id="flow_a2" sourceRef="task_app_pay_req" targetRef="task_app_notify_bank" />
+    <bpmn:sequenceFlow id="flow_a3" sourceRef="task_app_notify_bank" targetRef="catch_app_result" />
+    <bpmn:sequenceFlow id="flow_a4" sourceRef="catch_app_result" targetRef="end_app" />
+  </bpmn:process>
+  <bpmn:process id="process_bank" name="银行核心系统" isExecutable="true">
+    <bpmn:startEvent id="start_bank" name="收到对账明细">
+      <bpmn:outgoing>flow_b1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_bank_clear" name="清算入账">
+      <bpmn:incoming>flow_b1</bpmn:incoming>
+      <bpmn:outgoing>flow_b2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="task_bank_callback" name="回传清算状态">
+      <bpmn:incoming>flow_b2</bpmn:incoming>
+      <bpmn:outgoing>flow_b3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_bank" name="清算完成">
+      <bpmn:incoming>flow_b3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_b1" sourceRef="start_bank" targetRef="task_bank_clear" />
+    <bpmn:sequenceFlow id="flow_b2" sourceRef="task_bank_clear" targetRef="task_bank_callback" />
+    <bpmn:sequenceFlow id="flow_b3" sourceRef="task_bank_callback" targetRef="end_bank" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_messageflow_endpoint_mix" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_messageflow_endpoint_mix" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="1038" height="448" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_app_di" bpmnElement="pool_app" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_app_di" bpmnElement="start_app">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_app_pay_req_di" bpmnElement="task_app_pay_req">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_app_notify_bank_di" bpmnElement="task_app_notify_bank">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_app_result_di" bpmnElement="catch_app_result">
+        <dc:Bounds x="538" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="506" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_app_di" bpmnElement="end_app">
+        <dc:Bounds x="654" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="622" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_gateway_di" bpmnElement="pool_gateway" isHorizontal="true">
+        <dc:Bounds x="0" y="174" width="710" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_bank_di" bpmnElement="pool_bank" isHorizontal="true">
+        <dc:Bounds x="328" y="304" width="710" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_bank_di" bpmnElement="start_bank">
+        <dc:Bounds x="390" y="358" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="398" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_bank_clear_di" bpmnElement="task_bank_clear">
+        <dc:Bounds x="506" y="336" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_bank_callback_di" bpmnElement="task_bank_callback">
+        <dc:Bounds x="686" y="336" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_bank_di" bpmnElement="end_bank">
+        <dc:Bounds x="866" y="358" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="834" y="398" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_a1_di" bpmnElement="flow_a1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a2_di" bpmnElement="flow_a2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a3_di" bpmnElement="flow_a3">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_a4_di" bpmnElement="flow_a4">
+        <di:waypoint x="574" y="72" />
+        <di:waypoint x="654" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b1_di" bpmnElement="flow_b1">
+        <di:waypoint x="426" y="376" />
+        <di:waypoint x="506" y="376" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b2_di" bpmnElement="flow_b2">
+        <di:waypoint x="606" y="376" />
+        <di:waypoint x="686" y="376" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_b3_di" bpmnElement="flow_b3">
+        <di:waypoint x="786" y="376" />
+        <di:waypoint x="866" y="376" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_node_to_node_di" bpmnElement="msgflow_node_to_node">
+        <di:waypoint x="408" y="112" />
+        <di:waypoint x="408" y="358" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="413" y="191.1" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

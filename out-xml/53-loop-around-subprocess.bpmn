@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_loop_around_subprocess" targetNamespace="http://example.com/test-loop-around-subprocess" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_loop_around_sub" name="证照办理绕子流程回环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_prepare_docs" name="整理申报材料">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:incoming>flow_gw_back</bpmn:incoming>
+      <bpmn:outgoing>flow_prepare_sub</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="subprocess_audit" name="材料联合审查">
+      <bpmn:incoming>flow_prepare_sub</bpmn:incoming>
+      <bpmn:outgoing>flow_sub_gw</bpmn:outgoing>
+      <bpmn:startEvent id="sub_start" name="开始审查">
+        <bpmn:outgoing>sub_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="sub_task_review" name="窗口初审">
+        <bpmn:incoming>sub_flow_1</bpmn:incoming>
+        <bpmn:outgoing>sub_flow_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="sub_end" name="审查完毕">
+        <bpmn:incoming>sub_flow_2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="sub_flow_1" sourceRef="sub_start" targetRef="sub_task_review" />
+      <bpmn:sequenceFlow id="sub_flow_2" sourceRef="sub_task_review" targetRef="sub_end" />
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="gw_audit_result" name="审查通过">
+      <bpmn:incoming>flow_sub_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_gw_back</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw_issue</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_issue" name="发放证照">
+      <bpmn:incoming>flow_gw_issue</bpmn:incoming>
+      <bpmn:outgoing>flow_issue_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="办结">
+      <bpmn:incoming>flow_issue_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_prepare_docs" />
+    <bpmn:sequenceFlow id="flow_prepare_sub" sourceRef="task_prepare_docs" targetRef="subprocess_audit" />
+    <bpmn:sequenceFlow id="flow_sub_gw" sourceRef="subprocess_audit" targetRef="gw_audit_result" />
+    <bpmn:sequenceFlow id="flow_gw_back" name="补正材料" sourceRef="gw_audit_result" targetRef="task_prepare_docs" />
+    <bpmn:sequenceFlow id="flow_gw_issue" name="通过" sourceRef="gw_audit_result" targetRef="task_issue" />
+    <bpmn:sequenceFlow id="flow_issue_end" sourceRef="task_issue" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_loop_around_subprocess" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_loop_around_subprocess" bpmnElement="process_loop_around_sub">
+      <bpmndi:BPMNShape id="process_loop_around_sub_di" bpmnElement="process_loop_around_sub">
+        <dc:Bounds x="0" y="0" width="1240" height="239" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="182" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_docs_di" bpmnElement="task_prepare_docs">
+        <dc:Bounds x="178" y="119.99999999999999" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="subprocess_audit_di" bpmnElement="subprocess_audit" isExpanded="true">
+        <dc:Bounds x="358" y="32" width="436" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_start_di" bpmnElement="sub_start">
+        <dc:Bounds x="390" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_review_di" bpmnElement="sub_task_review">
+        <dc:Bounds x="526" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_end_di" bpmnElement="sub_end">
+        <dc:Bounds x="726" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="694" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_audit_result_di" bpmnElement="gw_audit_result">
+        <dc:Bounds x="874" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="871" y="189" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_issue_di" bpmnElement="task_issue">
+        <dc:Bounds x="1004" y="119.99999999999999" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1184" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1152" y="182" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="sub_flow_1_di" bpmnElement="sub_flow_1">
+        <di:waypoint x="426" y="124" />
+        <di:waypoint x="526" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_flow_2_di" bpmnElement="sub_flow_2">
+        <di:waypoint x="626" y="124" />
+        <di:waypoint x="726" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="160" />
+        <di:waypoint x="178" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_prepare_sub_di" bpmnElement="flow_prepare_sub">
+        <di:waypoint x="278" y="160" />
+        <di:waypoint x="318" y="160" />
+        <di:waypoint x="318" y="114" />
+        <di:waypoint x="358" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sub_gw_di" bpmnElement="flow_sub_gw">
+        <di:waypoint x="794" y="114" />
+        <di:waypoint x="834" y="114" />
+        <di:waypoint x="834" y="160" />
+        <di:waypoint x="874" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_back_di" bpmnElement="flow_gw_back">
+        <di:waypoint x="899" y="135" />
+        <di:waypoint x="899" y="16" />
+        <di:waypoint x="228" y="16" />
+        <di:waypoint x="228" y="119.99999999999999" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="904" y="106" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_issue_di" bpmnElement="flow_gw_issue">
+        <di:waypoint x="924" y="160" />
+        <di:waypoint x="1004" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="933" y="165" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_issue_end_di" bpmnElement="flow_issue_end">
+        <di:waypoint x="1104" y="160" />
+        <di:waypoint x="1184" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

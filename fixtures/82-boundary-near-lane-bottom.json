@@ -1,0 +1,122 @@
+{
+  "id": "definitions_boundary_near_lane_bottom",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-boundary-near-lane-bottom"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_ticket",
+      "bpmn": { "type": "collaboration", "name": "工单超时督办" },
+      "children": [
+        {
+          "id": "pool_service_center",
+          "bpmn": {
+            "type": "participant",
+            "name": "客服中心",
+            "processRef": "process_ticket"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_intake",
+              "bpmn": { "type": "lane", "name": "客服受理" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_ticket",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "客户来电" },
+                  "labels": [{ "text": "客户来电" }]
+                },
+                {
+                  "id": "task_register",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "登记工单" },
+                  "labels": [{ "text": "登记工单" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_handling",
+              "bpmn": { "type": "lane", "name": "工单处理" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_handle",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "处理工单" },
+                  "labels": [{ "text": "处理工单" }],
+                  "boundaryEvents": [
+                    {
+                      "id": "boundary_handle_timeout",
+                      "width": 36, "height": 36,
+                      "attachedToRef": "task_handle",
+                      "bpmn": {
+                        "type": "boundaryEvent",
+                        "eventDefinitionType": "timer",
+                        "name": "处理超时",
+                        "isInterrupting": false,
+                        "cancelActivity": false,
+                        "timerEventDefinition": { "timeDuration": "PT8H" }
+                      },
+                      "labels": [{ "text": "8小时未结" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "task_close",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "结单回访" },
+                  "labels": [{ "text": "结单回访" }]
+                },
+                {
+                  "id": "end_closed",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "工单关闭" },
+                  "labels": [{ "text": "工单关闭" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_supervision",
+              "bpmn": { "type": "lane", "name": "质检督办" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_urge",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "下发督办单" },
+                  "labels": [{ "text": "下发督办单" }]
+                },
+                {
+                  "id": "end_urged",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "督办完成" },
+                  "labels": [{ "text": "督办完成" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_start_register", "sources": ["start_ticket"], "targets": ["task_register"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_register_handle", "sources": ["task_register"], "targets": ["task_handle"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_handle_close", "sources": ["task_handle"], "targets": ["task_close"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_close_end", "sources": ["task_close"], "targets": ["end_closed"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_bd_urge", "sources": ["boundary_handle_timeout"], "targets": ["task_urge"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_urge_end", "sources": ["task_urge"], "targets": ["end_urged"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

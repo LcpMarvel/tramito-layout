@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_loan_tiered_approval" targetNamespace="http://example.com/loan-tiered-approval" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_loan" name="贷款分档审批" isExecutable="true">
+    <bpmn:startEvent id="start_loan" name="贷款申请">
+      <bpmn:outgoing>f_start_intake</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_intake" name="录入申请资料">
+      <bpmn:incoming>f_start_intake</bpmn:incoming>
+      <bpmn:outgoing>f_intake_split</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="gw_amount_split" name="按金额分档" gatewayDirection="Diverging">
+      <bpmn:incoming>f_intake_split</bpmn:incoming>
+      <bpmn:outgoing>f_split_small</bpmn:outgoing>
+      <bpmn:outgoing>f_split_mid</bpmn:outgoing>
+      <bpmn:outgoing>f_split_large</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="task_small_approve" name="小额快速审批">
+      <bpmn:incoming>f_split_small</bpmn:incoming>
+      <bpmn:outgoing>f_small_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_mid_first" name="中额初审">
+      <bpmn:incoming>f_split_mid</bpmn:incoming>
+      <bpmn:outgoing>f_mid_1_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_mid_second" name="中额复审">
+      <bpmn:incoming>f_mid_1_2</bpmn:incoming>
+      <bpmn:outgoing>f_mid_2_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_mid_risk" name="中额风控审核">
+      <bpmn:incoming>f_mid_2_3</bpmn:incoming>
+      <bpmn:outgoing>f_mid_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_large_manager" name="客户经理初审">
+      <bpmn:incoming>f_split_large</bpmn:incoming>
+      <bpmn:incoming>f_committee_reject</bpmn:incoming>
+      <bpmn:outgoing>f_large_1_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_large_credit" name="信贷部审核">
+      <bpmn:incoming>f_large_1_2</bpmn:incoming>
+      <bpmn:outgoing>f_large_2_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_large_risk" name="风控评估">
+      <bpmn:incoming>f_large_2_3</bpmn:incoming>
+      <bpmn:outgoing>f_large_3_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_large_committee" name="贷审会审议">
+      <bpmn:incoming>f_large_3_4</bpmn:incoming>
+      <bpmn:outgoing>f_large_4_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_committee" name="审议结论" gatewayDirection="Diverging">
+      <bpmn:incoming>f_large_4_gw</bpmn:incoming>
+      <bpmn:outgoing>f_committee_reject</bpmn:outgoing>
+      <bpmn:outgoing>f_committee_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_large_president" name="行长终审">
+      <bpmn:incoming>f_committee_pass</bpmn:incoming>
+      <bpmn:outgoing>f_large_merge</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="gw_merge_tiers" name="汇总审批结果" gatewayDirection="Converging">
+      <bpmn:incoming>f_small_merge</bpmn:incoming>
+      <bpmn:incoming>f_mid_merge</bpmn:incoming>
+      <bpmn:incoming>f_large_merge</bpmn:incoming>
+      <bpmn:outgoing>f_merge_disburse</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="task_disburse" name="放款">
+      <bpmn:incoming>f_merge_disburse</bpmn:incoming>
+      <bpmn:outgoing>f_disburse_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_loan_done" name="放款完成">
+      <bpmn:incoming>f_disburse_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_intake" sourceRef="start_loan" targetRef="task_intake" />
+    <bpmn:sequenceFlow id="f_intake_split" sourceRef="task_intake" targetRef="gw_amount_split" />
+    <bpmn:sequenceFlow id="f_split_small" name="小额" sourceRef="gw_amount_split" targetRef="task_small_approve" />
+    <bpmn:sequenceFlow id="f_split_mid" name="中额" sourceRef="gw_amount_split" targetRef="task_mid_first" />
+    <bpmn:sequenceFlow id="f_split_large" name="大额" sourceRef="gw_amount_split" targetRef="task_large_manager" />
+    <bpmn:sequenceFlow id="f_small_merge" sourceRef="task_small_approve" targetRef="gw_merge_tiers" />
+    <bpmn:sequenceFlow id="f_mid_1_2" sourceRef="task_mid_first" targetRef="task_mid_second" />
+    <bpmn:sequenceFlow id="f_mid_2_3" sourceRef="task_mid_second" targetRef="task_mid_risk" />
+    <bpmn:sequenceFlow id="f_mid_merge" sourceRef="task_mid_risk" targetRef="gw_merge_tiers" />
+    <bpmn:sequenceFlow id="f_large_1_2" sourceRef="task_large_manager" targetRef="task_large_credit" />
+    <bpmn:sequenceFlow id="f_large_2_3" sourceRef="task_large_credit" targetRef="task_large_risk" />
+    <bpmn:sequenceFlow id="f_large_3_4" sourceRef="task_large_risk" targetRef="task_large_committee" />
+    <bpmn:sequenceFlow id="f_large_4_gw" sourceRef="task_large_committee" targetRef="gw_committee" />
+    <bpmn:sequenceFlow id="f_committee_reject" name="驳回补件" sourceRef="gw_committee" targetRef="task_large_manager" />
+    <bpmn:sequenceFlow id="f_committee_pass" name="通过" sourceRef="gw_committee" targetRef="task_large_president" />
+    <bpmn:sequenceFlow id="f_large_merge" sourceRef="task_large_president" targetRef="gw_merge_tiers" />
+    <bpmn:sequenceFlow id="f_merge_disburse" sourceRef="gw_merge_tiers" targetRef="task_disburse" />
+    <bpmn:sequenceFlow id="f_disburse_end" sourceRef="task_disburse" targetRef="end_loan_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_loan_tiered_approval" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_loan_tiered_approval" bpmnElement="process_loan">
+      <bpmndi:BPMNShape id="process_loan_di" bpmnElement="process_loan">
+        <dc:Bounds x="0" y="0" width="1934" height="360" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_loan_di" bpmnElement="start_loan">
+        <dc:Bounds x="62" y="105" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="145" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_intake_di" bpmnElement="task_intake">
+        <dc:Bounds x="178" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_split_di" bpmnElement="gw_amount_split">
+        <dc:Bounds x="358" y="98" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="60" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_small_approve_di" bpmnElement="task_small_approve">
+        <dc:Bounds x="1028" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mid_first_di" bpmnElement="task_mid_first">
+        <dc:Bounds x="668" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mid_second_di" bpmnElement="task_mid_second">
+        <dc:Bounds x="848" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_mid_risk_di" bpmnElement="task_mid_risk">
+        <dc:Bounds x="1208" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_large_manager_di" bpmnElement="task_large_manager">
+        <dc:Bounds x="488" y="248" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_large_credit_di" bpmnElement="task_large_credit">
+        <dc:Bounds x="668" y="223" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_large_risk_di" bpmnElement="task_large_risk">
+        <dc:Bounds x="848" y="223" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_large_committee_di" bpmnElement="task_large_committee">
+        <dc:Bounds x="1028" y="223" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_committee_di" bpmnElement="gw_committee">
+        <dc:Bounds x="1224.6666666666667" y="263" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1221.6666666666667" y="317" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_large_president_di" bpmnElement="task_large_president">
+        <dc:Bounds x="1388" y="248" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_merge_tiers_di" bpmnElement="gw_merge_tiers">
+        <dc:Bounds x="1568" y="98" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1551" y="80" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_disburse_di" bpmnElement="task_disburse">
+        <dc:Bounds x="1698" y="83" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_loan_done_di" bpmnElement="end_loan_done">
+        <dc:Bounds x="1878" y="105" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1846" y="145" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_intake_di" bpmnElement="f_start_intake">
+        <di:waypoint x="98" y="123" />
+        <di:waypoint x="178" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_intake_split_di" bpmnElement="f_intake_split">
+        <di:waypoint x="278" y="123" />
+        <di:waypoint x="358" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_split_small_di" bpmnElement="f_split_small">
+        <di:waypoint x="383" y="98" />
+        <di:waypoint x="383" y="72" />
+        <di:waypoint x="1028" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="388" y="78" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_split_mid_di" bpmnElement="f_split_mid">
+        <di:waypoint x="408" y="123" />
+        <di:waypoint x="668" y="123" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="128" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_split_large_di" bpmnElement="f_split_large">
+        <di:waypoint x="383" y="148" />
+        <di:waypoint x="383" y="288" />
+        <di:waypoint x="488" y="288" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="328" y="163" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_small_merge_di" bpmnElement="f_small_merge">
+        <di:waypoint x="1128" y="72" />
+        <di:waypoint x="1348" y="72" />
+        <di:waypoint x="1348" y="123" />
+        <di:waypoint x="1568" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mid_1_2_di" bpmnElement="f_mid_1_2">
+        <di:waypoint x="768" y="123" />
+        <di:waypoint x="848" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mid_2_3_di" bpmnElement="f_mid_2_3">
+        <di:waypoint x="948" y="123" />
+        <di:waypoint x="1208" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_mid_merge_di" bpmnElement="f_mid_merge">
+        <di:waypoint x="1308" y="123" />
+        <di:waypoint x="1568" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_large_1_2_di" bpmnElement="f_large_1_2">
+        <di:waypoint x="588" y="288" />
+        <di:waypoint x="628" y="288" />
+        <di:waypoint x="628" y="263" />
+        <di:waypoint x="668" y="263" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_large_2_3_di" bpmnElement="f_large_2_3">
+        <di:waypoint x="768" y="263" />
+        <di:waypoint x="848" y="263" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_large_3_4_di" bpmnElement="f_large_3_4">
+        <di:waypoint x="948" y="263" />
+        <di:waypoint x="1028" y="263" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_large_4_gw_di" bpmnElement="f_large_4_gw">
+        <di:waypoint x="1128" y="263" />
+        <di:waypoint x="1176.3333333333335" y="263" />
+        <di:waypoint x="1176.3333333333335" y="288" />
+        <di:waypoint x="1224.6666666666667" y="288" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_committee_reject_di" bpmnElement="f_committee_reject">
+        <di:waypoint x="1249.6666666666667" y="263" />
+        <di:waypoint x="1249.6666666666667" y="207" />
+        <di:waypoint x="538" y="207" />
+        <di:waypoint x="538" y="248" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1254.6666666666667" y="234" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_committee_pass_di" bpmnElement="f_committee_pass">
+        <di:waypoint x="1274.6666666666667" y="288" />
+        <di:waypoint x="1388" y="288" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1283.6666666666667" y="293" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_large_merge_di" bpmnElement="f_large_merge">
+        <di:waypoint x="1438" y="248" />
+        <di:waypoint x="1438" y="198" />
+        <di:waypoint x="1593" y="198" />
+        <di:waypoint x="1593" y="148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_merge_disburse_di" bpmnElement="f_merge_disburse">
+        <di:waypoint x="1618" y="123" />
+        <di:waypoint x="1698" y="123" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_disburse_end_di" bpmnElement="f_disburse_end">
+        <di:waypoint x="1798" y="123" />
+        <di:waypoint x="1878" y="123" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

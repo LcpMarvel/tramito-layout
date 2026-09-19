@@ -1,0 +1,170 @@
+{
+  "id": "definitions_three_subprocess_siblings",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-three-subprocess-siblings",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_procurement",
+      "bpmn": {
+        "type": "process",
+        "name": "采购全流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "采购申请" },
+          "labels": [{ "text": "采购申请" }]
+        },
+        {
+          "id": "sub_demand",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "需求确认", "isExpanded": true },
+          "labels": [{ "text": "需求确认" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "demand_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "需求受理" },
+              "labels": [{ "text": "需求受理" }]
+            },
+            {
+              "id": "demand_task_collect",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "汇总需求清单" },
+              "labels": [{ "text": "汇总需求清单" }]
+            },
+            {
+              "id": "demand_task_confirm",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "部门确认需求" },
+              "labels": [{ "text": "部门确认需求" }]
+            },
+            {
+              "id": "demand_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "需求确认完成" },
+              "labels": [{ "text": "需求确认完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "demand_flow_1", "sources": ["demand_start"], "targets": ["demand_task_collect"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "demand_flow_2", "sources": ["demand_task_collect"], "targets": ["demand_task_confirm"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "demand_flow_3", "sources": ["demand_task_confirm"], "targets": ["demand_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "sub_bidding",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "供应商比价", "isExpanded": true },
+          "labels": [{ "text": "供应商比价" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "bidding_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起询价" },
+              "labels": [{ "text": "发起询价" }]
+            },
+            {
+              "id": "bidding_task_invite",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "邀请供应商报价" },
+              "labels": [{ "text": "邀请供应商报价" }]
+            },
+            {
+              "id": "bidding_task_compare",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "比价评估" },
+              "labels": [{ "text": "比价评估" }]
+            },
+            {
+              "id": "bidding_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "选定供应商" },
+              "labels": [{ "text": "选定供应商" }]
+            }
+          ],
+          "edges": [
+            { "id": "bidding_flow_1", "sources": ["bidding_start"], "targets": ["bidding_task_invite"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "bidding_flow_2", "sources": ["bidding_task_invite"], "targets": ["bidding_task_compare"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "bidding_flow_3", "sources": ["bidding_task_compare"], "targets": ["bidding_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "sub_contract",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "subProcess", "name": "合同签订", "isExpanded": true },
+          "labels": [{ "text": "合同签订" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "contract_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "拟定合同" },
+              "labels": [{ "text": "拟定合同" }]
+            },
+            {
+              "id": "contract_task_legal",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "法务审核合同" },
+              "labels": [{ "text": "法务审核合同" }]
+            },
+            {
+              "id": "contract_task_sign",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "双方盖章签署" },
+              "labels": [{ "text": "双方盖章签署" }]
+            },
+            {
+              "id": "contract_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "合同生效" },
+              "labels": [{ "text": "合同生效" }]
+            }
+          ],
+          "edges": [
+            { "id": "contract_flow_1", "sources": ["contract_start"], "targets": ["contract_task_legal"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "contract_flow_2", "sources": ["contract_task_legal"], "targets": ["contract_task_sign"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "contract_flow_3", "sources": ["contract_task_sign"], "targets": ["contract_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "采购完成" },
+          "labels": [{ "text": "采购完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["sub_demand"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["sub_demand"], "targets": ["sub_bidding"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["sub_bidding"], "targets": ["sub_contract"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_4", "sources": ["sub_contract"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

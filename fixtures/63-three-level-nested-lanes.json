@@ -1,0 +1,128 @@
+{
+  "id": "definitions_three_level_nested_lanes",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-three-level-nested-lanes",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "集团研发立项三级泳道"
+      },
+      "children": [
+        {
+          "id": "pool_group",
+          "bpmn": {
+            "type": "participant",
+            "name": "集团",
+            "processRef": "process_group"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_headquarter",
+              "bpmn": { "type": "lane", "name": "总部管理层" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_initiate",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "立项启动" },
+                  "labels": [{ "text": "立项启动" }]
+                },
+                {
+                  "id": "task_strategy_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "战略评审" },
+                  "labels": [{ "text": "战略评审" }]
+                },
+                {
+                  "id": "task_final_approve",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "终审批准" },
+                  "labels": [{ "text": "终审批准" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_rd_center",
+              "bpmn": { "type": "lane", "name": "研发中心" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "lane_arch_office",
+                  "bpmn": { "type": "lane", "name": "架构办公室" },
+                  "children": [
+                    {
+                      "id": "task_tech_assess",
+                      "width": 100, "height": 80,
+                      "bpmn": { "type": "userTask", "name": "技术可行性评估" },
+                      "labels": [{ "text": "技术可行性评估" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "lane_dev_dept",
+                  "bpmn": { "type": "lane", "name": "开发部" },
+                  "children": [
+                    {
+                      "id": "lane_backend_team",
+                      "bpmn": { "type": "lane", "name": "后端组" },
+                      "children": [
+                        {
+                          "id": "task_backend_estimate",
+                          "width": 100, "height": 80,
+                          "bpmn": { "type": "task", "name": "后端工作量估算" },
+                          "labels": [{ "text": "后端工作量估算" }]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "lane_frontend_team",
+                      "bpmn": { "type": "lane", "name": "前端组" },
+                      "children": [
+                        {
+                          "id": "task_frontend_estimate",
+                          "width": 100, "height": 80,
+                          "bpmn": { "type": "task", "name": "前端工作量估算" },
+                          "labels": [{ "text": "前端工作量估算" }]
+                        },
+                        {
+                          "id": "end_done",
+                          "width": 36, "height": 36,
+                          "bpmn": { "type": "endEvent", "name": "立项完成" },
+                          "labels": [{ "text": "立项完成" }]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_initiate"], "targets": ["task_strategy_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_strategy_review"], "targets": ["task_tech_assess"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_tech_assess"], "targets": ["task_backend_estimate"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_backend_estimate"], "targets": ["task_frontend_estimate"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_5", "sources": ["task_frontend_estimate"], "targets": ["task_final_approve"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_6", "sources": ["task_final_approve"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

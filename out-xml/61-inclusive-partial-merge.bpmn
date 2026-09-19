@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_inclusive_partial_merge" targetNamespace="http://example.com/test-inclusive-partial-merge" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_inclusive_partial" name="包容网关部分先合并通知流程" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="订单发货">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:inclusiveGateway id="gw_inc_div" name="通知渠道选择" gatewayDirection="Diverging" default="flow_sms">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_sms</bpmn:outgoing>
+      <bpmn:outgoing>flow_email</bpmn:outgoing>
+      <bpmn:outgoing>flow_call</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="task_sms" name="发送短信通知">
+      <bpmn:incoming>flow_sms</bpmn:incoming>
+      <bpmn:outgoing>flow_sms_partial</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_email" name="发送邮件通知">
+      <bpmn:incoming>flow_email</bpmn:incoming>
+      <bpmn:outgoing>flow_email_partial</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_call" name="客服电话回访">
+      <bpmn:incoming>flow_call</bpmn:incoming>
+      <bpmn:outgoing>flow_call_final</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="gw_partial_conv" name="电子渠道汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_sms_partial</bpmn:incoming>
+      <bpmn:incoming>flow_email_partial</bpmn:incoming>
+      <bpmn:outgoing>flow_partial_log</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="task_log" name="记录通知日志">
+      <bpmn:incoming>flow_partial_log</bpmn:incoming>
+      <bpmn:outgoing>flow_log_final</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:inclusiveGateway id="gw_final_conv" name="全渠道汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_log_final</bpmn:incoming>
+      <bpmn:incoming>flow_call_final</bpmn:incoming>
+      <bpmn:outgoing>flow_final_close</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:serviceTask id="task_close" name="更新订单状态">
+      <bpmn:incoming>flow_final_close</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="通知完成">
+      <bpmn:incoming>flow_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="gw_inc_div" />
+    <bpmn:sequenceFlow id="flow_sms" name="默认短信" sourceRef="gw_inc_div" targetRef="task_sms" />
+    <bpmn:sequenceFlow id="flow_email" name="绑定邮箱" sourceRef="gw_inc_div" targetRef="task_email">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasEmail == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_call" name="VIP客户" sourceRef="gw_inc_div" targetRef="task_call">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isVip == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_sms_partial" sourceRef="task_sms" targetRef="gw_partial_conv" />
+    <bpmn:sequenceFlow id="flow_email_partial" sourceRef="task_email" targetRef="gw_partial_conv" />
+    <bpmn:sequenceFlow id="flow_partial_log" sourceRef="gw_partial_conv" targetRef="task_log" />
+    <bpmn:sequenceFlow id="flow_log_final" sourceRef="task_log" targetRef="gw_final_conv" />
+    <bpmn:sequenceFlow id="flow_call_final" sourceRef="task_call" targetRef="gw_final_conv" />
+    <bpmn:sequenceFlow id="flow_final_close" sourceRef="gw_final_conv" targetRef="task_close" />
+    <bpmn:sequenceFlow id="flow_to_end" sourceRef="task_close" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_inclusive_partial_merge" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_inclusive_partial_merge" bpmnElement="process_inclusive_partial">
+      <bpmndi:BPMNShape id="process_inclusive_partial_di" bpmnElement="process_inclusive_partial">
+        <dc:Bounds x="0" y="0" width="1214" height="367.3333333333333" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_inc_div_di" bpmnElement="gw_inc_div">
+        <dc:Bounds x="178" y="187" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="209" y="169" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_sms_di" bpmnElement="task_sms">
+        <dc:Bounds x="308" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_email_di" bpmnElement="task_email">
+        <dc:Bounds x="308" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_call_di" bpmnElement="task_call">
+        <dc:Bounds x="488" y="255.33333333333331" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_partial_conv_di" bpmnElement="gw_partial_conv">
+        <dc:Bounds x="504.66666666666674" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="487.66666666666674" y="99" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_log_di" bpmnElement="task_log">
+        <dc:Bounds x="668" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_final_conv_di" bpmnElement="gw_final_conv">
+        <dc:Bounds x="848" y="179.5" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="838" y="161.5" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_close_di" bpmnElement="task_close">
+        <dc:Bounds x="978" y="164.5" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1158" y="186.5" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1126" y="226.5" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sms_di" bpmnElement="flow_sms">
+        <di:waypoint x="203" y="187" />
+        <di:waypoint x="203" y="72" />
+        <di:waypoint x="308" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="208" y="158" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_email_di" bpmnElement="flow_email">
+        <di:waypoint x="228" y="212" />
+        <di:waypoint x="308" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="217" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_call_di" bpmnElement="flow_call">
+        <di:waypoint x="203" y="237" />
+        <di:waypoint x="203" y="295.3333333333333" />
+        <di:waypoint x="488" y="295.3333333333333" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="148" y="252" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sms_partial_di" bpmnElement="flow_sms_partial">
+        <di:waypoint x="408" y="72" />
+        <di:waypoint x="456.33333333333337" y="72" />
+        <di:waypoint x="456.33333333333337" y="142" />
+        <di:waypoint x="504.66666666666674" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_email_partial_di" bpmnElement="flow_email_partial">
+        <di:waypoint x="408" y="212" />
+        <di:waypoint x="456.33333333333337" y="212" />
+        <di:waypoint x="456.33333333333337" y="142" />
+        <di:waypoint x="504.66666666666674" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_partial_log_di" bpmnElement="flow_partial_log">
+        <di:waypoint x="554.6666666666667" y="142" />
+        <di:waypoint x="668" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_log_final_di" bpmnElement="flow_log_final">
+        <di:waypoint x="768" y="142" />
+        <di:waypoint x="808" y="142" />
+        <di:waypoint x="808" y="204.5" />
+        <di:waypoint x="848" y="204.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_call_final_di" bpmnElement="flow_call_final">
+        <di:waypoint x="588" y="295.3333333333333" />
+        <di:waypoint x="718" y="295.3333333333333" />
+        <di:waypoint x="718" y="204.5" />
+        <di:waypoint x="848" y="204.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_final_close_di" bpmnElement="flow_final_close">
+        <di:waypoint x="898" y="204.5" />
+        <di:waypoint x="978" y="204.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_di" bpmnElement="flow_to_end">
+        <di:waypoint x="1078" y="204.5" />
+        <di:waypoint x="1158" y="204.5" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

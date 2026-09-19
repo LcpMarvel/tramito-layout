@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_multiple_empty_lanes" targetNamespace="http://example.com/test-multiple-empty-lanes" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="多空泳道报销流程">
+    <bpmn:participant id="pool_company" name="贸易公司" processRef="process_expense" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_expense" name="贸易公司" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_1_employee" name="申请人">
+        <bpmn:flowNodeRef>start_expense</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_submit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_confirm_receipt</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_done</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_2_reserved_audit" name="稽核组（预留）" />
+      <bpmn:lane id="lane_3_manager" name="部门经理">
+        <bpmn:flowNodeRef>task_manager_approve</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_4_reserved_legal" name="法务（预留）" />
+      <bpmn:lane id="lane_5_reserved_tax" name="税务（预留）" />
+      <bpmn:lane id="lane_6_cashier" name="出纳">
+        <bpmn:flowNodeRef>task_pay</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_expense" name="发起报销">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="提交报销单">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_confirm_receipt" name="确认到账">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_done" name="报销完成">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_manager_approve" name="经理审批">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_pay" name="打款">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_expense" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_submit" targetRef="task_manager_approve" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_manager_approve" targetRef="task_pay" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_pay" targetRef="task_confirm_receipt" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_confirm_receipt" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_multiple_empty_lanes" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_multiple_empty_lanes" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="954" height="812" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_company_di" bpmnElement="pool_company" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="954" height="812" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_1_employee_di" bpmnElement="lane_1_employee" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="924" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_expense_di" bpmnElement="start_expense">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_confirm_receipt_di" bpmnElement="task_confirm_receipt">
+        <dc:Bounds x="718" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="898" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="866" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_2_reserved_audit_di" bpmnElement="lane_2_reserved_audit" isHorizontal="true">
+        <dc:Bounds x="30" y="268" width="924" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_3_manager_di" bpmnElement="lane_3_manager" isHorizontal="true">
+        <dc:Bounds x="30" y="368" width="924" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_manager_approve_di" bpmnElement="task_manager_approve">
+        <dc:Bounds x="358" y="384" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_4_reserved_legal_di" bpmnElement="lane_4_reserved_legal" isHorizontal="true">
+        <dc:Bounds x="30" y="480" width="924" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_5_reserved_tax_di" bpmnElement="lane_5_reserved_tax" isHorizontal="true">
+        <dc:Bounds x="30" y="580" width="924" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_6_cashier_di" bpmnElement="lane_6_cashier" isHorizontal="true">
+        <dc:Bounds x="30" y="680" width="924" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pay_di" bpmnElement="task_pay">
+        <dc:Bounds x="538" y="696" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="424" />
+        <di:waypoint x="358" y="424" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="408" y="464" />
+        <di:waypoint x="408" y="736" />
+        <di:waypoint x="538" y="736" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="588" y="696" />
+        <di:waypoint x="588" y="212" />
+        <di:waypoint x="718" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="818" y="212" />
+        <di:waypoint x="898" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

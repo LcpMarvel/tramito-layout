@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_annotation_on_edge" targetNamespace="http://example.com/test-annotation-on-edge" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:process id="process_refund_review" name="退款审核（注释挂边）" isExecutable="true">
+    <bpmn:startEvent id="start_refund" name="退款申请">
+      <bpmn:outgoing>flow_start_verify</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_verify" name="核对订单">
+      <bpmn:incoming>flow_start_verify</bpmn:incoming>
+      <bpmn:outgoing>flow_verify_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_amount" name="金额判断">
+      <bpmn:incoming>flow_verify_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_gw_auto</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw_manual</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_auto_refund" name="自动退款">
+      <bpmn:incoming>flow_gw_auto</bpmn:incoming>
+      <bpmn:outgoing>flow_auto_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_manual_review" name="人工复核">
+      <bpmn:incoming>flow_gw_manual</bpmn:incoming>
+      <bpmn:outgoing>flow_manual_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_refunded" name="退款完成">
+      <bpmn:incoming>flow_auto_end</bpmn:incoming>
+      <bpmn:incoming>flow_manual_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:textAnnotation id="annotation_on_flow">
+      <bpmn:text>小额标准：金额≤500元直接放行</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="annotation_on_task">
+      <bpmn:text>需双人核对订单流水</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:sequenceFlow id="flow_start_verify" sourceRef="start_refund" targetRef="task_verify" />
+    <bpmn:sequenceFlow id="flow_verify_gw" sourceRef="task_verify" targetRef="gw_amount" />
+    <bpmn:sequenceFlow id="flow_gw_auto" name="小额" sourceRef="gw_amount" targetRef="task_auto_refund" />
+    <bpmn:sequenceFlow id="flow_gw_manual" name="大额" sourceRef="gw_amount" targetRef="task_manual_review" />
+    <bpmn:sequenceFlow id="flow_auto_end" sourceRef="task_auto_refund" targetRef="end_refunded" />
+    <bpmn:sequenceFlow id="flow_manual_end" sourceRef="task_manual_review" targetRef="end_refunded" />
+    <bpmn:association id="assoc_annotation_flow" associationDirection="None" sourceRef="annotation_on_flow" targetRef="gw_amount" />
+    <bpmn:association id="assoc_annotation_task" associationDirection="None" sourceRef="annotation_on_task" targetRef="task_verify" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_annotation_on_edge" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_annotation_on_edge" bpmnElement="process_refund_review">
+      <bpmndi:BPMNShape id="process_refund_review_di" bpmnElement="process_refund_review">
+        <dc:Bounds x="0" y="0" width="724" height="302" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_refund_di" bpmnElement="start_refund">
+        <dc:Bounds x="62" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="182" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_verify_di" bpmnElement="task_verify">
+        <dc:Bounds x="178" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_di" bpmnElement="gw_amount">
+        <dc:Bounds x="358" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="117" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_auto_refund_di" bpmnElement="task_auto_refund">
+        <dc:Bounds x="488" y="50" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_manual_review_di" bpmnElement="task_manual_review">
+        <dc:Bounds x="488" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_refunded_di" bpmnElement="end_refunded">
+        <dc:Bounds x="668" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="182" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="annotation_on_flow_di" bpmnElement="annotation_on_flow">
+        <dc:Bounds x="318" y="45" width="130" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="annotation_on_task_di" bpmnElement="annotation_on_task">
+        <dc:Bounds x="168" y="40" width="120" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_verify_di" bpmnElement="flow_start_verify">
+        <di:waypoint x="98" y="160" />
+        <di:waypoint x="178" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_verify_gw_di" bpmnElement="flow_verify_gw">
+        <di:waypoint x="278" y="160" />
+        <di:waypoint x="358" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_auto_di" bpmnElement="flow_gw_auto">
+        <di:waypoint x="408" y="160" />
+        <di:waypoint x="448" y="160" />
+        <di:waypoint x="448" y="90" />
+        <di:waypoint x="488" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="165" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_manual_di" bpmnElement="flow_gw_manual">
+        <di:waypoint x="383" y="185" />
+        <di:waypoint x="383" y="230" />
+        <di:waypoint x="488" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="328" y="200" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_auto_end_di" bpmnElement="flow_auto_end">
+        <di:waypoint x="588" y="90" />
+        <di:waypoint x="628" y="90" />
+        <di:waypoint x="628" y="160" />
+        <di:waypoint x="668" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_manual_end_di" bpmnElement="flow_manual_end">
+        <di:waypoint x="588" y="230" />
+        <di:waypoint x="628" y="230" />
+        <di:waypoint x="628" y="160" />
+        <di:waypoint x="668" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_annotation_flow_di" bpmnElement="assoc_annotation_flow">
+        <di:waypoint x="383" y="95" />
+        <di:waypoint x="383" y="135" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="assoc_annotation_task_di" bpmnElement="assoc_annotation_task">
+        <di:waypoint x="228" y="80" />
+        <di:waypoint x="228" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

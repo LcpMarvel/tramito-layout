@@ -1,0 +1,59 @@
+{
+  "id": "definitions_self_loop",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-self-loop",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_self_loop",
+      "bpmn": { "type": "process", "name": "文稿打磨自环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_draft",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "撰写初稿" },
+          "labels": [{ "text": "撰写初稿" }]
+        },
+        {
+          "id": "task_polish",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "打磨文稿" },
+          "labels": [{ "text": "打磨文稿" }]
+        },
+        {
+          "id": "task_submit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "提交定稿" },
+          "labels": [{ "text": "提交定稿" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "结束" },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_draft", "sources": ["start_1"], "targets": ["task_draft"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_draft_polish", "sources": ["task_draft"], "targets": ["task_polish"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_polish_self", "sources": ["task_polish"], "targets": ["task_polish"], "bpmn": { "type": "sequenceFlow", "name": "仍不满意" }, "labels": [{ "text": "仍不满意" }] },
+        { "id": "flow_polish_submit", "sources": ["task_polish"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "满意" }, "labels": [{ "text": "满意" }] },
+        { "id": "flow_submit_end", "sources": ["task_submit"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

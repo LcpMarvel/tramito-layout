@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_self_loop" targetNamespace="http://example.com/test-self-loop" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_self_loop" name="文稿打磨自环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start_draft</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_draft" name="撰写初稿">
+      <bpmn:incoming>flow_start_draft</bpmn:incoming>
+      <bpmn:outgoing>flow_draft_polish</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_polish" name="打磨文稿">
+      <bpmn:incoming>flow_draft_polish</bpmn:incoming>
+      <bpmn:incoming>flow_polish_self</bpmn:incoming>
+      <bpmn:outgoing>flow_polish_self</bpmn:outgoing>
+      <bpmn:outgoing>flow_polish_submit</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_submit" name="提交定稿">
+      <bpmn:incoming>flow_polish_submit</bpmn:incoming>
+      <bpmn:outgoing>flow_submit_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_submit_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start_draft" sourceRef="start_1" targetRef="task_draft" />
+    <bpmn:sequenceFlow id="flow_draft_polish" sourceRef="task_draft" targetRef="task_polish" />
+    <bpmn:sequenceFlow id="flow_polish_self" name="仍不满意" sourceRef="task_polish" targetRef="task_polish" />
+    <bpmn:sequenceFlow id="flow_polish_submit" name="满意" sourceRef="task_polish" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="flow_submit_end" sourceRef="task_submit" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_self_loop" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_self_loop" bpmnElement="process_self_loop">
+      <bpmndi:BPMNShape id="process_self_loop_di" bpmnElement="process_self_loop">
+        <dc:Bounds x="0" y="0" width="774" height="154" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="64" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="104" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_draft_di" bpmnElement="task_draft">
+        <dc:Bounds x="178" y="42" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_polish_di" bpmnElement="task_polish">
+        <dc:Bounds x="358" y="42" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="538" y="42" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="718" y="64" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="104" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_draft_di" bpmnElement="flow_start_draft">
+        <di:waypoint x="98" y="82" />
+        <di:waypoint x="178" y="82" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_draft_polish_di" bpmnElement="flow_draft_polish">
+        <di:waypoint x="278" y="82" />
+        <di:waypoint x="358" y="82" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_polish_self_di" bpmnElement="flow_polish_self">
+        <di:waypoint x="408" y="42" />
+        <di:waypoint x="408" y="18" />
+        <di:waypoint x="408" y="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="413" y="23" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_polish_submit_di" bpmnElement="flow_polish_submit">
+        <di:waypoint x="458" y="82" />
+        <di:waypoint x="538" y="82" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="473" y="63" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_submit_end_di" bpmnElement="flow_submit_end">
+        <di:waypoint x="638" y="82" />
+        <di:waypoint x="718" y="82" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

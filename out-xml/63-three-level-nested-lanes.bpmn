@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_three_level_nested_lanes" targetNamespace="http://example.com/test-three-level-nested-lanes" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="集团研发立项三级泳道">
+    <bpmn:participant id="pool_group" name="集团" processRef="process_group" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_group" name="集团" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_headquarter" name="总部管理层">
+        <bpmn:flowNodeRef>start_initiate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_strategy_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_final_approve</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_rd_center" name="研发中心">
+        <bpmn:childLaneSet id="LaneSet_2">
+          <bpmn:lane id="lane_arch_office" name="架构办公室">
+            <bpmn:flowNodeRef>task_tech_assess</bpmn:flowNodeRef>
+          </bpmn:lane>
+          <bpmn:lane id="lane_dev_dept" name="开发部">
+            <bpmn:childLaneSet id="LaneSet_3">
+              <bpmn:lane id="lane_backend_team" name="后端组">
+                <bpmn:flowNodeRef>task_backend_estimate</bpmn:flowNodeRef>
+              </bpmn:lane>
+              <bpmn:lane id="lane_frontend_team" name="前端组">
+                <bpmn:flowNodeRef>task_frontend_estimate</bpmn:flowNodeRef>
+                <bpmn:flowNodeRef>end_done</bpmn:flowNodeRef>
+              </bpmn:lane>
+            </bpmn:childLaneSet>
+          </bpmn:lane>
+        </bpmn:childLaneSet>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_initiate" name="立项启动">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_strategy_review" name="战略评审">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_final_approve" name="终审批准">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tech_assess" name="技术可行性评估">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="task_backend_estimate" name="后端工作量估算">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_frontend_estimate" name="前端工作量估算">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="end_done" name="立项完成">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_initiate" targetRef="task_strategy_review" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_strategy_review" targetRef="task_tech_assess" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_tech_assess" targetRef="task_backend_estimate" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_backend_estimate" targetRef="task_frontend_estimate" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_frontend_estimate" targetRef="task_final_approve" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_final_approve" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_three_level_nested_lanes" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_three_level_nested_lanes" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="1134" height="624" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_group_di" bpmnElement="pool_group" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1134" height="624" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_headquarter_di" bpmnElement="lane_headquarter" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1104" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_initiate_di" bpmnElement="start_initiate">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_strategy_review_di" bpmnElement="task_strategy_review">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_final_approve_di" bpmnElement="task_final_approve">
+        <dc:Bounds x="898" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_rd_center_di" bpmnElement="lane_rd_center" isHorizontal="true">
+        <dc:Bounds x="30" y="268" width="1104" height="336" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_arch_office_di" bpmnElement="lane_arch_office" isHorizontal="true">
+        <dc:Bounds x="60" y="268" width="1074" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tech_assess_di" bpmnElement="task_tech_assess">
+        <dc:Bounds x="358" y="284" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_dev_dept_di" bpmnElement="lane_dev_dept" isHorizontal="true">
+        <dc:Bounds x="60" y="380" width="1074" height="224" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_backend_team_di" bpmnElement="lane_backend_team" isHorizontal="true">
+        <dc:Bounds x="90" y="380" width="1044" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_backend_estimate_di" bpmnElement="task_backend_estimate">
+        <dc:Bounds x="538" y="396" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_frontend_team_di" bpmnElement="lane_frontend_team" isHorizontal="true">
+        <dc:Bounds x="90" y="492" width="1044" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_frontend_estimate_di" bpmnElement="task_frontend_estimate">
+        <dc:Bounds x="718" y="508" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="1078" y="530" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1046" y="570" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="324" />
+        <di:waypoint x="358" y="324" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="408" y="364" />
+        <di:waypoint x="408" y="436" />
+        <di:waypoint x="538" y="436" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="588" y="476" />
+        <di:waypoint x="588" y="548" />
+        <di:waypoint x="718" y="548" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="768" y="508" />
+        <di:waypoint x="768" y="212" />
+        <di:waypoint x="898" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="948" y="252" />
+        <di:waypoint x="948" y="548" />
+        <di:waypoint x="1078" y="548" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

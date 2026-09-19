@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_dataobject_star" targetNamespace="http://example.com/test-dataobject-star" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:process id="process_contract_lifecycle" name="合同档案星形读写" isExecutable="true">
+    <bpmn:startEvent id="start_draft" name="发起合同">
+      <bpmn:outgoing>flow_start_draft</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_draft" name="起草合同">
+      <bpmn:incoming>flow_start_draft</bpmn:incoming>
+      <bpmn:outgoing>flow_draft_review</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="data_out_draft">
+        <bpmn:targetRef>data_contract</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_legal_review" name="法务批注">
+      <bpmn:incoming>flow_draft_review</bpmn:incoming>
+      <bpmn:outgoing>flow_review_archive</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="data_out_review">
+        <bpmn:targetRef>data_contract</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_archive" name="归档合同">
+      <bpmn:incoming>flow_review_archive</bpmn:incoming>
+      <bpmn:outgoing>flow_archive_execute</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="data_in_archive">
+        <bpmn:sourceRef>data_contract</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_execute" name="履约执行">
+      <bpmn:incoming>flow_archive_execute</bpmn:incoming>
+      <bpmn:outgoing>flow_execute_end</bpmn:outgoing>
+      <bpmn:dataInputAssociation id="data_in_execute">
+        <bpmn:sourceRef>data_contract</bpmn:sourceRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_done" name="合同完结">
+      <bpmn:incoming>flow_execute_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataObjectReference id="data_contract" name="合同档案" />
+    <bpmn:sequenceFlow id="flow_start_draft" sourceRef="start_draft" targetRef="task_draft" />
+    <bpmn:sequenceFlow id="flow_draft_review" sourceRef="task_draft" targetRef="task_legal_review" />
+    <bpmn:sequenceFlow id="flow_review_archive" sourceRef="task_legal_review" targetRef="task_archive" />
+    <bpmn:sequenceFlow id="flow_archive_execute" sourceRef="task_archive" targetRef="task_execute" />
+    <bpmn:sequenceFlow id="flow_execute_end" sourceRef="task_execute" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_dataobject_star" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_dataobject_star" bpmnElement="process_contract_lifecycle">
+      <bpmndi:BPMNShape id="process_contract_lifecycle_di" bpmnElement="process_contract_lifecycle">
+        <dc:Bounds x="0" y="0" width="954" height="242" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_draft_di" bpmnElement="start_draft">
+        <dc:Bounds x="62" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_draft_di" bpmnElement="task_draft">
+        <dc:Bounds x="178" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_legal_review_di" bpmnElement="task_legal_review">
+        <dc:Bounds x="358" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_archive_di" bpmnElement="task_archive">
+        <dc:Bounds x="538" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_execute_di" bpmnElement="task_execute">
+        <dc:Bounds x="718" y="130" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="898" y="152" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="866" y="192" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_contract_di" bpmnElement="data_contract">
+        <dc:Bounds x="750" y="40" width="36" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_draft_di" bpmnElement="flow_start_draft">
+        <di:waypoint x="98" y="170" />
+        <di:waypoint x="178" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_draft_review_di" bpmnElement="flow_draft_review">
+        <di:waypoint x="278" y="170" />
+        <di:waypoint x="358" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_archive_di" bpmnElement="flow_review_archive">
+        <di:waypoint x="458" y="170" />
+        <di:waypoint x="538" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_archive_execute_di" bpmnElement="flow_archive_execute">
+        <di:waypoint x="638" y="170" />
+        <di:waypoint x="718" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_execute_end_di" bpmnElement="flow_execute_end">
+        <di:waypoint x="818" y="170" />
+        <di:waypoint x="898" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_out_draft_di" bpmnElement="data_out_draft">
+        <di:waypoint x="228" y="130" />
+        <di:waypoint x="228" y="110" />
+        <di:waypoint x="768" y="110" />
+        <di:waypoint x="768" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_out_review_di" bpmnElement="data_out_review">
+        <di:waypoint x="408" y="130" />
+        <di:waypoint x="408" y="110" />
+        <di:waypoint x="768" y="110" />
+        <di:waypoint x="768" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_in_archive_di" bpmnElement="data_in_archive">
+        <di:waypoint x="768" y="90" />
+        <di:waypoint x="768" y="110" />
+        <di:waypoint x="588" y="110" />
+        <di:waypoint x="588" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_in_execute_di" bpmnElement="data_in_execute">
+        <di:waypoint x="768" y="90" />
+        <di:waypoint x="768" y="130" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

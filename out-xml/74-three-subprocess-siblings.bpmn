@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_three_subprocess_siblings" targetNamespace="http://example.com/test-three-subprocess-siblings" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_procurement" name="采购全流程" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="采购申请">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="sub_demand" name="需求确认">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+      <bpmn:startEvent id="demand_start" name="需求受理">
+        <bpmn:outgoing>demand_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="demand_task_collect" name="汇总需求清单">
+        <bpmn:incoming>demand_flow_1</bpmn:incoming>
+        <bpmn:outgoing>demand_flow_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="demand_task_confirm" name="部门确认需求">
+        <bpmn:incoming>demand_flow_2</bpmn:incoming>
+        <bpmn:outgoing>demand_flow_3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="demand_end" name="需求确认完成">
+        <bpmn:incoming>demand_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="demand_flow_1" sourceRef="demand_start" targetRef="demand_task_collect" />
+      <bpmn:sequenceFlow id="demand_flow_2" sourceRef="demand_task_collect" targetRef="demand_task_confirm" />
+      <bpmn:sequenceFlow id="demand_flow_3" sourceRef="demand_task_confirm" targetRef="demand_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="sub_bidding" name="供应商比价">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+      <bpmn:outgoing>main_flow_3</bpmn:outgoing>
+      <bpmn:startEvent id="bidding_start" name="发起询价">
+        <bpmn:outgoing>bidding_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="bidding_task_invite" name="邀请供应商报价">
+        <bpmn:incoming>bidding_flow_1</bpmn:incoming>
+        <bpmn:outgoing>bidding_flow_2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:userTask id="bidding_task_compare" name="比价评估">
+        <bpmn:incoming>bidding_flow_2</bpmn:incoming>
+        <bpmn:outgoing>bidding_flow_3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="bidding_end" name="选定供应商">
+        <bpmn:incoming>bidding_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="bidding_flow_1" sourceRef="bidding_start" targetRef="bidding_task_invite" />
+      <bpmn:sequenceFlow id="bidding_flow_2" sourceRef="bidding_task_invite" targetRef="bidding_task_compare" />
+      <bpmn:sequenceFlow id="bidding_flow_3" sourceRef="bidding_task_compare" targetRef="bidding_end" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="sub_contract" name="合同签订">
+      <bpmn:incoming>main_flow_3</bpmn:incoming>
+      <bpmn:outgoing>main_flow_4</bpmn:outgoing>
+      <bpmn:startEvent id="contract_start" name="拟定合同">
+        <bpmn:outgoing>contract_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="contract_task_legal" name="法务审核合同">
+        <bpmn:incoming>contract_flow_1</bpmn:incoming>
+        <bpmn:outgoing>contract_flow_2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="contract_task_sign" name="双方盖章签署">
+        <bpmn:incoming>contract_flow_2</bpmn:incoming>
+        <bpmn:outgoing>contract_flow_3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="contract_end" name="合同生效">
+        <bpmn:incoming>contract_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="contract_flow_1" sourceRef="contract_start" targetRef="contract_task_legal" />
+      <bpmn:sequenceFlow id="contract_flow_2" sourceRef="contract_task_legal" targetRef="contract_task_sign" />
+      <bpmn:sequenceFlow id="contract_flow_3" sourceRef="contract_task_sign" targetRef="contract_end" />
+    </bpmn:subProcess>
+    <bpmn:endEvent id="end_main" name="采购完成">
+      <bpmn:incoming>main_flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="sub_demand" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="sub_demand" targetRef="sub_bidding" />
+    <bpmn:sequenceFlow id="main_flow_3" sourceRef="sub_bidding" targetRef="sub_contract" />
+    <bpmn:sequenceFlow id="main_flow_4" sourceRef="sub_contract" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_three_subprocess_siblings" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_three_subprocess_siblings" bpmnElement="process_procurement">
+      <bpmndi:BPMNShape id="process_procurement_di" bpmnElement="process_procurement">
+        <dc:Bounds x="0" y="0" width="2382" height="228" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_demand_di" bpmnElement="sub_demand" isExpanded="true">
+        <dc:Bounds x="178" y="32" width="636" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="demand_start_di" bpmnElement="demand_start">
+        <dc:Bounds x="210" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="demand_task_collect_di" bpmnElement="demand_task_collect">
+        <dc:Bounds x="346" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="demand_task_confirm_di" bpmnElement="demand_task_confirm">
+        <dc:Bounds x="546" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="demand_end_di" bpmnElement="demand_end">
+        <dc:Bounds x="746" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="714" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_bidding_di" bpmnElement="sub_bidding" isExpanded="true">
+        <dc:Bounds x="894" y="32" width="636" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="bidding_start_di" bpmnElement="bidding_start">
+        <dc:Bounds x="926" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="894" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="bidding_task_invite_di" bpmnElement="bidding_task_invite">
+        <dc:Bounds x="1062" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="bidding_task_compare_di" bpmnElement="bidding_task_compare">
+        <dc:Bounds x="1262" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="bidding_end_di" bpmnElement="bidding_end">
+        <dc:Bounds x="1462" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1430" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_contract_di" bpmnElement="sub_contract" isExpanded="true">
+        <dc:Bounds x="1610" y="32" width="636" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contract_start_di" bpmnElement="contract_start">
+        <dc:Bounds x="1642" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1610" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contract_task_legal_di" bpmnElement="contract_task_legal">
+        <dc:Bounds x="1778" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contract_task_sign_di" bpmnElement="contract_task_sign">
+        <dc:Bounds x="1978" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contract_end_di" bpmnElement="contract_end">
+        <dc:Bounds x="2178" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2146" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="2326" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2294" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="demand_flow_1_di" bpmnElement="demand_flow_1">
+        <di:waypoint x="246" y="124" />
+        <di:waypoint x="346" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="demand_flow_2_di" bpmnElement="demand_flow_2">
+        <di:waypoint x="446" y="124" />
+        <di:waypoint x="546" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="demand_flow_3_di" bpmnElement="demand_flow_3">
+        <di:waypoint x="646" y="124" />
+        <di:waypoint x="746" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bidding_flow_1_di" bpmnElement="bidding_flow_1">
+        <di:waypoint x="962" y="124" />
+        <di:waypoint x="1062" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bidding_flow_2_di" bpmnElement="bidding_flow_2">
+        <di:waypoint x="1162" y="124" />
+        <di:waypoint x="1262" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="bidding_flow_3_di" bpmnElement="bidding_flow_3">
+        <di:waypoint x="1362" y="124" />
+        <di:waypoint x="1462" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="contract_flow_1_di" bpmnElement="contract_flow_1">
+        <di:waypoint x="1678" y="124" />
+        <di:waypoint x="1778" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="contract_flow_2_di" bpmnElement="contract_flow_2">
+        <di:waypoint x="1878" y="124" />
+        <di:waypoint x="1978" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="contract_flow_3_di" bpmnElement="contract_flow_3">
+        <di:waypoint x="2078" y="124" />
+        <di:waypoint x="2178" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="114" />
+        <di:waypoint x="178" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="814" y="114" />
+        <di:waypoint x="894" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_3_di" bpmnElement="main_flow_3">
+        <di:waypoint x="1530" y="114" />
+        <di:waypoint x="1610" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_4_di" bpmnElement="main_flow_4">
+        <di:waypoint x="2246" y="114" />
+        <di:waypoint x="2326" y="114" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

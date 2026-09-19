@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_group_cross_lane" targetNamespace="http://example.com/test-group-cross-lane" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:collaboration id="collaboration_claim" name="保险理赔">
+    <bpmn:participant id="pool_insurance" name="保险公司" processRef="process_claim" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_claim" name="保险公司" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_customer" name="客户服务">
+        <bpmn:flowNodeRef>start_claim</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_submit_claim</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_adjuster" name="理赔员">
+        <bpmn:flowNodeRef>task_initial_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_assess_loss</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_finance" name="财务结算">
+        <bpmn:flowNodeRef>task_pay_claim</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_claim_paid</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_claim" name="报案">
+      <bpmn:outgoing>flow_start_submit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit_claim" name="提交理赔材料">
+      <bpmn:incoming>flow_start_submit</bpmn:incoming>
+      <bpmn:outgoing>flow_submit_review</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_initial_review" name="材料初审">
+      <bpmn:incoming>flow_submit_review</bpmn:incoming>
+      <bpmn:outgoing>flow_review_assess</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_assess_loss" name="现场定损">
+      <bpmn:incoming>flow_review_assess</bpmn:incoming>
+      <bpmn:outgoing>flow_assess_pay</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_pay_claim" name="赔款打款">
+      <bpmn:incoming>flow_assess_pay</bpmn:incoming>
+      <bpmn:outgoing>flow_pay_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_claim_paid" name="理赔完成">
+      <bpmn:incoming>flow_pay_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:group id="group_claim_review" name="理赔审核阶段" />
+    <bpmn:sequenceFlow id="flow_start_submit" sourceRef="start_claim" targetRef="task_submit_claim" />
+    <bpmn:sequenceFlow id="flow_submit_review" sourceRef="task_submit_claim" targetRef="task_initial_review" />
+    <bpmn:sequenceFlow id="flow_review_assess" sourceRef="task_initial_review" targetRef="task_assess_loss" />
+    <bpmn:sequenceFlow id="flow_assess_pay" sourceRef="task_assess_loss" targetRef="task_pay_claim" />
+    <bpmn:sequenceFlow id="flow_pay_end" sourceRef="task_pay_claim" targetRef="end_claim_paid" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_group_cross_lane" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_group_cross_lane" bpmnElement="collaboration_claim">
+      <bpmndi:BPMNShape id="collaboration_claim_di" bpmnElement="collaboration_claim">
+        <dc:Bounds x="0" y="0" width="954" height="376" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_insurance_di" bpmnElement="pool_insurance" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="954" height="376" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_customer_di" bpmnElement="lane_customer" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="924" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_claim_di" bpmnElement="start_claim">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_claim_di" bpmnElement="task_submit_claim">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_adjuster_di" bpmnElement="lane_adjuster" isHorizontal="true">
+        <dc:Bounds x="30" y="132" width="924" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_initial_review_di" bpmnElement="task_initial_review">
+        <dc:Bounds x="358" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_assess_loss_di" bpmnElement="task_assess_loss">
+        <dc:Bounds x="538" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_finance_di" bpmnElement="lane_finance" isHorizontal="true">
+        <dc:Bounds x="30" y="244" width="924" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pay_claim_di" bpmnElement="task_pay_claim">
+        <dc:Bounds x="718" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_claim_paid_di" bpmnElement="end_claim_paid">
+        <dc:Bounds x="898" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="866" y="322" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_submit_di" bpmnElement="flow_start_submit">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_submit_review_di" bpmnElement="flow_submit_review">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="188" />
+        <di:waypoint x="358" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_assess_di" bpmnElement="flow_review_assess">
+        <di:waypoint x="458" y="188" />
+        <di:waypoint x="538" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_assess_pay_di" bpmnElement="flow_assess_pay">
+        <di:waypoint x="588" y="228" />
+        <di:waypoint x="588" y="300" />
+        <di:waypoint x="718" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_pay_end_di" bpmnElement="flow_pay_end">
+        <di:waypoint x="818" y="300" />
+        <di:waypoint x="898" y="300" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

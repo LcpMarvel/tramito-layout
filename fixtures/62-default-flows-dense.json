@@ -1,0 +1,126 @@
+{
+  "id": "definitions_default_flows_dense",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-default-flows-dense",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_default_dense",
+      "bpmn": {
+        "type": "process",
+        "name": "密集默认流工单分派",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "工单创建" },
+          "labels": [{ "text": "工单创建" }]
+        },
+        {
+          "id": "gw_urgent",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "紧急程度",
+            "gatewayDirection": "Diverging",
+            "default": "flow_urgent_default"
+          },
+          "labels": [{ "text": "紧急程度" }]
+        },
+        {
+          "id": "task_urgent",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "紧急通道处理" },
+          "labels": [{ "text": "紧急通道处理" }]
+        },
+        {
+          "id": "gw_vip",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "客户等级",
+            "gatewayDirection": "Diverging",
+            "default": "flow_vip_default"
+          },
+          "labels": [{ "text": "客户等级" }]
+        },
+        {
+          "id": "task_vip",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "VIP专员跟进" },
+          "labels": [{ "text": "VIP专员跟进" }]
+        },
+        {
+          "id": "gw_category",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "问题类别",
+            "gatewayDirection": "Diverging",
+            "default": "flow_category_default"
+          },
+          "labels": [{ "text": "问题类别" }]
+        },
+        {
+          "id": "task_tech",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "技术组处理" },
+          "labels": [{ "text": "技术组处理" }]
+        },
+        {
+          "id": "task_general",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "普通客服处理" },
+          "labels": [{ "text": "普通客服处理" }]
+        },
+        {
+          "id": "gw_merge",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "处理汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "处理汇合" }]
+        },
+        {
+          "id": "task_feedback",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "回访满意度" },
+          "labels": [{ "text": "回访满意度" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "工单关闭" },
+          "labels": [{ "text": "工单关闭" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gw_urgent"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_urgent_hit", "sources": ["gw_urgent"], "targets": ["task_urgent"], "bpmn": { "type": "sequenceFlow", "name": "特急工单", "conditionExpression": { "body": "${priority == 'urgent'}" } }, "labels": [{ "text": "特急工单" }] },
+        { "id": "flow_urgent_default", "sources": ["gw_urgent"], "targets": ["gw_vip"], "bpmn": { "type": "sequenceFlow", "name": "常规优先级", "isDefault": true }, "labels": [{ "text": "常规优先级" }] },
+        { "id": "flow_vip_hit", "sources": ["gw_vip"], "targets": ["task_vip"], "bpmn": { "type": "sequenceFlow", "name": "VIP客户", "conditionExpression": { "body": "${level == 'vip'}" } }, "labels": [{ "text": "VIP客户" }] },
+        { "id": "flow_vip_default", "sources": ["gw_vip"], "targets": ["gw_category"], "bpmn": { "type": "sequenceFlow", "name": "普通客户", "isDefault": true }, "labels": [{ "text": "普通客户" }] },
+        { "id": "flow_category_tech", "sources": ["gw_category"], "targets": ["task_tech"], "bpmn": { "type": "sequenceFlow", "name": "技术问题", "conditionExpression": { "body": "${category == 'tech'}" } }, "labels": [{ "text": "技术问题" }] },
+        { "id": "flow_category_default", "sources": ["gw_category"], "targets": ["task_general"], "bpmn": { "type": "sequenceFlow", "name": "其他问题", "isDefault": true }, "labels": [{ "text": "其他问题" }] },
+        { "id": "flow_urgent_merge", "sources": ["task_urgent"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_vip_merge", "sources": ["task_vip"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_tech_merge", "sources": ["task_tech"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_general_merge", "sources": ["task_general"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_feedback", "sources": ["gw_merge"], "targets": ["task_feedback"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end", "sources": ["task_feedback"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

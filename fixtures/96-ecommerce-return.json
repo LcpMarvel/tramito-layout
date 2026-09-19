@@ -1,0 +1,151 @@
+{
+  "id": "definitions_ecommerce_return",
+  "bpmn": {
+    "targetNamespace": "http://example.com/ecommerce-return",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_return",
+      "bpmn": { "type": "collaboration", "name": "电商退货流程" },
+      "children": [
+        {
+          "id": "pool_ecommerce",
+          "bpmn": { "type": "participant", "name": "电商平台", "processRef": "process_return" },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_customer",
+              "bpmn": { "type": "lane", "name": "客户" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_return",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起退货" },
+                  "labels": [{ "text": "发起退货" }]
+                },
+                {
+                  "id": "task_submit_return",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "提交退货申请" },
+                  "labels": [{ "text": "提交退货申请" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_service",
+              "bpmn": { "type": "lane", "name": "客服" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_cs_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "客服审核申请" },
+                  "labels": [{ "text": "客服审核申请" }],
+                  "boundaryEvents": [
+                    {
+                      "id": "boundary_cs_timeout",
+                      "width": 36, "height": 36,
+                      "attachedToRef": "task_cs_review",
+                      "bpmn": {
+                        "type": "boundaryEvent",
+                        "eventDefinitionType": "timer",
+                        "name": "审核超时",
+                        "isInterrupting": true,
+                        "cancelActivity": true,
+                        "timerEventDefinition": { "timeDuration": "PT24H" }
+                      },
+                      "labels": [{ "text": "24小时超时" }]
+                    }
+                  ]
+                },
+                {
+                  "id": "task_cs_escalate",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "升级专员处理" },
+                  "labels": [{ "text": "升级专员处理" }]
+                },
+                {
+                  "id": "gw_cs_review",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "审核结果", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "审核结果" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_warehouse",
+              "bpmn": { "type": "lane", "name": "仓库" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_receive_goods",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "收货登记" },
+                  "labels": [{ "text": "收货登记" }]
+                },
+                {
+                  "id": "task_quality_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "退货质检" },
+                  "labels": [{ "text": "退货质检" }]
+                },
+                {
+                  "id": "gw_quality",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "质检是否合格", "gatewayDirection": "Diverging" },
+                  "labels": [{ "text": "质检是否合格" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                {
+                  "id": "task_refund",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "执行退款" },
+                  "labels": [{ "text": "执行退款" }]
+                },
+                {
+                  "id": "end_return_done",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "退货完成" },
+                  "labels": [{ "text": "退货完成" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "f_start_submit", "sources": ["start_return"], "targets": ["task_submit_return"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_submit_review", "sources": ["task_submit_return"], "targets": ["task_cs_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_review_gw", "sources": ["task_cs_review"], "targets": ["gw_cs_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_cs_reject", "sources": ["gw_cs_review"], "targets": ["task_submit_return"], "bpmn": { "type": "sequenceFlow", "name": "驳回" }, "labels": [{ "text": "驳回" }] },
+            { "id": "f_cs_pass", "sources": ["gw_cs_review"], "targets": ["task_receive_goods"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+            { "id": "f_timeout_escalate", "sources": ["boundary_cs_timeout"], "targets": ["task_cs_escalate"], "bpmn": { "type": "sequenceFlow", "name": "超时升级" }, "labels": [{ "text": "超时升级" }] },
+            { "id": "f_escalate_gw", "sources": ["task_cs_escalate"], "targets": ["gw_cs_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_receive_qc", "sources": ["task_receive_goods"], "targets": ["task_quality_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_qc_gw", "sources": ["task_quality_check"], "targets": ["gw_quality"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "f_qc_fail", "sources": ["gw_quality"], "targets": ["task_cs_review"], "bpmn": { "type": "sequenceFlow", "name": "不合格" }, "labels": [{ "text": "不合格" }] },
+            { "id": "f_qc_pass", "sources": ["gw_quality"], "targets": ["task_refund"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] },
+            { "id": "f_refund_end", "sources": ["task_refund"], "targets": ["end_return_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

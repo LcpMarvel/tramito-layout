@@ -1,0 +1,88 @@
+{
+  "id": "definitions_backedge_into_gateway",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-backedge-into-gateway",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_backedge_gateway",
+      "bpmn": { "type": "process", "name": "订单分流复核回环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_receive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "接收订单" },
+          "labels": [{ "text": "接收订单" }]
+        },
+        {
+          "id": "gw_split",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "渠道分流" },
+          "labels": [{ "text": "渠道分流" }]
+        },
+        {
+          "id": "task_online",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "线上渠道处理" },
+          "labels": [{ "text": "线上渠道处理" }]
+        },
+        {
+          "id": "task_offline",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "线下网点处理" },
+          "labels": [{ "text": "线下网点处理" }]
+        },
+        {
+          "id": "gw_merge",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "处理汇聚" },
+          "labels": [{ "text": "处理汇聚" }]
+        },
+        {
+          "id": "task_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "汇总复核" },
+          "labels": [{ "text": "汇总复核" }]
+        },
+        {
+          "id": "gw_check",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "复核通过" },
+          "labels": [{ "text": "复核通过" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "完成" },
+          "labels": [{ "text": "完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_receive"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_receive_split", "sources": ["task_receive"], "targets": ["gw_split"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_split_online", "sources": ["gw_split"], "targets": ["task_online"], "bpmn": { "type": "sequenceFlow", "name": "线上" }, "labels": [{ "text": "线上" }] },
+        { "id": "flow_split_offline", "sources": ["gw_split"], "targets": ["task_offline"], "bpmn": { "type": "sequenceFlow", "name": "线下" }, "labels": [{ "text": "线下" }] },
+        { "id": "flow_online_merge", "sources": ["task_online"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_offline_merge", "sources": ["task_offline"], "targets": ["gw_merge"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_merge_review", "sources": ["gw_merge"], "targets": ["task_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_review_check", "sources": ["task_review"], "targets": ["gw_check"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_check_pass", "sources": ["gw_check"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_check_back", "sources": ["gw_check"], "targets": ["gw_split"], "bpmn": { "type": "sequenceFlow", "name": "重新分流" }, "labels": [{ "text": "重新分流" }] }
+      ]
+    }
+  ]
+}

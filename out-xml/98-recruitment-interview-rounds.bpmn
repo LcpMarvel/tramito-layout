@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_recruitment_interview" targetNamespace="http://example.com/recruitment-interview-rounds" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_invite" name="面试邀约" />
+  <bpmn:message id="msg_confirm" name="面试确认" />
+  <bpmn:message id="msg_result" name="结果通知" />
+  <bpmn:message id="msg_offer" name="Offer通知" />
+  <bpmn:collaboration id="collaboration_recruit" name="招聘面试流程">
+    <bpmn:participant id="pool_company" name="公司" processRef="process_company" />
+    <bpmn:participant id="pool_candidate" name="候选人" processRef="process_candidate" />
+    <bpmn:messageFlow id="mf_invite" sourceRef="task_send_invite" targetRef="start_candidate" messageRef="msg_invite" />
+    <bpmn:messageFlow id="mf_confirm" sourceRef="task_confirm_time" targetRef="event_recv_confirm" messageRef="msg_confirm" />
+    <bpmn:messageFlow id="mf_result" sourceRef="task_send_reject" targetRef="event_recv_result" messageRef="msg_result" />
+    <bpmn:messageFlow id="mf_offer" sourceRef="task_send_offer" targetRef="event_recv_offer" messageRef="msg_offer" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_company" name="公司" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_hr" name="HR">
+        <bpmn:flowNodeRef>start_resume</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_screen_resume</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_send_invite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>event_recv_confirm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_send_reject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_interviewer" name="面试官">
+        <bpmn:flowNodeRef>task_interview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_interview_result</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_hrbp" name="HRBP">
+        <bpmn:flowNodeRef>task_offer_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_send_offer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_hired</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_resume" name="收到简历投递">
+      <bpmn:outgoing>f_resume_screen</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_screen_resume" name="简历筛选">
+      <bpmn:incoming>f_resume_screen</bpmn:incoming>
+      <bpmn:outgoing>f_screen_invite</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="task_send_invite" name="发送面试邀约">
+      <bpmn:incoming>f_screen_invite</bpmn:incoming>
+      <bpmn:incoming>f_result_more</bpmn:incoming>
+      <bpmn:outgoing>f_invite_confirm</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="event_recv_confirm" name="收到候选人确认">
+      <bpmn:incoming>f_invite_confirm</bpmn:incoming>
+      <bpmn:outgoing>f_confirm_interview</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_confirm" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="task_send_reject" name="发送结果通知">
+      <bpmn:incoming>f_result_fail</bpmn:incoming>
+      <bpmn:outgoing>f_reject_end</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_rejected" name="招聘终止">
+      <bpmn:incoming>f_reject_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_interview" name="面试评估">
+      <bpmn:incoming>f_confirm_interview</bpmn:incoming>
+      <bpmn:outgoing>f_interview_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_interview_result" name="面试结论" gatewayDirection="Diverging">
+      <bpmn:incoming>f_interview_gw</bpmn:incoming>
+      <bpmn:outgoing>f_result_more</bpmn:outgoing>
+      <bpmn:outgoing>f_result_fail</bpmn:outgoing>
+      <bpmn:outgoing>f_result_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_offer_review" name="Offer审批">
+      <bpmn:incoming>f_result_pass</bpmn:incoming>
+      <bpmn:outgoing>f_review_offer</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="task_send_offer" name="发放Offer">
+      <bpmn:incoming>f_review_offer</bpmn:incoming>
+      <bpmn:outgoing>f_offer_end</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_hired" name="录用完成">
+      <bpmn:incoming>f_offer_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_resume_screen" sourceRef="start_resume" targetRef="task_screen_resume" />
+    <bpmn:sequenceFlow id="f_screen_invite" sourceRef="task_screen_resume" targetRef="task_send_invite" />
+    <bpmn:sequenceFlow id="f_invite_confirm" sourceRef="task_send_invite" targetRef="event_recv_confirm" />
+    <bpmn:sequenceFlow id="f_confirm_interview" sourceRef="event_recv_confirm" targetRef="task_interview" />
+    <bpmn:sequenceFlow id="f_interview_gw" sourceRef="task_interview" targetRef="gw_interview_result" />
+    <bpmn:sequenceFlow id="f_result_more" name="需加面" sourceRef="gw_interview_result" targetRef="task_send_invite" />
+    <bpmn:sequenceFlow id="f_result_fail" name="不通过" sourceRef="gw_interview_result" targetRef="task_send_reject" />
+    <bpmn:sequenceFlow id="f_reject_end" sourceRef="task_send_reject" targetRef="end_rejected" />
+    <bpmn:sequenceFlow id="f_result_pass" name="通过" sourceRef="gw_interview_result" targetRef="task_offer_review" />
+    <bpmn:sequenceFlow id="f_review_offer" sourceRef="task_offer_review" targetRef="task_send_offer" />
+    <bpmn:sequenceFlow id="f_offer_end" sourceRef="task_send_offer" targetRef="end_hired" />
+  </bpmn:process>
+  <bpmn:process id="process_candidate" name="候选人" isExecutable="true">
+    <bpmn:startEvent id="start_candidate" name="收到面试邀约">
+      <bpmn:outgoing>f_cand_confirm</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_invite" />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_confirm_time" name="确认面试时间">
+      <bpmn:incoming>f_cand_confirm</bpmn:incoming>
+      <bpmn:outgoing>f_cand_attend</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="task_attend_interview" name="参加面试">
+      <bpmn:incoming>f_cand_attend</bpmn:incoming>
+      <bpmn:outgoing>f_cand_result</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateCatchEvent id="event_recv_result" name="收到结果通知">
+      <bpmn:incoming>f_cand_result</bpmn:incoming>
+      <bpmn:outgoing>f_cand_offer</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_result" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="event_recv_offer" name="收到Offer">
+      <bpmn:incoming>f_cand_offer</bpmn:incoming>
+      <bpmn:outgoing>f_cand_end</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_offer" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="end_candidate" name="求职结束">
+      <bpmn:incoming>f_cand_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_cand_confirm" sourceRef="start_candidate" targetRef="task_confirm_time" />
+    <bpmn:sequenceFlow id="f_cand_attend" sourceRef="task_confirm_time" targetRef="task_attend_interview" />
+    <bpmn:sequenceFlow id="f_cand_result" sourceRef="task_attend_interview" targetRef="event_recv_result" />
+    <bpmn:sequenceFlow id="f_cand_offer" sourceRef="event_recv_result" targetRef="event_recv_offer" />
+    <bpmn:sequenceFlow id="f_cand_end" sourceRef="event_recv_offer" targetRef="end_candidate" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_recruitment_interview" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_recruitment_interview" bpmnElement="collaboration_recruit">
+      <bpmndi:BPMNShape id="collaboration_recruit_di" bpmnElement="collaboration_recruit">
+        <dc:Bounds x="0" y="0" width="1708" height="689" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_company_di" bpmnElement="pool_company" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1380" height="515" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_hr_di" bpmnElement="lane_hr" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1350" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_resume_di" bpmnElement="start_resume">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_screen_resume_di" bpmnElement="task_screen_resume">
+        <dc:Bounds x="178" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_send_invite_di" bpmnElement="task_send_invite">
+        <dc:Bounds x="358" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_recv_confirm_di" bpmnElement="event_recv_confirm">
+        <dc:Bounds x="538" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="506" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_send_reject_di" bpmnElement="task_send_reject">
+        <dc:Bounds x="964" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_rejected_di" bpmnElement="end_rejected">
+        <dc:Bounds x="1324" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1292" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_interviewer_di" bpmnElement="lane_interviewer" isHorizontal="true">
+        <dc:Bounds x="30" y="268" width="1350" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_interview_di" bpmnElement="task_interview">
+        <dc:Bounds x="654" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_interview_result_di" bpmnElement="gw_interview_result">
+        <dc:Bounds x="834" y="302" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="320" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_hrbp_di" bpmnElement="lane_hrbp" isHorizontal="true">
+        <dc:Bounds x="30" y="383" width="1350" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_offer_review_di" bpmnElement="task_offer_review">
+        <dc:Bounds x="964" y="399" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_send_offer_di" bpmnElement="task_send_offer">
+        <dc:Bounds x="1144" y="399" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_hired_di" bpmnElement="end_hired">
+        <dc:Bounds x="1324" y="421" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1292" y="461" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_candidate_di" bpmnElement="pool_candidate" isHorizontal="true">
+        <dc:Bounds x="328" y="545" width="1380" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_candidate_di" bpmnElement="start_candidate">
+        <dc:Bounds x="390" y="599" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="639" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_confirm_time_di" bpmnElement="task_confirm_time">
+        <dc:Bounds x="506" y="577" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_attend_interview_di" bpmnElement="task_attend_interview">
+        <dc:Bounds x="686" y="577" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_recv_result_di" bpmnElement="event_recv_result">
+        <dc:Bounds x="866" y="599" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="834" y="639" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="event_recv_offer_di" bpmnElement="event_recv_offer">
+        <dc:Bounds x="982" y="599" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="950" y="639" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_candidate_di" bpmnElement="end_candidate">
+        <dc:Bounds x="1098" y="599" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1066" y="639" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_resume_screen_di" bpmnElement="f_resume_screen">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_screen_invite_di" bpmnElement="f_screen_invite">
+        <di:waypoint x="278" y="212" />
+        <di:waypoint x="358" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_invite_confirm_di" bpmnElement="f_invite_confirm">
+        <di:waypoint x="458" y="212" />
+        <di:waypoint x="538" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_confirm_interview_di" bpmnElement="f_confirm_interview">
+        <di:waypoint x="556" y="230" />
+        <di:waypoint x="556" y="327" />
+        <di:waypoint x="654" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_interview_gw_di" bpmnElement="f_interview_gw">
+        <di:waypoint x="754" y="327" />
+        <di:waypoint x="834" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_result_more_di" bpmnElement="f_result_more">
+        <di:waypoint x="859" y="302" />
+        <di:waypoint x="859" y="258" />
+        <di:waypoint x="408" y="258" />
+        <di:waypoint x="408" y="252" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="864" y="273" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_result_fail_di" bpmnElement="f_result_fail">
+        <di:waypoint x="859" y="302" />
+        <di:waypoint x="859" y="76" />
+        <di:waypoint x="964" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="273" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_reject_end_di" bpmnElement="f_reject_end">
+        <di:waypoint x="1064" y="76" />
+        <di:waypoint x="1324" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_result_pass_di" bpmnElement="f_result_pass">
+        <di:waypoint x="859" y="352" />
+        <di:waypoint x="859" y="439" />
+        <di:waypoint x="964" y="439" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="367" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_review_offer_di" bpmnElement="f_review_offer">
+        <di:waypoint x="1064" y="439" />
+        <di:waypoint x="1144" y="439" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_offer_end_di" bpmnElement="f_offer_end">
+        <di:waypoint x="1244" y="439" />
+        <di:waypoint x="1324" y="439" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cand_confirm_di" bpmnElement="f_cand_confirm">
+        <di:waypoint x="426" y="617" />
+        <di:waypoint x="506" y="617" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cand_attend_di" bpmnElement="f_cand_attend">
+        <di:waypoint x="606" y="617" />
+        <di:waypoint x="686" y="617" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cand_result_di" bpmnElement="f_cand_result">
+        <di:waypoint x="786" y="617" />
+        <di:waypoint x="866" y="617" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cand_offer_di" bpmnElement="f_cand_offer">
+        <di:waypoint x="902" y="617" />
+        <di:waypoint x="982" y="617" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_cand_end_di" bpmnElement="f_cand_end">
+        <di:waypoint x="1018" y="617" />
+        <di:waypoint x="1098" y="617" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_invite_di" bpmnElement="mf_invite">
+        <di:waypoint x="408" y="252" />
+        <di:waypoint x="408" y="599" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="413" y="366.45" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_confirm_di" bpmnElement="mf_confirm">
+        <di:waypoint x="556" y="577" />
+        <di:waypoint x="556" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="448.55" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_result_di" bpmnElement="mf_result">
+        <di:waypoint x="1014" y="116" />
+        <di:waypoint x="1014" y="124" />
+        <di:waypoint x="954" y="124" />
+        <di:waypoint x="954" y="530" />
+        <di:waypoint x="884" y="530" />
+        <di:waypoint x="884" y="599" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="959" y="259.1" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_offer_di" bpmnElement="mf_offer">
+        <di:waypoint x="1194" y="479" />
+        <di:waypoint x="1194" y="548" />
+        <di:waypoint x="1000" y="548" />
+        <di:waypoint x="1000" y="599" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1072" y="529" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,110 @@
+{
+  "id": "definitions_single_lane_long_process",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-single-lane-long-process",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "外贸出运超长串行流程"
+      },
+      "children": [
+        {
+          "id": "pool_forwarder",
+          "bpmn": {
+            "type": "participant",
+            "name": "货运代理",
+            "processRef": "process_forwarder"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_ops",
+              "bpmn": { "type": "lane", "name": "操作部" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "接单" },
+                  "labels": [{ "text": "接单" }]
+                },
+                { "id": "task_01", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "接收委托" }, "labels": [{ "text": "接收委托" }] },
+                { "id": "task_02", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "审核合同" }, "labels": [{ "text": "审核合同" }] },
+                { "id": "task_03", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "录入订单" }, "labels": [{ "text": "录入订单" }] },
+                { "id": "task_04", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "制作箱单" }, "labels": [{ "text": "制作箱单" }] },
+                { "id": "task_05", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "制作发票" }, "labels": [{ "text": "制作发票" }] },
+                { "id": "task_06", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "申报舱单" }, "labels": [{ "text": "申报舱单" }] },
+                { "id": "task_07", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "订舱配载" }, "labels": [{ "text": "订舱配载" }] },
+                { "id": "task_08", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "安排拖车" }, "labels": [{ "text": "安排拖车" }] },
+                { "id": "task_09", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "工厂装柜" }, "labels": [{ "text": "工厂装柜" }] },
+                { "id": "task_10", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "称重核验" }, "labels": [{ "text": "称重核验" }] },
+                { "id": "task_11", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "录入报关单" }, "labels": [{ "text": "录入报关单" }] },
+                { "id": "task_12", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "申报海关" }, "labels": [{ "text": "申报海关" }] },
+                { "id": "task_13", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "配合查验" }, "labels": [{ "text": "配合查验" }] },
+                { "id": "task_14", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "缴纳税费" }, "labels": [{ "text": "缴纳税费" }] },
+                { "id": "task_15", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "海关放行" }, "labels": [{ "text": "海关放行" }] },
+                { "id": "task_16", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "码头进港" }, "labels": [{ "text": "码头进港" }] },
+                { "id": "task_17", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "装船出运" }, "labels": [{ "text": "装船出运" }] },
+                { "id": "task_18", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "签发提单" }, "labels": [{ "text": "签发提单" }] },
+                { "id": "task_19", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "寄送单据" }, "labels": [{ "text": "寄送单据" }] },
+                { "id": "task_20", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "目的港换单" }, "labels": [{ "text": "目的港换单" }] },
+                { "id": "task_21", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "进口清关" }, "labels": [{ "text": "进口清关" }] },
+                { "id": "task_22", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "提货派送" }, "labels": [{ "text": "提货派送" }] },
+                { "id": "task_23", "width": 100, "height": 80, "bpmn": { "type": "userTask", "name": "收货确认" }, "labels": [{ "text": "收货确认" }] },
+                { "id": "task_24", "width": 100, "height": 80, "bpmn": { "type": "serviceTask", "name": "结算费用" }, "labels": [{ "text": "结算费用" }] },
+                {
+                  "id": "end_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "委托完成" },
+                  "labels": [{ "text": "委托完成" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_00", "sources": ["start_1"], "targets": ["task_01"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_01", "sources": ["task_01"], "targets": ["task_02"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_02", "sources": ["task_02"], "targets": ["task_03"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_03", "sources": ["task_03"], "targets": ["task_04"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_04", "sources": ["task_04"], "targets": ["task_05"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_05", "sources": ["task_05"], "targets": ["task_06"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_06", "sources": ["task_06"], "targets": ["task_07"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_07", "sources": ["task_07"], "targets": ["task_08"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_08", "sources": ["task_08"], "targets": ["task_09"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_09", "sources": ["task_09"], "targets": ["task_10"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_10", "sources": ["task_10"], "targets": ["task_11"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_11", "sources": ["task_11"], "targets": ["task_12"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_12", "sources": ["task_12"], "targets": ["task_13"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_13", "sources": ["task_13"], "targets": ["task_14"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_14", "sources": ["task_14"], "targets": ["task_15"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_15", "sources": ["task_15"], "targets": ["task_16"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_16", "sources": ["task_16"], "targets": ["task_17"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_17", "sources": ["task_17"], "targets": ["task_18"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_18", "sources": ["task_18"], "targets": ["task_19"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_19", "sources": ["task_19"], "targets": ["task_20"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_20", "sources": ["task_20"], "targets": ["task_21"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_21", "sources": ["task_21"], "targets": ["task_22"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_22", "sources": ["task_22"], "targets": ["task_23"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_23", "sources": ["task_23"], "targets": ["task_24"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_24", "sources": ["task_24"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

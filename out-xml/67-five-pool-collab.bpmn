@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_five_pool_collab" targetNamespace="http://example.com/test-five-pool-collab" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="五方供应链协作">
+    <bpmn:participant id="pool_customer" name="客户" processRef="process_customer" />
+    <bpmn:participant id="pool_store" name="门店" processRef="process_store" />
+    <bpmn:participant id="pool_region" name="区域中心" processRef="process_region" />
+    <bpmn:participant id="pool_hq" name="总部" processRef="process_hq" />
+    <bpmn:participant id="pool_logistics" name="物流公司" processRef="process_logistics" />
+    <bpmn:messageFlow id="msgflow_order" name="订单" sourceRef="task_place_order" targetRef="start_store" />
+    <bpmn:messageFlow id="msgflow_transfer" name="调拨单" sourceRef="task_store_forward" targetRef="start_region" />
+    <bpmn:messageFlow id="msgflow_report" name="调拨上报" sourceRef="task_region_report" targetRef="start_hq" />
+    <bpmn:messageFlow id="msgflow_dispatch" name="运单" sourceRef="task_hq_dispatch" targetRef="start_logistics" />
+    <bpmn:messageFlow id="msgflow_deliver" name="送达通知" sourceRef="task_deliver" targetRef="task_receive_goods" />
+    <bpmn:messageFlow id="msgflow_hq_notify_customer" name="发货短信" sourceRef="task_hq_dispatch" targetRef="task_receive_goods" />
+    <bpmn:messageFlow id="msgflow_store_notify_logistics" name="门店自提信息" sourceRef="task_store_forward" targetRef="task_deliver" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_customer" name="客户" isExecutable="true">
+    <bpmn:startEvent id="start_customer" name="产生需求">
+      <bpmn:outgoing>flow_c1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_place_order" name="下单">
+      <bpmn:incoming>flow_c1</bpmn:incoming>
+      <bpmn:outgoing>flow_c2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="task_receive_goods" name="收货签收">
+      <bpmn:incoming>flow_c2</bpmn:incoming>
+      <bpmn:outgoing>flow_c3</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:endEvent id="end_customer" name="购买完成">
+      <bpmn:incoming>flow_c3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_c1" sourceRef="start_customer" targetRef="task_place_order" />
+    <bpmn:sequenceFlow id="flow_c2" sourceRef="task_place_order" targetRef="task_receive_goods" />
+    <bpmn:sequenceFlow id="flow_c3" sourceRef="task_receive_goods" targetRef="end_customer" />
+  </bpmn:process>
+  <bpmn:process id="process_store" name="门店" isExecutable="true">
+    <bpmn:startEvent id="start_store" name="收到订单">
+      <bpmn:outgoing>flow_s1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_store_forward" name="转交区域中心">
+      <bpmn:incoming>flow_s1</bpmn:incoming>
+      <bpmn:outgoing>flow_s2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_store" name="门店处理完">
+      <bpmn:incoming>flow_s2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_s1" sourceRef="start_store" targetRef="task_store_forward" />
+    <bpmn:sequenceFlow id="flow_s2" sourceRef="task_store_forward" targetRef="end_store" />
+  </bpmn:process>
+  <bpmn:process id="process_region" name="区域中心" isExecutable="true">
+    <bpmn:startEvent id="start_region" name="收到调拨单">
+      <bpmn:outgoing>flow_r1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_region_alloc" name="库存调拨">
+      <bpmn:incoming>flow_r1</bpmn:incoming>
+      <bpmn:outgoing>flow_r2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="task_region_report" name="上报总部">
+      <bpmn:incoming>flow_r2</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="flow_r1" sourceRef="start_region" targetRef="task_region_alloc" />
+    <bpmn:sequenceFlow id="flow_r2" sourceRef="task_region_alloc" targetRef="task_region_report" />
+  </bpmn:process>
+  <bpmn:process id="process_hq" name="总部" isExecutable="true">
+    <bpmn:startEvent id="start_hq" name="收到上报">
+      <bpmn:outgoing>flow_h1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_hq_dispatch" name="派发物流指令">
+      <bpmn:incoming>flow_h1</bpmn:incoming>
+      <bpmn:outgoing>flow_h2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_hq" name="指令下发完">
+      <bpmn:incoming>flow_h2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_h1" sourceRef="start_hq" targetRef="task_hq_dispatch" />
+    <bpmn:sequenceFlow id="flow_h2" sourceRef="task_hq_dispatch" targetRef="end_hq" />
+  </bpmn:process>
+  <bpmn:process id="process_logistics" name="物流公司" isExecutable="true">
+    <bpmn:startEvent id="start_logistics" name="收到运单">
+      <bpmn:outgoing>flow_l1</bpmn:outgoing>
+      <bpmn:messageEventDefinition />
+    </bpmn:startEvent>
+    <bpmn:sendTask id="task_deliver" name="配送上门">
+      <bpmn:incoming>flow_l1</bpmn:incoming>
+      <bpmn:outgoing>flow_l2</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_logistics" name="配送完成">
+      <bpmn:incoming>flow_l2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_l1" sourceRef="start_logistics" targetRef="task_deliver" />
+    <bpmn:sequenceFlow id="flow_l2" sourceRef="task_deliver" targetRef="end_logistics" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_five_pool_collab" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_five_pool_collab" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="1366" height="840" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_customer_di" bpmnElement="pool_customer" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_customer_di" bpmnElement="start_customer">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_place_order_di" bpmnElement="task_place_order">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receive_goods_di" bpmnElement="task_receive_goods">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_customer_di" bpmnElement="end_customer">
+        <dc:Bounds x="538" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="506" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_store_di" bpmnElement="pool_store" isHorizontal="true">
+        <dc:Bounds x="148" y="174" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_store_di" bpmnElement="start_store">
+        <dc:Bounds x="210" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_store_forward_di" bpmnElement="task_store_forward">
+        <dc:Bounds x="326" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_store_di" bpmnElement="end_store">
+        <dc:Bounds x="506" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="474" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_region_di" bpmnElement="pool_region" isHorizontal="true">
+        <dc:Bounds x="296" y="348" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_region_di" bpmnElement="start_region">
+        <dc:Bounds x="358" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="442" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_region_alloc_di" bpmnElement="task_region_alloc">
+        <dc:Bounds x="474" y="380" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_region_report_di" bpmnElement="task_region_report">
+        <dc:Bounds x="654" y="380" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_hq_di" bpmnElement="pool_hq" isHorizontal="true">
+        <dc:Bounds x="624" y="522" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_hq_di" bpmnElement="start_hq">
+        <dc:Bounds x="686" y="576" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="654" y="616" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_hq_dispatch_di" bpmnElement="task_hq_dispatch">
+        <dc:Bounds x="802" y="554" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_hq_di" bpmnElement="end_hq">
+        <dc:Bounds x="982" y="576" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="950" y="616" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_logistics_di" bpmnElement="pool_logistics" isHorizontal="true">
+        <dc:Bounds x="772" y="696" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_logistics_di" bpmnElement="start_logistics">
+        <dc:Bounds x="834" y="750" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="802" y="790" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_deliver_di" bpmnElement="task_deliver">
+        <dc:Bounds x="950" y="728" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_logistics_di" bpmnElement="end_logistics">
+        <dc:Bounds x="1130" y="750" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1098" y="790" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_c1_di" bpmnElement="flow_c1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_c2_di" bpmnElement="flow_c2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_c3_di" bpmnElement="flow_c3">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_s1_di" bpmnElement="flow_s1">
+        <di:waypoint x="246" y="246" />
+        <di:waypoint x="326" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_s2_di" bpmnElement="flow_s2">
+        <di:waypoint x="426" y="246" />
+        <di:waypoint x="506" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_r1_di" bpmnElement="flow_r1">
+        <di:waypoint x="394" y="420" />
+        <di:waypoint x="474" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_r2_di" bpmnElement="flow_r2">
+        <di:waypoint x="574" y="420" />
+        <di:waypoint x="654" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_h1_di" bpmnElement="flow_h1">
+        <di:waypoint x="722" y="594" />
+        <di:waypoint x="802" y="594" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_h2_di" bpmnElement="flow_h2">
+        <di:waypoint x="902" y="594" />
+        <di:waypoint x="982" y="594" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l1_di" bpmnElement="flow_l1">
+        <di:waypoint x="870" y="768" />
+        <di:waypoint x="950" y="768" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_l2_di" bpmnElement="flow_l2">
+        <di:waypoint x="1050" y="768" />
+        <di:waypoint x="1130" y="768" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_order_di" bpmnElement="msgflow_order">
+        <di:waypoint x="228" y="112" />
+        <di:waypoint x="228" y="228" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="233" y="145.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_transfer_di" bpmnElement="msgflow_transfer">
+        <di:waypoint x="376" y="286" />
+        <di:waypoint x="376" y="402" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="381" y="319.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_report_di" bpmnElement="msgflow_report">
+        <di:waypoint x="704" y="460" />
+        <di:waypoint x="704" y="576" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="709" y="493.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_dispatch_di" bpmnElement="msgflow_dispatch">
+        <di:waypoint x="852" y="634" />
+        <di:waypoint x="852" y="750" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="857" y="667.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_deliver_di" bpmnElement="msgflow_deliver">
+        <di:waypoint x="972" y="728" />
+        <di:waypoint x="972" y="470" />
+        <di:waypoint x="436" y="470" />
+        <di:waypoint x="436" y="112" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="679" y="475" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_hq_notify_customer_di" bpmnElement="msgflow_hq_notify_customer">
+        <di:waypoint x="852" y="554" />
+        <di:waypoint x="852" y="324" />
+        <di:waypoint x="436" y="324" />
+        <di:waypoint x="436" y="112" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="619" y="305" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_store_notify_logistics_di" bpmnElement="msgflow_store_notify_logistics">
+        <di:waypoint x="348" y="286" />
+        <di:waypoint x="348" y="507" />
+        <di:waypoint x="972" y="507" />
+        <di:waypoint x="972" y="728" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="512" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,179 @@
+{
+  "id": "definitions_five_boundaries_one_host",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-five-boundaries-one-host"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_terms_change", "name": "条款变更" }
+  ],
+  "signals": [
+    { "id": "sig_policy_update", "name": "政策更新" }
+  ],
+  "errors": [
+    { "id": "err_contract", "name": "合同错误", "errorCode": "CT_001" }
+  ],
+  "escalations": [
+    { "id": "esc_overdue", "name": "严重逾期", "escalationCode": "ESC_001" }
+  ],
+  "children": [
+    {
+      "id": "process_contract_approval",
+      "bpmn": {
+        "type": "process",
+        "name": "合同审批（单任务五边界）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_contract",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "提交合同" },
+          "labels": [{ "text": "提交合同" }]
+        },
+        {
+          "id": "task_approve_contract",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "合同审批" },
+          "labels": [{ "text": "合同审批" }],
+          "boundaryEvents": [
+            {
+              "id": "boundary_approve_timer",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_approve_contract",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "timer",
+                "name": "审批催办",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "timerEventDefinition": { "timeCycle": "R/PT24H" }
+              },
+              "labels": [{ "text": "每24小时催办" }]
+            },
+            {
+              "id": "boundary_approve_error",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_approve_contract",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "error",
+                "name": "合同错误",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "errorRef": "err_contract"
+              },
+              "labels": [{ "text": "合同错误" }]
+            },
+            {
+              "id": "boundary_approve_message",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_approve_contract",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "message",
+                "name": "条款变更",
+                "isInterrupting": true,
+                "cancelActivity": true,
+                "messageRef": "msg_terms_change"
+              },
+              "labels": [{ "text": "条款变更" }]
+            },
+            {
+              "id": "boundary_approve_signal",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_approve_contract",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "signal",
+                "name": "政策更新",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "signalRef": "sig_policy_update"
+              },
+              "labels": [{ "text": "政策更新" }]
+            },
+            {
+              "id": "boundary_approve_escalation",
+              "width": 36, "height": 36,
+              "attachedToRef": "task_approve_contract",
+              "bpmn": {
+                "type": "boundaryEvent",
+                "eventDefinitionType": "escalation",
+                "name": "严重逾期",
+                "isInterrupting": false,
+                "cancelActivity": false,
+                "escalationRef": "esc_overdue"
+              },
+              "labels": [{ "text": "严重逾期上报" }]
+            }
+          ]
+        },
+        {
+          "id": "end_approved",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "审批通过" },
+          "labels": [{ "text": "审批通过" }]
+        },
+        {
+          "id": "task_h_remind",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "sendTask", "name": "发送催办" },
+          "labels": [{ "text": "发送催办" }]
+        },
+        {
+          "id": "task_h_fix",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "修正合同" },
+          "labels": [{ "text": "修正合同" }]
+        },
+        {
+          "id": "end_fix_abort",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "退回重签" },
+          "labels": [{ "text": "退回重签" }]
+        },
+        {
+          "id": "task_h_update_terms",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "更新合同条款" },
+          "labels": [{ "text": "更新合同条款" }]
+        },
+        {
+          "id": "task_h_log_policy",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "记录政策变更" },
+          "labels": [{ "text": "记录政策变更" }]
+        },
+        {
+          "id": "task_h_escalate",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "上报部门主管" },
+          "labels": [{ "text": "上报部门主管" }]
+        },
+        {
+          "id": "end_escalated",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "上报完成" },
+          "labels": [{ "text": "上报完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_approve", "sources": ["start_contract"], "targets": ["task_approve_contract"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_approve_end", "sources": ["task_approve_contract"], "targets": ["end_approved"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_timer_remind", "sources": ["boundary_approve_timer"], "targets": ["task_h_remind"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_error_fix", "sources": ["boundary_approve_error"], "targets": ["task_h_fix"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_fix_abort", "sources": ["task_h_fix"], "targets": ["end_fix_abort"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_msg_update", "sources": ["boundary_approve_message"], "targets": ["task_h_update_terms"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_signal_log", "sources": ["boundary_approve_signal"], "targets": ["task_h_log_policy"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_bd_esc_escalate", "sources": ["boundary_approve_escalation"], "targets": ["task_h_escalate"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_escalate_end", "sources": ["task_h_escalate"], "targets": ["end_escalated"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

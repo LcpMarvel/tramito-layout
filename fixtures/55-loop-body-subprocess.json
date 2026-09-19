@@ -1,0 +1,107 @@
+{
+  "id": "definitions_loop_body_subprocess",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-loop-body-subprocess",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_loop_body_sub",
+      "bpmn": { "type": "process", "name": "试制批次循环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_order",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "下达试制指令" },
+          "labels": [{ "text": "下达试制指令" }]
+        },
+        {
+          "id": "subprocess_trial",
+          "width": 500, "height": 200,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "试制一个批次",
+            "triggeredByEvent": false,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "试制一个批次" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "sub_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "批次开始" },
+              "labels": [{ "text": "批次开始" }]
+            },
+            {
+              "id": "sub_task_make",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "task", "name": "样件制作" },
+              "labels": [{ "text": "样件制作" }]
+            },
+            {
+              "id": "sub_task_test",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "性能测试" },
+              "labels": [{ "text": "性能测试" }]
+            },
+            {
+              "id": "sub_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "批次完成" },
+              "labels": [{ "text": "批次完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_flow_1", "sources": ["sub_start"], "targets": ["sub_task_make"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_flow_2", "sources": ["sub_task_make"], "targets": ["sub_task_test"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_flow_3", "sources": ["sub_task_test"], "targets": ["sub_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "gw_quality",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "质检合格" },
+          "labels": [{ "text": "质检合格" }]
+        },
+        {
+          "id": "task_handover",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "量产移交" },
+          "labels": [{ "text": "量产移交" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "结束" },
+          "labels": [{ "text": "结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_order"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_order_sub", "sources": ["task_order"], "targets": ["subprocess_trial"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_sub_gw", "sources": ["subprocess_trial"], "targets": ["gw_quality"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw_back", "sources": ["gw_quality"], "targets": ["subprocess_trial"], "bpmn": { "type": "sequenceFlow", "name": "不合格再试制" }, "labels": [{ "text": "不合格再试制" }] },
+        { "id": "flow_gw_pass", "sources": ["gw_quality"], "targets": ["task_handover"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] },
+        { "id": "flow_handover_end", "sources": ["task_handover"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

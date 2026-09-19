@@ -1,0 +1,100 @@
+{
+  "id": "definitions_loop_around_subprocess",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-loop-around-subprocess",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_loop_around_sub",
+      "bpmn": { "type": "process", "name": "证照办理绕子流程回环", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始" },
+          "labels": [{ "text": "开始" }]
+        },
+        {
+          "id": "task_prepare_docs",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "整理申报材料" },
+          "labels": [{ "text": "整理申报材料" }]
+        },
+        {
+          "id": "subprocess_audit",
+          "width": 400, "height": 200,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "材料联合审查",
+            "triggeredByEvent": false,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "材料联合审查" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "sub_start",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开始审查" },
+              "labels": [{ "text": "开始审查" }]
+            },
+            {
+              "id": "sub_task_review",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "userTask", "name": "窗口初审" },
+              "labels": [{ "text": "窗口初审" }]
+            },
+            {
+              "id": "sub_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "审查完毕" },
+              "labels": [{ "text": "审查完毕" }]
+            }
+          ],
+          "edges": [
+            { "id": "sub_flow_1", "sources": ["sub_start"], "targets": ["sub_task_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "sub_flow_2", "sources": ["sub_task_review"], "targets": ["sub_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        },
+        {
+          "id": "gw_audit_result",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "审查通过" },
+          "labels": [{ "text": "审查通过" }]
+        },
+        {
+          "id": "task_issue",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "发放证照" },
+          "labels": [{ "text": "发放证照" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "办结" },
+          "labels": [{ "text": "办结" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_prepare_docs"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_prepare_sub", "sources": ["task_prepare_docs"], "targets": ["subprocess_audit"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_sub_gw", "sources": ["subprocess_audit"], "targets": ["gw_audit_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw_back", "sources": ["gw_audit_result"], "targets": ["task_prepare_docs"], "bpmn": { "type": "sequenceFlow", "name": "补正材料" }, "labels": [{ "text": "补正材料" }] },
+        { "id": "flow_gw_issue", "sources": ["gw_audit_result"], "targets": ["task_issue"], "bpmn": { "type": "sequenceFlow", "name": "通过" }, "labels": [{ "text": "通过" }] },
+        { "id": "flow_issue_end", "sources": ["task_issue"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

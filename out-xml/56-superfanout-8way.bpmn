@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_superfanout_8way" targetNamespace="http://example.com/test-superfanout-8way" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_superfanout" name="报销金额八路分级审批" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="提交报销">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_prepare" name="填写报销单">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_amount_div" name="金额分级" gatewayDirection="Diverging" default="flow_tier_8">
+      <bpmn:incoming>flow_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_tier_1</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_2</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_3</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_4</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_5</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_6</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_7</bpmn:outgoing>
+      <bpmn:outgoing>flow_tier_8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_tier1" name="自动报销">
+      <bpmn:incoming>flow_tier_1</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_tier2" name="组长审批">
+      <bpmn:incoming>flow_tier_2</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier3" name="经理审批">
+      <bpmn:incoming>flow_tier_3</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier4_a" name="经理初审">
+      <bpmn:incoming>flow_tier_4</bpmn:incoming>
+      <bpmn:outgoing>flow_tier4_chain</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier4_b" name="总监复审">
+      <bpmn:incoming>flow_tier4_chain</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier5" name="总监审批">
+      <bpmn:incoming>flow_tier_5</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier6_a" name="总监初审">
+      <bpmn:incoming>flow_tier_6</bpmn:incoming>
+      <bpmn:outgoing>flow_tier6_chain</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier6_b" name="副总裁复审">
+      <bpmn:incoming>flow_tier6_chain</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier7" name="总裁审批">
+      <bpmn:incoming>flow_tier_7</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier8_a" name="董事会预审">
+      <bpmn:incoming>flow_tier_8</bpmn:incoming>
+      <bpmn:outgoing>flow_tier8_chain</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_tier8_b" name="董事会决议">
+      <bpmn:incoming>flow_tier8_chain</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_amount_conv" name="审批汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_conv_1</bpmn:incoming>
+      <bpmn:incoming>flow_conv_2</bpmn:incoming>
+      <bpmn:incoming>flow_conv_3</bpmn:incoming>
+      <bpmn:incoming>flow_conv_4</bpmn:incoming>
+      <bpmn:incoming>flow_conv_5</bpmn:incoming>
+      <bpmn:incoming>flow_conv_6</bpmn:incoming>
+      <bpmn:incoming>flow_conv_7</bpmn:incoming>
+      <bpmn:incoming>flow_conv_8</bpmn:incoming>
+      <bpmn:outgoing>flow_to_payout</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_payout" name="财务打款">
+      <bpmn:incoming>flow_to_payout</bpmn:incoming>
+      <bpmn:outgoing>flow_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="报销完成">
+      <bpmn:incoming>flow_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="flow_to_gw" sourceRef="task_prepare" targetRef="gw_amount_div" />
+    <bpmn:sequenceFlow id="flow_tier_1" name="金额&#60;1千" sourceRef="gw_amount_div" targetRef="task_tier1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &lt; 1000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_2" name="1千-5千" sourceRef="gw_amount_div" targetRef="task_tier2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 1000 &amp;&amp; amount &lt; 5000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_3" name="5千-1万" sourceRef="gw_amount_div" targetRef="task_tier3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 5000 &amp;&amp; amount &lt; 10000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_4" name="1万-5万" sourceRef="gw_amount_div" targetRef="task_tier4_a">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 10000 &amp;&amp; amount &lt; 50000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_5" name="5万-10万" sourceRef="gw_amount_div" targetRef="task_tier5">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 50000 &amp;&amp; amount &lt; 100000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_6" name="10万-50万" sourceRef="gw_amount_div" targetRef="task_tier6_a">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 100000 &amp;&amp; amount &lt; 500000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_7" name="50万-100万" sourceRef="gw_amount_div" targetRef="task_tier7">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 500000 &amp;&amp; amount &lt; 1000000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_tier_8" name="100万以上" sourceRef="gw_amount_div" targetRef="task_tier8_a" />
+    <bpmn:sequenceFlow id="flow_tier4_chain" sourceRef="task_tier4_a" targetRef="task_tier4_b" />
+    <bpmn:sequenceFlow id="flow_tier6_chain" sourceRef="task_tier6_a" targetRef="task_tier6_b" />
+    <bpmn:sequenceFlow id="flow_tier8_chain" sourceRef="task_tier8_a" targetRef="task_tier8_b" />
+    <bpmn:sequenceFlow id="flow_conv_1" sourceRef="task_tier1" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_2" sourceRef="task_tier2" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_3" sourceRef="task_tier3" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_4" sourceRef="task_tier4_b" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_5" sourceRef="task_tier5" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_6" sourceRef="task_tier6_b" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_7" sourceRef="task_tier7" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_8" sourceRef="task_tier8_b" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_to_payout" sourceRef="gw_amount_conv" targetRef="task_payout" />
+    <bpmn:sequenceFlow id="flow_to_end" sourceRef="task_payout" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_superfanout_8way" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_superfanout_8way" bpmnElement="process_superfanout">
+      <bpmndi:BPMNShape id="process_superfanout_di" bpmnElement="process_superfanout">
+        <dc:Bounds x="0" y="0" width="1214" height="1124" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="544" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="584" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="522" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_div_di" bpmnElement="gw_amount_div">
+        <dc:Bounds x="358" y="537" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="355" y="519" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier1_di" bpmnElement="task_tier1">
+        <dc:Bounds x="668" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier2_di" bpmnElement="task_tier2">
+        <dc:Bounds x="668" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier3_di" bpmnElement="task_tier3">
+        <dc:Bounds x="668" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier4_a_di" bpmnElement="task_tier4_a">
+        <dc:Bounds x="488" y="452" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier4_b_di" bpmnElement="task_tier4_b">
+        <dc:Bounds x="668" y="452" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier5_di" bpmnElement="task_tier5">
+        <dc:Bounds x="488" y="592" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier6_a_di" bpmnElement="task_tier6_a">
+        <dc:Bounds x="488" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier6_b_di" bpmnElement="task_tier6_b">
+        <dc:Bounds x="668" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier7_di" bpmnElement="task_tier7">
+        <dc:Bounds x="488" y="872" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier8_a_di" bpmnElement="task_tier8_a">
+        <dc:Bounds x="488" y="1012" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_tier8_b_di" bpmnElement="task_tier8_b">
+        <dc:Bounds x="668" y="1012" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_conv_di" bpmnElement="gw_amount_conv">
+        <dc:Bounds x="848" y="537" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="879" y="519" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_payout_di" bpmnElement="task_payout">
+        <dc:Bounds x="978" y="522" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1158" y="544" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1126" y="584" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="562" />
+        <di:waypoint x="178" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_gw_di" bpmnElement="flow_to_gw">
+        <di:waypoint x="278" y="562" />
+        <di:waypoint x="358" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_1_di" bpmnElement="flow_tier_1">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="72" />
+        <di:waypoint x="668" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="567" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_2_di" bpmnElement="flow_tier_2">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="668" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="543" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_3_di" bpmnElement="flow_tier_3">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="352" />
+        <di:waypoint x="668" y="352" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="585" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_4_di" bpmnElement="flow_tier_4">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="492" />
+        <di:waypoint x="488" y="492" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="525" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_5_di" bpmnElement="flow_tier_5">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="632" />
+        <di:waypoint x="488" y="632" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="603" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_6_di" bpmnElement="flow_tier_6">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="772" />
+        <di:waypoint x="488" y="772" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="507" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_7_di" bpmnElement="flow_tier_7">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="912" />
+        <di:waypoint x="488" y="912" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="567" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier_8_di" bpmnElement="flow_tier_8">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="1052" />
+        <di:waypoint x="488" y="1052" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="567" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier4_chain_di" bpmnElement="flow_tier4_chain">
+        <di:waypoint x="588" y="492" />
+        <di:waypoint x="668" y="492" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier6_chain_di" bpmnElement="flow_tier6_chain">
+        <di:waypoint x="588" y="772" />
+        <di:waypoint x="668" y="772" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_tier8_chain_di" bpmnElement="flow_tier8_chain">
+        <di:waypoint x="588" y="1052" />
+        <di:waypoint x="668" y="1052" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_1_di" bpmnElement="flow_conv_1">
+        <di:waypoint x="718" y="112" />
+        <di:waypoint x="718" y="120" />
+        <di:waypoint x="658" y="120" />
+        <di:waypoint x="658" y="302" />
+        <di:waypoint x="873" y="302" />
+        <di:waypoint x="873" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_2_di" bpmnElement="flow_conv_2">
+        <di:waypoint x="718" y="252" />
+        <di:waypoint x="718" y="260" />
+        <di:waypoint x="658" y="260" />
+        <di:waypoint x="658" y="394.5" />
+        <di:waypoint x="873" y="394.5" />
+        <di:waypoint x="873" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_3_di" bpmnElement="flow_conv_3">
+        <di:waypoint x="718" y="392" />
+        <di:waypoint x="718" y="442" />
+        <di:waypoint x="873" y="442" />
+        <di:waypoint x="873" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_4_di" bpmnElement="flow_conv_4">
+        <di:waypoint x="768" y="492" />
+        <di:waypoint x="808" y="492" />
+        <di:waypoint x="808" y="562" />
+        <di:waypoint x="848" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_5_di" bpmnElement="flow_conv_5">
+        <di:waypoint x="588" y="632" />
+        <di:waypoint x="718" y="632" />
+        <di:waypoint x="718" y="562" />
+        <di:waypoint x="848" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_6_di" bpmnElement="flow_conv_6">
+        <di:waypoint x="718" y="732" />
+        <di:waypoint x="718" y="659.5" />
+        <di:waypoint x="873" y="659.5" />
+        <di:waypoint x="873" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_7_di" bpmnElement="flow_conv_7">
+        <di:waypoint x="538" y="872" />
+        <di:waypoint x="538" y="864" />
+        <di:waypoint x="478" y="864" />
+        <di:waypoint x="478" y="729.5" />
+        <di:waypoint x="873" y="729.5" />
+        <di:waypoint x="873" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_8_di" bpmnElement="flow_conv_8">
+        <di:waypoint x="718" y="1012" />
+        <di:waypoint x="718" y="822" />
+        <di:waypoint x="873" y="822" />
+        <di:waypoint x="873" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_payout_di" bpmnElement="flow_to_payout">
+        <di:waypoint x="898" y="562" />
+        <di:waypoint x="978" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_to_end_di" bpmnElement="flow_to_end">
+        <di:waypoint x="1078" y="562" />
+        <di:waypoint x="1158" y="562" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,152 @@
+{
+  "id": "definitions_all_edge_labels",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-all-edge-labels",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_all_edge_labels",
+      "bpmn": {
+        "type": "process",
+        "name": "全边标签报销流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起报销" },
+          "labels": [{ "text": "发起报销" }]
+        },
+        {
+          "id": "task_submit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "填写报销单" },
+          "labels": [{ "text": "填写报销单" }]
+        },
+        {
+          "id": "task_dept_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "部门主管审核" },
+          "labels": [{ "text": "部门主管审核" }]
+        },
+        {
+          "id": "gw_amount",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "金额判断",
+            "gatewayDirection": "Diverging",
+            "default": "flow_small_amount"
+          },
+          "labels": [{ "text": "金额判断" }]
+        },
+        {
+          "id": "task_quick_approve",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "快速通道批准" },
+          "labels": [{ "text": "快速通道批准" }]
+        },
+        {
+          "id": "task_finance_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "财务审核票据" },
+          "labels": [{ "text": "财务审核票据" }]
+        },
+        {
+          "id": "task_director_approve",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "财务总监审批" },
+          "labels": [{ "text": "财务总监审批" }]
+        },
+        {
+          "id": "gw_amount_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "审批汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "审批汇合" }]
+        },
+        {
+          "id": "gw_invoice",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "票据归档判断",
+            "gatewayDirection": "Diverging",
+            "default": "flow_e_archive"
+          },
+          "labels": [{ "text": "票据归档判断" }]
+        },
+        {
+          "id": "task_paper_archive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "纸质票据归档" },
+          "labels": [{ "text": "纸质票据归档" }]
+        },
+        {
+          "id": "task_e_archive",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "电子票据归档" },
+          "labels": [{ "text": "电子票据归档" }]
+        },
+        {
+          "id": "gw_invoice_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "归档汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "归档汇合" }]
+        },
+        {
+          "id": "task_payout",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "出纳打款" },
+          "labels": [{ "text": "出纳打款" }]
+        },
+        {
+          "id": "task_notify",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "通知申请人" },
+          "labels": [{ "text": "通知申请人" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "报销结束" },
+          "labels": [{ "text": "报销结束" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "开始填单" }, "labels": [{ "text": "开始填单" }] },
+        { "id": "flow_submit_dept", "sources": ["task_submit"], "targets": ["task_dept_review"], "bpmn": { "type": "sequenceFlow", "name": "提交主管" }, "labels": [{ "text": "提交主管" }] },
+        { "id": "flow_dept_gw", "sources": ["task_dept_review"], "targets": ["gw_amount"], "bpmn": { "type": "sequenceFlow", "name": "主管通过" }, "labels": [{ "text": "主管通过" }] },
+        { "id": "flow_small_amount", "sources": ["gw_amount"], "targets": ["task_quick_approve"], "bpmn": { "type": "sequenceFlow", "name": "5千以内", "isDefault": true }, "labels": [{ "text": "5千以内" }] },
+        { "id": "flow_large_amount", "sources": ["gw_amount"], "targets": ["task_finance_review"], "bpmn": { "type": "sequenceFlow", "name": "超过5千", "conditionExpression": { "body": "${amount > 5000}" } }, "labels": [{ "text": "超过5千" }] },
+        { "id": "flow_finance_director", "sources": ["task_finance_review"], "targets": ["task_director_approve"], "bpmn": { "type": "sequenceFlow", "name": "票据齐全" }, "labels": [{ "text": "票据齐全" }] },
+        { "id": "flow_quick_conv", "sources": ["task_quick_approve"], "targets": ["gw_amount_conv"], "bpmn": { "type": "sequenceFlow", "name": "快速批准完成" }, "labels": [{ "text": "快速批准完成" }] },
+        { "id": "flow_director_conv", "sources": ["task_director_approve"], "targets": ["gw_amount_conv"], "bpmn": { "type": "sequenceFlow", "name": "总监已签字" }, "labels": [{ "text": "总监已签字" }] },
+        { "id": "flow_conv_invoice", "sources": ["gw_amount_conv"], "targets": ["gw_invoice"], "bpmn": { "type": "sequenceFlow", "name": "进入归档" }, "labels": [{ "text": "进入归档" }] },
+        { "id": "flow_paper_archive", "sources": ["gw_invoice"], "targets": ["task_paper_archive"], "bpmn": { "type": "sequenceFlow", "name": "纸质发票", "conditionExpression": { "body": "${invoiceType == 'paper'}" } }, "labels": [{ "text": "纸质发票" }] },
+        { "id": "flow_e_archive", "sources": ["gw_invoice"], "targets": ["task_e_archive"], "bpmn": { "type": "sequenceFlow", "name": "电子发票", "isDefault": true }, "labels": [{ "text": "电子发票" }] },
+        { "id": "flow_paper_conv", "sources": ["task_paper_archive"], "targets": ["gw_invoice_conv"], "bpmn": { "type": "sequenceFlow", "name": "纸质归档完成" }, "labels": [{ "text": "纸质归档完成" }] },
+        { "id": "flow_e_conv", "sources": ["task_e_archive"], "targets": ["gw_invoice_conv"], "bpmn": { "type": "sequenceFlow", "name": "电子归档完成" }, "labels": [{ "text": "电子归档完成" }] },
+        { "id": "flow_conv_payout", "sources": ["gw_invoice_conv"], "targets": ["task_payout"], "bpmn": { "type": "sequenceFlow", "name": "转出纳" }, "labels": [{ "text": "转出纳" }] },
+        { "id": "flow_payout_notify", "sources": ["task_payout"], "targets": ["task_notify"], "bpmn": { "type": "sequenceFlow", "name": "打款成功" }, "labels": [{ "text": "打款成功" }] },
+        { "id": "flow_notify_end", "sources": ["task_notify"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow", "name": "流程归档" }, "labels": [{ "text": "流程归档" }] }
+      ]
+    }
+  ]
+}

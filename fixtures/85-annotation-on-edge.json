@@ -1,0 +1,96 @@
+{
+  "id": "definitions_annotation_on_edge",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-annotation-on-edge"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_refund_review",
+      "bpmn": {
+        "type": "process",
+        "name": "退款审核（注释挂边）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_refund",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "退款申请" },
+          "labels": [{ "text": "退款申请" }]
+        },
+        {
+          "id": "task_verify",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "核对订单" },
+          "labels": [{ "text": "核对订单" }]
+        },
+        {
+          "id": "gw_amount",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "金额判断" },
+          "labels": [{ "text": "金额判断" }]
+        },
+        {
+          "id": "task_auto_refund",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "自动退款" },
+          "labels": [{ "text": "自动退款" }]
+        },
+        {
+          "id": "task_manual_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "人工复核" },
+          "labels": [{ "text": "人工复核" }]
+        },
+        {
+          "id": "end_refunded",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "退款完成" },
+          "labels": [{ "text": "退款完成" }]
+        },
+        {
+          "id": "annotation_on_flow",
+          "width": 130, "height": 50,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "小额标准：金额≤500元直接放行"
+          }
+        },
+        {
+          "id": "annotation_on_task",
+          "width": 120, "height": 40,
+          "bpmn": {
+            "type": "textAnnotation",
+            "text": "需双人核对订单流水"
+          }
+        }
+      ],
+      "edges": [
+        { "id": "flow_start_verify", "sources": ["start_refund"], "targets": ["task_verify"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_verify_gw", "sources": ["task_verify"], "targets": ["gw_amount"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_gw_auto", "sources": ["gw_amount"], "targets": ["task_auto_refund"], "bpmn": { "type": "sequenceFlow", "name": "小额" }, "labels": [{ "text": "小额" }] },
+        { "id": "flow_gw_manual", "sources": ["gw_amount"], "targets": ["task_manual_review"], "bpmn": { "type": "sequenceFlow", "name": "大额" }, "labels": [{ "text": "大额" }] },
+        { "id": "flow_auto_end", "sources": ["task_auto_refund"], "targets": ["end_refunded"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_manual_end", "sources": ["task_manual_review"], "targets": ["end_refunded"], "bpmn": { "type": "sequenceFlow" } },
+        {
+          "id": "assoc_annotation_flow",
+          "sources": ["annotation_on_flow"],
+          "targets": ["gw_amount"],
+          "bpmn": { "type": "association", "associationDirection": "None" }
+        },
+        {
+          "id": "assoc_annotation_task",
+          "sources": ["annotation_on_task"],
+          "targets": ["task_verify"],
+          "bpmn": { "type": "association", "associationDirection": "None" }
+        }
+      ]
+    }
+  ]
+}

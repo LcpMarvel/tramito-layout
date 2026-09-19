@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_mega_reject_fanin" targetNamespace="http://example.com/test-mega-reject-fanin" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_mega_fanin" name="七级审批驳回汇聚">
+    <bpmn:participant id="pool_group" name="集团" processRef="process_group" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_group" name="集团" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_applicant" name="申请人">
+        <bpmn:flowNodeRef>start_apply</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_submit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_teamlead" name="组长">
+        <bpmn:flowNodeRef>task_l1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_dept" name="部门">
+        <bpmn:flowNodeRef>task_l2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_l3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l3</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_risk" name="风控">
+        <bpmn:flowNodeRef>task_l4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l4</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_finance" name="财务">
+        <bpmn:flowNodeRef>task_l5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l5</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_l6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l6</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_gm" name="总经理">
+        <bpmn:flowNodeRef>task_l7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_l7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_archive</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_done</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_apply" name="发起申请">
+      <bpmn:outgoing>f_start_submit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="提交申请单">
+      <bpmn:incoming>f_start_submit</bpmn:incoming>
+      <bpmn:incoming>f_l1_reject</bpmn:incoming>
+      <bpmn:incoming>f_l2_reject</bpmn:incoming>
+      <bpmn:incoming>f_l3_reject</bpmn:incoming>
+      <bpmn:incoming>f_l4_reject</bpmn:incoming>
+      <bpmn:incoming>f_l5_reject</bpmn:incoming>
+      <bpmn:incoming>f_l6_reject</bpmn:incoming>
+      <bpmn:incoming>f_l7_reject</bpmn:incoming>
+      <bpmn:outgoing>f_submit_l1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_l1" name="组长初审">
+      <bpmn:incoming>f_submit_l1</bpmn:incoming>
+      <bpmn:outgoing>f_l1_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l1" name="初审通过">
+      <bpmn:incoming>f_l1_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l1_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l1_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l2" name="主管审核">
+      <bpmn:incoming>f_l1_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l2_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l2" name="主管通过">
+      <bpmn:incoming>f_l2_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l2_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l2_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l3" name="部门经理审核">
+      <bpmn:incoming>f_l2_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l3_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l3" name="经理通过">
+      <bpmn:incoming>f_l3_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l3_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l3_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l4" name="风控评估">
+      <bpmn:incoming>f_l3_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l4_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l4" name="风控通过">
+      <bpmn:incoming>f_l4_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l4_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l4_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l5" name="财务审核">
+      <bpmn:incoming>f_l4_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l5_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l5" name="财务通过">
+      <bpmn:incoming>f_l5_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l5_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l5_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l6" name="财务总监复核">
+      <bpmn:incoming>f_l5_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l6_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l6" name="总监通过">
+      <bpmn:incoming>f_l6_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l6_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l6_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_l7" name="总经理审批">
+      <bpmn:incoming>f_l6_pass</bpmn:incoming>
+      <bpmn:outgoing>f_l7_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_l7" name="审批通过">
+      <bpmn:incoming>f_l7_gw</bpmn:incoming>
+      <bpmn:outgoing>f_l7_pass</bpmn:outgoing>
+      <bpmn:outgoing>f_l7_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_archive" name="归档">
+      <bpmn:incoming>f_l7_pass</bpmn:incoming>
+      <bpmn:outgoing>f_archive_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_done" name="结束">
+      <bpmn:incoming>f_archive_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_submit" sourceRef="start_apply" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_submit_l1" sourceRef="task_submit" targetRef="task_l1" />
+    <bpmn:sequenceFlow id="f_l1_gw" sourceRef="task_l1" targetRef="gw_l1" />
+    <bpmn:sequenceFlow id="f_l1_pass" name="通过" sourceRef="gw_l1" targetRef="task_l2" />
+    <bpmn:sequenceFlow id="f_l1_reject" name="驳回" sourceRef="gw_l1" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l2_gw" sourceRef="task_l2" targetRef="gw_l2" />
+    <bpmn:sequenceFlow id="f_l2_pass" name="通过" sourceRef="gw_l2" targetRef="task_l3" />
+    <bpmn:sequenceFlow id="f_l2_reject" name="驳回" sourceRef="gw_l2" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l3_gw" sourceRef="task_l3" targetRef="gw_l3" />
+    <bpmn:sequenceFlow id="f_l3_pass" name="通过" sourceRef="gw_l3" targetRef="task_l4" />
+    <bpmn:sequenceFlow id="f_l3_reject" name="驳回" sourceRef="gw_l3" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l4_gw" sourceRef="task_l4" targetRef="gw_l4" />
+    <bpmn:sequenceFlow id="f_l4_pass" name="通过" sourceRef="gw_l4" targetRef="task_l5" />
+    <bpmn:sequenceFlow id="f_l4_reject" name="驳回" sourceRef="gw_l4" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l5_gw" sourceRef="task_l5" targetRef="gw_l5" />
+    <bpmn:sequenceFlow id="f_l5_pass" name="通过" sourceRef="gw_l5" targetRef="task_l6" />
+    <bpmn:sequenceFlow id="f_l5_reject" name="驳回" sourceRef="gw_l5" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l6_gw" sourceRef="task_l6" targetRef="gw_l6" />
+    <bpmn:sequenceFlow id="f_l6_pass" name="通过" sourceRef="gw_l6" targetRef="task_l7" />
+    <bpmn:sequenceFlow id="f_l6_reject" name="驳回" sourceRef="gw_l6" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_l7_gw" sourceRef="task_l7" targetRef="gw_l7" />
+    <bpmn:sequenceFlow id="f_l7_pass" name="通过" sourceRef="gw_l7" targetRef="task_archive" />
+    <bpmn:sequenceFlow id="f_l7_reject" name="驳回" sourceRef="gw_l7" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="f_archive_end" sourceRef="task_archive" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_mega_reject_fanin" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_mega_reject_fanin" bpmnElement="collaboration_mega_fanin">
+      <bpmndi:BPMNShape id="collaboration_mega_fanin_di" bpmnElement="collaboration_mega_fanin">
+        <dc:Bounds x="0" y="0" width="2764" height="763" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_group_di" bpmnElement="pool_group" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="2764" height="763" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_applicant_di" bpmnElement="lane_applicant" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="2734" height="148" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_apply_di" bpmnElement="start_apply">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_teamlead_di" bpmnElement="lane_teamlead" isHorizontal="true">
+        <dc:Bounds x="30" y="168" width="2734" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l1_di" bpmnElement="task_l1">
+        <dc:Bounds x="358" y="187" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l1_di" bpmnElement="gw_l1">
+        <dc:Bounds x="538" y="202" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="592" y="220" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_dept_di" bpmnElement="lane_dept" isHorizontal="true">
+        <dc:Bounds x="30" y="283" width="2734" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l2_di" bpmnElement="task_l2">
+        <dc:Bounds x="668" y="302" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l2_di" bpmnElement="gw_l2">
+        <dc:Bounds x="848" y="317" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="845" y="371" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l3_di" bpmnElement="task_l3">
+        <dc:Bounds x="978" y="302" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l3_di" bpmnElement="gw_l3">
+        <dc:Bounds x="1158" y="317" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1212" y="335" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_risk_di" bpmnElement="lane_risk" isHorizontal="true">
+        <dc:Bounds x="30" y="398" width="2734" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l4_di" bpmnElement="task_l4">
+        <dc:Bounds x="1288" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l4_di" bpmnElement="gw_l4">
+        <dc:Bounds x="1468" y="432" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1522" y="450" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_finance_di" bpmnElement="lane_finance" isHorizontal="true">
+        <dc:Bounds x="30" y="513" width="2734" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l5_di" bpmnElement="task_l5">
+        <dc:Bounds x="1598" y="532" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l5_di" bpmnElement="gw_l5">
+        <dc:Bounds x="1778" y="547" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1775" y="601" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l6_di" bpmnElement="task_l6">
+        <dc:Bounds x="1908" y="532" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l6_di" bpmnElement="gw_l6">
+        <dc:Bounds x="2088" y="547" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2142" y="565" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_gm_di" bpmnElement="lane_gm" isHorizontal="true">
+        <dc:Bounds x="30" y="628" width="2734" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_l7_di" bpmnElement="task_l7">
+        <dc:Bounds x="2218" y="647" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_l7_di" bpmnElement="gw_l7">
+        <dc:Bounds x="2398" y="662" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2395" y="716" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_archive_di" bpmnElement="task_archive">
+        <dc:Bounds x="2528" y="647" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="2708" y="669" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2676" y="709" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_start_submit_di" bpmnElement="f_start_submit">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_submit_l1_di" bpmnElement="f_submit_l1">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="227" />
+        <di:waypoint x="358" y="227" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_gw_di" bpmnElement="f_l1_gw">
+        <di:waypoint x="458" y="227" />
+        <di:waypoint x="538" y="227" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_pass_di" bpmnElement="f_l1_pass">
+        <di:waypoint x="563" y="252" />
+        <di:waypoint x="563" y="342" />
+        <di:waypoint x="668" y="342" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="508" y="267" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l1_reject_di" bpmnElement="f_l1_reject">
+        <di:waypoint x="563" y="202" />
+        <di:waypoint x="563" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="173" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_gw_di" bpmnElement="f_l2_gw">
+        <di:waypoint x="768" y="342" />
+        <di:waypoint x="848" y="342" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_pass_di" bpmnElement="f_l2_pass">
+        <di:waypoint x="898" y="342" />
+        <di:waypoint x="978" y="342" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="907" y="347" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l2_reject_di" bpmnElement="f_l2_reject">
+        <di:waypoint x="873" y="317" />
+        <di:waypoint x="873" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="878" y="288" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_gw_di" bpmnElement="f_l3_gw">
+        <di:waypoint x="1078" y="342" />
+        <di:waypoint x="1158" y="342" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_pass_di" bpmnElement="f_l3_pass">
+        <di:waypoint x="1183" y="367" />
+        <di:waypoint x="1183" y="457" />
+        <di:waypoint x="1288" y="457" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1128" y="382" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l3_reject_di" bpmnElement="f_l3_reject">
+        <di:waypoint x="1183" y="317" />
+        <di:waypoint x="1183" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1188" y="288" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l4_gw_di" bpmnElement="f_l4_gw">
+        <di:waypoint x="1388" y="457" />
+        <di:waypoint x="1468" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l4_pass_di" bpmnElement="f_l4_pass">
+        <di:waypoint x="1493" y="482" />
+        <di:waypoint x="1493" y="572" />
+        <di:waypoint x="1598" y="572" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1438" y="497" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l4_reject_di" bpmnElement="f_l4_reject">
+        <di:waypoint x="1493" y="432" />
+        <di:waypoint x="1493" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1498" y="403" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l5_gw_di" bpmnElement="f_l5_gw">
+        <di:waypoint x="1698" y="572" />
+        <di:waypoint x="1778" y="572" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l5_pass_di" bpmnElement="f_l5_pass">
+        <di:waypoint x="1828" y="572" />
+        <di:waypoint x="1908" y="572" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1837" y="577" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l5_reject_di" bpmnElement="f_l5_reject">
+        <di:waypoint x="1803" y="547" />
+        <di:waypoint x="1803" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1808" y="518" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l6_gw_di" bpmnElement="f_l6_gw">
+        <di:waypoint x="2008" y="572" />
+        <di:waypoint x="2088" y="572" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l6_pass_di" bpmnElement="f_l6_pass">
+        <di:waypoint x="2113" y="597" />
+        <di:waypoint x="2113" y="687" />
+        <di:waypoint x="2218" y="687" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2058" y="612" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l6_reject_di" bpmnElement="f_l6_reject">
+        <di:waypoint x="2113" y="547" />
+        <di:waypoint x="2113" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2118" y="518" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l7_gw_di" bpmnElement="f_l7_gw">
+        <di:waypoint x="2318" y="687" />
+        <di:waypoint x="2398" y="687" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l7_pass_di" bpmnElement="f_l7_pass">
+        <di:waypoint x="2448" y="687" />
+        <di:waypoint x="2528" y="687" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2457" y="692" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_l7_reject_di" bpmnElement="f_l7_reject">
+        <di:waypoint x="2423" y="662" />
+        <di:waypoint x="2423" y="76" />
+        <di:waypoint x="278" y="76" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2428" y="633" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_archive_end_di" bpmnElement="f_archive_end">
+        <di:waypoint x="2628" y="687" />
+        <di:waypoint x="2708" y="687" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

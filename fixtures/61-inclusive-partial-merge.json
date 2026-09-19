@@ -1,0 +1,112 @@
+{
+  "id": "definitions_inclusive_partial_merge",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-inclusive-partial-merge",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_inclusive_partial",
+      "bpmn": {
+        "type": "process",
+        "name": "包容网关部分先合并通知流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "订单发货" },
+          "labels": [{ "text": "订单发货" }]
+        },
+        {
+          "id": "gw_inc_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "通知渠道选择",
+            "gatewayDirection": "Diverging",
+            "default": "flow_sms"
+          },
+          "labels": [{ "text": "通知渠道选择" }]
+        },
+        {
+          "id": "task_sms",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "发送短信通知" },
+          "labels": [{ "text": "发送短信通知" }]
+        },
+        {
+          "id": "task_email",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "发送邮件通知" },
+          "labels": [{ "text": "发送邮件通知" }]
+        },
+        {
+          "id": "task_call",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "客服电话回访" },
+          "labels": [{ "text": "客服电话回访" }]
+        },
+        {
+          "id": "gw_partial_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "电子渠道汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "电子渠道汇合" }]
+        },
+        {
+          "id": "task_log",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "记录通知日志" },
+          "labels": [{ "text": "记录通知日志" }]
+        },
+        {
+          "id": "gw_final_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "inclusiveGateway",
+            "name": "全渠道汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "全渠道汇合" }]
+        },
+        {
+          "id": "task_close",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "更新订单状态" },
+          "labels": [{ "text": "更新订单状态" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "通知完成" },
+          "labels": [{ "text": "通知完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gw_inc_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_sms", "sources": ["gw_inc_div"], "targets": ["task_sms"], "bpmn": { "type": "sequenceFlow", "name": "默认短信", "isDefault": true }, "labels": [{ "text": "默认短信" }] },
+        { "id": "flow_email", "sources": ["gw_inc_div"], "targets": ["task_email"], "bpmn": { "type": "sequenceFlow", "name": "绑定邮箱", "conditionExpression": { "body": "${hasEmail == true}" } }, "labels": [{ "text": "绑定邮箱" }] },
+        { "id": "flow_call", "sources": ["gw_inc_div"], "targets": ["task_call"], "bpmn": { "type": "sequenceFlow", "name": "VIP客户", "conditionExpression": { "body": "${isVip == true}" } }, "labels": [{ "text": "VIP客户" }] },
+        { "id": "flow_sms_partial", "sources": ["task_sms"], "targets": ["gw_partial_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_email_partial", "sources": ["task_email"], "targets": ["gw_partial_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_partial_log", "sources": ["gw_partial_conv"], "targets": ["task_log"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_log_final", "sources": ["task_log"], "targets": ["gw_final_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_call_final", "sources": ["task_call"], "targets": ["gw_final_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_final_close", "sources": ["gw_final_conv"], "targets": ["task_close"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end", "sources": ["task_close"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

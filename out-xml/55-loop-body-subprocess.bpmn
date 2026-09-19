@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_loop_body_subprocess" targetNamespace="http://example.com/test-loop-body-subprocess" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_loop_body_sub" name="试制批次循环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_order" name="下达试制指令">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_order_sub</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="subprocess_trial" name="试制一个批次">
+      <bpmn:incoming>flow_order_sub</bpmn:incoming>
+      <bpmn:incoming>flow_gw_back</bpmn:incoming>
+      <bpmn:outgoing>flow_sub_gw</bpmn:outgoing>
+      <bpmn:startEvent id="sub_start" name="批次开始">
+        <bpmn:outgoing>sub_flow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="sub_task_make" name="样件制作">
+        <bpmn:incoming>sub_flow_1</bpmn:incoming>
+        <bpmn:outgoing>sub_flow_2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:userTask id="sub_task_test" name="性能测试">
+        <bpmn:incoming>sub_flow_2</bpmn:incoming>
+        <bpmn:outgoing>sub_flow_3</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="sub_end" name="批次完成">
+        <bpmn:incoming>sub_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="sub_flow_1" sourceRef="sub_start" targetRef="sub_task_make" />
+      <bpmn:sequenceFlow id="sub_flow_2" sourceRef="sub_task_make" targetRef="sub_task_test" />
+      <bpmn:sequenceFlow id="sub_flow_3" sourceRef="sub_task_test" targetRef="sub_end" />
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="gw_quality" name="质检合格">
+      <bpmn:incoming>flow_sub_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_gw_back</bpmn:outgoing>
+      <bpmn:outgoing>flow_gw_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_handover" name="量产移交">
+      <bpmn:incoming>flow_gw_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_handover_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_handover_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_order" />
+    <bpmn:sequenceFlow id="flow_order_sub" sourceRef="task_order" targetRef="subprocess_trial" />
+    <bpmn:sequenceFlow id="flow_sub_gw" sourceRef="subprocess_trial" targetRef="gw_quality" />
+    <bpmn:sequenceFlow id="flow_gw_back" name="不合格再试制" sourceRef="gw_quality" targetRef="subprocess_trial" />
+    <bpmn:sequenceFlow id="flow_gw_pass" name="合格" sourceRef="gw_quality" targetRef="task_handover" />
+    <bpmn:sequenceFlow id="flow_handover_end" sourceRef="task_handover" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_loop_body_subprocess" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_loop_body_subprocess" bpmnElement="process_loop_body_sub">
+      <bpmndi:BPMNShape id="process_loop_body_sub_di" bpmnElement="process_loop_body_sub">
+        <dc:Bounds x="0" y="0" width="1440" height="228" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_order_di" bpmnElement="task_order">
+        <dc:Bounds x="178" y="74" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="subprocess_trial_di" bpmnElement="subprocess_trial" isExpanded="true">
+        <dc:Bounds x="358" y="32" width="636" height="164" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_start_di" bpmnElement="sub_start">
+        <dc:Bounds x="390" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_make_di" bpmnElement="sub_task_make">
+        <dc:Bounds x="526" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_test_di" bpmnElement="sub_task_test">
+        <dc:Bounds x="726" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_end_di" bpmnElement="sub_end">
+        <dc:Bounds x="926" y="106" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="894" y="146" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_quality_di" bpmnElement="gw_quality">
+        <dc:Bounds x="1074" y="89" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1071" y="143" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_handover_di" bpmnElement="task_handover">
+        <dc:Bounds x="1204" y="74" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1384" y="96" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1352" y="136" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="sub_flow_1_di" bpmnElement="sub_flow_1">
+        <di:waypoint x="426" y="124" />
+        <di:waypoint x="526" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_flow_2_di" bpmnElement="sub_flow_2">
+        <di:waypoint x="626" y="124" />
+        <di:waypoint x="726" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_flow_3_di" bpmnElement="sub_flow_3">
+        <di:waypoint x="826" y="124" />
+        <di:waypoint x="926" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="114" />
+        <di:waypoint x="178" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_order_sub_di" bpmnElement="flow_order_sub">
+        <di:waypoint x="278" y="114" />
+        <di:waypoint x="358" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sub_gw_di" bpmnElement="flow_sub_gw">
+        <di:waypoint x="994" y="114" />
+        <di:waypoint x="1074" y="114" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_back_di" bpmnElement="flow_gw_back">
+        <di:waypoint x="1099" y="89" />
+        <di:waypoint x="1099" y="8" />
+        <di:waypoint x="676" y="8" />
+        <di:waypoint x="676" y="32" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1104" y="60" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_gw_pass_di" bpmnElement="flow_gw_pass">
+        <di:waypoint x="1124" y="114" />
+        <di:waypoint x="1204" y="114" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1133" y="119" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_handover_end_di" bpmnElement="flow_handover_end">
+        <di:waypoint x="1304" y="114" />
+        <di:waypoint x="1384" y="114" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

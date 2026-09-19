@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_boundary_handler_upward" targetNamespace="http://example.com/test-boundary-handler-upward" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:error id="err_assess" name="评估异常" errorCode="RISK_001" />
+  <bpmn:process id="process_loan_approval" name="贷款审批（handler 方向对比）" isExecutable="true">
+    <bpmn:startEvent id="start_apply" name="提交申请">
+      <bpmn:outgoing>flow_start_check</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_check_docs" name="资料审查">
+      <bpmn:incoming>flow_start_check</bpmn:incoming>
+      <bpmn:outgoing>flow_check_route</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="boundary_check_timer" name="审查超时" cancelActivity="false" attachedToRef="task_check_docs">
+      <bpmn:outgoing>flow_bd_timer_remind</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT4H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="gw_route" name="额度分流">
+      <bpmn:incoming>flow_check_route</bpmn:incoming>
+      <bpmn:outgoing>flow_route_fast</bpmn:outgoing>
+      <bpmn:outgoing>flow_route_assess</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_fast_track" name="快速通道复核">
+      <bpmn:incoming>flow_route_fast</bpmn:incoming>
+      <bpmn:incoming>flow_manual_fast</bpmn:incoming>
+      <bpmn:outgoing>flow_fast_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_risk_assess" name="风险评估">
+      <bpmn:incoming>flow_route_assess</bpmn:incoming>
+      <bpmn:outgoing>flow_assess_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_assess_error" name="评估异常" attachedToRef="task_risk_assess">
+      <bpmn:outgoing>flow_bd_error_manual</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="err_assess" />
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="gw_join" name="审批汇聚">
+      <bpmn:incoming>flow_fast_join</bpmn:incoming>
+      <bpmn:incoming>flow_assess_join</bpmn:incoming>
+      <bpmn:outgoing>flow_join_sign</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_sign" name="签约放款">
+      <bpmn:incoming>flow_join_sign</bpmn:incoming>
+      <bpmn:outgoing>flow_sign_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_done" name="放款完成">
+      <bpmn:incoming>flow_sign_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="task_remind" name="发送催办提醒">
+      <bpmn:incoming>flow_bd_timer_remind</bpmn:incoming>
+      <bpmn:outgoing>flow_remind_end</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_remind" name="催办结束">
+      <bpmn:incoming>flow_remind_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="task_manual_review" name="人工复评">
+      <bpmn:incoming>flow_bd_error_manual</bpmn:incoming>
+      <bpmn:outgoing>flow_manual_fast</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="flow_start_check" sourceRef="start_apply" targetRef="task_check_docs" />
+    <bpmn:sequenceFlow id="flow_check_route" sourceRef="task_check_docs" targetRef="gw_route" />
+    <bpmn:sequenceFlow id="flow_route_fast" name="小额" sourceRef="gw_route" targetRef="task_fast_track" />
+    <bpmn:sequenceFlow id="flow_route_assess" name="大额" sourceRef="gw_route" targetRef="task_risk_assess" />
+    <bpmn:sequenceFlow id="flow_fast_join" sourceRef="task_fast_track" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_assess_join" sourceRef="task_risk_assess" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_sign" sourceRef="gw_join" targetRef="task_sign" />
+    <bpmn:sequenceFlow id="flow_sign_end" sourceRef="task_sign" targetRef="end_done" />
+    <bpmn:sequenceFlow id="flow_bd_timer_remind" sourceRef="boundary_check_timer" targetRef="task_remind" />
+    <bpmn:sequenceFlow id="flow_remind_end" sourceRef="task_remind" targetRef="end_remind" />
+    <bpmn:sequenceFlow id="flow_bd_error_manual" sourceRef="boundary_assess_error" targetRef="task_manual_review" />
+    <bpmn:sequenceFlow id="flow_manual_fast" name="转快速通道" sourceRef="task_manual_review" targetRef="task_fast_track" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_boundary_handler_upward" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_boundary_handler_upward" bpmnElement="process_loan_approval">
+      <bpmndi:BPMNShape id="process_loan_approval_di" bpmnElement="process_loan_approval">
+        <dc:Bounds x="0" y="0" width="1034" height="484" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_apply_di" bpmnElement="start_apply">
+        <dc:Bounds x="62" y="124" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_check_docs_di" bpmnElement="task_check_docs">
+        <dc:Bounds x="178" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_check_timer_di" bpmnElement="boundary_check_timer">
+        <dc:Bounds x="180" y="164" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="171" y="204" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_route_di" bpmnElement="gw_route">
+        <dc:Bounds x="358" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="412" y="135" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_fast_track_di" bpmnElement="task_fast_track">
+        <dc:Bounds x="488" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_risk_assess_di" bpmnElement="task_risk_assess">
+        <dc:Bounds x="488" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_assess_error_di" bpmnElement="boundary_assess_error">
+        <dc:Bounds x="490" y="234" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="481" y="274" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_join_di" bpmnElement="gw_join">
+        <dc:Bounds x="668" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="665" y="99" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_sign_di" bpmnElement="task_sign">
+        <dc:Bounds x="798" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="978" y="124" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="946" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_remind_di" bpmnElement="task_remind">
+        <dc:Bounds x="110" y="294" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_remind_di" bpmnElement="end_remind">
+        <dc:Bounds x="310" y="316" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="278" y="356" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_manual_review_di" bpmnElement="task_manual_review">
+        <dc:Bounds x="488" y="364" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_check_di" bpmnElement="flow_start_check">
+        <di:waypoint x="98" y="142" />
+        <di:waypoint x="178" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_check_route_di" bpmnElement="flow_check_route">
+        <di:waypoint x="278" y="142" />
+        <di:waypoint x="358" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_route_fast_di" bpmnElement="flow_route_fast">
+        <di:waypoint x="383" y="117" />
+        <di:waypoint x="383" y="72" />
+        <di:waypoint x="488" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="388" y="88" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_route_assess_di" bpmnElement="flow_route_assess">
+        <di:waypoint x="383" y="167" />
+        <di:waypoint x="383" y="212" />
+        <di:waypoint x="488" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="328" y="182" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fast_join_di" bpmnElement="flow_fast_join">
+        <di:waypoint x="588" y="72" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="668" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_assess_join_di" bpmnElement="flow_assess_join">
+        <di:waypoint x="588" y="212" />
+        <di:waypoint x="628" y="212" />
+        <di:waypoint x="628" y="142" />
+        <di:waypoint x="668" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_sign_di" bpmnElement="flow_join_sign">
+        <di:waypoint x="718" y="142" />
+        <di:waypoint x="798" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_sign_end_di" bpmnElement="flow_sign_end">
+        <di:waypoint x="898" y="142" />
+        <di:waypoint x="978" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_timer_remind_di" bpmnElement="flow_bd_timer_remind">
+        <di:waypoint x="198" y="200" />
+        <di:waypoint x="198" y="241" />
+        <di:waypoint x="160" y="241" />
+        <di:waypoint x="160" y="294" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_remind_end_di" bpmnElement="flow_remind_end">
+        <di:waypoint x="210" y="334" />
+        <di:waypoint x="310" y="334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_bd_error_manual_di" bpmnElement="flow_bd_error_manual">
+        <di:waypoint x="508" y="270" />
+        <di:waypoint x="508" y="323" />
+        <di:waypoint x="538" y="323" />
+        <di:waypoint x="538" y="364" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_manual_fast_di" bpmnElement="flow_manual_fast">
+        <di:waypoint x="538" y="364" />
+        <di:waypoint x="598" y="348" />
+        <di:waypoint x="598" y="132" />
+        <di:waypoint x="538" y="132" />
+        <di:waypoint x="538" y="112" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="603" y="265.4" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,301 @@
+{
+  "id": "definitions_event_gateway_six_catch",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-event-gateway-six-catch-labels",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_confirm", "name": "客户确认消息" },
+    { "id": "msg_modify", "name": "客户修改消息" },
+    { "id": "msg_complaint", "name": "客户投诉消息" }
+  ],
+  "signals": [
+    { "id": "sig_force_close", "name": "强制关单信号" },
+    { "id": "sig_system_pause", "name": "系统停机维护信号" }
+  ],
+  "children": [
+    {
+      "id": "process_six_catch",
+      "bpmn": {
+        "type": "process",
+        "name": "事件网关六分支长标签测试",
+        "isExecutable": true
+      },
+      "layoutOptions": {
+        "elk.algorithm": "layered",
+        "elk.direction": "RIGHT"
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "startEvent",
+            "eventDefinitionType": "none",
+            "name": "工单创建完成"
+          },
+          "labels": [{ "text": "工单创建完成" }]
+        },
+        {
+          "id": "task_dispatch",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "task",
+            "name": "客服坐席派单并通知客户"
+          },
+          "labels": [{ "text": "客服坐席派单并通知客户" }]
+        },
+        {
+          "id": "gateway_event",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "eventBasedGateway",
+            "name": "等待客户响应或系统超时等多种可能事件中最先到达的那一个",
+            "gatewayDirection": "Diverging",
+            "eventGatewayType": "Exclusive",
+            "instantiate": false
+          },
+          "labels": [{ "text": "等待客户响应或系统超时等多种可能事件中最先到达的那一个" }]
+        },
+        {
+          "id": "catch_confirm",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "客户通过移动端小程序确认服务方案与上门时间均无异议",
+            "messageRef": "msg_confirm"
+          },
+          "labels": [{ "text": "客户通过移动端小程序确认服务方案与上门时间均无异议" }]
+        },
+        {
+          "id": "catch_modify",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "客户提出修改预约时间或更换服务网点的变更请求消息",
+            "messageRef": "msg_modify"
+          },
+          "labels": [{ "text": "客户提出修改预约时间或更换服务网点的变更请求消息" }]
+        },
+        {
+          "id": "catch_complaint",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "message",
+            "name": "客户在等待期间发起服务态度或响应速度方面的投诉消息",
+            "messageRef": "msg_complaint"
+          },
+          "labels": [{ "text": "客户在等待期间发起服务态度或响应速度方面的投诉消息" }]
+        },
+        {
+          "id": "catch_timeout_24h",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "timer",
+            "name": "客户超过二十四小时未作任何响应触发首次自动提醒定时器",
+            "timerEventDefinition": { "timeDuration": "PT24H" }
+          },
+          "labels": [{ "text": "客户超过二十四小时未作任何响应触发首次自动提醒定时器" }]
+        },
+        {
+          "id": "catch_force_close",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "signal",
+            "name": "运营管理后台广播强制关单信号要求立即终止所有挂起工单",
+            "signalRef": "sig_force_close"
+          },
+          "labels": [{ "text": "运营管理后台广播强制关单信号要求立即终止所有挂起工单" }]
+        },
+        {
+          "id": "catch_system_pause",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "intermediateCatchEvent",
+            "eventDefinitionType": "signal",
+            "name": "接到系统停机维护广播信号需将工单转入离线待恢复队列",
+            "signalRef": "sig_system_pause"
+          },
+          "labels": [{ "text": "接到系统停机维护广播信号需将工单转入离线待恢复队列" }]
+        },
+        {
+          "id": "task_serve",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "按确认方案执行上门服务" },
+          "labels": [{ "text": "按确认方案执行上门服务" }]
+        },
+        {
+          "id": "task_reschedule",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "重新协商并改派服务资源" },
+          "labels": [{ "text": "重新协商并改派服务资源" }]
+        },
+        {
+          "id": "task_handle_complaint",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "升级投诉专员介入安抚处理" },
+          "labels": [{ "text": "升级投诉专员介入安抚处理" }]
+        },
+        {
+          "id": "task_remind",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "外呼提醒客户尽快确认" },
+          "labels": [{ "text": "外呼提醒客户尽快确认" }]
+        },
+        {
+          "id": "task_close",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "执行关单并记录关闭原因" },
+          "labels": [{ "text": "执行关单并记录关闭原因" }]
+        },
+        {
+          "id": "task_park",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "工单转入离线待恢复队列" },
+          "labels": [{ "text": "工单转入离线待恢复队列" }]
+        },
+        {
+          "id": "end_done",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "工单处理完毕"
+          },
+          "labels": [{ "text": "工单处理完毕" }]
+        },
+        {
+          "id": "end_closed",
+          "width": 36, "height": 36,
+          "bpmn": {
+            "type": "endEvent",
+            "eventDefinitionType": "none",
+            "name": "工单已关闭"
+          },
+          "labels": [{ "text": "工单已关闭" }]
+        }
+      ],
+      "edges": [
+        {
+          "id": "flow_start",
+          "sources": ["start_1"], "targets": ["task_dispatch"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_to_gateway",
+          "sources": ["task_dispatch"], "targets": ["gateway_event"],
+          "bpmn": { "type": "sequenceFlow", "name": "派单通知发送成功后进入多事件竞争等待状态" },
+          "labels": [{ "text": "派单通知发送成功后进入多事件竞争等待状态" }]
+        },
+        {
+          "id": "flow_g_confirm",
+          "sources": ["gateway_event"], "targets": ["catch_confirm"],
+          "bpmn": { "type": "sequenceFlow", "name": "若客户确认消息最先到达则锁定服务方案进入执行分支" },
+          "labels": [{ "text": "若客户确认消息最先到达则锁定服务方案进入执行分支" }]
+        },
+        {
+          "id": "flow_g_modify",
+          "sources": ["gateway_event"], "targets": ["catch_modify"],
+          "bpmn": { "type": "sequenceFlow", "name": "若客户变更请求最先到达则进入重新协商改派处理分支" },
+          "labels": [{ "text": "若客户变更请求最先到达则进入重新协商改派处理分支" }]
+        },
+        {
+          "id": "flow_g_complaint",
+          "sources": ["gateway_event"], "targets": ["catch_complaint"],
+          "bpmn": { "type": "sequenceFlow", "name": "若客户投诉消息最先到达则升级专员通道优先安抚处理" },
+          "labels": [{ "text": "若客户投诉消息最先到达则升级专员通道优先安抚处理" }]
+        },
+        {
+          "id": "flow_g_timeout",
+          "sources": ["gateway_event"], "targets": ["catch_timeout_24h"],
+          "bpmn": { "type": "sequenceFlow", "name": "若二十四小时定时器最先触发则启动外呼提醒补救动作" },
+          "labels": [{ "text": "若二十四小时定时器最先触发则启动外呼提醒补救动作" }]
+        },
+        {
+          "id": "flow_g_force",
+          "sources": ["gateway_event"], "targets": ["catch_force_close"],
+          "bpmn": { "type": "sequenceFlow", "name": "若强制关单广播信号最先到达则立即终止等待执行关单" },
+          "labels": [{ "text": "若强制关单广播信号最先到达则立即终止等待执行关单" }]
+        },
+        {
+          "id": "flow_g_pause",
+          "sources": ["gateway_event"], "targets": ["catch_system_pause"],
+          "bpmn": { "type": "sequenceFlow", "name": "若系统停机维护信号最先到达则把工单挂起转离线队列" },
+          "labels": [{ "text": "若系统停机维护信号最先到达则把工单挂起转离线队列" }]
+        },
+        {
+          "id": "flow_confirm_serve",
+          "sources": ["catch_confirm"], "targets": ["task_serve"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_modify_reschedule",
+          "sources": ["catch_modify"], "targets": ["task_reschedule"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_complaint_handle",
+          "sources": ["catch_complaint"], "targets": ["task_handle_complaint"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_timeout_remind",
+          "sources": ["catch_timeout_24h"], "targets": ["task_remind"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_force_close",
+          "sources": ["catch_force_close"], "targets": ["task_close"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_pause_park",
+          "sources": ["catch_system_pause"], "targets": ["task_park"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_serve_done",
+          "sources": ["task_serve"], "targets": ["end_done"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_reschedule_done",
+          "sources": ["task_reschedule"], "targets": ["end_done"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_complaint_done",
+          "sources": ["task_handle_complaint"], "targets": ["end_done"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_remind_done",
+          "sources": ["task_remind"], "targets": ["end_done"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_close_end",
+          "sources": ["task_close"], "targets": ["end_closed"],
+          "bpmn": { "type": "sequenceFlow" }
+        },
+        {
+          "id": "flow_park_end",
+          "sources": ["task_park"], "targets": ["end_closed"],
+          "bpmn": { "type": "sequenceFlow" }
+        }
+      ]
+    }
+  ]
+}

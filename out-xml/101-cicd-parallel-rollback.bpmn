@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_cicd_parallel_rollback" targetNamespace="http://example.com/cicd-parallel-rollback" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_cicd" name="持续集成发布流水线" isExecutable="true">
+    <bpmn:startEvent id="start_commit" name="代码提交">
+      <bpmn:outgoing>f_commit_build</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_build" name="构建">
+      <bpmn:incoming>f_commit_build</bpmn:incoming>
+      <bpmn:incoming>f_check_fail</bpmn:incoming>
+      <bpmn:outgoing>f_build_fork</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="gw_fork_tests" name="并行测试" gatewayDirection="Diverging">
+      <bpmn:incoming>f_build_fork</bpmn:incoming>
+      <bpmn:outgoing>f_fork_unit</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_integration</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_api</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_ui</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_perf</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_security</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_compat</bpmn:outgoing>
+      <bpmn:outgoing>f_fork_regression</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="task_test_unit" name="单元测试">
+      <bpmn:incoming>f_fork_unit</bpmn:incoming>
+      <bpmn:outgoing>f_unit_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_integration" name="集成测试">
+      <bpmn:incoming>f_fork_integration</bpmn:incoming>
+      <bpmn:outgoing>f_integration_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_api" name="接口测试">
+      <bpmn:incoming>f_fork_api</bpmn:incoming>
+      <bpmn:outgoing>f_api_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_ui" name="界面测试">
+      <bpmn:incoming>f_fork_ui</bpmn:incoming>
+      <bpmn:outgoing>f_ui_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_perf" name="性能测试">
+      <bpmn:incoming>f_fork_perf</bpmn:incoming>
+      <bpmn:outgoing>f_perf_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_security" name="安全扫描">
+      <bpmn:incoming>f_fork_security</bpmn:incoming>
+      <bpmn:outgoing>f_security_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_compat" name="兼容性测试">
+      <bpmn:incoming>f_fork_compat</bpmn:incoming>
+      <bpmn:outgoing>f_compat_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_test_regression" name="回归测试">
+      <bpmn:incoming>f_fork_regression</bpmn:incoming>
+      <bpmn:outgoing>f_regression_join</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="gw_join_tests" name="测试汇合" gatewayDirection="Converging">
+      <bpmn:incoming>f_unit_join</bpmn:incoming>
+      <bpmn:incoming>f_integration_join</bpmn:incoming>
+      <bpmn:incoming>f_api_join</bpmn:incoming>
+      <bpmn:incoming>f_ui_join</bpmn:incoming>
+      <bpmn:incoming>f_perf_join</bpmn:incoming>
+      <bpmn:incoming>f_security_join</bpmn:incoming>
+      <bpmn:incoming>f_compat_join</bpmn:incoming>
+      <bpmn:incoming>f_regression_join</bpmn:incoming>
+      <bpmn:outgoing>f_join_check</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:exclusiveGateway id="gw_check_result" name="测试是否全部通过" gatewayDirection="Diverging">
+      <bpmn:incoming>f_join_check</bpmn:incoming>
+      <bpmn:outgoing>f_check_fail</bpmn:outgoing>
+      <bpmn:outgoing>f_check_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_deploy" name="部署预发布环境">
+      <bpmn:incoming>f_check_pass</bpmn:incoming>
+      <bpmn:outgoing>f_deploy_release</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_released" name="发布完成">
+      <bpmn:incoming>f_deploy_release</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_commit_build" sourceRef="start_commit" targetRef="task_build" />
+    <bpmn:sequenceFlow id="f_build_fork" sourceRef="task_build" targetRef="gw_fork_tests" />
+    <bpmn:sequenceFlow id="f_fork_unit" sourceRef="gw_fork_tests" targetRef="task_test_unit" />
+    <bpmn:sequenceFlow id="f_fork_integration" sourceRef="gw_fork_tests" targetRef="task_test_integration" />
+    <bpmn:sequenceFlow id="f_fork_api" sourceRef="gw_fork_tests" targetRef="task_test_api" />
+    <bpmn:sequenceFlow id="f_fork_ui" sourceRef="gw_fork_tests" targetRef="task_test_ui" />
+    <bpmn:sequenceFlow id="f_fork_perf" sourceRef="gw_fork_tests" targetRef="task_test_perf" />
+    <bpmn:sequenceFlow id="f_fork_security" sourceRef="gw_fork_tests" targetRef="task_test_security" />
+    <bpmn:sequenceFlow id="f_fork_compat" sourceRef="gw_fork_tests" targetRef="task_test_compat" />
+    <bpmn:sequenceFlow id="f_fork_regression" sourceRef="gw_fork_tests" targetRef="task_test_regression" />
+    <bpmn:sequenceFlow id="f_unit_join" sourceRef="task_test_unit" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_integration_join" sourceRef="task_test_integration" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_api_join" sourceRef="task_test_api" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_ui_join" sourceRef="task_test_ui" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_perf_join" sourceRef="task_test_perf" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_security_join" sourceRef="task_test_security" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_compat_join" sourceRef="task_test_compat" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_regression_join" sourceRef="task_test_regression" targetRef="gw_join_tests" />
+    <bpmn:sequenceFlow id="f_join_check" sourceRef="gw_join_tests" targetRef="gw_check_result" />
+    <bpmn:sequenceFlow id="f_check_fail" name="存在失败重新构建" sourceRef="gw_check_result" targetRef="task_build" />
+    <bpmn:sequenceFlow id="f_check_pass" name="全部通过" sourceRef="gw_check_result" targetRef="task_deploy" />
+    <bpmn:sequenceFlow id="f_deploy_release" sourceRef="task_deploy" targetRef="end_released" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_cicd_parallel_rollback" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_cicd_parallel_rollback" bpmnElement="process_cicd">
+      <bpmndi:BPMNShape id="process_cicd_di" bpmnElement="process_cicd">
+        <dc:Bounds x="0" y="0" width="1164" height="1134.9999999999998" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_commit_di" bpmnElement="start_commit">
+        <dc:Bounds x="62" y="780.3888888888889" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="820.3888888888889" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_build_di" bpmnElement="task_build">
+        <dc:Bounds x="178" y="758.3888888888889" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_fork_tests_di" bpmnElement="gw_fork_tests">
+        <dc:Bounds x="358" y="537" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="355" y="519" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_unit_di" bpmnElement="task_test_unit">
+        <dc:Bounds x="488" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_integration_di" bpmnElement="task_test_integration">
+        <dc:Bounds x="488" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_api_di" bpmnElement="task_test_api">
+        <dc:Bounds x="488" y="312" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_ui_di" bpmnElement="task_test_ui">
+        <dc:Bounds x="488" y="452" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_perf_di" bpmnElement="task_test_perf">
+        <dc:Bounds x="488" y="592" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_security_di" bpmnElement="task_test_security">
+        <dc:Bounds x="488" y="732" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_compat_di" bpmnElement="task_test_compat">
+        <dc:Bounds x="488" y="872" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_test_regression_di" bpmnElement="task_test_regression">
+        <dc:Bounds x="488" y="1012" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_join_tests_di" bpmnElement="gw_join_tests">
+        <dc:Bounds x="668" y="537" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="699" y="519" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_check_result_di" bpmnElement="gw_check_result">
+        <dc:Bounds x="798" y="773.3888888888889" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="767" y="827.3888888888889" width="112" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_deploy_di" bpmnElement="task_deploy">
+        <dc:Bounds x="928" y="758.3888888888889" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_released_di" bpmnElement="end_released">
+        <dc:Bounds x="1108" y="780.3888888888889" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1076" y="820.3888888888889" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="f_commit_build_di" bpmnElement="f_commit_build">
+        <di:waypoint x="98" y="798.3888888888889" />
+        <di:waypoint x="178" y="798.3888888888889" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_build_fork_di" bpmnElement="f_build_fork">
+        <di:waypoint x="228" y="758.3888888888889" />
+        <di:waypoint x="228" y="672.6944444444445" />
+        <di:waypoint x="383" y="672.6944444444445" />
+        <di:waypoint x="383" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_unit_di" bpmnElement="f_fork_unit">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="72" />
+        <di:waypoint x="488" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_integration_di" bpmnElement="f_fork_integration">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="212" />
+        <di:waypoint x="488" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_api_di" bpmnElement="f_fork_api">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="352" />
+        <di:waypoint x="488" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_ui_di" bpmnElement="f_fork_ui">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="492" />
+        <di:waypoint x="488" y="492" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_perf_di" bpmnElement="f_fork_perf">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="632" />
+        <di:waypoint x="488" y="632" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_security_di" bpmnElement="f_fork_security">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="772" />
+        <di:waypoint x="488" y="772" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_compat_di" bpmnElement="f_fork_compat">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="912" />
+        <di:waypoint x="488" y="912" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_fork_regression_di" bpmnElement="f_fork_regression">
+        <di:waypoint x="408" y="562" />
+        <di:waypoint x="448" y="562" />
+        <di:waypoint x="448" y="1052" />
+        <di:waypoint x="488" y="1052" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_unit_join_di" bpmnElement="f_unit_join">
+        <di:waypoint x="538" y="112" />
+        <di:waypoint x="538" y="120" />
+        <di:waypoint x="478" y="120" />
+        <di:waypoint x="478" y="302" />
+        <di:waypoint x="693" y="302" />
+        <di:waypoint x="693" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_integration_join_di" bpmnElement="f_integration_join">
+        <di:waypoint x="538" y="252" />
+        <di:waypoint x="538" y="260" />
+        <di:waypoint x="478" y="260" />
+        <di:waypoint x="478" y="394.5" />
+        <di:waypoint x="693" y="394.5" />
+        <di:waypoint x="693" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_api_join_di" bpmnElement="f_api_join">
+        <di:waypoint x="538" y="392" />
+        <di:waypoint x="538" y="442" />
+        <di:waypoint x="693" y="442" />
+        <di:waypoint x="693" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_ui_join_di" bpmnElement="f_ui_join">
+        <di:waypoint x="588" y="492" />
+        <di:waypoint x="628" y="492" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_perf_join_di" bpmnElement="f_perf_join">
+        <di:waypoint x="588" y="632" />
+        <di:waypoint x="628" y="632" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_security_join_di" bpmnElement="f_security_join">
+        <di:waypoint x="538" y="732" />
+        <di:waypoint x="538" y="682" />
+        <di:waypoint x="693" y="682" />
+        <di:waypoint x="693" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_compat_join_di" bpmnElement="f_compat_join">
+        <di:waypoint x="538" y="872" />
+        <di:waypoint x="538" y="864" />
+        <di:waypoint x="478" y="864" />
+        <di:waypoint x="478" y="729.5" />
+        <di:waypoint x="693" y="729.5" />
+        <di:waypoint x="693" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_regression_join_di" bpmnElement="f_regression_join">
+        <di:waypoint x="538" y="1012" />
+        <di:waypoint x="538" y="1004" />
+        <di:waypoint x="478" y="1004" />
+        <di:waypoint x="478" y="822" />
+        <di:waypoint x="693" y="822" />
+        <di:waypoint x="693" y="587" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_join_check_di" bpmnElement="f_join_check">
+        <di:waypoint x="718" y="562" />
+        <di:waypoint x="758" y="562" />
+        <di:waypoint x="758" y="798.3888888888889" />
+        <di:waypoint x="798" y="798.3888888888889" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_check_fail_di" bpmnElement="f_check_fail">
+        <di:waypoint x="823" y="773.3888888888889" />
+        <di:waypoint x="823" y="716" />
+        <di:waypoint x="228" y="716" />
+        <di:waypoint x="228" y="758.3888888888889" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="828" y="744.3888888888889" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_check_pass_di" bpmnElement="f_check_pass">
+        <di:waypoint x="848" y="798.3888888888889" />
+        <di:waypoint x="928" y="798.3888888888889" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="857" y="803.3888888888889" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_deploy_release_di" bpmnElement="f_deploy_release">
+        <di:waypoint x="1028" y="798.3888888888889" />
+        <di:waypoint x="1108" y="798.3888888888889" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

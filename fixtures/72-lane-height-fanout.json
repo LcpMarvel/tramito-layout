@@ -1,0 +1,151 @@
+{
+  "id": "definitions_lane_height_fanout",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-lane-height-fanout",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "年度审计六路并行"
+      },
+      "children": [
+        {
+          "id": "pool_audit",
+          "bpmn": {
+            "type": "participant",
+            "name": "审计事务所",
+            "processRef": "process_audit"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_partner",
+              "bpmn": { "type": "lane", "name": "项目合伙人" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_audit",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "审计立项" },
+                  "labels": [{ "text": "审计立项" }]
+                },
+                {
+                  "id": "task_plan",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "制定审计计划" },
+                  "labels": [{ "text": "制定审计计划" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_field_team",
+              "bpmn": { "type": "lane", "name": "现场审计组" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "gw_split",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "parallelGateway", "name": "分组并行" },
+                  "labels": [{ "text": "分组并行" }]
+                },
+                {
+                  "id": "task_cash",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "货币资金盘点" },
+                  "labels": [{ "text": "货币资金盘点" }]
+                },
+                {
+                  "id": "task_receivable",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "应收账款函证" },
+                  "labels": [{ "text": "应收账款函证" }]
+                },
+                {
+                  "id": "task_inventory",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "存货监盘" },
+                  "labels": [{ "text": "存货监盘" }]
+                },
+                {
+                  "id": "task_fixed_asset",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "固定资产抽查" },
+                  "labels": [{ "text": "固定资产抽查" }]
+                },
+                {
+                  "id": "task_revenue",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "收入截止测试" },
+                  "labels": [{ "text": "收入截止测试" }]
+                },
+                {
+                  "id": "task_expense",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "费用凭证抽凭" },
+                  "labels": [{ "text": "费用凭证抽凭" }]
+                },
+                {
+                  "id": "gw_join",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "parallelGateway", "name": "汇总底稿" },
+                  "labels": [{ "text": "汇总底稿" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_quality",
+              "bpmn": { "type": "lane", "name": "质控复核" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "质控复核底稿" },
+                  "labels": [{ "text": "质控复核底稿" }]
+                },
+                {
+                  "id": "end_audit",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "出具报告" },
+                  "labels": [{ "text": "出具报告" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_audit"], "targets": ["task_plan"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_plan"], "targets": ["gw_split"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_1", "sources": ["gw_split"], "targets": ["task_cash"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_2", "sources": ["gw_split"], "targets": ["task_receivable"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_3", "sources": ["gw_split"], "targets": ["task_inventory"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_4", "sources": ["gw_split"], "targets": ["task_fixed_asset"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_5", "sources": ["gw_split"], "targets": ["task_revenue"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_fan_6", "sources": ["gw_split"], "targets": ["task_expense"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_1", "sources": ["task_cash"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_2", "sources": ["task_receivable"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_3", "sources": ["task_inventory"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_4", "sources": ["task_fixed_asset"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_5", "sources": ["task_revenue"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_join_6", "sources": ["task_expense"], "targets": ["gw_join"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["gw_join"], "targets": ["task_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_review"], "targets": ["end_audit"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

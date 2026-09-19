@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_triple_nested_loops" targetNamespace="http://example.com/test-triple-nested-loops" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_triple_nested" name="研发三重返工环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_requirement" name="需求分析">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:incoming>flow_acceptance_back</bpmn:incoming>
+      <bpmn:outgoing>flow_req_design</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_design" name="方案设计">
+      <bpmn:incoming>flow_req_design</bpmn:incoming>
+      <bpmn:incoming>flow_review_back</bpmn:incoming>
+      <bpmn:outgoing>flow_design_coding</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_coding" name="编码实现">
+      <bpmn:incoming>flow_design_coding</bpmn:incoming>
+      <bpmn:incoming>flow_selftest_back</bpmn:incoming>
+      <bpmn:outgoing>flow_coding_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_selftest" name="自测通过">
+      <bpmn:incoming>flow_coding_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_selftest_back</bpmn:outgoing>
+      <bpmn:outgoing>flow_selftest_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_codereview" name="代码评审">
+      <bpmn:incoming>flow_selftest_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_review_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_review" name="评审通过">
+      <bpmn:incoming>flow_review_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_review_back</bpmn:outgoing>
+      <bpmn:outgoing>flow_review_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_acceptance" name="验收测试">
+      <bpmn:incoming>flow_review_pass</bpmn:incoming>
+      <bpmn:outgoing>flow_acceptance_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_acceptance" name="验收通过">
+      <bpmn:incoming>flow_acceptance_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_acceptance_back</bpmn:outgoing>
+      <bpmn:outgoing>flow_acceptance_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="end_1" name="发布">
+      <bpmn:incoming>flow_acceptance_pass</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_requirement" />
+    <bpmn:sequenceFlow id="flow_req_design" sourceRef="task_requirement" targetRef="task_design" />
+    <bpmn:sequenceFlow id="flow_design_coding" sourceRef="task_design" targetRef="task_coding" />
+    <bpmn:sequenceFlow id="flow_coding_gw" sourceRef="task_coding" targetRef="gw_selftest" />
+    <bpmn:sequenceFlow id="flow_selftest_back" name="修复缺陷" sourceRef="gw_selftest" targetRef="task_coding" />
+    <bpmn:sequenceFlow id="flow_selftest_pass" name="通过" sourceRef="gw_selftest" targetRef="task_codereview" />
+    <bpmn:sequenceFlow id="flow_review_gw" sourceRef="task_codereview" targetRef="gw_review" />
+    <bpmn:sequenceFlow id="flow_review_back" name="返工设计" sourceRef="gw_review" targetRef="task_design" />
+    <bpmn:sequenceFlow id="flow_review_pass" name="通过" sourceRef="gw_review" targetRef="task_acceptance" />
+    <bpmn:sequenceFlow id="flow_acceptance_gw" sourceRef="task_acceptance" targetRef="gw_acceptance" />
+    <bpmn:sequenceFlow id="flow_acceptance_back" name="需求变更" sourceRef="gw_acceptance" targetRef="task_requirement" />
+    <bpmn:sequenceFlow id="flow_acceptance_pass" name="通过" sourceRef="gw_acceptance" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_triple_nested_loops" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_triple_nested_loops" bpmnElement="process_triple_nested">
+      <bpmndi:BPMNShape id="process_triple_nested_di" bpmnElement="process_triple_nested">
+        <dc:Bounds x="0" y="0" width="1524" height="196.66666666666666" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="106.66666666666666" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="146.66666666666666" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_requirement_di" bpmnElement="task_requirement">
+        <dc:Bounds x="178" y="84.66666666666666" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_design_di" bpmnElement="task_design">
+        <dc:Bounds x="358" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_coding_di" bpmnElement="task_coding">
+        <dc:Bounds x="538" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_selftest_di" bpmnElement="gw_selftest">
+        <dc:Bounds x="718" y="47" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="715" y="101" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_codereview_di" bpmnElement="task_codereview">
+        <dc:Bounds x="848" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_review_di" bpmnElement="gw_review">
+        <dc:Bounds x="1028" y="72" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="126" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_acceptance_di" bpmnElement="task_acceptance">
+        <dc:Bounds x="1158" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_acceptance_di" bpmnElement="gw_acceptance">
+        <dc:Bounds x="1338" y="99.5" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1335" y="153.5" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1468" y="106.5" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="146.5" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="124.66666666666666" />
+        <di:waypoint x="178" y="124.66666666666666" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_req_design_di" bpmnElement="flow_req_design">
+        <di:waypoint x="278" y="124.66666666666666" />
+        <di:waypoint x="318" y="124.66666666666666" />
+        <di:waypoint x="318" y="97" />
+        <di:waypoint x="358" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_design_coding_di" bpmnElement="flow_design_coding">
+        <di:waypoint x="458" y="97" />
+        <di:waypoint x="498" y="97" />
+        <di:waypoint x="498" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_coding_gw_di" bpmnElement="flow_coding_gw">
+        <di:waypoint x="638" y="72" />
+        <di:waypoint x="718" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_selftest_back_di" bpmnElement="flow_selftest_back">
+        <di:waypoint x="743" y="47" />
+        <di:waypoint x="743" y="3" />
+        <di:waypoint x="588" y="3" />
+        <di:waypoint x="588" y="32" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="748" y="18" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_selftest_pass_di" bpmnElement="flow_selftest_pass">
+        <di:waypoint x="768" y="72" />
+        <di:waypoint x="848" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="777" y="77" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_gw_di" bpmnElement="flow_review_gw">
+        <di:waypoint x="948" y="72" />
+        <di:waypoint x="988" y="72" />
+        <di:waypoint x="988" y="97" />
+        <di:waypoint x="1028" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_back_di" bpmnElement="flow_review_back">
+        <di:waypoint x="1053" y="72" />
+        <di:waypoint x="1053" y="15" />
+        <di:waypoint x="408" y="15" />
+        <di:waypoint x="408" y="57" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1058" y="43" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_review_pass_di" bpmnElement="flow_review_pass">
+        <di:waypoint x="1078" y="97" />
+        <di:waypoint x="1158" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1087" y="102" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_acceptance_gw_di" bpmnElement="flow_acceptance_gw">
+        <di:waypoint x="1258" y="97" />
+        <di:waypoint x="1298" y="97" />
+        <di:waypoint x="1298" y="124.5" />
+        <di:waypoint x="1338" y="124.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_acceptance_back_di" bpmnElement="flow_acceptance_back">
+        <di:waypoint x="1363" y="99.5" />
+        <di:waypoint x="1363" y="27" />
+        <di:waypoint x="228" y="27" />
+        <di:waypoint x="228" y="84.66666666666666" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1368" y="70.5" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_acceptance_pass_di" bpmnElement="flow_acceptance_pass">
+        <di:waypoint x="1388" y="124.5" />
+        <di:waypoint x="1468" y="124.5" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1397" y="129.5" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

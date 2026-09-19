@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_long_backedge" targetNamespace="http://example.com/test-long-backedge" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_long_backedge" name="生产线终检长回边" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开工">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="task_material" name="原料准备">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:incoming>flow_reject</bpmn:incoming>
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_rough" name="粗加工">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_fine" name="精加工">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_assemble" name="部件组装">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_debug" name="整机调试">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_paint" name="表面喷涂">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_pack" name="包装">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="task_finalcheck" name="终检">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_final" name="终检合格">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+      <bpmn:outgoing>flow_pass</bpmn:outgoing>
+      <bpmn:outgoing>flow_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="end_1" name="入库">
+      <bpmn:incoming>flow_pass</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_material" />
+    <bpmn:sequenceFlow id="flow_1" sourceRef="task_material" targetRef="task_rough" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_rough" targetRef="task_fine" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_fine" targetRef="task_assemble" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_assemble" targetRef="task_debug" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_debug" targetRef="task_paint" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_paint" targetRef="task_pack" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="task_pack" targetRef="task_finalcheck" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_finalcheck" targetRef="gw_final" />
+    <bpmn:sequenceFlow id="flow_pass" name="合格" sourceRef="gw_final" targetRef="end_1" />
+    <bpmn:sequenceFlow id="flow_reject" name="整批返工" sourceRef="gw_final" targetRef="task_material" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_long_backedge" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_long_backedge" bpmnElement="process_long_backedge">
+      <bpmndi:BPMNShape id="process_long_backedge_di" bpmnElement="process_long_backedge">
+        <dc:Bounds x="0" y="0" width="1804" height="169" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_material_di" bpmnElement="task_material">
+        <dc:Bounds x="178" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_rough_di" bpmnElement="task_rough">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_fine_di" bpmnElement="task_fine">
+        <dc:Bounds x="538" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_assemble_di" bpmnElement="task_assemble">
+        <dc:Bounds x="718" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_debug_di" bpmnElement="task_debug">
+        <dc:Bounds x="898" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_paint_di" bpmnElement="task_paint">
+        <dc:Bounds x="1078" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pack_di" bpmnElement="task_pack">
+        <dc:Bounds x="1258" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_finalcheck_di" bpmnElement="task_finalcheck">
+        <dc:Bounds x="1438" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_final_di" bpmnElement="gw_final">
+        <dc:Bounds x="1618" y="72" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1615" y="126" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1748" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1716" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="97" />
+        <di:waypoint x="178" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="278" y="97" />
+        <di:waypoint x="318" y="97" />
+        <di:waypoint x="318" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="638" y="72" />
+        <di:waypoint x="718" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="818" y="72" />
+        <di:waypoint x="898" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="998" y="72" />
+        <di:waypoint x="1078" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="1178" y="72" />
+        <di:waypoint x="1258" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1358" y="72" />
+        <di:waypoint x="1438" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="1538" y="72" />
+        <di:waypoint x="1578" y="72" />
+        <di:waypoint x="1578" y="97" />
+        <di:waypoint x="1618" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_pass_di" bpmnElement="flow_pass">
+        <di:waypoint x="1668" y="97" />
+        <di:waypoint x="1748" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1677" y="102" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject">
+        <di:waypoint x="1643" y="72" />
+        <di:waypoint x="1643" y="16" />
+        <di:waypoint x="228" y="16" />
+        <di:waypoint x="228" y="57" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1648" y="43" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

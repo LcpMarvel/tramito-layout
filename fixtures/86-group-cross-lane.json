@@ -1,0 +1,119 @@
+{
+  "id": "definitions_group_cross_lane",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-group-cross-lane"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "categories": [
+    {
+      "id": "category_claim",
+      "name": "理赔阶段类别",
+      "categoryValues": [
+        { "id": "cat_claim_review", "value": "理赔审核阶段" }
+      ]
+    }
+  ],
+  "children": [
+    {
+      "id": "collaboration_claim",
+      "bpmn": { "type": "collaboration", "name": "保险理赔" },
+      "children": [
+        {
+          "id": "pool_insurance",
+          "bpmn": {
+            "type": "participant",
+            "name": "保险公司",
+            "processRef": "process_claim"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_customer",
+              "bpmn": { "type": "lane", "name": "客户服务" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_claim",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "报案" },
+                  "labels": [{ "text": "报案" }]
+                },
+                {
+                  "id": "task_submit_claim",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "提交理赔材料" },
+                  "labels": [{ "text": "提交理赔材料" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_adjuster",
+              "bpmn": { "type": "lane", "name": "理赔员" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_initial_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "材料初审" },
+                  "labels": [{ "text": "材料初审" }]
+                },
+                {
+                  "id": "task_assess_loss",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "现场定损" },
+                  "labels": [{ "text": "现场定损" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_finance",
+              "bpmn": { "type": "lane", "name": "财务结算" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_pay_claim",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "赔款打款" },
+                  "labels": [{ "text": "赔款打款" }]
+                },
+                {
+                  "id": "end_claim_paid",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "理赔完成" },
+                  "labels": [{ "text": "理赔完成" }]
+                }
+              ]
+            },
+            {
+              "id": "group_claim_review",
+              "bpmn": {
+                "type": "group",
+                "name": "理赔审核阶段",
+                "categoryValueRef": "cat_claim_review",
+                "groupedElements": ["task_submit_claim", "task_initial_review", "task_assess_loss"],
+                "padding": 25
+              },
+              "labels": [{ "text": "理赔审核阶段" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_start_submit", "sources": ["start_claim"], "targets": ["task_submit_claim"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_submit_review", "sources": ["task_submit_claim"], "targets": ["task_initial_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_review_assess", "sources": ["task_initial_review"], "targets": ["task_assess_loss"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_assess_pay", "sources": ["task_assess_loss"], "targets": ["task_pay_claim"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_pay_end", "sources": ["task_pay_claim"], "targets": ["end_claim_paid"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

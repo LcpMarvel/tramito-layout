@@ -1,0 +1,101 @@
+{
+  "id": "definitions_long_backedge",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-long-backedge",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_long_backedge",
+      "bpmn": { "type": "process", "name": "生产线终检长回边", "isExecutable": true },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "开工" },
+          "labels": [{ "text": "开工" }]
+        },
+        {
+          "id": "task_material",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "原料准备" },
+          "labels": [{ "text": "原料准备" }]
+        },
+        {
+          "id": "task_rough",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "粗加工" },
+          "labels": [{ "text": "粗加工" }]
+        },
+        {
+          "id": "task_fine",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "精加工" },
+          "labels": [{ "text": "精加工" }]
+        },
+        {
+          "id": "task_assemble",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "部件组装" },
+          "labels": [{ "text": "部件组装" }]
+        },
+        {
+          "id": "task_debug",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "整机调试" },
+          "labels": [{ "text": "整机调试" }]
+        },
+        {
+          "id": "task_paint",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "表面喷涂" },
+          "labels": [{ "text": "表面喷涂" }]
+        },
+        {
+          "id": "task_pack",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "task", "name": "包装" },
+          "labels": [{ "text": "包装" }]
+        },
+        {
+          "id": "task_finalcheck",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "终检" },
+          "labels": [{ "text": "终检" }]
+        },
+        {
+          "id": "gw_final",
+          "width": 50, "height": 50,
+          "bpmn": { "type": "exclusiveGateway", "name": "终检合格" },
+          "labels": [{ "text": "终检合格" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "入库" },
+          "labels": [{ "text": "入库" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["task_material"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_1", "sources": ["task_material"], "targets": ["task_rough"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_2", "sources": ["task_rough"], "targets": ["task_fine"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_3", "sources": ["task_fine"], "targets": ["task_assemble"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_4", "sources": ["task_assemble"], "targets": ["task_debug"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_5", "sources": ["task_debug"], "targets": ["task_paint"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_6", "sources": ["task_paint"], "targets": ["task_pack"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_7", "sources": ["task_pack"], "targets": ["task_finalcheck"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_8", "sources": ["task_finalcheck"], "targets": ["gw_final"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_pass", "sources": ["gw_final"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow", "name": "合格" }, "labels": [{ "text": "合格" }] },
+        { "id": "flow_reject", "sources": ["gw_final"], "targets": ["task_material"], "bpmn": { "type": "sequenceFlow", "name": "整批返工" }, "labels": [{ "text": "整批返工" }] }
+      ]
+    }
+  ]
+}

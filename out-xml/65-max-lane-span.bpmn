@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_max_lane_span" targetNamespace="http://example.com/test-max-lane-span" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="重大事故跨八级上报">
+    <bpmn:participant id="pool_factory" name="制造工厂" processRef="process_incident" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_incident" name="制造工厂" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_1_operator" name="一线操作员">
+        <bpmn:flowNodeRef>start_incident</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_report</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_severity</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_2_shift" name="班组长">
+        <bpmn:flowNodeRef>task_shift_confirm</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_3_workshop" name="车间主任">
+        <bpmn:flowNodeRef>task_workshop_assess</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_4_quality" name="质量部">
+        <bpmn:flowNodeRef>task_quality_analyze</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_5_equipment" name="设备部">
+        <bpmn:flowNodeRef>task_equipment_check</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_6_safety" name="安环部">
+        <bpmn:flowNodeRef>task_safety_audit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_7_director" name="厂长办">
+        <bpmn:flowNodeRef>task_director_review</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_8_emergency" name="应急指挥中心">
+        <bpmn:flowNodeRef>task_emergency_launch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_close_incident</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_done</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_incident" name="发现异常">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_report" name="上报异常">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_severity" name="重大事故?">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_direct_span</bpmn:outgoing>
+      <bpmn:outgoing>flow_normal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_shift_confirm" name="班组确认">
+      <bpmn:incoming>flow_normal</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_workshop_assess" name="车间评估">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_quality_analyze" name="质量分析">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_equipment_check" name="设备排查">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_safety_audit" name="安全稽核">
+      <bpmn:incoming>flow_6</bpmn:incoming>
+      <bpmn:outgoing>flow_7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_director_review" name="厂长审阅">
+      <bpmn:incoming>flow_7</bpmn:incoming>
+      <bpmn:outgoing>flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_emergency_launch" name="启动应急预案">
+      <bpmn:incoming>flow_direct_span</bpmn:incoming>
+      <bpmn:outgoing>flow_9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_close_incident" name="事故结案">
+      <bpmn:incoming>flow_8</bpmn:incoming>
+      <bpmn:incoming>flow_9</bpmn:incoming>
+      <bpmn:outgoing>flow_10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_done" name="处理完毕">
+      <bpmn:incoming>flow_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_incident" targetRef="task_report" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_report" targetRef="gw_severity" />
+    <bpmn:sequenceFlow id="flow_direct_span" name="重大，直报应急中心" sourceRef="gw_severity" targetRef="task_emergency_launch" />
+    <bpmn:sequenceFlow id="flow_normal" name="一般，逐级处理" sourceRef="gw_severity" targetRef="task_shift_confirm" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="task_shift_confirm" targetRef="task_workshop_assess" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_workshop_assess" targetRef="task_quality_analyze" />
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_quality_analyze" targetRef="task_equipment_check" />
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_equipment_check" targetRef="task_safety_audit" />
+    <bpmn:sequenceFlow id="flow_7" sourceRef="task_safety_audit" targetRef="task_director_review" />
+    <bpmn:sequenceFlow id="flow_8" sourceRef="task_director_review" targetRef="task_close_incident" />
+    <bpmn:sequenceFlow id="flow_9" sourceRef="task_emergency_launch" targetRef="task_close_incident" />
+    <bpmn:sequenceFlow id="flow_10" sourceRef="task_close_incident" targetRef="end_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_max_lane_span" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_max_lane_span" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="1804" height="939" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_factory_di" bpmnElement="pool_factory" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1804" height="939" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_1_operator_di" bpmnElement="lane_1_operator" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1774" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_incident_di" bpmnElement="start_incident">
+        <dc:Bounds x="62" y="61" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="101" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_report_di" bpmnElement="task_report">
+        <dc:Bounds x="178" y="39" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_severity_di" bpmnElement="gw_severity">
+        <dc:Bounds x="358" y="54" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351.5" y="36" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_2_shift_di" bpmnElement="lane_2_shift" isHorizontal="true">
+        <dc:Bounds x="30" y="135" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_shift_confirm_di" bpmnElement="task_shift_confirm">
+        <dc:Bounds x="488" y="151" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_3_workshop_di" bpmnElement="lane_3_workshop" isHorizontal="true">
+        <dc:Bounds x="30" y="247" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_workshop_assess_di" bpmnElement="task_workshop_assess">
+        <dc:Bounds x="668" y="263" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_4_quality_di" bpmnElement="lane_4_quality" isHorizontal="true">
+        <dc:Bounds x="30" y="359" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_quality_analyze_di" bpmnElement="task_quality_analyze">
+        <dc:Bounds x="848" y="375" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_5_equipment_di" bpmnElement="lane_5_equipment" isHorizontal="true">
+        <dc:Bounds x="30" y="471" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_equipment_check_di" bpmnElement="task_equipment_check">
+        <dc:Bounds x="1028" y="487" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_6_safety_di" bpmnElement="lane_6_safety" isHorizontal="true">
+        <dc:Bounds x="30" y="583" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_safety_audit_di" bpmnElement="task_safety_audit">
+        <dc:Bounds x="1208" y="599" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_7_director_di" bpmnElement="lane_7_director" isHorizontal="true">
+        <dc:Bounds x="30" y="695" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_director_review_di" bpmnElement="task_director_review">
+        <dc:Bounds x="1388" y="711" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_8_emergency_di" bpmnElement="lane_8_emergency" isHorizontal="true">
+        <dc:Bounds x="30" y="807" width="1774" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_emergency_launch_di" bpmnElement="task_emergency_launch">
+        <dc:Bounds x="668" y="823" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_close_incident_di" bpmnElement="task_close_incident">
+        <dc:Bounds x="1568" y="823" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
+        <dc:Bounds x="1748" y="845" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1716" y="885" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="79" />
+        <di:waypoint x="178" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="278" y="79" />
+        <di:waypoint x="358" y="79" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_direct_span_di" bpmnElement="flow_direct_span">
+        <di:waypoint x="383" y="104" />
+        <di:waypoint x="383" y="863" />
+        <di:waypoint x="668" y="863" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="328" y="119" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_normal_di" bpmnElement="flow_normal">
+        <di:waypoint x="383" y="104" />
+        <di:waypoint x="383" y="191" />
+        <di:waypoint x="488" y="191" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="388" y="119" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="538" y="231" />
+        <di:waypoint x="538" y="303" />
+        <di:waypoint x="668" y="303" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="718" y="343" />
+        <di:waypoint x="718" y="415" />
+        <di:waypoint x="848" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
+        <di:waypoint x="898" y="455" />
+        <di:waypoint x="898" y="527" />
+        <di:waypoint x="1028" y="527" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
+        <di:waypoint x="1078" y="567" />
+        <di:waypoint x="1078" y="639" />
+        <di:waypoint x="1208" y="639" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_7_di" bpmnElement="flow_7">
+        <di:waypoint x="1258" y="679" />
+        <di:waypoint x="1258" y="751" />
+        <di:waypoint x="1388" y="751" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_8_di" bpmnElement="flow_8">
+        <di:waypoint x="1438" y="791" />
+        <di:waypoint x="1438" y="863" />
+        <di:waypoint x="1568" y="863" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_9_di" bpmnElement="flow_9">
+        <di:waypoint x="768" y="863" />
+        <di:waypoint x="1568" y="863" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_10_di" bpmnElement="flow_10">
+        <di:waypoint x="1668" y="863" />
+        <di:waypoint x="1748" y="863" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

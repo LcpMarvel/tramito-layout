@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_minimal_start_end" targetNamespace="http://example.com/test-minimal-start-end" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_minimal" name="最小流程" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_1" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_minimal_start_end" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_minimal_start_end" bpmnElement="process_minimal">
+      <bpmndi:BPMNShape id="process_minimal_di" bpmnElement="process_minimal">
+        <dc:Bounds x="0" y="0" width="270" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="178" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="146" y="72" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="50" />
+        <di:waypoint x="178" y="50" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

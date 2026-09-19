@@ -1,0 +1,194 @@
+{
+  "id": "definitions_max_lane_span",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-max-lane-span",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "重大事故跨八级上报"
+      },
+      "children": [
+        {
+          "id": "pool_factory",
+          "bpmn": {
+            "type": "participant",
+            "name": "制造工厂",
+            "processRef": "process_incident"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_1_operator",
+              "bpmn": { "type": "lane", "name": "一线操作员" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_incident",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "发现异常" },
+                  "labels": [{ "text": "发现异常" }]
+                },
+                {
+                  "id": "task_report",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "上报异常" },
+                  "labels": [{ "text": "上报异常" }]
+                },
+                {
+                  "id": "gw_severity",
+                  "width": 50, "height": 50,
+                  "bpmn": { "type": "exclusiveGateway", "name": "重大事故?" },
+                  "labels": [{ "text": "重大事故?" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_2_shift",
+              "bpmn": { "type": "lane", "name": "班组长" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": [
+                {
+                  "id": "task_shift_confirm",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "班组确认" },
+                  "labels": [{ "text": "班组确认" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_3_workshop",
+              "bpmn": { "type": "lane", "name": "车间主任" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_workshop_assess",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "车间评估" },
+                  "labels": [{ "text": "车间评估" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_4_quality",
+              "bpmn": { "type": "lane", "name": "质量部" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": [
+                {
+                  "id": "task_quality_analyze",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "质量分析" },
+                  "labels": [{ "text": "质量分析" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_5_equipment",
+              "bpmn": { "type": "lane", "name": "设备部" },
+              "layoutOptions": { "elk.partitioning.partition": 4 },
+              "children": [
+                {
+                  "id": "task_equipment_check",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "设备排查" },
+                  "labels": [{ "text": "设备排查" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_6_safety",
+              "bpmn": { "type": "lane", "name": "安环部" },
+              "layoutOptions": { "elk.partitioning.partition": 5 },
+              "children": [
+                {
+                  "id": "task_safety_audit",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "安全稽核" },
+                  "labels": [{ "text": "安全稽核" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_7_director",
+              "bpmn": { "type": "lane", "name": "厂长办" },
+              "layoutOptions": { "elk.partitioning.partition": 6 },
+              "children": [
+                {
+                  "id": "task_director_review",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "厂长审阅" },
+                  "labels": [{ "text": "厂长审阅" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_8_emergency",
+              "bpmn": { "type": "lane", "name": "应急指挥中心" },
+              "layoutOptions": { "elk.partitioning.partition": 7 },
+              "children": [
+                {
+                  "id": "task_emergency_launch",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "启动应急预案" },
+                  "labels": [{ "text": "启动应急预案" }]
+                },
+                {
+                  "id": "task_close_incident",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "事故结案" },
+                  "labels": [{ "text": "事故结案" }]
+                },
+                {
+                  "id": "end_done",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "处理完毕" },
+                  "labels": [{ "text": "处理完毕" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_incident"], "targets": ["task_report"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_report"], "targets": ["gw_severity"], "bpmn": { "type": "sequenceFlow" } },
+            {
+              "id": "flow_direct_span",
+              "sources": ["gw_severity"],
+              "targets": ["task_emergency_launch"],
+              "bpmn": { "type": "sequenceFlow", "name": "重大，直报应急中心" },
+              "labels": [{ "text": "重大，直报应急中心" }]
+            },
+            {
+              "id": "flow_normal",
+              "sources": ["gw_severity"],
+              "targets": ["task_shift_confirm"],
+              "bpmn": { "type": "sequenceFlow", "name": "一般，逐级处理" },
+              "labels": [{ "text": "一般，逐级处理" }]
+            },
+            { "id": "flow_3", "sources": ["task_shift_confirm"], "targets": ["task_workshop_assess"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_workshop_assess"], "targets": ["task_quality_analyze"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_5", "sources": ["task_quality_analyze"], "targets": ["task_equipment_check"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_6", "sources": ["task_equipment_check"], "targets": ["task_safety_audit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_7", "sources": ["task_safety_audit"], "targets": ["task_director_review"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_8", "sources": ["task_director_review"], "targets": ["task_close_incident"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_9", "sources": ["task_emergency_launch"], "targets": ["task_close_incident"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_10", "sources": ["task_close_incident"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_all_edge_labels" targetNamespace="http://example.com/test-all-edge-labels" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_all_edge_labels" name="全边标签报销流程" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="发起报销">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="填写报销单">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:outgoing>flow_submit_dept</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_dept_review" name="部门主管审核">
+      <bpmn:incoming>flow_submit_dept</bpmn:incoming>
+      <bpmn:outgoing>flow_dept_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_amount" name="金额判断" gatewayDirection="Diverging" default="flow_small_amount">
+      <bpmn:incoming>flow_dept_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_small_amount</bpmn:outgoing>
+      <bpmn:outgoing>flow_large_amount</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_quick_approve" name="快速通道批准">
+      <bpmn:incoming>flow_small_amount</bpmn:incoming>
+      <bpmn:outgoing>flow_quick_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="task_finance_review" name="财务审核票据">
+      <bpmn:incoming>flow_large_amount</bpmn:incoming>
+      <bpmn:outgoing>flow_finance_director</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_director_approve" name="财务总监审批">
+      <bpmn:incoming>flow_finance_director</bpmn:incoming>
+      <bpmn:outgoing>flow_director_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_amount_conv" name="审批汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_quick_conv</bpmn:incoming>
+      <bpmn:incoming>flow_director_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_invoice</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gw_invoice" name="票据归档判断" gatewayDirection="Diverging" default="flow_e_archive">
+      <bpmn:incoming>flow_conv_invoice</bpmn:incoming>
+      <bpmn:outgoing>flow_paper_archive</bpmn:outgoing>
+      <bpmn:outgoing>flow_e_archive</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_paper_archive" name="纸质票据归档">
+      <bpmn:incoming>flow_paper_archive</bpmn:incoming>
+      <bpmn:outgoing>flow_paper_conv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_e_archive" name="电子票据归档">
+      <bpmn:incoming>flow_e_archive</bpmn:incoming>
+      <bpmn:outgoing>flow_e_conv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gw_invoice_conv" name="归档汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_paper_conv</bpmn:incoming>
+      <bpmn:incoming>flow_e_conv</bpmn:incoming>
+      <bpmn:outgoing>flow_conv_payout</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_payout" name="出纳打款">
+      <bpmn:incoming>flow_conv_payout</bpmn:incoming>
+      <bpmn:outgoing>flow_payout_notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_notify" name="通知申请人">
+      <bpmn:incoming>flow_payout_notify</bpmn:incoming>
+      <bpmn:outgoing>flow_notify_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="报销结束">
+      <bpmn:incoming>flow_notify_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" name="开始填单" sourceRef="start_1" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="flow_submit_dept" name="提交主管" sourceRef="task_submit" targetRef="task_dept_review" />
+    <bpmn:sequenceFlow id="flow_dept_gw" name="主管通过" sourceRef="task_dept_review" targetRef="gw_amount" />
+    <bpmn:sequenceFlow id="flow_small_amount" name="5千以内" sourceRef="gw_amount" targetRef="task_quick_approve" />
+    <bpmn:sequenceFlow id="flow_large_amount" name="超过5千" sourceRef="gw_amount" targetRef="task_finance_review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt; 5000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_finance_director" name="票据齐全" sourceRef="task_finance_review" targetRef="task_director_approve" />
+    <bpmn:sequenceFlow id="flow_quick_conv" name="快速批准完成" sourceRef="task_quick_approve" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_director_conv" name="总监已签字" sourceRef="task_director_approve" targetRef="gw_amount_conv" />
+    <bpmn:sequenceFlow id="flow_conv_invoice" name="进入归档" sourceRef="gw_amount_conv" targetRef="gw_invoice" />
+    <bpmn:sequenceFlow id="flow_paper_archive" name="纸质发票" sourceRef="gw_invoice" targetRef="task_paper_archive">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${invoiceType == 'paper'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_e_archive" name="电子发票" sourceRef="gw_invoice" targetRef="task_e_archive" />
+    <bpmn:sequenceFlow id="flow_paper_conv" name="纸质归档完成" sourceRef="task_paper_archive" targetRef="gw_invoice_conv" />
+    <bpmn:sequenceFlow id="flow_e_conv" name="电子归档完成" sourceRef="task_e_archive" targetRef="gw_invoice_conv" />
+    <bpmn:sequenceFlow id="flow_conv_payout" name="转出纳" sourceRef="gw_invoice_conv" targetRef="task_payout" />
+    <bpmn:sequenceFlow id="flow_payout_notify" name="打款成功" sourceRef="task_payout" targetRef="task_notify" />
+    <bpmn:sequenceFlow id="flow_notify_end" name="流程归档" sourceRef="task_notify" targetRef="end_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_all_edge_labels" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_all_edge_labels" bpmnElement="process_all_edge_labels">
+      <bpmndi:BPMNShape id="process_all_edge_labels_di" bpmnElement="process_all_edge_labels">
+        <dc:Bounds x="0" y="0" width="1272" height="585" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="186" y="124.00000000000001" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="154" y="164" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="302" y="102.00000000000001" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_dept_review_di" bpmnElement="task_dept_review">
+        <dc:Bounds x="482" y="102.00000000000001" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_di" bpmnElement="gw_amount">
+        <dc:Bounds x="695.3333333333334" y="117.00000000000001" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="749.3333333333334" y="135" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_quick_approve_di" bpmnElement="task_quick_approve">
+        <dc:Bounds x="1022" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_finance_review_di" bpmnElement="task_finance_review">
+        <dc:Bounds x="842" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_director_approve_di" bpmnElement="task_director_approve">
+        <dc:Bounds x="1022" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_amount_conv_di" bpmnElement="gw_amount_conv">
+        <dc:Bounds x="1202" y="117.00000000000001" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1199" y="82" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_invoice_di" bpmnElement="gw_invoice">
+        <dc:Bounds x="172" y="418" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="84" y="436" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_paper_archive_di" bpmnElement="task_paper_archive">
+        <dc:Bounds x="302" y="333" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_e_archive_di" bpmnElement="task_e_archive">
+        <dc:Bounds x="302" y="473" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_invoice_conv_di" bpmnElement="gw_invoice_conv">
+        <dc:Bounds x="498.6666666666667" y="418" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="495.66666666666674" y="383" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_payout_di" bpmnElement="task_payout">
+        <dc:Bounds x="662" y="403" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_notify_di" bpmnElement="task_notify">
+        <dc:Bounds x="842" y="403" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="1022" y="425" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="990" y="465" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="222" y="142" />
+        <di:waypoint x="302" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="123" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_submit_dept_di" bpmnElement="flow_submit_dept">
+        <di:waypoint x="402" y="142" />
+        <di:waypoint x="482" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="123" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_dept_gw_di" bpmnElement="flow_dept_gw">
+        <di:waypoint x="582" y="142" />
+        <di:waypoint x="695.3333333333334" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="613.6666666666667" y="123" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_small_amount_di" bpmnElement="flow_small_amount">
+        <di:waypoint x="720.3333333333334" y="117" />
+        <di:waypoint x="720.3333333333334" y="72" />
+        <di:waypoint x="1022" y="72" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="725.3333333333334" y="88" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_large_amount_di" bpmnElement="flow_large_amount">
+        <di:waypoint x="720.3333333333334" y="167" />
+        <di:waypoint x="720.3333333333334" y="212" />
+        <di:waypoint x="842" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="665.3333333333334" y="182" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_finance_director_di" bpmnElement="flow_finance_director">
+        <di:waypoint x="942" y="212" />
+        <di:waypoint x="1022" y="212" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="957" y="193" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_quick_conv_di" bpmnElement="flow_quick_conv">
+        <di:waypoint x="1122" y="72" />
+        <di:waypoint x="1162" y="72" />
+        <di:waypoint x="1162" y="142" />
+        <di:waypoint x="1202" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1167" y="100" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_director_conv_di" bpmnElement="flow_director_conv">
+        <di:waypoint x="1122" y="212" />
+        <di:waypoint x="1162" y="212" />
+        <di:waypoint x="1162" y="142" />
+        <di:waypoint x="1202" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1167" y="170" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_invoice_di" bpmnElement="flow_conv_invoice">
+        <di:waypoint x="1227" y="167" />
+        <di:waypoint x="1227" y="292.5" />
+        <di:waypoint x="197" y="292.5" />
+        <di:waypoint x="197" y="418" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1232" y="182" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_paper_archive_di" bpmnElement="flow_paper_archive">
+        <di:waypoint x="222" y="443" />
+        <di:waypoint x="262" y="443" />
+        <di:waypoint x="262" y="373" />
+        <di:waypoint x="302" y="373" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="229" y="448" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_e_archive_di" bpmnElement="flow_e_archive">
+        <di:waypoint x="197" y="468" />
+        <di:waypoint x="197" y="513" />
+        <di:waypoint x="302" y="513" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="142" y="483" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_paper_conv_di" bpmnElement="flow_paper_conv">
+        <di:waypoint x="402" y="373" />
+        <di:waypoint x="450.33333333333337" y="373" />
+        <di:waypoint x="450.33333333333337" y="443" />
+        <di:waypoint x="498.66666666666674" y="443" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455.33333333333337" y="401" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_e_conv_di" bpmnElement="flow_e_conv">
+        <di:waypoint x="402" y="513" />
+        <di:waypoint x="450.33333333333337" y="513" />
+        <di:waypoint x="450.33333333333337" y="443" />
+        <di:waypoint x="498.66666666666674" y="443" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455.33333333333337" y="471" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_conv_payout_di" bpmnElement="flow_conv_payout">
+        <di:waypoint x="548.6666666666667" y="443" />
+        <di:waypoint x="662" y="443" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="557.6666666666667" y="448" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_payout_notify_di" bpmnElement="flow_payout_notify">
+        <di:waypoint x="762" y="443" />
+        <di:waypoint x="842" y="443" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="777" y="424" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_notify_end_di" bpmnElement="flow_notify_end">
+        <di:waypoint x="942" y="443" />
+        <di:waypoint x="1022" y="443" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="957" y="424" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

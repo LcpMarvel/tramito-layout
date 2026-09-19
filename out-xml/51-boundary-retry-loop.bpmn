@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_boundary_retry_loop" targetNamespace="http://example.com/test-boundary-retry-loop" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:error id="err_remote" name="接口调用失败" errorCode="REMOTE_500" />
+  <bpmn:process id="process_boundary_retry" name="接口调用重试环" isExecutable="true">
+    <bpmn:startEvent id="start_1" name="开始">
+      <bpmn:outgoing>flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_prepare" name="组装请求参数">
+      <bpmn:incoming>flow_start</bpmn:incoming>
+      <bpmn:incoming>flow_retry</bpmn:incoming>
+      <bpmn:outgoing>flow_prepare_call</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="task_call" name="调用外部接口">
+      <bpmn:incoming>flow_prepare_call</bpmn:incoming>
+      <bpmn:outgoing>flow_call_save</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="boundary_call_error" name="调用失败" attachedToRef="task_call">
+      <bpmn:outgoing>flow_retry</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="err_remote" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="task_save" name="保存返回结果">
+      <bpmn:incoming>flow_call_save</bpmn:incoming>
+      <bpmn:outgoing>flow_save_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_1" name="结束">
+      <bpmn:incoming>flow_save_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_start" sourceRef="start_1" targetRef="task_prepare" />
+    <bpmn:sequenceFlow id="flow_prepare_call" sourceRef="task_prepare" targetRef="task_call" />
+    <bpmn:sequenceFlow id="flow_call_save" sourceRef="task_call" targetRef="task_save" />
+    <bpmn:sequenceFlow id="flow_save_end" sourceRef="task_save" targetRef="end_1" />
+    <bpmn:sequenceFlow id="flow_retry" name="重试" sourceRef="boundary_call_error" targetRef="task_prepare" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_boundary_retry_loop" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_boundary_retry_loop" bpmnElement="process_boundary_retry">
+      <bpmndi:BPMNShape id="process_boundary_retry_di" bpmnElement="process_boundary_retry">
+        <dc:Bounds x="0" y="0" width="774" height="170" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_call_di" bpmnElement="task_call">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="boundary_call_error_di" bpmnElement="boundary_call_error">
+        <dc:Bounds x="360" y="94" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="351" y="134" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_save_di" bpmnElement="task_save">
+        <dc:Bounds x="538" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
+        <dc:Bounds x="718" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_prepare_call_di" bpmnElement="flow_prepare_call">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_call_save_di" bpmnElement="flow_call_save">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_save_end_di" bpmnElement="flow_save_end">
+        <di:waypoint x="638" y="72" />
+        <di:waypoint x="718" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_retry_di" bpmnElement="flow_retry">
+        <di:waypoint x="378" y="130" />
+        <di:waypoint x="350" y="130" />
+        <di:waypoint x="350" y="122" />
+        <di:waypoint x="168" y="122" />
+        <di:waypoint x="168" y="40" />
+        <di:waypoint x="168" y="12" />
+        <di:waypoint x="228" y="12" />
+        <di:waypoint x="228" y="32" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="234" y="127" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

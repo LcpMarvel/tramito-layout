@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_event_subprocess_backedge_mix" targetNamespace="http://example.com/test-event-subprocess-backedge-mix" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:message id="msg_cancel_request" name="客户撤单请求" />
+  <bpmn:process id="process_loan_application" name="贷款申请（事件子流程+驳回回边）" isExecutable="true">
+    <bpmn:startEvent id="start_main" name="发起申请">
+      <bpmn:outgoing>main_flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_submit" name="提交贷款材料">
+      <bpmn:incoming>main_flow_1</bpmn:incoming>
+      <bpmn:incoming>main_flow_reject</bpmn:incoming>
+      <bpmn:outgoing>main_flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_review" name="信贷初审">
+      <bpmn:incoming>main_flow_2</bpmn:incoming>
+      <bpmn:outgoing>main_flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gateway_review_result" name="初审结果" gatewayDirection="Diverging">
+      <bpmn:incoming>main_flow_3</bpmn:incoming>
+      <bpmn:outgoing>main_flow_pass</bpmn:outgoing>
+      <bpmn:outgoing>main_flow_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="task_grant" name="放款">
+      <bpmn:incoming>main_flow_pass</bpmn:incoming>
+      <bpmn:outgoing>main_flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_main" name="申请完成">
+      <bpmn:incoming>main_flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="event_sub_cancel" name="客户撤单处理" triggeredByEvent="true">
+      <bpmn:startEvent id="cancel_start" name="收到撤单消息">
+        <bpmn:outgoing>cancel_flow_1</bpmn:outgoing>
+        <bpmn:messageEventDefinition messageRef="msg_cancel_request" />
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="cancel_task_terminate" name="终止审批处理">
+        <bpmn:incoming>cancel_flow_1</bpmn:incoming>
+        <bpmn:outgoing>cancel_flow_2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:serviceTask id="cancel_task_notify" name="通知客户经理">
+        <bpmn:incoming>cancel_flow_2</bpmn:incoming>
+        <bpmn:outgoing>cancel_flow_3</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="cancel_end" name="撤单完成">
+        <bpmn:incoming>cancel_flow_3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="cancel_flow_1" sourceRef="cancel_start" targetRef="cancel_task_terminate" />
+      <bpmn:sequenceFlow id="cancel_flow_2" sourceRef="cancel_task_terminate" targetRef="cancel_task_notify" />
+      <bpmn:sequenceFlow id="cancel_flow_3" sourceRef="cancel_task_notify" targetRef="cancel_end" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="main_flow_1" sourceRef="start_main" targetRef="task_submit" />
+    <bpmn:sequenceFlow id="main_flow_2" sourceRef="task_submit" targetRef="task_review" />
+    <bpmn:sequenceFlow id="main_flow_3" sourceRef="task_review" targetRef="gateway_review_result" />
+    <bpmn:sequenceFlow id="main_flow_pass" name="通过" sourceRef="gateway_review_result" targetRef="task_grant">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewPassed == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="main_flow_reject" name="驳回补件" sourceRef="gateway_review_result" targetRef="task_submit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewPassed == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="main_flow_4" sourceRef="task_grant" targetRef="end_main" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_event_subprocess_backedge_mix" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_event_subprocess_backedge_mix" bpmnElement="process_loan_application">
+      <bpmndi:BPMNShape id="process_loan_application_di" bpmnElement="process_loan_application">
+        <dc:Bounds x="0" y="0" width="904" height="169" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
+        <dc:Bounds x="62" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
+        <dc:Bounds x="178" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_review_di" bpmnElement="task_review">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_review_result_di" bpmnElement="gateway_review_result">
+        <dc:Bounds x="538" y="72" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="126" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_grant_di" bpmnElement="task_grant">
+        <dc:Bounds x="668" y="57" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
+        <dc:Bounds x="848" y="79" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="816" y="119" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
+        <di:waypoint x="98" y="97" />
+        <di:waypoint x="178" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
+        <di:waypoint x="278" y="97" />
+        <di:waypoint x="318" y="97" />
+        <di:waypoint x="318" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_3_di" bpmnElement="main_flow_3">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="498" y="72" />
+        <di:waypoint x="498" y="97" />
+        <di:waypoint x="538" y="97" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_pass_di" bpmnElement="main_flow_pass">
+        <di:waypoint x="588" y="97" />
+        <di:waypoint x="668" y="97" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="597" y="102" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_reject_di" bpmnElement="main_flow_reject">
+        <di:waypoint x="563" y="72" />
+        <di:waypoint x="563" y="16" />
+        <di:waypoint x="228" y="16" />
+        <di:waypoint x="228" y="57" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="43" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="main_flow_4_di" bpmnElement="main_flow_4">
+        <di:waypoint x="768" y="97" />
+        <di:waypoint x="848" y="97" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

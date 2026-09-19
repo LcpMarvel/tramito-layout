@@ -1,0 +1,130 @@
+{
+  "id": "definitions_event_subprocess_backedge_mix",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-event-subprocess-backedge-mix",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "messages": [
+    { "id": "msg_cancel_request", "name": "客户撤单请求" }
+  ],
+  "children": [
+    {
+      "id": "process_loan_application",
+      "bpmn": {
+        "type": "process",
+        "name": "贷款申请（事件子流程+驳回回边）",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "发起申请" },
+          "labels": [{ "text": "发起申请" }]
+        },
+        {
+          "id": "task_submit",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "提交贷款材料" },
+          "labels": [{ "text": "提交贷款材料" }]
+        },
+        {
+          "id": "task_review",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "信贷初审" },
+          "labels": [{ "text": "信贷初审" }]
+        },
+        {
+          "id": "gateway_review_result",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "初审结果",
+            "gatewayDirection": "Diverging"
+          },
+          "labels": [{ "text": "初审结果" }]
+        },
+        {
+          "id": "task_grant",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "放款" },
+          "labels": [{ "text": "放款" }]
+        },
+        {
+          "id": "end_main",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "申请完成" },
+          "labels": [{ "text": "申请完成" }]
+        },
+        {
+          "id": "event_sub_cancel",
+          "width": 100, "height": 80,
+          "bpmn": {
+            "type": "subProcess",
+            "name": "客户撤单处理",
+            "triggeredByEvent": true,
+            "isExpanded": true
+          },
+          "labels": [{ "text": "客户撤单处理" }],
+          "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+            "elk.padding": "[top=40,left=20,bottom=20,right=20]"
+          },
+          "children": [
+            {
+              "id": "cancel_start",
+              "width": 36, "height": 36,
+              "bpmn": {
+                "type": "startEvent",
+                "eventDefinitionType": "message",
+                "name": "收到撤单消息",
+                "isInterrupting": true,
+                "messageRef": "msg_cancel_request"
+              },
+              "labels": [{ "text": "撤单消息" }]
+            },
+            {
+              "id": "cancel_task_terminate",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "终止审批处理" },
+              "labels": [{ "text": "终止审批处理" }]
+            },
+            {
+              "id": "cancel_task_notify",
+              "width": 100, "height": 80,
+              "bpmn": { "type": "serviceTask", "name": "通知客户经理" },
+              "labels": [{ "text": "通知客户经理" }]
+            },
+            {
+              "id": "cancel_end",
+              "width": 36, "height": 36,
+              "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "撤单完成" },
+              "labels": [{ "text": "撤单完成" }]
+            }
+          ],
+          "edges": [
+            { "id": "cancel_flow_1", "sources": ["cancel_start"], "targets": ["cancel_task_terminate"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "cancel_flow_2", "sources": ["cancel_task_terminate"], "targets": ["cancel_task_notify"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "cancel_flow_3", "sources": ["cancel_task_notify"], "targets": ["cancel_end"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ],
+      "edges": [
+        { "id": "main_flow_1", "sources": ["start_main"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_2", "sources": ["task_submit"], "targets": ["task_review"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_3", "sources": ["task_review"], "targets": ["gateway_review_result"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "main_flow_pass", "sources": ["gateway_review_result"], "targets": ["task_grant"], "bpmn": { "type": "sequenceFlow", "name": "通过", "conditionExpression": { "body": "${reviewPassed == true}" } }, "labels": [{ "text": "通过" }] },
+        { "id": "main_flow_reject", "sources": ["gateway_review_result"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow", "name": "驳回补件", "conditionExpression": { "body": "${reviewPassed == false}" } }, "labels": [{ "text": "驳回补件" }] },
+        { "id": "main_flow_4", "sources": ["task_grant"], "targets": ["end_main"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

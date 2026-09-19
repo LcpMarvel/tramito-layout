@@ -1,0 +1,122 @@
+{
+  "id": "definitions_multiple_empty_lanes",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-multiple-empty-lanes",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "多空泳道报销流程"
+      },
+      "children": [
+        {
+          "id": "pool_company",
+          "bpmn": {
+            "type": "participant",
+            "name": "贸易公司",
+            "processRef": "process_expense"
+          },
+          "layoutOptions": {
+            "elk.partitioning.activate": true,
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT"
+          },
+          "children": [
+            {
+              "id": "lane_1_employee",
+              "bpmn": { "type": "lane", "name": "申请人" },
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "children": [
+                {
+                  "id": "start_expense",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "发起报销" },
+                  "labels": [{ "text": "发起报销" }]
+                },
+                {
+                  "id": "task_submit",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "提交报销单" },
+                  "labels": [{ "text": "提交报销单" }]
+                },
+                {
+                  "id": "task_confirm_receipt",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "确认到账" },
+                  "labels": [{ "text": "确认到账" }]
+                },
+                {
+                  "id": "end_done",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "报销完成" },
+                  "labels": [{ "text": "报销完成" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_2_reserved_audit",
+              "bpmn": { "type": "lane", "name": "稽核组（预留）" },
+              "layoutOptions": { "elk.partitioning.partition": 1 },
+              "children": []
+            },
+            {
+              "id": "lane_3_manager",
+              "bpmn": { "type": "lane", "name": "部门经理" },
+              "layoutOptions": { "elk.partitioning.partition": 2 },
+              "children": [
+                {
+                  "id": "task_manager_approve",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "经理审批" },
+                  "labels": [{ "text": "经理审批" }]
+                }
+              ]
+            },
+            {
+              "id": "lane_4_reserved_legal",
+              "bpmn": { "type": "lane", "name": "法务（预留）" },
+              "layoutOptions": { "elk.partitioning.partition": 3 },
+              "children": []
+            },
+            {
+              "id": "lane_5_reserved_tax",
+              "bpmn": { "type": "lane", "name": "税务（预留）" },
+              "layoutOptions": { "elk.partitioning.partition": 4 },
+              "children": []
+            },
+            {
+              "id": "lane_6_cashier",
+              "bpmn": { "type": "lane", "name": "出纳" },
+              "layoutOptions": { "elk.partitioning.partition": 5 },
+              "children": [
+                {
+                  "id": "task_pay",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "serviceTask", "name": "打款" },
+                  "labels": [{ "text": "打款" }]
+                }
+              ]
+            }
+          ],
+          "edges": [
+            { "id": "flow_1", "sources": ["start_expense"], "targets": ["task_submit"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_2", "sources": ["task_submit"], "targets": ["task_manager_approve"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_3", "sources": ["task_manager_approve"], "targets": ["task_pay"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_4", "sources": ["task_pay"], "targets": ["task_confirm_receipt"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_5", "sources": ["task_confirm_receipt"], "targets": ["end_done"], "bpmn": { "type": "sequenceFlow" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

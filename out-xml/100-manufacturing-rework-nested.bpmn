@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_manufacturing_rework" targetNamespace="http://example.com/manufacturing-rework-nested" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_manufacturing" name="制造返工流程" isExecutable="true">
+    <bpmn:startEvent id="start_order" name="生产工单下达">
+      <bpmn:outgoing>f_start_prepare</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_prepare_material" name="备料">
+      <bpmn:incoming>f_start_prepare</bpmn:incoming>
+      <bpmn:incoming>f_quality_rework</bpmn:incoming>
+      <bpmn:outgoing>f_prepare_assembly</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="subprocess_assembly" name="装配工序">
+      <bpmn:incoming>f_prepare_assembly</bpmn:incoming>
+      <bpmn:outgoing>f_assembly_inspect</bpmn:outgoing>
+      <bpmn:startEvent id="sub_start_assembly" name="开始装配">
+        <bpmn:outgoing>sub_f_start_parts</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="sub_task_parts" name="部件装配">
+        <bpmn:incoming>sub_f_start_parts</bpmn:incoming>
+        <bpmn:incoming>sub_f_check_rework</bpmn:incoming>
+        <bpmn:outgoing>sub_f_parts_whole</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="sub_task_whole" name="整机组装">
+        <bpmn:incoming>sub_f_parts_whole</bpmn:incoming>
+        <bpmn:outgoing>sub_f_whole_check</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="sub_gw_selfcheck" name="自检是否合格" gatewayDirection="Diverging">
+        <bpmn:incoming>sub_f_whole_check</bpmn:incoming>
+        <bpmn:outgoing>sub_f_check_rework</bpmn:outgoing>
+        <bpmn:outgoing>sub_f_check_done</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="sub_end_assembly" name="装配完成">
+        <bpmn:incoming>sub_f_check_done</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="sub_f_start_parts" sourceRef="sub_start_assembly" targetRef="sub_task_parts" />
+      <bpmn:sequenceFlow id="sub_f_parts_whole" sourceRef="sub_task_parts" targetRef="sub_task_whole" />
+      <bpmn:sequenceFlow id="sub_f_whole_check" sourceRef="sub_task_whole" targetRef="sub_gw_selfcheck" />
+      <bpmn:sequenceFlow id="sub_f_check_rework" name="不合格返工" sourceRef="sub_gw_selfcheck" targetRef="sub_task_parts" />
+      <bpmn:sequenceFlow id="sub_f_check_done" name="合格" sourceRef="sub_gw_selfcheck" targetRef="sub_end_assembly" />
+    </bpmn:subProcess>
+    <bpmn:userTask id="task_quality_inspect" name="成品质检">
+      <bpmn:incoming>f_assembly_inspect</bpmn:incoming>
+      <bpmn:outgoing>f_inspect_gw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gw_quality_result" name="质检是否合格" gatewayDirection="Diverging">
+      <bpmn:incoming>f_inspect_gw</bpmn:incoming>
+      <bpmn:outgoing>f_quality_rework</bpmn:outgoing>
+      <bpmn:outgoing>f_quality_pass</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="task_package_store" name="包装入库">
+      <bpmn:incoming>f_quality_pass</bpmn:incoming>
+      <bpmn:outgoing>f_package_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_produced" name="生产完成">
+      <bpmn:incoming>f_package_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f_start_prepare" sourceRef="start_order" targetRef="task_prepare_material" />
+    <bpmn:sequenceFlow id="f_prepare_assembly" sourceRef="task_prepare_material" targetRef="subprocess_assembly" />
+    <bpmn:sequenceFlow id="f_assembly_inspect" sourceRef="subprocess_assembly" targetRef="task_quality_inspect" />
+    <bpmn:sequenceFlow id="f_inspect_gw" sourceRef="task_quality_inspect" targetRef="gw_quality_result" />
+    <bpmn:sequenceFlow id="f_quality_rework" name="不合格重新备料" sourceRef="gw_quality_result" targetRef="task_prepare_material" />
+    <bpmn:sequenceFlow id="f_quality_pass" name="合格" sourceRef="gw_quality_result" targetRef="task_package_store" />
+    <bpmn:sequenceFlow id="f_package_end" sourceRef="task_package_store" targetRef="end_produced" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_manufacturing_rework" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_manufacturing_rework" bpmnElement="process_manufacturing">
+      <bpmndi:BPMNShape id="process_manufacturing_di" bpmnElement="process_manufacturing">
+        <dc:Bounds x="0" y="0" width="1770" height="264" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
+        <dc:Bounds x="62" y="160.75" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="200.75" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_prepare_material_di" bpmnElement="task_prepare_material">
+        <dc:Bounds x="178" y="138.75" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="subprocess_assembly_di" bpmnElement="subprocess_assembly" isExpanded="true">
+        <dc:Bounds x="358" y="32" width="786" height="189" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_start_assembly_di" bpmnElement="sub_start_assembly">
+        <dc:Bounds x="390" y="131" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="171" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_parts_di" bpmnElement="sub_task_parts">
+        <dc:Bounds x="526" y="109" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_task_whole_di" bpmnElement="sub_task_whole">
+        <dc:Bounds x="726" y="84" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_gw_selfcheck_di" bpmnElement="sub_gw_selfcheck">
+        <dc:Bounds x="926" y="124" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="909" y="178" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sub_end_assembly_di" bpmnElement="sub_end_assembly">
+        <dc:Bounds x="1076" y="131" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1044" y="171" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_quality_inspect_di" bpmnElement="task_quality_inspect">
+        <dc:Bounds x="1224" y="86.5" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_quality_result_di" bpmnElement="gw_quality_result">
+        <dc:Bounds x="1404" y="153.75" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1387" y="207.75" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_package_store_di" bpmnElement="task_package_store">
+        <dc:Bounds x="1534" y="138.75" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_produced_di" bpmnElement="end_produced">
+        <dc:Bounds x="1714" y="160.75" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1682" y="200.75" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="sub_f_start_parts_di" bpmnElement="sub_f_start_parts">
+        <di:waypoint x="426" y="149" />
+        <di:waypoint x="526" y="149" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_f_parts_whole_di" bpmnElement="sub_f_parts_whole">
+        <di:waypoint x="626" y="149" />
+        <di:waypoint x="676" y="149" />
+        <di:waypoint x="676" y="124" />
+        <di:waypoint x="726" y="124" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_f_whole_check_di" bpmnElement="sub_f_whole_check">
+        <di:waypoint x="826" y="124" />
+        <di:waypoint x="876" y="124" />
+        <di:waypoint x="876" y="149" />
+        <di:waypoint x="926" y="149" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_f_check_rework_di" bpmnElement="sub_f_check_rework">
+        <di:waypoint x="951" y="124" />
+        <di:waypoint x="951" y="68" />
+        <di:waypoint x="576" y="68" />
+        <di:waypoint x="576" y="109" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="956" y="95" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="sub_f_check_done_di" bpmnElement="sub_f_check_done">
+        <di:waypoint x="976" y="149" />
+        <di:waypoint x="1076" y="149" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="154" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_start_prepare_di" bpmnElement="f_start_prepare">
+        <di:waypoint x="98" y="178.75" />
+        <di:waypoint x="178" y="178.75" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_prepare_assembly_di" bpmnElement="f_prepare_assembly">
+        <di:waypoint x="278" y="178.75" />
+        <di:waypoint x="318" y="178.75" />
+        <di:waypoint x="318" y="126.5" />
+        <di:waypoint x="358" y="126.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_assembly_inspect_di" bpmnElement="f_assembly_inspect">
+        <di:waypoint x="1144" y="126.5" />
+        <di:waypoint x="1224" y="126.5" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_inspect_gw_di" bpmnElement="f_inspect_gw">
+        <di:waypoint x="1324" y="126.5" />
+        <di:waypoint x="1364" y="126.5" />
+        <di:waypoint x="1364" y="178.75" />
+        <di:waypoint x="1404" y="178.75" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_quality_rework_di" bpmnElement="f_quality_rework">
+        <di:waypoint x="1429" y="153.75" />
+        <di:waypoint x="1429" y="16" />
+        <di:waypoint x="228" y="16" />
+        <di:waypoint x="228" y="138.75" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1434" y="124.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_quality_pass_di" bpmnElement="f_quality_pass">
+        <di:waypoint x="1454" y="178.75" />
+        <di:waypoint x="1534" y="178.75" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1463" y="183.75" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="f_package_end_di" bpmnElement="f_package_end">
+        <di:waypoint x="1634" y="178.75" />
+        <di:waypoint x="1714" y="178.75" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

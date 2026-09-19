@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_lane_height_fanout" targetNamespace="http://example.com/test-lane-height-fanout" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:collaboration id="collaboration_1" name="年度审计六路并行">
+    <bpmn:participant id="pool_audit" name="审计事务所" processRef="process_audit" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_audit" name="审计事务所" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="lane_partner" name="项目合伙人">
+        <bpmn:flowNodeRef>start_audit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_plan</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_field_team" name="现场审计组">
+        <bpmn:flowNodeRef>gw_split</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_cash</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_receivable</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_inventory</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_fixed_asset</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_revenue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_expense</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>gw_join</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="lane_quality" name="质控复核">
+        <bpmn:flowNodeRef>task_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>end_audit</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="start_audit" name="审计立项">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_plan" name="制定审计计划">
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gw_split" name="分组并行">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_fan_1</bpmn:outgoing>
+      <bpmn:outgoing>flow_fan_2</bpmn:outgoing>
+      <bpmn:outgoing>flow_fan_3</bpmn:outgoing>
+      <bpmn:outgoing>flow_fan_4</bpmn:outgoing>
+      <bpmn:outgoing>flow_fan_5</bpmn:outgoing>
+      <bpmn:outgoing>flow_fan_6</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="task_cash" name="货币资金盘点">
+      <bpmn:incoming>flow_fan_1</bpmn:incoming>
+      <bpmn:outgoing>flow_join_1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_receivable" name="应收账款函证">
+      <bpmn:incoming>flow_fan_2</bpmn:incoming>
+      <bpmn:outgoing>flow_join_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_inventory" name="存货监盘">
+      <bpmn:incoming>flow_fan_3</bpmn:incoming>
+      <bpmn:outgoing>flow_join_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_fixed_asset" name="固定资产抽查">
+      <bpmn:incoming>flow_fan_4</bpmn:incoming>
+      <bpmn:outgoing>flow_join_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_revenue" name="收入截止测试">
+      <bpmn:incoming>flow_fan_5</bpmn:incoming>
+      <bpmn:outgoing>flow_join_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="task_expense" name="费用凭证抽凭">
+      <bpmn:incoming>flow_fan_6</bpmn:incoming>
+      <bpmn:outgoing>flow_join_6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="gw_join" name="汇总底稿">
+      <bpmn:incoming>flow_join_1</bpmn:incoming>
+      <bpmn:incoming>flow_join_2</bpmn:incoming>
+      <bpmn:incoming>flow_join_3</bpmn:incoming>
+      <bpmn:incoming>flow_join_4</bpmn:incoming>
+      <bpmn:incoming>flow_join_5</bpmn:incoming>
+      <bpmn:incoming>flow_join_6</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="task_review" name="质控复核底稿">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="end_audit" name="出具报告">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_1" sourceRef="start_audit" targetRef="task_plan" />
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_plan" targetRef="gw_split" />
+    <bpmn:sequenceFlow id="flow_fan_1" sourceRef="gw_split" targetRef="task_cash" />
+    <bpmn:sequenceFlow id="flow_fan_2" sourceRef="gw_split" targetRef="task_receivable" />
+    <bpmn:sequenceFlow id="flow_fan_3" sourceRef="gw_split" targetRef="task_inventory" />
+    <bpmn:sequenceFlow id="flow_fan_4" sourceRef="gw_split" targetRef="task_fixed_asset" />
+    <bpmn:sequenceFlow id="flow_fan_5" sourceRef="gw_split" targetRef="task_revenue" />
+    <bpmn:sequenceFlow id="flow_fan_6" sourceRef="gw_split" targetRef="task_expense" />
+    <bpmn:sequenceFlow id="flow_join_1" sourceRef="task_cash" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_2" sourceRef="task_receivable" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_3" sourceRef="task_inventory" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_4" sourceRef="task_fixed_asset" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_5" sourceRef="task_revenue" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_join_6" sourceRef="task_expense" targetRef="gw_join" />
+    <bpmn:sequenceFlow id="flow_3" sourceRef="gw_join" targetRef="task_review" />
+    <bpmn:sequenceFlow id="flow_4" sourceRef="task_review" targetRef="end_audit" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_lane_height_fanout" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_lane_height_fanout" bpmnElement="collaboration_1">
+      <bpmndi:BPMNShape id="collaboration_1_di" bpmnElement="collaboration_1">
+        <dc:Bounds x="0" y="0" width="1034" height="1059" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_audit_di" bpmnElement="pool_audit" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1034" height="1059" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_partner_di" bpmnElement="lane_partner" isHorizontal="true">
+        <dc:Bounds x="30" y="20" width="1004" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_audit_di" bpmnElement="start_audit">
+        <dc:Bounds x="62" y="58" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="98" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_plan_di" bpmnElement="task_plan">
+        <dc:Bounds x="178" y="36" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_field_team_di" bpmnElement="lane_field_team" isHorizontal="true">
+        <dc:Bounds x="30" y="132" width="1004" height="795" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_split_di" bpmnElement="gw_split">
+        <dc:Bounds x="358" y="302" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="355" y="284" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_cash_di" bpmnElement="task_cash">
+        <dc:Bounds x="488" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_receivable_di" bpmnElement="task_receivable">
+        <dc:Bounds x="488" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_inventory_di" bpmnElement="task_inventory">
+        <dc:Bounds x="488" y="423" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_fixed_asset_di" bpmnElement="task_fixed_asset">
+        <dc:Bounds x="488" y="559" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_revenue_di" bpmnElement="task_revenue">
+        <dc:Bounds x="488" y="695" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_expense_di" bpmnElement="task_expense">
+        <dc:Bounds x="488" y="831" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_join_di" bpmnElement="gw_join">
+        <dc:Bounds x="668" y="302" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="722" y="320" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lane_quality_di" bpmnElement="lane_quality" isHorizontal="true">
+        <dc:Bounds x="30" y="927" width="1004" height="112" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_review_di" bpmnElement="task_review">
+        <dc:Bounds x="798" y="943" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_audit_di" bpmnElement="end_audit">
+        <dc:Bounds x="978" y="965" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="946" y="1005" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
+        <di:waypoint x="98" y="76" />
+        <di:waypoint x="178" y="76" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
+        <di:waypoint x="228" y="116" />
+        <di:waypoint x="228" y="327" />
+        <di:waypoint x="358" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_1_di" bpmnElement="flow_fan_1">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="488" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_2_di" bpmnElement="flow_fan_2">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="448" y="327" />
+        <di:waypoint x="448" y="188" />
+        <di:waypoint x="488" y="188" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_3_di" bpmnElement="flow_fan_3">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="448" y="327" />
+        <di:waypoint x="448" y="463" />
+        <di:waypoint x="488" y="463" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_4_di" bpmnElement="flow_fan_4">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="448" y="327" />
+        <di:waypoint x="448" y="599" />
+        <di:waypoint x="488" y="599" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_5_di" bpmnElement="flow_fan_5">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="448" y="327" />
+        <di:waypoint x="448" y="735" />
+        <di:waypoint x="488" y="735" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_fan_6_di" bpmnElement="flow_fan_6">
+        <di:waypoint x="408" y="327" />
+        <di:waypoint x="448" y="327" />
+        <di:waypoint x="448" y="871" />
+        <di:waypoint x="488" y="871" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_1_di" bpmnElement="flow_join_1">
+        <di:waypoint x="588" y="327" />
+        <di:waypoint x="668" y="327" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_2_di" bpmnElement="flow_join_2">
+        <di:waypoint x="538" y="228" />
+        <di:waypoint x="538" y="265" />
+        <di:waypoint x="693" y="265" />
+        <di:waypoint x="693" y="302" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_3_di" bpmnElement="flow_join_3">
+        <di:waypoint x="538" y="423" />
+        <di:waypoint x="538" y="387.5" />
+        <di:waypoint x="693" y="387.5" />
+        <di:waypoint x="693" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_4_di" bpmnElement="flow_join_4">
+        <di:waypoint x="538" y="559" />
+        <di:waypoint x="538" y="551" />
+        <di:waypoint x="478" y="551" />
+        <di:waypoint x="478" y="413" />
+        <di:waypoint x="693" y="413" />
+        <di:waypoint x="693" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_5_di" bpmnElement="flow_join_5">
+        <di:waypoint x="538" y="695" />
+        <di:waypoint x="538" y="687" />
+        <di:waypoint x="478" y="687" />
+        <di:waypoint x="478" y="523.5" />
+        <di:waypoint x="693" y="523.5" />
+        <di:waypoint x="693" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_join_6_di" bpmnElement="flow_join_6">
+        <di:waypoint x="538" y="831" />
+        <di:waypoint x="538" y="823" />
+        <di:waypoint x="478" y="823" />
+        <di:waypoint x="478" y="539" />
+        <di:waypoint x="693" y="539" />
+        <di:waypoint x="693" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
+        <di:waypoint x="693" y="352" />
+        <di:waypoint x="693" y="983" />
+        <di:waypoint x="798" y="983" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_4_di" bpmnElement="flow_4">
+        <di:waypoint x="898" y="983" />
+        <di:waypoint x="978" y="983" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_multi_start_mesh" targetNamespace="http://example.com/test-multi-start-mesh" exporter="ELK-BPMN Test Generator" exporterVersion="1.0">
+  <bpmn:process id="process_multi_start_mesh" name="多起点网状汇合测试" isExecutable="true">
+    <bpmn:startEvent id="start_web" name="网页渠道发起">
+      <bpmn:outgoing>flow_web</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_app" name="App渠道发起">
+      <bpmn:outgoing>flow_app</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_phone" name="电话渠道发起">
+      <bpmn:outgoing>flow_phone</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:startEvent id="start_counter" name="柜面渠道发起">
+      <bpmn:outgoing>flow_counter</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="task_web_check" name="网页表单校验">
+      <bpmn:incoming>flow_web</bpmn:incoming>
+      <bpmn:outgoing>flow_web_merge</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_app_check" name="App实名核验">
+      <bpmn:incoming>flow_app</bpmn:incoming>
+      <bpmn:outgoing>flow_app_merge</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_phone_record" name="电话录音登记">
+      <bpmn:incoming>flow_phone</bpmn:incoming>
+      <bpmn:outgoing>flow_phone_merge</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gateway_online_merge" name="线上渠道汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_web_merge</bpmn:incoming>
+      <bpmn:incoming>flow_app_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_online_process</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gateway_offline_merge" name="线下渠道汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_counter</bpmn:incoming>
+      <bpmn:incoming>flow_phone_merge</bpmn:incoming>
+      <bpmn:outgoing>flow_offline_process</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="task_online_process" name="线上统一受理">
+      <bpmn:incoming>flow_online_process</bpmn:incoming>
+      <bpmn:outgoing>flow_online_route</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="task_offline_process" name="线下人工受理">
+      <bpmn:incoming>flow_offline_process</bpmn:incoming>
+      <bpmn:outgoing>flow_offline_manual</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gateway_route" name="是否自动审批" gatewayDirection="Diverging">
+      <bpmn:incoming>flow_online_route</bpmn:incoming>
+      <bpmn:outgoing>flow_route_auto</bpmn:outgoing>
+      <bpmn:outgoing>flow_route_manual</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="gateway_manual_merge" name="人工通道汇合" gatewayDirection="Converging">
+      <bpmn:incoming>flow_route_manual</bpmn:incoming>
+      <bpmn:incoming>flow_offline_manual</bpmn:incoming>
+      <bpmn:outgoing>flow_manual_end</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="end_auto" name="自动办结">
+      <bpmn:incoming>flow_route_auto</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="end_manual" name="人工办结">
+      <bpmn:incoming>flow_manual_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_web" sourceRef="start_web" targetRef="task_web_check" />
+    <bpmn:sequenceFlow id="flow_app" sourceRef="start_app" targetRef="task_app_check" />
+    <bpmn:sequenceFlow id="flow_phone" sourceRef="start_phone" targetRef="task_phone_record" />
+    <bpmn:sequenceFlow id="flow_counter" name="柜面直接受理" sourceRef="start_counter" targetRef="gateway_offline_merge" />
+    <bpmn:sequenceFlow id="flow_web_merge" sourceRef="task_web_check" targetRef="gateway_online_merge" />
+    <bpmn:sequenceFlow id="flow_app_merge" sourceRef="task_app_check" targetRef="gateway_online_merge" />
+    <bpmn:sequenceFlow id="flow_phone_merge" sourceRef="task_phone_record" targetRef="gateway_offline_merge" />
+    <bpmn:sequenceFlow id="flow_online_process" sourceRef="gateway_online_merge" targetRef="task_online_process" />
+    <bpmn:sequenceFlow id="flow_offline_process" sourceRef="gateway_offline_merge" targetRef="task_offline_process" />
+    <bpmn:sequenceFlow id="flow_online_route" sourceRef="task_online_process" targetRef="gateway_route" />
+    <bpmn:sequenceFlow id="flow_route_auto" name="满足自动审批规则" sourceRef="gateway_route" targetRef="end_auto" />
+    <bpmn:sequenceFlow id="flow_route_manual" name="需人工复核" sourceRef="gateway_route" targetRef="gateway_manual_merge" />
+    <bpmn:sequenceFlow id="flow_offline_manual" sourceRef="task_offline_process" targetRef="gateway_manual_merge" />
+    <bpmn:sequenceFlow id="flow_manual_end" sourceRef="gateway_manual_merge" targetRef="end_manual" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_multi_start_mesh" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_multi_start_mesh" bpmnElement="process_multi_start_mesh">
+      <bpmndi:BPMNShape id="process_multi_start_mesh_di" bpmnElement="process_multi_start_mesh">
+        <dc:Bounds x="0" y="0" width="1084" height="464.33333333333326" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_web_di" bpmnElement="start_web">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_app_di" bpmnElement="start_app">
+        <dc:Bounds x="62" y="194" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="234" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_phone_di" bpmnElement="start_phone">
+        <dc:Bounds x="62" y="300.33333333333337" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="340.33333333333337" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_counter_di" bpmnElement="start_counter">
+        <dc:Bounds x="62" y="396.33333333333326" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="436.33333333333326" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_web_check_di" bpmnElement="task_web_check">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_app_check_di" bpmnElement="task_app_check">
+        <dc:Bounds x="178" y="172" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_phone_record_di" bpmnElement="task_phone_record">
+        <dc:Bounds x="358" y="278.33333333333337" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_online_merge_di" bpmnElement="gateway_online_merge">
+        <dc:Bounds x="374.6666666666667" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="357.6666666666667" y="99" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_offline_merge_di" bpmnElement="gateway_offline_merge">
+        <dc:Bounds x="554.6666666666666" y="341.33333333333326" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="537.6666666666666" y="323.33333333333326" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_online_process_di" bpmnElement="task_online_process">
+        <dc:Bounds x="538" y="102" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_offline_process_di" bpmnElement="task_offline_process">
+        <dc:Bounds x="718" y="326.33333333333337" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_route_di" bpmnElement="gateway_route">
+        <dc:Bounds x="751.3333333333334" y="117" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="734.3333333333334" y="99" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gateway_manual_merge_di" bpmnElement="gateway_manual_merge">
+        <dc:Bounds x="898" y="333" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="881" y="315" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_auto_di" bpmnElement="end_auto">
+        <dc:Bounds x="1028" y="115.66666666666666" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="996" y="155.66666666666666" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_manual_di" bpmnElement="end_manual">
+        <dc:Bounds x="1028" y="340" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="996" y="380" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_web_di" bpmnElement="flow_web">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_app_di" bpmnElement="flow_app">
+        <di:waypoint x="98" y="212" />
+        <di:waypoint x="178" y="212" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_phone_di" bpmnElement="flow_phone">
+        <di:waypoint x="98" y="318.33333333333337" />
+        <di:waypoint x="358" y="318.33333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_counter_di" bpmnElement="flow_counter">
+        <di:waypoint x="98" y="414.33333333333326" />
+        <di:waypoint x="326.3333333333333" y="414.33333333333326" />
+        <di:waypoint x="326.3333333333333" y="366.33333333333326" />
+        <di:waypoint x="554.6666666666666" y="366.33333333333326" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="187.16666666666666" y="395.33333333333326" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_web_merge_di" bpmnElement="flow_web_merge">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="326.33333333333337" y="72" />
+        <di:waypoint x="326.33333333333337" y="142" />
+        <di:waypoint x="374.6666666666667" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_app_merge_di" bpmnElement="flow_app_merge">
+        <di:waypoint x="278" y="212" />
+        <di:waypoint x="326.33333333333337" y="212" />
+        <di:waypoint x="326.33333333333337" y="142" />
+        <di:waypoint x="374.6666666666667" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_phone_merge_di" bpmnElement="flow_phone_merge">
+        <di:waypoint x="458" y="318.33333333333337" />
+        <di:waypoint x="506.3333333333333" y="318.33333333333337" />
+        <di:waypoint x="506.3333333333333" y="366.33333333333326" />
+        <di:waypoint x="554.6666666666666" y="366.33333333333326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_online_process_di" bpmnElement="flow_online_process">
+        <di:waypoint x="424.6666666666667" y="142" />
+        <di:waypoint x="538" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_offline_process_di" bpmnElement="flow_offline_process">
+        <di:waypoint x="604.6666666666666" y="366.33333333333326" />
+        <di:waypoint x="718" y="366.33333333333337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_online_route_di" bpmnElement="flow_online_route">
+        <di:waypoint x="638" y="142" />
+        <di:waypoint x="751.3333333333334" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_route_auto_di" bpmnElement="flow_route_auto">
+        <di:waypoint x="801.3333333333334" y="142" />
+        <di:waypoint x="1028" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810.3333333333334" y="147" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_route_manual_di" bpmnElement="flow_route_manual">
+        <di:waypoint x="801.3333333333334" y="142" />
+        <di:waypoint x="849.6666666666667" y="142" />
+        <di:waypoint x="849.6666666666667" y="358" />
+        <di:waypoint x="898" y="358" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="810.3333333333334" y="123" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_offline_manual_di" bpmnElement="flow_offline_manual">
+        <di:waypoint x="818" y="358" />
+        <di:waypoint x="898" y="358" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_manual_end_di" bpmnElement="flow_manual_end">
+        <di:waypoint x="948" y="358" />
+        <di:waypoint x="1028" y="358" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

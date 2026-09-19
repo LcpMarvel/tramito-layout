@@ -1,0 +1,128 @@
+{
+  "id": "definitions_unbalanced_branches",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-unbalanced-branches",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80
+  },
+  "children": [
+    {
+      "id": "process_unbalanced",
+      "bpmn": {
+        "type": "process",
+        "name": "极不均衡分支入职流程",
+        "isExecutable": true
+      },
+      "children": [
+        {
+          "id": "start_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "startEvent", "eventDefinitionType": "none", "name": "录用确认" },
+          "labels": [{ "text": "录用确认" }]
+        },
+        {
+          "id": "gw_type_div",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "用工类型",
+            "gatewayDirection": "Diverging",
+            "default": "flow_fulltime"
+          },
+          "labels": [{ "text": "用工类型" }]
+        },
+        {
+          "id": "task_intern",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "签实习协议" },
+          "labels": [{ "text": "签实习协议" }]
+        },
+        {
+          "id": "task_ft_1",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "签劳动合同" },
+          "labels": [{ "text": "签劳动合同" }]
+        },
+        {
+          "id": "task_ft_2",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "体检报告核验" },
+          "labels": [{ "text": "体检报告核验" }]
+        },
+        {
+          "id": "task_ft_3",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "开通办公账号" },
+          "labels": [{ "text": "开通办公账号" }]
+        },
+        {
+          "id": "task_ft_4",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "领取办公设备" },
+          "labels": [{ "text": "领取办公设备" }]
+        },
+        {
+          "id": "task_ft_5",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "社保公积金登记" },
+          "labels": [{ "text": "社保公积金登记" }]
+        },
+        {
+          "id": "task_ft_6",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "入职培训" },
+          "labels": [{ "text": "入职培训" }]
+        },
+        {
+          "id": "task_ft_7",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "userTask", "name": "导师见面会" },
+          "labels": [{ "text": "导师见面会" }]
+        },
+        {
+          "id": "gw_type_conv",
+          "width": 50, "height": 50,
+          "bpmn": {
+            "type": "exclusiveGateway",
+            "name": "入职汇合",
+            "gatewayDirection": "Converging"
+          },
+          "labels": [{ "text": "入职汇合" }]
+        },
+        {
+          "id": "task_report",
+          "width": 100, "height": 80,
+          "bpmn": { "type": "serviceTask", "name": "通知部门报到" },
+          "labels": [{ "text": "通知部门报到" }]
+        },
+        {
+          "id": "end_1",
+          "width": 36, "height": 36,
+          "bpmn": { "type": "endEvent", "eventDefinitionType": "none", "name": "入职完成" },
+          "labels": [{ "text": "入职完成" }]
+        }
+      ],
+      "edges": [
+        { "id": "flow_start", "sources": ["start_1"], "targets": ["gw_type_div"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_intern", "sources": ["gw_type_div"], "targets": ["task_intern"], "bpmn": { "type": "sequenceFlow", "name": "实习生", "conditionExpression": { "body": "${type == 'intern'}" } }, "labels": [{ "text": "实习生" }] },
+        { "id": "flow_fulltime", "sources": ["gw_type_div"], "targets": ["task_ft_1"], "bpmn": { "type": "sequenceFlow", "name": "正式员工", "isDefault": true }, "labels": [{ "text": "正式员工" }] },
+        { "id": "flow_ft_12", "sources": ["task_ft_1"], "targets": ["task_ft_2"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_23", "sources": ["task_ft_2"], "targets": ["task_ft_3"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_34", "sources": ["task_ft_3"], "targets": ["task_ft_4"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_45", "sources": ["task_ft_4"], "targets": ["task_ft_5"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_56", "sources": ["task_ft_5"], "targets": ["task_ft_6"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_67", "sources": ["task_ft_6"], "targets": ["task_ft_7"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_intern_conv", "sources": ["task_intern"], "targets": ["gw_type_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_ft_conv", "sources": ["task_ft_7"], "targets": ["gw_type_conv"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_report", "sources": ["gw_type_conv"], "targets": ["task_report"], "bpmn": { "type": "sequenceFlow" } },
+        { "id": "flow_to_end", "sources": ["task_report"], "targets": ["end_1"], "bpmn": { "type": "sequenceFlow" } }
+      ]
+    }
+  ]
+}

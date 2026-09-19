@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="definitions_datastore_cross_pool" targetNamespace="http://example.com/test-datastore-cross-pool" exporter="bpmn-elk-layout" exporterVersion="1.0.0">
+  <bpmn:message id="msg_outbound_notice" name="出库通知" />
+  <bpmn:collaboration id="collaboration_order_wms" name="订单与仓储共享数据库">
+    <bpmn:participant id="pool_order_center" name="订单中心" processRef="process_order_center" />
+    <bpmn:participant id="pool_wms" name="仓储系统" processRef="process_wms" />
+    <bpmn:messageFlow id="msgflow_outbound" sourceRef="task_notify_wms" targetRef="start_wms" messageRef="msg_outbound_notice" />
+    <bpmn:messageFlow id="data_in_pick_orders" sourceRef="data_store_orders" targetRef="task_pick_goods" />
+    <bpmn:messageFlow id="data_out_stock_orders" sourceRef="task_update_stock" targetRef="data_store_orders" />
+  </bpmn:collaboration>
+  <bpmn:process id="process_order_center" name="订单中心" isExecutable="true">
+    <bpmn:startEvent id="start_order" name="客户下单">
+      <bpmn:outgoing>flow_o1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="task_create_order" name="创建订单">
+      <bpmn:incoming>flow_o1</bpmn:incoming>
+      <bpmn:outgoing>flow_o2</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="data_out_create_orders">
+        <bpmn:targetRef>data_store_orders</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="task_notify_wms" name="通知仓库出库">
+      <bpmn:incoming>flow_o2</bpmn:incoming>
+      <bpmn:outgoing>flow_o3</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="end_order_placed" name="下单完成">
+      <bpmn:incoming>flow_o3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:dataStoreReference id="data_store_orders" name="订单数据库" />
+    <bpmn:sequenceFlow id="flow_o1" sourceRef="start_order" targetRef="task_create_order" />
+    <bpmn:sequenceFlow id="flow_o2" sourceRef="task_create_order" targetRef="task_notify_wms" />
+    <bpmn:sequenceFlow id="flow_o3" sourceRef="task_notify_wms" targetRef="end_order_placed" />
+  </bpmn:process>
+  <bpmn:process id="process_wms" name="仓储系统" isExecutable="true">
+    <bpmn:startEvent id="start_wms" name="收到出库通知">
+      <bpmn:outgoing>flow_w1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="msg_outbound_notice" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="task_pick_goods" name="拣货出库">
+      <bpmn:incoming>flow_w1</bpmn:incoming>
+      <bpmn:outgoing>flow_w2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="task_update_stock" name="回写库存状态">
+      <bpmn:incoming>flow_w2</bpmn:incoming>
+      <bpmn:outgoing>flow_w3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="end_wms_done" name="出库完成">
+      <bpmn:incoming>flow_w3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_w1" sourceRef="start_wms" targetRef="task_pick_goods" />
+    <bpmn:sequenceFlow id="flow_w2" sourceRef="task_pick_goods" targetRef="task_update_stock" />
+    <bpmn:sequenceFlow id="flow_w3" sourceRef="task_update_stock" targetRef="end_wms_done" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_datastore_cross_pool" name="BPMNDiagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_definitions_datastore_cross_pool" bpmnElement="collaboration_order_wms">
+      <bpmndi:BPMNShape id="collaboration_order_wms_di" bpmnElement="collaboration_order_wms">
+        <dc:Bounds x="0" y="0" width="922" height="416" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_order_center_di" bpmnElement="pool_order_center" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="594" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
+        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="30" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_create_order_di" bpmnElement="task_create_order">
+        <dc:Bounds x="178" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_notify_wms_di" bpmnElement="task_notify_wms">
+        <dc:Bounds x="358" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_order_placed_di" bpmnElement="end_order_placed">
+        <dc:Bounds x="538" y="54" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="506" y="94" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="data_store_orders_di" bpmnElement="data_store_orders">
+        <dc:Bounds x="711" y="326" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pool_wms_di" bpmnElement="pool_wms" isHorizontal="true">
+        <dc:Bounds x="328" y="174" width="594" height="242" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="start_wms_di" bpmnElement="start_wms">
+        <dc:Bounds x="390" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="358" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_pick_goods_di" bpmnElement="task_pick_goods">
+        <dc:Bounds x="506" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_update_stock_di" bpmnElement="task_update_stock">
+        <dc:Bounds x="686" y="206" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_wms_done_di" bpmnElement="end_wms_done">
+        <dc:Bounds x="866" y="228" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="834" y="268" width="100" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="flow_o1_di" bpmnElement="flow_o1">
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_o2_di" bpmnElement="flow_o2">
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_o3_di" bpmnElement="flow_o3">
+        <di:waypoint x="458" y="72" />
+        <di:waypoint x="538" y="72" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_out_create_orders_di" bpmnElement="data_out_create_orders">
+        <di:waypoint x="228" y="112" />
+        <di:waypoint x="228" y="196" />
+        <di:waypoint x="676" y="196" />
+        <di:waypoint x="676" y="318" />
+        <di:waypoint x="736" y="318" />
+        <di:waypoint x="736" y="326" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_w1_di" bpmnElement="flow_w1">
+        <di:waypoint x="426" y="246" />
+        <di:waypoint x="506" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_w2_di" bpmnElement="flow_w2">
+        <di:waypoint x="606" y="246" />
+        <di:waypoint x="686" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_w3_di" bpmnElement="flow_w3">
+        <di:waypoint x="786" y="246" />
+        <di:waypoint x="866" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="msgflow_outbound_di" bpmnElement="msgflow_outbound">
+        <di:waypoint x="408" y="112" />
+        <di:waypoint x="408" y="228" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="413" y="145.6" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_in_pick_orders_di" bpmnElement="data_in_pick_orders">
+        <di:waypoint x="736" y="326" />
+        <di:waypoint x="736" y="306" />
+        <di:waypoint x="556" y="306" />
+        <di:waypoint x="556" y="286" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="data_out_stock_orders_di" bpmnElement="data_out_stock_orders">
+        <di:waypoint x="736" y="286" />
+        <di:waypoint x="736" y="326" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
