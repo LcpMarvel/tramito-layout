@@ -124,14 +124,13 @@ export type {
 } from './pool-composer.ts';
 
 // ───────────────────────────────────────────────────────────
-// DecorationPlacer — boundary event 骑边 + handler 子图平移
+// DecorationPlacer — boundary event 骑边（P3 后 handler 已并入主 ELK，无子图平移）
 // ───────────────────────────────────────────────────────────
 export { placeDecorations } from './decoration-placer.ts';
 export type {
   DecorationInput,
   DecorationInputBoundaryEvent,
   DecorationOutput,
-  HandlerSubgraph,
 } from './decoration-placer.ts';
 
 // ───────────────────────────────────────────────────────────

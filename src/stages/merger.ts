@@ -158,7 +158,7 @@ function writeFlowNode(node: any, allNodes: Map<string, NodeBox>, baseAbsX: numb
         be.y = beBox.y;
         be.width = beBox.w;
         be.height = beBox.h;
-        placeBoundaryEventLabel(be, beBox, placedBoundaryLabels);
+        placeBoundaryEventLabel(be, beBox, box, placedBoundaryLabels);
       }
     }
   }
@@ -331,21 +331,27 @@ function samePoint(a: Waypoint, b: Waypoint): boolean {
   return Math.abs(a.x - b.x) < 0.001 && Math.abs(a.y - b.y) < 0.001;
 }
 
-function placeBoundaryEventLabel(be: any, beBox: NodeBox, placedLabels: LabelBox[]): void {
+function placeBoundaryEventLabel(be: any, beBox: NodeBox, hostBox: NodeBox | undefined, placedLabels: LabelBox[]): void {
   const labelText = be.bpmn?.name ?? '';
   if (!labelText) return;
 
   const labelHeight = 14;
   const labelWidth = estimateBpmnLabelWidth(labelText);
   const labelX = beBox.x + beBox.w / 2 - labelWidth / 2;
-  let labelY = beBox.y + beBox.h + 4;
+  // BE 骑顶边（handler 在 host 上方，P3 允许）时 label 必须放 BE **上方**——放下方就是
+  // host 内部（23/81/83 的 L2）。骑底边保持下方（BPMN 惯例）。交错方向跟随所在侧。
+  const beCy = beBox.y + beBox.h / 2;
+  const rideTop = hostBox !== undefined
+    && Math.abs(beCy - hostBox.y) < Math.abs(beCy - (hostBox.y + hostBox.h));
+  const step = labelHeight + 4;
+  let labelY = rideTop ? beBox.y - 4 - labelHeight : beBox.y + beBox.h + 4;
   for (let guard = 0; guard < 10; guard++) {
     const collide = placedLabels.some((p) =>
       rangesOverlap(labelX, labelWidth, p.x, p.width)
       && Math.abs(p.y - labelY) < labelHeight
     );
     if (!collide) break;
-    labelY += labelHeight + 4;
+    labelY += rideTop ? -step : step;
   }
 
   const label = { text: labelText, x: labelX, y: labelY, width: labelWidth, height: labelHeight };

@@ -61,10 +61,10 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_boundary_near_lane_bottom" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_boundary_near_lane_bottom" bpmnElement="collaboration_ticket">
       <bpmndi:BPMNShape id="collaboration_ticket_di" bpmnElement="collaboration_ticket">
-        <dc:Bounds x="0" y="0" width="774" height="460" />
+        <dc:Bounds x="0" y="0" width="774" height="412" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_service_center_di" bpmnElement="pool_service_center" isHorizontal="true">
-        <dc:Bounds x="0" y="0" width="774" height="460" />
+        <dc:Bounds x="0" y="0" width="774" height="412" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_intake_di" bpmnElement="lane_intake" isHorizontal="true">
         <dc:Bounds x="30" y="20" width="744" height="112" />
@@ -100,15 +100,15 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_supervision_di" bpmnElement="lane_supervision" isHorizontal="true">
-        <dc:Bounds x="30" y="280" width="744" height="160" />
+        <dc:Bounds x="30" y="280" width="744" height="112" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_urge_di" bpmnElement="task_urge">
-        <dc:Bounds x="290" y="340" width="100" height="80" />
+        <dc:Bounds x="538" y="296" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_urged_di" bpmnElement="end_urged">
-        <dc:Bounds x="490" y="362" width="36" height="36" />
+        <dc:Bounds x="718" y="318" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="458" y="402" width="100" height="14" />
+          <dc:Bounds x="686" y="358" width="100" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_register_di" bpmnElement="flow_start_register">
@@ -130,13 +130,13 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_bd_urge_di" bpmnElement="flow_bd_urge">
         <di:waypoint x="378" y="246" />
-        <di:waypoint x="378" y="293" />
-        <di:waypoint x="340" y="293" />
-        <di:waypoint x="340" y="340" />
+        <di:waypoint x="378" y="271" />
+        <di:waypoint x="588" y="271" />
+        <di:waypoint x="588" y="296" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_urge_end_di" bpmnElement="flow_urge_end">
-        <di:waypoint x="390" y="380" />
-        <di:waypoint x="490" y="380" />
+        <di:waypoint x="638" y="336" />
+        <di:waypoint x="718" y="336" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

@@ -67,7 +67,6 @@ import {
   type ComposeOutput,
   // DecorationPlacer
   placeDecorations,
-  type HandlerSubgraph,
   type DecorationOutput,
   // ArtifactPlacer
   placeArtifacts,
@@ -113,6 +112,10 @@ import {
 } from './stages/index.ts';
 
 const MAX_TRACE_DECISIONS = 500;
+
+// handler 节点的 semiInteractive y hint 基值：远大于任何主流节点的自然行 y，
+// 让 ELK 在同层排序时把所有 handler 分支排到主流下方（P3 去分片的侧别保证）。
+const HANDLER_POSITION_Y_HINT = 100_000;
 
 export interface PipelineTrace {
   routeCount: number;
@@ -191,12 +194,11 @@ interface PipelineContext {
   expandedInnerNodes?: SubprocessTranslateOutput['innerNodeBoxes'];
   expandedInnerEdgeIds?: SubprocessTranslateOutput['innerEdgeIds'];
 
-  // —— handler mini-ELK ——
-  handlerSubgraphs: HandlerSubgraph[];
+  // —— handler 图分析（P3 去分片后不再 mini-ELK，只识别归属） ——
+  handlerNodeIdsPerProc: Map<string, Set<string>>;
   handlerNodeMeta: Map<string, { hostId: string; procId: string }>;
-  handlerInternalEdges: SequenceFlow[];
   beToHandlerEntry: Map<string, string>;
-  compensationHandlerEdges: { id: string; source: string; target: string; bpmnType: BpmnEdgeKind }[];
+  compensationHandlerEdges: { id: string; source: string; target: string; bpmnType: BpmnEdgeKind; host: string; procId: string }[];
 
   // —— DecorationPlacer ——
   boundaryEvents: { id: string; hostId: string; idx: number }[];
@@ -254,9 +256,8 @@ export async function runPipeline(
     poolInputs: [],
     mainReachablePerProc: new Map(),
     elkShapes: [],
-    handlerSubgraphs: [],
+    handlerNodeIdsPerProc: new Map(),
     handlerNodeMeta: new Map(),
-    handlerInternalEdges: [],
     beToHandlerEntry: new Map(),
     compensationHandlerEdges: [],
     boundaryEvents: [],
@@ -265,10 +266,10 @@ export async function runPipeline(
   };
 
   await runStage('subprocess-layout', () => phaseSubprocessLayout(ctx));
+  await runStage('graph-analysis', () => phaseGraphAnalysis(ctx));
   await runStage('elk-placement', () => phaseElkPlacementAndLanes(ctx));
   await runStage('pool-composer', () => phasePoolComposer(ctx));
   await runStage('subprocess-translator', () => phaseSubprocessTranslator(ctx));
-  await runStage('handler-placement', () => phaseHandlerMiniElk(ctx));
   await runStage('decoration-placer', () => phaseDecorationPlacer(ctx));
   await runStage('artifact-placer', () => phaseArtifactPlacer(ctx));
   await runStage('pool-overflow-rebalancer', () => phasePoolOverflowRebalancer(ctx));
@@ -338,15 +339,34 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
       });
       continue;
     }
-    let mainReachable = mainFlowReachable(proc.flowNodes, proc.sequenceFlows);
-    // Fallback：没有 startEvent 的 process（如纯 event-subprocess 容器），把所有非 BE 节点都纳入 ELK。
-    if (mainReachable.size === 0) {
-      mainReachable = new Set(proc.flowNodes.filter(n => n.type !== 'boundaryEvent').map(n => n.id));
+    const mainReachable = ctx.mainReachablePerProc.get(proc.id);
+    if (!mainReachable) throw new Error(`[pipeline] mainReachable missing for process ${proc.id} (graph-analysis must run before elk-placement)`);
+    // P3 去分片：handler 节点并入主图一次 ELK。children 里 handler 节点排在主流之后——
+    // considerModelOrder=NODES_AND_EDGES 让 handler 分支落在 host 下方而不是上方。
+    const handlerIds = ctx.handlerNodeIdsPerProc.get(proc.id) ?? new Set<string>();
+    const flowNodesForElk = [
+      ...proc.flowNodes.filter(n => mainReachable.has(n.id)),
+      ...proc.flowNodes.filter(n => !mainReachable.has(n.id) && handlerIds.has(n.id)),
+    ];
+    const elkNodeIds = new Set(flowNodesForElk.map(n => n.id));
+    // BE 不是 ELK 节点（它骑在 host 上）：BE→handlerEntry 边以 host 名义喂 ELK，
+    // handler 才成为 host 的下游（分层自然成立），汇回主流的边也变普通分层。
+    const beHostById = new Map<string, string>();
+    for (const d of proc.decorations) {
+      if (d.kind === 'boundaryEvent') beHostById.set(d.id, d.host);
     }
-    ctx.mainReachablePerProc.set(proc.id, mainReachable);
-    const flowNodesForElk = proc.flowNodes.filter(n => mainReachable.has(n.id));
-    const elkFlows = proc.sequenceFlows
-      .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target));
+    const elkFlows: Array<{ id: string; source: string; target: string; isDefault?: boolean; name?: string }> = [];
+    for (const sf of proc.sequenceFlows) {
+      const source = beHostById.get(sf.source) ?? sf.source;
+      if (!elkNodeIds.has(source) || !elkNodeIds.has(sf.target)) continue;
+      elkFlows.push({ id: sf.id, source, target: sf.target, isDefault: sf.isDefault, name: sf.name });
+    }
+    // compensation BE 的 handler 经 association 连接：补 host→handler 虚拟边，让 ELK 分层带上它
+    for (const ce of ctx.compensationHandlerEdges) {
+      if (ce.procId !== proc.id) continue;
+      if (!elkNodeIds.has(ce.host) || !elkNodeIds.has(ce.target)) continue;
+      elkFlows.push({ id: ce.id, source: ce.host, target: ce.target });
+    }
 
     // 自主断环：识别回头边并预反转，保证喂 ELK 的图无环（ELK GREEDY 对双环结构会断错）。
     const { edges: elkEdges, reversedIds: reversedEdgeIds } = resolveBackEdgesForElk(flowNodesForElk, elkFlows);
@@ -357,7 +377,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
         kind: 'back-edge-reverse',
         subject: { kind: 'edge', id: sf.id },
         reason: 'Semantic back-edge detection reversed this loop edge before ELK to keep the fed graph acyclic',
-        input: { source: sf.source, target: sf.target, isDefault: sf.isDefault, label: sf.name ?? null },
+        input: { source: sf.source, target: sf.target, isDefault: sf.isDefault ?? false, label: sf.name ?? null },
         output: { reversedForElk: true },
       });
     }
@@ -378,7 +398,10 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
       processId: proc.id,
       hasLanes: proc.lanes.length > 0,
       hasBoundaryHandlers: proc.decorations.some(d => d.kind === 'boundaryEvent'),
-      nodes: flowNodesForElk.map(n => {
+      nodes: flowNodesForElk.map((n, nodeIdx) => {
+        // handler 节点压到 host 下方（见 elk-placement 的 positionYHint 说明）。
+        // 递增值让多个 handler 分支之间保持声明顺序（83 的 5 个 BE 对应 5 条 handler 链）。
+        const positionYHint = handlerIds.has(n.id) ? HANDLER_POSITION_Y_HINT + nodeIdx : undefined;
         // B3: start event 锁最左 layer，end event 锁最右 layer——保证 F1 主流方向一致。
         // 仅当拓扑合规（start 无入边、end 无出边）时加约束；否则 ELK 会抛 UnsupportedConfigurationException。
         let layerConstraint: 'first' | 'last' | undefined;
@@ -418,6 +441,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
                 inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
               ),
               layerConstraint,
+              positionYHint,
             };
           }
         }
@@ -433,6 +457,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
           h: size.h,
           layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, w),
           layerConstraint,
+          positionYHint,
         };
       }),
       edges: elkEdges,
@@ -609,21 +634,24 @@ function phaseSubprocessTranslator(ctx: PipelineContext): void {
   }
 }
 
-// ============= mini ElkPlacement: handler subgraphs =============
-async function phaseHandlerMiniElk(ctx: PipelineContext): Promise<void> {
+// ============= 图分析：mainReachable + handler 子图识别（纯图，不摆位） =============
+// P3 去分片：handler 节点不再单独 mini-ELK 再平移拼接（主图和 handler 子图各算一套坐标，
+// 片与片之间有边就出 N 形回头/出 lane/负坐标——80/96/77/83 一族），而是并入主 ELK 一次摆位。
+// 本 phase 只做图分析：
+//   - mainReachable（哪些节点是主流；handler 节点 = flowNodes − mainReachable − 游离）
+//   - 每个 BE 的 handler 节点集（EdgeRouter 分类、DecorationPlacer 决定骑边侧要用）
+//   - BE→handler 入口映射（骑边侧判定）+ compensation BE 的 association 虚拟连接边
+function phaseGraphAnalysis(ctx: PipelineContext): void {
   const { model } = ctx;
-  const tH = performance.now();
-
-  // compensation BE → 触发的活动是通过 association 而不是 sequenceFlow 连接。
-  // 把这些 association 当作 BE→handler 的"虚拟连接边"喂给 EdgeRouter，handler 节点摆位
-  // 与普通 handler 子图一致（单节点）。
-  // 边的 BPMN 语义类别由 boundaryRuleFor(eventType).connectorKind 决定：
-  //   compensation BE → 'compensationAssociation'（direct 直线）
-  //   其它（不应该走这条 codepath，仅为类型完备）→ rule 默认值
-
   for (const proc of model.processes) {
     if (proc.isBlackBox) continue;
-    const mainReachable = ctx.mainReachablePerProc.get(proc.id) ?? new Set();
+    let mainReachable = mainFlowReachable(proc.flowNodes, proc.sequenceFlows);
+    // Fallback：没有 startEvent 的 process（如纯 event-subprocess 容器），把所有非 BE 节点都纳入 ELK。
+    if (mainReachable.size === 0) {
+      mainReachable = new Set(proc.flowNodes.filter(n => n.type !== 'boundaryEvent').map(n => n.id));
+    }
+    ctx.mainReachablePerProc.set(proc.id, mainReachable);
+
     const claimed = new Set<string>();
     // 预先索引该 proc 内的 association decorations（key=source）
     const assocBySource = new Map<string, { id: string; target: string }[]>();
@@ -632,20 +660,21 @@ async function phaseHandlerMiniElk(ctx: PipelineContext): Promise<void> {
       if (!assocBySource.has(d.source)) assocBySource.set(d.source, []);
       assocBySource.get(d.source)!.push({ id: d.id, target: d.target });
     }
+    const handlerIds = new Set<string>();
     for (const dec of proc.decorations) {
       if (dec.kind !== 'boundaryEvent') continue;
       const sg = collectHandlerSubgraph(dec.id, dec.host, proc.sequenceFlows, mainReachable, claimed);
 
-      // compensation BE：用 association 找 handler 活动，单节点 handler
+      // compensation BE → 触发的活动是通过 association 而不是 sequenceFlow 连接。
+      // 把 association 当作 BE→handler 的"虚拟连接边"：喂 ELK 时改记 host→handler（让 handler
+      // 成为 host 的下游），喂 EdgeRouter 时保持 BE→handler（按 connectorKind 画直线）。
       if (sg.nodes.size === 0 && dec.eventType === 'compensation') {
         const assocs = assocBySource.get(dec.id) ?? [];
         const connectorKind = boundaryRuleFor(dec.eventType).connectorKind;
         for (const a of assocs) {
           if (mainReachable.has(a.target) || claimed.has(a.target)) continue;
           sg.nodes.add(a.target);
-          // 走 boundary rule 决定的 BPMN 类别（compensation → compensationAssociation，
-          // path-shaper 会按 direct 风格画 2-point 直线）
-          ctx.compensationHandlerEdges.push({ id: a.id, source: dec.id, target: a.target, bpmnType: connectorKind });
+          ctx.compensationHandlerEdges.push({ id: a.id, source: dec.id, target: a.target, bpmnType: connectorKind, host: dec.host, procId: proc.id });
         }
       }
 
@@ -657,59 +686,10 @@ async function phaseHandlerMiniElk(ctx: PipelineContext): Promise<void> {
 
       for (const id of sg.nodes) claimed.add(id);
       for (const id of sg.nodes) ctx.handlerNodeMeta.set(id, { hostId: dec.host, procId: proc.id });
-      for (const e of sg.edges) ctx.handlerInternalEdges.push(e);
-
-      // mini ElkPlacement
-      const handlerNodes = proc.flowNodes
-        .filter(n => sg.nodes.has(n.id))
-        .map(n => {
-          if (n.isExpanded) {
-            const inner = ctx.subprocessLayouts.get(n.id);
-            if (inner) {
-              const h = inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
-              return {
-                id: n.id,
-                type: n.type,
-                w: inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
-                h,
-                layoutH: layoutHeightWithIoSpec(
-                  h,
-                  n.ioInputCount,
-                  n.ioOutputCount,
-                  n.ioInputNames,
-                  n.ioOutputNames,
-                  inner.bounds.width + SUBPROCESS_PADDING_LEFT + SUBPROCESS_PADDING_RIGHT,
-                ),
-              };
-            }
-          }
-          const size = nodeSizeOf(n.type);
-          const w = Math.max(size.w, hostWidthForBoundaries(n.boundaryEventIds.length));
-          return {
-            id: n.id,
-            type: n.type,
-            w,
-            h: size.h,
-            layoutH: layoutHeightWithIoSpec(size.h, n.ioInputCount, n.ioOutputCount, n.ioInputNames, n.ioOutputNames, w),
-          };
-        });
-      const handlerFlows = sg.edges
-        .filter(e => sg.nodes.has(e.source) && sg.nodes.has(e.target));
-      // handler 子图内同样可能有重试环，断环策略与主流程一致
-      const { edges: handlerEdges } = resolveBackEdgesForElk(handlerNodes, handlerFlows);
-      const placement = await elkPlacement({
-        processId: `${proc.id}::handler::${dec.id}`,
-        nodes: handlerNodes,
-        edges: handlerEdges,
-      });
-      ctx.handlerSubgraphs.push({
-        beId: dec.id, hostId: dec.host,
-        nodes: placement.nodes,
-        width: placement.bounds.width, height: placement.bounds.height,
-      });
+      for (const id of sg.nodes) handlerIds.add(id);
     }
+    ctx.handlerNodeIdsPerProc.set(proc.id, handlerIds);
   }
-  ctx.ms.handlers = performance.now() - tH;
 }
 
 // ============= DecorationPlacer =============
@@ -725,10 +705,20 @@ function phaseDecorationPlacer(ctx: PipelineContext): void {
       byHost.set(dec.host, i + 1);
     }
   }
+  // BE 骑哪条边朝 handler 入口所在侧定（P3 后 handler 与主图同坐标系，直接读主图坐标）。
+  const handlerEntryBoxes = new Map<string, NodeBox>();
+  for (const [beId, entryId] of ctx.beToHandlerEntry) {
+    const box = compose.nodes.get(entryId);
+    if (box) handlerEntryBoxes.set(beId, box);
+  }
+  for (const ce of ctx.compensationHandlerEdges) {
+    const box = compose.nodes.get(ce.target);
+    if (box) handlerEntryBoxes.set(ce.source, box);
+  }
   const decoration = placeDecorations({
     hostBoxes: compose.nodes,
     boundaryEvents: ctx.boundaryEvents,
-    handlerSubgraphs: ctx.handlerSubgraphs,
+    handlerEntryBoxes,
   });
   ctx.decoration = decoration;
   layoutConstraints.push(...collectBoundaryConstraints({ boundaryEvents: ctx.boundaryEvents }));
@@ -740,7 +730,6 @@ function phaseDecorationPlacer(ctx: PipelineContext): void {
     const nodes = new Map<string, NodeBox>(compose.nodes);
     mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
     mergeNodeBoxes(nodes, decoration.boundaryEventBoxes);
-    mergeNodeBoxes(nodes, decoration.handlerNodeBoxes);
     pushSnapshot(ctx, createStageSnapshot({
       fixture: ctx.fixtureLabel,
       stage: 'decoration-placer',
@@ -779,7 +768,6 @@ function phaseArtifactPlacer(ctx: PipelineContext): void {
     const nodes = new Map<string, NodeBox>(compose.nodes);
     mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
     mergeNodeBoxes(nodes, ctx.decoration!.boundaryEventBoxes);
-    mergeNodeBoxes(nodes, ctx.decoration!.handlerNodeBoxes);
     mergeNodeBoxes(nodes, artifactOut.artifactBoxes);
     pushSnapshot(ctx, createStageSnapshot({
       fixture: ctx.fixtureLabel,
@@ -841,7 +829,7 @@ function phasePoolOverflowRebalancer(ctx: PipelineContext): void {
     expandedInnerNodes: ctx.expandedInnerNodes!,
     artifactBoxes: ctx.artifactOut!.artifactBoxes,
     boundaryEventBoxes: ctx.decoration!.boundaryEventBoxes,
-    handlerNodeBoxes: ctx.decoration!.handlerNodeBoxes,
+    handlerNodeBoxes: new Map(),
     nodeToPool: compose.nodeToPool,
     artifactHosts,
     boundaryEventHosts,
@@ -855,7 +843,6 @@ function phasePoolOverflowRebalancer(ctx: PipelineContext): void {
     const nodes = new Map<string, NodeBox>(compose.nodes);
     mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
     mergeNodeBoxes(nodes, ctx.decoration!.boundaryEventBoxes);
-    mergeNodeBoxes(nodes, ctx.decoration!.handlerNodeBoxes);
     mergeNodeBoxes(nodes, ctx.artifactOut!.artifactBoxes);
     pushSnapshot(ctx, createStageSnapshot({
       fixture: ctx.fixtureLabel,
@@ -967,22 +954,6 @@ function phaseEdgeRouter(ctx: PipelineContext): void {
       laneIdx: hostNode?.laneIdx ?? null,
     });
   }
-  // handler 节点（位置来自 DecorationPlacer）
-  for (const [nodeId, box] of ctx.decoration!.handlerNodeBoxes) {
-    const meta = ctx.handlerNodeMeta.get(nodeId);
-    if (!meta) continue;
-    const hostNode = routeNodes.get(meta.hostId);
-    // handler 节点的 type 从原 fixture flowNodes 查
-    const fn = model.processes.flatMap(p => p.flowNodes).find(n => n.id === nodeId);
-    routeNodes.set(nodeId, {
-      box,
-      type: fn?.type ?? 'task',
-      isExpanded: fn?.isExpanded ?? false,
-      poolId: hostNode?.poolId ?? '',
-      laneId: hostNode?.laneId ?? null,
-      laneIdx: hostNode?.laneIdx ?? null,
-    });
-  }
   layoutConstraints.push(...collectContainmentConstraints({
     nodes: Array.from(routeNodes, ([id, n]) => ({
       id,
@@ -998,8 +969,6 @@ function phaseEdgeRouter(ctx: PipelineContext): void {
   for (const proc of model.processes) {
     for (const sf of proc.sequenceFlows) {
       if (!routeNodes.has(sf.source) || !routeNodes.has(sf.target)) continue;
-      // 跳过已经在 handlerInternalEdges 里的
-      if (ctx.handlerInternalEdges.some(e => e.id === sf.id)) continue;
       routeEdgesList.push({ id: sf.id, source: sf.source, target: sf.target, bpmnType: 'sequenceFlow' });
     }
   }
@@ -1017,11 +986,6 @@ function phaseEdgeRouter(ctx: PipelineContext): void {
     }
   }
   for (const proc of model.processes) walkInnerFlows(proc);
-  // handler 子图内部 + BE→handler 入口 都进 router
-  for (const sf of ctx.handlerInternalEdges) {
-    if (!routeNodes.has(sf.source) || !routeNodes.has(sf.target)) continue;
-    routeEdgesList.push({ id: sf.id, source: sf.source, target: sf.target, bpmnType: 'sequenceFlow' });
-  }
   // compensation BE → handler activity（association，但走 boundary-to-handler 路径）
   for (const ce of ctx.compensationHandlerEdges) {
     if (!routeNodes.has(ce.source) || !routeNodes.has(ce.target)) continue;
@@ -1107,7 +1071,6 @@ function phaseAssociationRouter(ctx: PipelineContext): void {
   const associationObstacles = [
     ...compose.nodes.values(),
     ...ctx.decoration!.boundaryEventBoxes.values(),
-    ...ctx.decoration!.handlerNodeBoxes.values(),
     ...ctx.expandedInnerNodes!.values(),
     // artifact 自身（annotation / dataObject）也是障碍：两个 artifact 之间的 association
     // 不能直穿第三个 artifact（06-artifacts-extended 的 E2）。router 会排除边的两端 box。
@@ -1166,7 +1129,6 @@ function phaseMerger(ctx: PipelineContext): void {
   const compose = ctx.compose!;
   // 合并所有节点位置 → allNodes（含 handler / artifact / 展开 subprocess 内部）
   const allNodesForMerge = new Map<string, NodeBox>(compose.nodes);
-  for (const [id, b] of ctx.decoration!.handlerNodeBoxes) allNodesForMerge.set(id, b);
   for (const [id, b] of ctx.artifactOut!.artifactBoxes) allNodesForMerge.set(id, b);
   for (const [id, b] of ctx.expandedInnerNodes!) allNodesForMerge.set(id, b);
 

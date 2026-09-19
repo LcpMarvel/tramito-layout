@@ -10,7 +10,6 @@ describe('Stage 5 — DecorationPlacer', () => {
     const out = placeDecorations({
       hostBoxes: hosts,
       boundaryEvents: [{ id: 'be1', hostId: 'task_x', idx: 0 }],
-      handlerSubgraphs: [],
     });
     const be = out.boundaryEventBoxes.get('be1')!;
     // host = (100, 200, 100, 80) → host.left = 100, host.bottom = 280
@@ -30,7 +29,6 @@ describe('Stage 5 — DecorationPlacer', () => {
         { id: 'be1', hostId: 'task_x', idx: 0 },
         { id: 'be2', hostId: 'task_x', idx: 1 },
       ],
-      handlerSubgraphs: [],
     });
     const a = out.boundaryEventBoxes.get('be1')!;
     const b = out.boundaryEventBoxes.get('be2')!;
@@ -43,7 +41,6 @@ describe('Stage 5 — DecorationPlacer', () => {
     const out = placeDecorations({
       hostBoxes: new Map(),
       boundaryEvents: [{ id: 'be1', hostId: 'ghost', idx: 0 }],
-      handlerSubgraphs: [],
     });
     expect(out.boundaryEventBoxes.size).toBe(0);
   });
@@ -53,11 +50,34 @@ describe('Stage 5 — DecorationPlacer', () => {
     const out = placeDecorations({
       hostBoxes: hosts,
       boundaryEvents: [{ id: 'be1', hostId: 't', idx: 0 }],
-      handlerSubgraphs: [],
     });
     const be = out.boundaryEventBoxes.get('be1')!;
     // host.bottom = 80, be center cy = 80
     // be.y = 80 - 18 = 62, be.y + be.h = 98
     expect(be.y + be.h / 2).toBe(80);
+  });
+
+  // P3 去分片：BE 骑边侧朝 handler 入口所在侧——handler 落在 host 上方时骑顶边，
+  // 否则 BE→handler 边要从底边出发绕回上方。
+  it('rides the top edge when the handler entry is above the host', () => {
+    const hosts = new Map([['t', box(0, 0)]]);
+    const out = placeDecorations({
+      hostBoxes: hosts,
+      boundaryEvents: [{ id: 'be1', hostId: 't', idx: 0 }],
+      handlerEntryBoxes: new Map([['be1', box(0, -140)]]), // 入口在 host 上方
+    });
+    const be = out.boundaryEventBoxes.get('be1')!;
+    expect(be.y + be.h / 2).toBe(0); // host.top
+  });
+
+  it('rides the bottom edge when the handler entry is below the host', () => {
+    const hosts = new Map([['t', box(0, 0)]]);
+    const out = placeDecorations({
+      hostBoxes: hosts,
+      boundaryEvents: [{ id: 'be1', hostId: 't', idx: 0 }],
+      handlerEntryBoxes: new Map([['be1', box(0, 200)]]), // 入口在 host 下方
+    });
+    const be = out.boundaryEventBoxes.get('be1')!;
+    expect(be.y + be.h / 2).toBe(80); // host.bottom
   });
 });

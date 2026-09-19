@@ -27,6 +27,12 @@ export interface PlacementInputNode {
    * 解 F1（主流方向一致）。
    */
   layerConstraint?: 'first' | 'last';
+  /**
+   * semiInteractive 的 y 排序 hint（大值 = 排到同层下方）。用于把 boundary handler 节点压到
+   * host 下方：model order 只能让 handler 进同一坐标系，侧别（上/下）由 BK 对齐决定，不加
+   * hint 时前几个 handler 分支会被均到 host 上方（83/81/23 的 L2/E4 就是这么来的）。
+   */
+  positionYHint?: number;
 }
 
 export interface PlacementInputEdge {
@@ -142,7 +148,9 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
       : input.nodes.length >= NO_LANE_WRAP_MIN_NODES
         ? ELK_OPTIONS_NO_LANE_LARGE
         : ELK_OPTIONS_NO_LANE;
-  const layoutOptions = baseOptions;
+  const layoutOptions = input.nodes.some(n => n.positionYHint !== undefined)
+    ? { ...baseOptions, 'elk.layered.crossingMinimization.semiInteractive': 'true' }
+    : baseOptions;
 
   const inputNodeById = new Map(input.nodes.map(n => [n.id, n]));
   const elkGraph = {
@@ -154,6 +162,9 @@ export async function elkPlacement(input: PlacementInput): Promise<PlacementOutp
         childLayoutOptions['elk.layered.layering.layerConstraint'] = 'FIRST';
       } else if (n.layerConstraint === 'last') {
         childLayoutOptions['elk.layered.layering.layerConstraint'] = 'LAST';
+      }
+      if (n.positionYHint !== undefined) {
+        childLayoutOptions['elk.position'] = `(0,${n.positionYHint})`;
       }
       const child: any = {
         id: n.id,
