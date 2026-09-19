@@ -603,6 +603,19 @@ function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypo
     }
     return false;
   };
+  // F12 贴边线守卫：水平段落在非端点节点的行带 ±6px 内且横向压过其宽 ≥50% 视为「骑」。
+  // hits 只管穿过内区，贴边线它看不见——14/23/83 的 BE 潜行道正好从兄弟 BE 圆边线上
+  // 碾过（overlap 36/36），两关都过才算干净走廊。
+  const rides = (y: number, x1: number, x2: number): boolean => {
+    for (const o of input.obstacles ?? []) {
+      if (o === input.source || o === input.target) continue;
+      if (Math.max(x1, x2) <= o.x - 2 || Math.min(x1, x2) >= o.x + o.w + 2) continue;
+      if (y <= o.y - 6 || y >= o.y + o.h + 6) continue;
+      const overlap = Math.min(Math.max(x1, x2), o.x + o.w) - Math.max(Math.min(x1, x2), o.x);
+      if (overlap >= 0.5 * o.w) return true;
+    }
+    return false;
+  };
   const sideEntry = (corridorY: number): Waypoint[] => {
     const entryX = tgtCx > start.x ? target.x : target.x + target.w;
     const wps: Waypoint[] = [start, { x: start.x, y: corridorY }, { x: entryX, y: corridorY }];
@@ -611,30 +624,41 @@ function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypo
 
   // A 浅窗：host 底 = BE 中心（start.y − 18），F12 净空 +4 → lo = start.y − 14；
   // label 顶 = BE 底 + 4 → hi = start.y + 4。走廊只能落在这个 18px 窗口内。
+  // 骑到兄弟 BE（浅窗天然在 host 底边带内、右侧兄弟 BE 就在那）→ 放弃浅窗走深窗。
   const shallowLo = Math.max(start.y - 14, target.y);
   const shallowHi = Math.min(start.y + 4, target.y + target.h);
   if (shallowLo <= shallowHi) {
     const corridorY = Math.min(Math.max(start.y, shallowLo), shallowHi);
-    const wps = sideEntry(corridorY);
+    const entryX = tgtCx > start.x ? target.x : target.x + target.w;
+    if (!rides(corridorY, start.x, entryX)) {
+      const wps = sideEntry(corridorY);
+      if (!hits(wps)) return wps;
+    }
+  }
+
+  // B/C 深窗（label 之下，channel 错开）：骑到障碍边线时按 BE_CHANNEL_GAP 逐级再潜，
+  // 最多 4 级——潜不过就交回泛用 L（宁可不优雅也不贴边线慢跑）。
+  for (let extra = 0; extra < 4; extra++) {
+    const deepY = start.y + BE_DIVE_CLEAR + (channel + extra) * BE_CHANNEL_GAP;
+    if (deepY <= target.y) return null; // handler 顶在深潜道之下：泛用 L 的 gap 走得通
+    if (deepY <= target.y + target.h) {
+      const entryX = tgtCx > start.x ? target.x : target.x + target.w;
+      if (rides(deepY, start.x, entryX)) continue;
+      const wps = sideEntry(deepY);
+      if (!hits(wps)) return wps;
+      continue;
+    }
+    // C 深窗低于 handler 底 → 底边向上进入
+    if (rides(deepY, start.x, tgtCx)) continue;
+    const wps: Waypoint[] = [
+      start,
+      { x: start.x, y: deepY },
+      { x: tgtCx, y: deepY },
+      { x: tgtCx, y: target.y + target.h },
+    ];
     if (!hits(wps)) return wps;
   }
-
-  // B 深窗（label 之下，channel 错开）
-  const deepY = start.y + BE_DIVE_CLEAR + channel * BE_CHANNEL_GAP;
-  if (deepY >= target.y && deepY <= target.y + target.h) {
-    const wps = sideEntry(deepY);
-    return hits(wps) ? null : wps;
-  }
-  if (deepY <= target.y) return null; // handler 顶在深潜道之下：泛用 L 的 gap 走得通
-
-  // C 深窗低于 handler 底 → 底边向上进入
-  const wps: Waypoint[] = [
-    start,
-    { x: start.x, y: deepY },
-    { x: tgtCx, y: deepY },
-    { x: tgtCx, y: target.y + target.h },
-  ];
-  return hits(wps) ? null : wps;
+  return null;
 }
 
 // 补偿 association 的 direct 端点：按源→目标的主导方向选互对的边（横为主走左右边，

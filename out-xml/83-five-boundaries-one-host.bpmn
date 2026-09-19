@@ -175,7 +175,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_bd_msg_update_di" bpmnElement="flow_bd_msg_update">
         <di:waypoint x="278" y="369" />
-        <di:waypoint x="438" y="369" />
+        <di:waypoint x="278" y="415" />
+        <di:waypoint x="438" y="415" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_bd_signal_log_di" bpmnElement="flow_bd_signal_log">
         <di:waypoint x="318" y="369" />
