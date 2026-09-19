@@ -39,6 +39,11 @@ export interface LabelPlaceOptions {
    * 手调 fixture 41 揭示。
    */
   anchorNearSource?: boolean;
+  /**
+   * 同源、同样带 label 的兄弟边路径（merger 预按 source 聚组，≥3 条才给）。
+   * 共享出口 stub 时 label 要移到各自第一段独占段（见 firstExclusiveSegment）。
+   */
+  siblingWaypoints?: Waypoint[][];
 }
 
 export function pickLabelPosition(
@@ -51,7 +56,7 @@ export function pickLabelPosition(
   if (waypoints.length < 2) return { x: 0, y: 0 };
 
   if (opts?.anchorNearSource) {
-    return pickNearSource(waypoints, labelWidth, labelHeight, ctx);
+    return pickNearSource(waypoints, labelWidth, labelHeight, ctx, opts);
   }
 
   // 1. 选 segment：优先"足够长" + 不靠端点节点
@@ -160,12 +165,16 @@ function pickNearSource(
   labelWidth: number,
   labelHeight: number,
   ctx: LabelPlaceContext,
+  opts?: LabelPlaceOptions,
 ): { x: number; y: number } {
   // 跳过过短的引出 stub，取第一段有意义的段（其 wpStart 即更靠 source 的一端）
   let idx = 0;
   for (let i = 0; i < waypoints.length - 1; i++) {
     const len = Math.hypot(waypoints[i + 1]!.x - waypoints[i]!.x, waypoints[i + 1]!.y - waypoints[i]!.y);
     if (len >= 20) { idx = i; break; }
+  }
+  if (opts?.siblingWaypoints && opts.siblingWaypoints.length >= 2) {
+    idx = firstExclusiveSegment(waypoints, opts.siblingWaypoints, idx);
   }
   const a = waypoints[idx]!;
   const b = waypoints[idx + 1]!;
@@ -209,6 +218,38 @@ function pickNearSource(
     else if (!overlapsLabel && tier < 1) { fallback = pos; tier = 1; }
   }
   return fallback;
+}
+
+// 同源 ≥3 条带 label 的边共享出口 stub 时（56：8 条同走 (408,562)→(448,562) 再分叉；
+// 90：6 条同走一段），每条 label 锚在同一段上必叠（L3）。改锚到「第一段独占段」——
+// 中点不在任何兄弟路径上的段（分叉之后的那一段）。
+// 出口段不共享则不动（04/42 的扇出各走不同 anchor，近网关摆位本来就错得开）。
+function firstExclusiveSegment(waypoints: Waypoint[], siblings: Waypoint[][], fallback: number): number {
+  const midOnPolyline = (segIdx: number, poly: Waypoint[]): boolean => {
+    const a = waypoints[segIdx]!;
+    const b = waypoints[segIdx + 1]!;
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    for (let j = 0; j < poly.length - 1; j++) {
+      if (pointToSegmentDist(mx, my, poly[j]!, poly[j + 1]!) <= 2) return true;
+    }
+    return false;
+  };
+  const sharedExit = siblings.filter(poly => midOnPolyline(0, poly)).length >= 2;
+  if (!sharedExit) return fallback;
+  for (let i = 1; i < waypoints.length - 1; i++) {
+    if (siblings.every(poly => !midOnPolyline(i, poly))) return i;
+  }
+  return fallback;
+}
+
+function pointToSegmentDist(px: number, py: number, a: Waypoint, b: Waypoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(px - a.x, py - a.y);
+  const t = Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / lenSq));
+  return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
 }
 
 // ============================================================

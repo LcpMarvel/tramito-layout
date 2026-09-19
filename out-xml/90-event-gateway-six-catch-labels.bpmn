@@ -126,7 +126,7 @@
       <bpmndi:BPMNShape id="gateway_event_di" bpmnElement="gateway_event">
         <dc:Bounds x="358" y="397" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="308" y="351" width="150" height="42" />
+          <dc:Bounds x="308" y="451" width="150" height="42" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_confirm_di" bpmnElement="catch_confirm">
@@ -212,7 +212,7 @@
         <di:waypoint x="448" y="72" />
         <di:waypoint x="488" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="427" width="50" height="14" />
+          <dc:Bounds x="435" y="77" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_modify_di" bpmnElement="flow_g_modify">
@@ -221,7 +221,7 @@
         <di:waypoint x="448" y="212" />
         <di:waypoint x="488" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="403" width="50" height="14" />
+          <dc:Bounds x="435" y="217" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_complaint_di" bpmnElement="flow_g_complaint">
@@ -230,7 +230,7 @@
         <di:waypoint x="448" y="352" />
         <di:waypoint x="488" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="445" width="50" height="14" />
+          <dc:Bounds x="435" y="357" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_timeout_di" bpmnElement="flow_g_timeout">
@@ -239,7 +239,7 @@
         <di:waypoint x="448" y="492" />
         <di:waypoint x="488" y="492" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="385" width="50" height="14" />
+          <dc:Bounds x="435" y="497" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_force_di" bpmnElement="flow_g_force">
@@ -248,7 +248,7 @@
         <di:waypoint x="448" y="632" />
         <di:waypoint x="488" y="632" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="403" y="463" width="50" height="14" />
+          <dc:Bounds x="435" y="637" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_pause_di" bpmnElement="flow_g_pause">
@@ -257,7 +257,7 @@
         <di:waypoint x="448" y="772" />
         <di:waypoint x="488" y="772" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="403" y="367" width="50" height="14" />
+          <dc:Bounds x="435" y="777" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_confirm_serve_di" bpmnElement="flow_confirm_serve">

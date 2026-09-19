@@ -37,6 +37,7 @@ export function merge(input: MergeInput): LayoutedGraph {
     placedLabels: [],
     nodeObstacles: collectLabelNodeObstacles(bpmnInfo, allNodes),
     bpmnInfo,
+    fanOutSiblings: collectFanOutSiblings(out, input.routes),
   };
 
   for (const top of out.children ?? []) {
@@ -221,6 +222,33 @@ interface MergeLabelContext {
   placedLabels: LabelBox[];
   nodeObstacles: LabelObstacle[];
   bpmnInfo: Map<string, BpmnInfo>;
+  /** edge id → 同源带 label 兄弟边的路径（≥3 条才有）：共享出口 stub 时 label 要移出共享段 */
+  fanOutSiblings: Map<string, Waypoint[][]>;
+}
+
+// 同源 ≥3 条带 label 的边：label 挤在出口共享段必叠（56 的 8 条金额档、90 的 6 条 catch）。
+// 预聚组给 label-placer，让它把锚点移到各自第一段独占段。只有几何、不涉及摆位顺序。
+function collectFanOutSiblings(out: any, routes: Map<string, EdgeRoute>): Map<string, Waypoint[][]> {
+  const bySource = new Map<string, { id: string; wps: Waypoint[] }[]>();
+  const walk = (node: any): void => {
+    for (const e of node?.edges ?? []) {
+      const src = e.sources?.[0];
+      const r = routes.get(e.id);
+      if ((e.labels?.length ?? 0) === 0 || !src || !r || r.waypoints.length < 2) continue;
+      if (!bySource.has(src)) bySource.set(src, []);
+      bySource.get(src)!.push({ id: e.id, wps: r.waypoints });
+    }
+    for (const c of node?.children ?? []) walk(c);
+  };
+  for (const top of out.children ?? []) walk(top);
+  const res = new Map<string, Waypoint[][]>();
+  for (const group of bySource.values()) {
+    if (group.length < 3) continue;
+    for (const e of group) {
+      res.set(e.id, group.filter(g => g.id !== e.id).map(g => g.wps));
+    }
+  }
+  return res;
 }
 
 function placeEdgeLabel(
@@ -247,7 +275,7 @@ function placeEdgeLabel(
     nodeObstacles: ctx.nodeObstacles,
     sourceBox,
     targetBox,
-  }, { anchorNearSource });
+  }, { anchorNearSource, siblingWaypoints: ctx.fanOutSiblings.get(edge.id) });
   label.x = pos.x;
   label.y = pos.y;
   label.width = labelWidth;
