@@ -1,28 +1,30 @@
 // Pipeline 胶水：串联 stages。
 //
-// 实际执行顺序（文件名按职责命名，不再带 s1/s4b 前缀）：
-//   Loader                                         (JSON → BpmnModel)
+// 实际执行顺序（每个阶段一个 phase 函数，runPipeline 只编排不写算法）：
+//   Loader                                         (JSON → BpmnModel)              phaseLoader
 //   → SubprocessLayout (recursive, depth-first)    (展开 subprocess 内部局部坐标 + bbox)
-//   → ElkPlacement (per proc)                      (节点局部坐标)
-//   → LaneConstrainer (per proc)                   (Y snap 到 lane 中线)
+//   → ElkPlacement + LaneConstrainer (per pool)    (节点局部坐标 → Y snap 到 lane 中线)
 //   → PoolComposer (compose)                       (多 pool 垂直堆叠 → 绝对坐标)
 //   → SubprocessTranslator                         (subprocess 内部局部 → 绝对坐标，递归)
 //   → mini ElkPlacement (per handler subgraph)     (boundary handler 子图)
 //   → DecorationPlacer                             (boundary event 骑边 + handler 平移)
 //   → ArtifactPlacer                               (dataObject / textAnnotation 上下方)
 //   → PoolOverflowRebalancer                       (BE/handler/artifact 溢出 pool 时整体下推 + 撑宽)
+//   → IncrementalStabilizer                        (previousBoxes 稳定化)
 //   → EdgeRouter                                   (所有节点位置已知后路由 edges)
 //   → AssociationRouter                            (artifact ↔ host 的 association 边)
 //   → Merger                                       (所有输出 → LayoutedGraph JSON)
 //   → Serializer (在 service.ts 中)                 (JSON → BPMN 2.0 XML)
 //
-// 约束：本文件只做装配，不写算法逻辑。
+// 约束：本文件只做装配。phase 之间通过 PipelineContext（plain data）传递；
+// 每个 phase 经 runStage 包裹，逃逸错误带权威 stage 名（ICE 归属不依赖 message 前缀）。
 
 import { loadFixture } from './loader/loader.ts';
 import type { ValidationProfile } from './loader/validate-graph.ts';
-import type { BpmnModel, ProcessUnit, SequenceFlow, Decoration } from './loader/types.ts';
+import type { BpmnModel, ProcessUnit, SequenceFlow } from './loader/types.ts';
 import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow, layoutHeightWithIoSpec } from './layout/node-sizes.ts';
 import { leafLaneOrder, nodeToLeafLane } from './layout/lane-resolver.ts';
+import { runStage } from './errors.ts';
 import {
   createStageSnapshot,
   edgeRouteToSnapshotInput,
@@ -47,6 +49,7 @@ import {
   SUBPROCESS_PADDING_LEFT, SUBPROCESS_PADDING_RIGHT,
   // SubprocessTranslator
   translateSubprocesses,
+  type SubprocessTranslateOutput,
   // PoolOverflowRebalancer
   rebalancePoolOverflow,
   // BackEdgeResolver
@@ -61,19 +64,23 @@ import {
   // PoolComposer
   poolCompose,
   type ComposeInputPool,
+  type ComposeOutput,
   // DecorationPlacer
   placeDecorations,
   type HandlerSubgraph,
+  type DecorationOutput,
   // ArtifactPlacer
   placeArtifacts,
   type ArtifactInputArtifact,
   type ArtifactInputAssociation,
+  type ArtifactOutput,
   // EdgeRouter
   routeEdges,
   type RouteInput,
   type RouteInputEdge,
   type RouteInputNode,
   type RouteInputObstacle,
+  type RouteOutput,
   // AssociationRouter
   routeAssociations,
   type AssociationEdgeInput,
@@ -88,11 +95,13 @@ import {
   summarizeConstraints,
   // IncrementalStabilizer
   stabilizeWithPreviousBoxes,
+  type IncrementalStabilizeOutput,
   // Merger
   merge,
   // shared atoms
   type NodeBox,
   type NodeLayoutBox,
+  type EdgeRoute,
   type LayoutConstraint,
   type LayoutConstraintSummary,
   type LayoutDecision,
@@ -148,48 +157,182 @@ export interface LayoutOptions {
   validationProfile?: ValidationProfile;
 }
 
+// ============================================================
+// PipelineContext：phase 之间传递的全部 plain data
+// ============================================================
+//
+// 每个 phase 读写这个对象（填自己负责的字，读上游阶段的字），runPipeline 只做装配。
+// 字段按执行顺序排列；`!` 标记的由对应 phase 写入、后续 phase 才可读。
+
+interface PipelineContext {
+  // —— 输入与贯穿收集器 ——
+  rawJson: any;
+  fixtureLabel: string;
+  model: BpmnModel;
+  layoutConstraints: LayoutConstraint[];
+  layoutDecisions: LayoutDecision[];
+  previousBoxes: PreviousBoxes;
+  stageSnapshots?: StageSnapshot[];
+  debugNodeMeta?: Map<string, SnapshotNodeMeta>;
+  debugInputEdges?: SnapshotEdgeInput[];
+
+  // —— SubprocessLayout ——
+  subprocessLayouts: Map<string, SubprocessLayout>;
+
+  // —— ElkPlacement + LaneConstrainer ——
+  poolInputs: ComposeInputPool[];
+  mainReachablePerProc: Map<string, Set<string>>;
+  elkShapes: ElkShape[];
+
+  // —— PoolComposer ——
+  compose?: ComposeOutput;
+
+  // —— SubprocessTranslator ——
+  expandedInnerNodes?: SubprocessTranslateOutput['innerNodeBoxes'];
+  expandedInnerEdgeIds?: SubprocessTranslateOutput['innerEdgeIds'];
+
+  // —— handler mini-ELK ——
+  handlerSubgraphs: HandlerSubgraph[];
+  handlerNodeMeta: Map<string, { hostId: string; procId: string }>;
+  handlerInternalEdges: SequenceFlow[];
+  beToHandlerEntry: Map<string, string>;
+  compensationHandlerEdges: { id: string; source: string; target: string; bpmnType: BpmnEdgeKind }[];
+
+  // —— DecorationPlacer ——
+  boundaryEvents: { id: string; hostId: string; idx: number }[];
+  decoration?: DecorationOutput;
+
+  // —— ArtifactPlacer ——
+  associationsIn: ArtifactInputAssociation[];
+  artifactOut?: ArtifactOutput;
+
+  // —— IncrementalStabilizer ——
+  incremental?: IncrementalStabilizeOutput;
+
+  // —— EdgeRouter / AssociationRouter ——
+  routes?: RouteOutput;
+  allRoutes?: Map<string, EdgeRoute>;
+  /** edge-router 的输入快照，association-router 的 debug snapshot 复用（仅 debug 开启时有值） */
+  routeNodesForAssoc?: Map<string, RouteInputNode>;
+  routeEdgesListForAssoc?: RouteInputEdge[];
+
+  // —— Merger ——
+  graph?: LayoutedGraph;
+
+  // —— 计时 ——
+  ms: {
+    placement: number;
+    constrain: number;
+    compose: number;
+    handlers: number;
+    route: number;
+    merge: number;
+  };
+}
+
 export async function runPipeline(
   rawJson: any,
   fixtureLabel = 'request',
   options: LayoutOptions = {},
 ): Promise<PipelineOutput> {
   const t0 = performance.now();
-  const model: BpmnModel = loadFixture(fixtureLabel, rawJson, {
+  const model: BpmnModel = await runStage('loader', () => loadFixture(fixtureLabel, rawJson, {
     validationProfile: options.validationProfile,
-  });
-  const layoutConstraints: LayoutConstraint[] = [];
-  const layoutDecisions: LayoutDecision[] = [];
-  const previousBoxes = normalizePreviousBoxes(options.previousBoxes);
+  }));
   const stageSnapshots = shouldCollectStageSnapshots(options) ? [] as StageSnapshot[] : undefined;
-  const debugNodeMeta = stageSnapshots ? collectDebugNodeMeta(model) : undefined;
-  const debugInputEdges = stageSnapshots ? collectDebugEdgeInputs(model) : undefined;
-  const pushSnapshot = (snapshot: StageSnapshot): void => {
-    stageSnapshots?.push(snapshot);
+  const ctx: PipelineContext = {
+    rawJson,
+    fixtureLabel,
+    model,
+    layoutConstraints: [],
+    layoutDecisions: [],
+    previousBoxes: normalizePreviousBoxes(options.previousBoxes),
+    stageSnapshots,
+    debugNodeMeta: stageSnapshots ? collectDebugNodeMeta(model) : undefined,
+    debugInputEdges: stageSnapshots ? collectDebugEdgeInputs(model) : undefined,
+    subprocessLayouts: new Map(),
+    poolInputs: [],
+    mainReachablePerProc: new Map(),
+    elkShapes: [],
+    handlerSubgraphs: [],
+    handlerNodeMeta: new Map(),
+    handlerInternalEdges: [],
+    beToHandlerEntry: new Map(),
+    compensationHandlerEdges: [],
+    boundaryEvents: [],
+    associationsIn: [],
+    ms: { placement: 0, constrain: 0, compose: 0, handlers: 0, route: 0, merge: 0 },
   };
 
-  // ============= SubprocessLayout: 递归展开 subprocess 内部 =============
-  // 每个 isExpanded=true 的 subprocess 跑一次 mini ELK，得到内部局部坐标 + bbox。
-  // 嵌套：深度优先，最内层先跑，外层用内层 size 作 override。
-  const subprocessLayouts = new Map<string, SubprocessLayout>();
-  for (const proc of model.processes) {
-    if (proc.isBlackBox) continue;
-    await collectSubprocessLayouts(proc, subprocessLayouts);
-  }
+  await runStage('subprocess-layout', () => phaseSubprocessLayout(ctx));
+  await runStage('elk-placement', () => phaseElkPlacementAndLanes(ctx));
+  await runStage('pool-composer', () => phasePoolComposer(ctx));
+  await runStage('subprocess-translator', () => phaseSubprocessTranslator(ctx));
+  await runStage('handler-placement', () => phaseHandlerMiniElk(ctx));
+  await runStage('decoration-placer', () => phaseDecorationPlacer(ctx));
+  await runStage('artifact-placer', () => phaseArtifactPlacer(ctx));
+  await runStage('pool-overflow-rebalancer', () => phasePoolOverflowRebalancer(ctx));
+  await runStage('incremental-stabilizer', () => phaseIncrementalStabilizer(ctx));
+  await runStage('edge-router', () => phaseEdgeRouter(ctx));
+  await runStage('association-router', () => phaseAssociationRouter(ctx));
+  await runStage('merger', () => phaseMerger(ctx));
 
-  // ============= ElkPlacement + LaneConstrainer (per pool) =============
-  const poolInputs: ComposeInputPool[] = [];
-  const mainReachablePerProc = new Map<string, Set<string>>();
-  const elkShapes: ElkShape[] = [];
+  const msTotal = performance.now() - t0;
+  const byEdgeType: Record<string, number> = {};
+  for (const r of ctx.routes!.routes.values()) {
+    byEdgeType[r.edgeType] = (byEdgeType[r.edgeType] ?? 0) + 1;
+  }
+  const decisionCount = ctx.layoutDecisions.length;
+
+  return {
+    graph: ctx.graph!,
+    trace: {
+      routeCount: ctx.routes!.routes.size, byEdgeType,
+      constraints: ctx.layoutConstraints,
+      constraintSummary: summarizeConstraints(ctx.layoutConstraints),
+      decisions: ctx.layoutDecisions.slice(0, MAX_TRACE_DECISIONS),
+      decisionCount,
+      decisionsTruncated: decisionCount > MAX_TRACE_DECISIONS,
+      incremental: {
+        previousBoxCount: ctx.previousBoxes.size,
+        appliedCount: ctx.incremental!.appliedCount,
+        skippedCount: ctx.incremental!.skippedCount,
+      },
+      elkShape: ctx.elkShapes,
+      ...(stageSnapshots ? { stageSnapshots } : {}),
+      msPlacement: ctx.ms.placement,
+      msConstrain: ctx.ms.constrain,
+      msCompose: ctx.ms.compose,
+      msHandlers: ctx.ms.handlers,
+      msRoute: ctx.ms.route,
+      msMerge: ctx.ms.merge,
+      msTotal,
+    },
+  };
+}
+
+// ============= SubprocessLayout: 递归展开 subprocess 内部 =============
+// 每个 isExpanded=true 的 subprocess 跑一次 mini ELK，得到内部局部坐标 + bbox。
+// 嵌套：深度优先，最内层先跑，外层用内层 size 作 override。
+async function phaseSubprocessLayout(ctx: PipelineContext): Promise<void> {
+  for (const proc of ctx.model.processes) {
+    if (proc.isBlackBox) continue;
+    await collectSubprocessLayouts(proc, ctx.subprocessLayouts);
+  }
+}
+
+// ============= ElkPlacement + LaneConstrainer (per pool) =============
+async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
+  const { model, layoutDecisions, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
   const debugElkNodes = stageSnapshots ? new Map<string, NodeBox>() : undefined;
   const debugElkPools = stageSnapshots ? new Map<string, SnapshotRect>() : undefined;
   const debugLaneNodes = stageSnapshots ? new Map<string, NodeBox>() : undefined;
   const debugLanePools = stageSnapshots ? new Map<string, SnapshotRect>() : undefined;
   const debugLaneRects = stageSnapshots ? new Map<string, SnapshotRect>() : undefined;
-  let msPlacement = 0;
-  let msConstrain = 0;
+
   for (const proc of model.processes) {
     if (proc.isBlackBox || proc.flowNodes.length === 0) {
-      poolInputs.push({
+      ctx.poolInputs.push({
         id: proc.id, name: proc.name, isBlackBox: proc.isBlackBox,
         nodes: new Map(), laneBoxes: new Map(), leafOrder: [], allLanes: [], width: 200, height: 60,
       });
@@ -200,7 +343,7 @@ export async function runPipeline(
     if (mainReachable.size === 0) {
       mainReachable = new Set(proc.flowNodes.filter(n => n.type !== 'boundaryEvent').map(n => n.id));
     }
-    mainReachablePerProc.set(proc.id, mainReachable);
+    ctx.mainReachablePerProc.set(proc.id, mainReachable);
     const flowNodesForElk = proc.flowNodes.filter(n => mainReachable.has(n.id));
     const elkFlows = proc.sequenceFlows
       .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target));
@@ -259,7 +402,7 @@ export async function runPipeline(
 
         // 展开 subprocess 用内部 bbox 决定的尺寸（含 padding）
         if (n.isExpanded) {
-          const inner = subprocessLayouts.get(n.id);
+          const inner = ctx.subprocessLayouts.get(n.id);
           if (inner) {
             const h = inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
             return {
@@ -296,8 +439,8 @@ export async function runPipeline(
     };
     const tp = performance.now();
     const placement = await elkPlacement(placementIn);
-    msPlacement += performance.now() - tp;
-    elkShapes.push(placement.shape);
+    ctx.ms.placement += performance.now() - tp;
+    ctx.elkShapes.push(placement.shape);
     if (stageSnapshots) {
       mergeNodeBoxes(debugElkNodes!, placement.nodes);
       debugElkPools!.set(proc.id, {
@@ -336,7 +479,7 @@ export async function runPipeline(
       edges: edgesForLane,
       boundaryHosts: new Set(proc.flowNodes.filter(fn => fn.boundaryEventIds.length > 0).map(fn => fn.id)),
     });
-    msConstrain += performance.now() - tc;
+    ctx.ms.constrain += performance.now() - tc;
 
     // B2: 压缩明显的层间空白。Y 不动、节点大小不动，仅减少 X 间距。
     // 跑在 lane-constrainer 后是关键：lane 高度已确定，X 收紧不会让节点出 lane。
@@ -365,7 +508,7 @@ export async function runPipeline(
       }
     }
 
-    poolInputs.push({
+    ctx.poolInputs.push({
       id: proc.id, name: proc.name, isBlackBox: false,
       nodes: finalNodes, laneBoxes: constrain.laneBoxes,
       leafOrder: constrain.leafOrder, allLanes: constrain.allLanes,
@@ -373,8 +516,8 @@ export async function runPipeline(
     });
   }
   if (stageSnapshots) {
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'elk-placement',
       order: stageSnapshots.length,
       nodes: debugElkNodes,
@@ -383,8 +526,8 @@ export async function runPipeline(
       pools: debugElkPools,
       notes: ['ELK output uses process-local coordinates before lane snap and pool composition.'],
     }));
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'lane-constrainer',
       order: stageSnapshots.length,
       nodes: debugLaneNodes,
@@ -395,8 +538,11 @@ export async function runPipeline(
       notes: ['Lane-constrainer output is still process-local; lane rectangles use local Y bands.'],
     }));
   }
+}
 
-  // ============= PoolComposer =============
+// ============= PoolComposer =============
+function phasePoolComposer(ctx: PipelineContext): void {
+  const { model, layoutConstraints, layoutDecisions, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
   // 提前收集 node → pool 映射用于 cross-pool X 对齐
   const nodeToPoolForCompose = new Map<string, string>();
   for (const proc of model.processes) {
@@ -404,16 +550,17 @@ export async function runPipeline(
   }
   const tCo = performance.now();
   const compose = poolCompose({
-    pools: poolInputs,
+    pools: ctx.poolInputs,
     messageFlows: model.collaborationMessageFlows,
     nodeToPool: nodeToPoolForCompose,
   });
-  const msCompose = performance.now() - tCo;
+  ctx.ms.compose = performance.now() - tCo;
+  ctx.compose = compose;
   layoutConstraints.push(...collectPoolStackConstraints(compose.poolBoxes));
   layoutDecisions.push(...collectPoolStackDecisions(compose.poolBoxes));
   if (stageSnapshots) {
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'pool-composer',
       order: stageSnapshots.length,
       nodes: compose.nodes,
@@ -424,28 +571,32 @@ export async function runPipeline(
       notes: ['Pool-composer upgrades process-local node and lane coordinates into absolute canvas coordinates.'],
     }));
   }
+}
 
-  // ============= SubprocessTranslator =============
-  // 顶层 expanded subprocess 的 abs box 来自 compose.nodes；stage 负责递归内层 + 把
-  // SubprocessLayout 局部坐标平移到绝对坐标。
+// ============= SubprocessTranslator =============
+// 顶层 expanded subprocess 的 abs box 来自 compose.nodes；stage 负责递归内层 + 把
+// SubprocessLayout 局部坐标平移到绝对坐标。
+function phaseSubprocessTranslator(ctx: PipelineContext): void {
+  const { model, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
+  const compose = ctx.compose!;
   const topLevelExpansions: Array<{ subId: string; absBox: NodeBox }> = [];
   for (const proc of model.processes) {
     for (const fn of proc.flowNodes) {
       if (!fn.isExpanded) continue;
-      if (!subprocessLayouts.has(fn.id)) continue;
+      if (!ctx.subprocessLayouts.has(fn.id)) continue;
       const box = compose.nodes.get(fn.id);
       if (!box) continue;
       topLevelExpansions.push({ subId: fn.id, absBox: box });
     }
   }
-  const translated = translateSubprocesses({ subprocessLayouts, topLevelExpansions });
-  const expandedInnerNodes = translated.innerNodeBoxes;
-  const expandedInnerEdgeIds = translated.innerEdgeIds;
+  const translated = translateSubprocesses({ subprocessLayouts: ctx.subprocessLayouts, topLevelExpansions });
+  ctx.expandedInnerNodes = translated.innerNodeBoxes;
+  ctx.expandedInnerEdgeIds = translated.innerEdgeIds;
   if (stageSnapshots) {
     const nodes = new Map<string, NodeBox>(compose.nodes);
-    mergeNodeBoxes(nodes, expandedInnerNodes);
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'subprocess-translator',
       order: stageSnapshots.length,
       nodes,
@@ -456,13 +607,12 @@ export async function runPipeline(
       notes: ['Expanded subprocess child nodes are translated from subprocess-local into absolute coordinates.'],
     }));
   }
+}
 
-  // ============= mini ElkPlacement: handler subgraphs =============
+// ============= mini ElkPlacement: handler subgraphs =============
+async function phaseHandlerMiniElk(ctx: PipelineContext): Promise<void> {
+  const { model } = ctx;
   const tH = performance.now();
-  const handlerSubgraphs: HandlerSubgraph[] = [];
-  const handlerNodeMeta = new Map<string, { hostId: string; procId: string }>();
-  const handlerInternalEdges: SequenceFlow[] = [];
-  const beToHandlerEntry = new Map<string, string>();  // BE id → handler 入口节点 id（用于 EdgeRouter）
 
   // compensation BE → 触发的活动是通过 association 而不是 sequenceFlow 连接。
   // 把这些 association 当作 BE→handler 的"虚拟连接边"喂给 EdgeRouter，handler 节点摆位
@@ -470,11 +620,10 @@ export async function runPipeline(
   // 边的 BPMN 语义类别由 boundaryRuleFor(eventType).connectorKind 决定：
   //   compensation BE → 'compensationAssociation'（direct 直线）
   //   其它（不应该走这条 codepath，仅为类型完备）→ rule 默认值
-  const compensationHandlerEdges: { id: string; source: string; target: string; bpmnType: BpmnEdgeKind }[] = [];
 
   for (const proc of model.processes) {
     if (proc.isBlackBox) continue;
-    const mainReachable = mainReachablePerProc.get(proc.id) ?? new Set();
+    const mainReachable = ctx.mainReachablePerProc.get(proc.id) ?? new Set();
     const claimed = new Set<string>();
     // 预先索引该 proc 内的 association decorations（key=source）
     const assocBySource = new Map<string, { id: string; target: string }[]>();
@@ -496,7 +645,7 @@ export async function runPipeline(
           sg.nodes.add(a.target);
           // 走 boundary rule 决定的 BPMN 类别（compensation → compensationAssociation，
           // path-shaper 会按 direct 风格画 2-point 直线）
-          compensationHandlerEdges.push({ id: a.id, source: dec.id, target: a.target, bpmnType: connectorKind });
+          ctx.compensationHandlerEdges.push({ id: a.id, source: dec.id, target: a.target, bpmnType: connectorKind });
         }
       }
 
@@ -504,18 +653,18 @@ export async function runPipeline(
 
       // 找入口节点：BE 直接 target
       const entry = proc.sequenceFlows.find(sf => sf.source === dec.id);
-      if (entry) beToHandlerEntry.set(dec.id, entry.target);
+      if (entry) ctx.beToHandlerEntry.set(dec.id, entry.target);
 
       for (const id of sg.nodes) claimed.add(id);
-      for (const id of sg.nodes) handlerNodeMeta.set(id, { hostId: dec.host, procId: proc.id });
-      for (const e of sg.edges) handlerInternalEdges.push(e);
+      for (const id of sg.nodes) ctx.handlerNodeMeta.set(id, { hostId: dec.host, procId: proc.id });
+      for (const e of sg.edges) ctx.handlerInternalEdges.push(e);
 
       // mini ElkPlacement
       const handlerNodes = proc.flowNodes
         .filter(n => sg.nodes.has(n.id))
         .map(n => {
           if (n.isExpanded) {
-            const inner = subprocessLayouts.get(n.id);
+            const inner = ctx.subprocessLayouts.get(n.id);
             if (inner) {
               const h = inner.bounds.height + SUBPROCESS_PADDING_TOP + SUBPROCESS_PADDING_BOTTOM;
               return {
@@ -553,43 +702,47 @@ export async function runPipeline(
         nodes: handlerNodes,
         edges: handlerEdges,
       });
-      handlerSubgraphs.push({
+      ctx.handlerSubgraphs.push({
         beId: dec.id, hostId: dec.host,
         nodes: placement.nodes,
         width: placement.bounds.width, height: placement.bounds.height,
       });
     }
   }
-  const msHandlers = performance.now() - tH;
+  ctx.ms.handlers = performance.now() - tH;
+}
 
-  // ============= DecorationPlacer =============
-  const boundaryEvents: { id: string; hostId: string; idx: number }[] = [];
+// ============= DecorationPlacer =============
+function phaseDecorationPlacer(ctx: PipelineContext): void {
+  const { model, layoutConstraints, layoutDecisions, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
+  const compose = ctx.compose!;
   for (const proc of model.processes) {
     const byHost = new Map<string, number>();
     for (const dec of proc.decorations) {
       if (dec.kind !== 'boundaryEvent') continue;
       const i = byHost.get(dec.host) ?? 0;
-      boundaryEvents.push({ id: dec.id, hostId: dec.host, idx: i });
+      ctx.boundaryEvents.push({ id: dec.id, hostId: dec.host, idx: i });
       byHost.set(dec.host, i + 1);
     }
   }
   const decoration = placeDecorations({
     hostBoxes: compose.nodes,
-    boundaryEvents,
-    handlerSubgraphs,
+    boundaryEvents: ctx.boundaryEvents,
+    handlerSubgraphs: ctx.handlerSubgraphs,
   });
-  layoutConstraints.push(...collectBoundaryConstraints({ boundaryEvents }));
+  ctx.decoration = decoration;
+  layoutConstraints.push(...collectBoundaryConstraints({ boundaryEvents: ctx.boundaryEvents }));
   layoutDecisions.push(...collectBoundaryDecisions({
-    boundaryEvents,
+    boundaryEvents: ctx.boundaryEvents,
     boundaryEventBoxes: decoration.boundaryEventBoxes,
   }));
   if (stageSnapshots) {
     const nodes = new Map<string, NodeBox>(compose.nodes);
-    mergeNodeBoxes(nodes, expandedInnerNodes);
+    mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
     mergeNodeBoxes(nodes, decoration.boundaryEventBoxes);
     mergeNodeBoxes(nodes, decoration.handlerNodeBoxes);
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'decoration-placer',
       order: stageSnapshots.length,
       nodes,
@@ -600,32 +753,36 @@ export async function runPipeline(
       notes: ['Boundary events and handler subgraphs are now absolute; edges are not routed yet.'],
     }));
   }
+}
 
-  // ============= ArtifactPlacer =============
+// ============= ArtifactPlacer =============
+function phaseArtifactPlacer(ctx: PipelineContext): void {
+  const { model, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
+  const compose = ctx.compose!;
   const artifactsIn: ArtifactInputArtifact[] = [];
-  const associationsIn: ArtifactInputAssociation[] = [];
   for (const proc of model.processes) {
     for (const dec of proc.decorations) {
       if (dec.kind === 'artifact') {
         artifactsIn.push({ id: dec.id, subtype: dec.subtype, width: dec.width, height: dec.height });
       } else if (dec.kind === 'association') {
-        associationsIn.push({ id: dec.id, subtype: dec.subtype, source: dec.source, target: dec.target });
+        ctx.associationsIn.push({ id: dec.id, subtype: dec.subtype, source: dec.source, target: dec.target });
       }
     }
   }
   const artifactOut = placeArtifacts({
     flowNodeBoxes: compose.nodes,
     artifacts: artifactsIn,
-    associations: associationsIn,
+    associations: ctx.associationsIn,
   });
+  ctx.artifactOut = artifactOut;
   if (stageSnapshots) {
     const nodes = new Map<string, NodeBox>(compose.nodes);
-    mergeNodeBoxes(nodes, expandedInnerNodes);
-    mergeNodeBoxes(nodes, decoration.boundaryEventBoxes);
-    mergeNodeBoxes(nodes, decoration.handlerNodeBoxes);
+    mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
+    mergeNodeBoxes(nodes, ctx.decoration!.boundaryEventBoxes);
+    mergeNodeBoxes(nodes, ctx.decoration!.handlerNodeBoxes);
     mergeNodeBoxes(nodes, artifactOut.artifactBoxes);
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'artifact-placer',
       order: stageSnapshots.length,
       nodes,
@@ -636,16 +793,20 @@ export async function runPipeline(
       notes: ['Artifact nodes are now placed relative to their associated host nodes.'],
     }));
   }
+}
 
-  // ============= PoolOverflowRebalancer =============
-  // 收集各类 box → host → pool 的归属映射，喂给 rebalancer。stage 会原地改 box 的 .y / .h /
-  // pool 的 .y / .h / .w，并返回新的 totalBounds。
+// ============= PoolOverflowRebalancer =============
+// 收集各类 box → host → pool 的归属映射，喂给 rebalancer。stage 会原地改 box 的 .y / .h /
+// pool 的 .y / .h / .w，并返回新的 totalBounds。
+function phasePoolOverflowRebalancer(ctx: PipelineContext): void {
+  const { model, stageSnapshots, debugNodeMeta, debugInputEdges } = ctx;
+  const compose = ctx.compose!;
   const artifactHosts = new Map<string, string>();
-  for (const [aid, meta] of artifactOut.artifactSides) artifactHosts.set(aid, meta.hostId);
+  for (const [aid, meta] of ctx.artifactOut!.artifactSides) artifactHosts.set(aid, meta.hostId);
   const boundaryEventHosts = new Map<string, string>();
-  for (const be of boundaryEvents) boundaryEventHosts.set(be.id, be.hostId);
+  for (const be of ctx.boundaryEvents) boundaryEventHosts.set(be.id, be.hostId);
   const handlerNodeHosts = new Map<string, string>();
-  for (const [nodeId, meta] of handlerNodeMeta) handlerNodeHosts.set(nodeId, meta.hostId);
+  for (const [nodeId, meta] of ctx.handlerNodeMeta) handlerNodeHosts.set(nodeId, meta.hostId);
   const innerNodeOwnerPool = new Map<string, string>();
   for (const proc of model.processes) {
     (function walk(p: ProcessUnit) {
@@ -667,7 +828,7 @@ export async function runPipeline(
     }
   }
   const bottomLaneByPool = new Map<string, string>();
-  for (const p of poolInputs) {
+  for (const p of ctx.poolInputs) {
     const bottomLaneId = p.leafOrder[p.leafOrder.length - 1];
     if (bottomLaneId) bottomLaneByPool.set(p.id, bottomLaneId);
   }
@@ -677,10 +838,10 @@ export async function runPipeline(
     totalBounds: compose.totalBounds,
     nodes: compose.nodes,
     laneBoxes: compose.laneBoxes,
-    expandedInnerNodes,
-    artifactBoxes: artifactOut.artifactBoxes,
-    boundaryEventBoxes: decoration.boundaryEventBoxes,
-    handlerNodeBoxes: decoration.handlerNodeBoxes,
+    expandedInnerNodes: ctx.expandedInnerNodes!,
+    artifactBoxes: ctx.artifactOut!.artifactBoxes,
+    boundaryEventBoxes: ctx.decoration!.boundaryEventBoxes,
+    handlerNodeBoxes: ctx.decoration!.handlerNodeBoxes,
     nodeToPool: compose.nodeToPool,
     artifactHosts,
     boundaryEventHosts,
@@ -692,12 +853,12 @@ export async function runPipeline(
   compose.totalBounds = rebalanced.totalBounds;
   if (stageSnapshots) {
     const nodes = new Map<string, NodeBox>(compose.nodes);
-    mergeNodeBoxes(nodes, expandedInnerNodes);
-    mergeNodeBoxes(nodes, decoration.boundaryEventBoxes);
-    mergeNodeBoxes(nodes, decoration.handlerNodeBoxes);
-    mergeNodeBoxes(nodes, artifactOut.artifactBoxes);
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    mergeNodeBoxes(nodes, ctx.expandedInnerNodes!);
+    mergeNodeBoxes(nodes, ctx.decoration!.boundaryEventBoxes);
+    mergeNodeBoxes(nodes, ctx.decoration!.handlerNodeBoxes);
+    mergeNodeBoxes(nodes, ctx.artifactOut!.artifactBoxes);
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'pool-overflow-rebalancer',
       order: stageSnapshots.length,
       nodes,
@@ -708,8 +869,12 @@ export async function runPipeline(
       notes: ['Pool overflow rebalancer may mutate pool, lane, host, boundary, handler, and artifact boxes in place.'],
     }));
   }
+}
 
-  // ============= IncrementalStabilizer =============
+// ============= IncrementalStabilizer =============
+function phaseIncrementalStabilizer(ctx: PipelineContext): void {
+  const { layoutConstraints, layoutDecisions } = ctx;
+  const compose = ctx.compose!;
   const incrementalNodeMeta = new Map<string, IncrementalNodeMeta>();
   for (const [nodeId] of compose.nodes) {
     incrementalNodeMeta.set(nodeId, {
@@ -719,16 +884,21 @@ export async function runPipeline(
   }
   const incremental = stabilizeWithPreviousBoxes({
     nodes: compose.nodes,
-    previousBoxes,
+    previousBoxes: ctx.previousBoxes,
     nodeMeta: incrementalNodeMeta,
     poolBoxes: compose.poolBoxes,
     laneBoxes: compose.laneBoxes,
   });
+  ctx.incremental = incremental;
   compose.nodes = incremental.nodes;
   layoutConstraints.push(...incremental.constraints);
   layoutDecisions.push(...incremental.decisions);
+}
 
-  // ============= EdgeRouter =============
+// ============= EdgeRouter =============
+function phaseEdgeRouter(ctx: PipelineContext): void {
+  const { model, layoutConstraints } = ctx;
+  const compose = ctx.compose!;
   const routeNodes = new Map<string, RouteInputNode>();
 
   // 主流节点
@@ -757,7 +927,7 @@ export async function runPipeline(
   }
   for (const proc of model.processes) walkInnerOwners(proc, proc.id);
 
-  for (const [innerId, innerBox] of expandedInnerNodes) {
+  for (const [innerId, innerBox] of ctx.expandedInnerNodes!) {
     // 找到节点类型
     let fnType: any = 'task';
     for (const proc of model.processes) {
@@ -783,9 +953,9 @@ export async function runPipeline(
     });
   }
   // BE 节点（位置来自 DecorationPlacer）
-  for (const [beId, beBox] of decoration.boundaryEventBoxes) {
+  for (const [beId, beBox] of ctx.decoration!.boundaryEventBoxes) {
     // 找 BE 的 host 来推断 pool/lane
-    const meta = boundaryEvents.find(b => b.id === beId);
+    const meta = ctx.boundaryEvents.find(b => b.id === beId);
     if (!meta) continue;
     const hostNode = routeNodes.get(meta.hostId);
     routeNodes.set(beId, {
@@ -798,8 +968,8 @@ export async function runPipeline(
     });
   }
   // handler 节点（位置来自 DecorationPlacer）
-  for (const [nodeId, box] of decoration.handlerNodeBoxes) {
-    const meta = handlerNodeMeta.get(nodeId);
+  for (const [nodeId, box] of ctx.decoration!.handlerNodeBoxes) {
+    const meta = ctx.handlerNodeMeta.get(nodeId);
     if (!meta) continue;
     const hostNode = routeNodes.get(meta.hostId);
     // handler 节点的 type 从原 fixture flowNodes 查
@@ -823,13 +993,13 @@ export async function runPipeline(
   }));
 
   const routeEdgesList: RouteInputEdge[] = [];
-  const innerEdgeIdSet = new Set(expandedInnerEdgeIds);
+  const innerEdgeIdSet = new Set(ctx.expandedInnerEdgeIds!);
   // 主流 sequenceFlows
   for (const proc of model.processes) {
     for (const sf of proc.sequenceFlows) {
       if (!routeNodes.has(sf.source) || !routeNodes.has(sf.target)) continue;
       // 跳过已经在 handlerInternalEdges 里的
-      if (handlerInternalEdges.some(e => e.id === sf.id)) continue;
+      if (ctx.handlerInternalEdges.some(e => e.id === sf.id)) continue;
       routeEdgesList.push({ id: sf.id, source: sf.source, target: sf.target, bpmnType: 'sequenceFlow' });
     }
   }
@@ -848,12 +1018,12 @@ export async function runPipeline(
   }
   for (const proc of model.processes) walkInnerFlows(proc);
   // handler 子图内部 + BE→handler 入口 都进 router
-  for (const sf of handlerInternalEdges) {
+  for (const sf of ctx.handlerInternalEdges) {
     if (!routeNodes.has(sf.source) || !routeNodes.has(sf.target)) continue;
     routeEdgesList.push({ id: sf.id, source: sf.source, target: sf.target, bpmnType: 'sequenceFlow' });
   }
   // compensation BE → handler activity（association，但走 boundary-to-handler 路径）
-  for (const ce of compensationHandlerEdges) {
+  for (const ce of ctx.compensationHandlerEdges) {
     if (!routeNodes.has(ce.source) || !routeNodes.has(ce.target)) continue;
     routeEdgesList.push({ id: ce.id, source: ce.source, target: ce.target, bpmnType: ce.bpmnType });
   }
@@ -864,11 +1034,18 @@ export async function runPipeline(
   }
 
   const routeObstacles: RouteInputObstacle[] = [];
+  const innerNodeOwnerPool = new Map<string, string>();
+  for (const proc of model.processes) {
+    (function walk(p: ProcessUnit) {
+      for (const fn of p.flowNodes) innerNodeOwnerPool.set(fn.id, proc.id);
+      for (const sub of p.subProcesses) walk(sub);
+    })(proc);
+  }
   for (const proc of model.processes) {
     (function walk(p: ProcessUnit) {
       for (const fn of p.flowNodes) {
         if (fn.ioInputCount <= 0 && fn.ioOutputCount <= 0) continue;
-        const hostBox = compose.nodes.get(fn.id) ?? expandedInnerNodes.get(fn.id);
+        const hostBox = compose.nodes.get(fn.id) ?? ctx.expandedInnerNodes!.get(fn.id);
         if (!hostBox) continue;
         const poolId = compose.nodeToPool.get(fn.id) ?? innerNodeOwnerPool.get(fn.id);
         if (!poolId) continue;
@@ -882,8 +1059,8 @@ export async function runPipeline(
   // artifact（annotation / dataObject）对 sequence flow 同样是障碍——E2 检测把它们当节点。
   // 折行链的回绕下行段会从 annotation 正中穿过（06-artifacts-extended flow_4 切 annotation_sla）。
   // 归属 pool 取 host 节点的 pool。
-  for (const [aid, box] of artifactOut.artifactBoxes) {
-    const hostId = artifactOut.artifactSides.get(aid)?.hostId;
+  for (const [aid, box] of ctx.artifactOut!.artifactBoxes) {
+    const hostId = ctx.artifactOut!.artifactSides.get(aid)?.hostId;
     const poolId = hostId ? (compose.nodeToPool.get(hostId) ?? innerNodeOwnerPool.get(hostId)) : undefined;
     if (!poolId) continue;
     routeObstacles.push({ box, poolId });
@@ -896,18 +1073,25 @@ export async function runPipeline(
     poolBoxes: compose.poolBoxes,
     routeObstacles,
   };
+  ctx.routeNodesForAssoc = routeNodes;
+  ctx.routeEdgesListForAssoc = routeEdgesList;
   const tR = performance.now();
   const routes = routeEdges(routeInput);
-  const msRoute = performance.now() - tR;
+  ctx.ms.route = performance.now() - tR;
+  ctx.routes = routes;
+}
 
-  // ============= AssociationRouter =============
+// ============= AssociationRouter =============
+function phaseAssociationRouter(ctx: PipelineContext): void {
+  const { layoutConstraints, layoutDecisions, stageSnapshots, debugNodeMeta } = ctx;
+  const compose = ctx.compose!;
   const assocEdgesIn: AssociationEdgeInput[] = [];
-  for (const assoc of associationsIn) {
+  for (const assoc of ctx.associationsIn) {
     // 找 artifact 端
-    const srcSide = artifactOut.artifactSides.get(assoc.source);
-    const tgtSide = artifactOut.artifactSides.get(assoc.target);
-    const srcBox = artifactOut.artifactBoxes.get(assoc.source) ?? compose.nodes.get(assoc.source);
-    const tgtBox = artifactOut.artifactBoxes.get(assoc.target) ?? compose.nodes.get(assoc.target);
+    const srcSide = ctx.artifactOut!.artifactSides.get(assoc.source);
+    const tgtSide = ctx.artifactOut!.artifactSides.get(assoc.target);
+    const srcBox = ctx.artifactOut!.artifactBoxes.get(assoc.source) ?? compose.nodes.get(assoc.source);
+    const tgtBox = ctx.artifactOut!.artifactBoxes.get(assoc.target) ?? compose.nodes.get(assoc.target);
     if (!srcBox || !tgtBox) continue;
     if (!srcSide && !tgtSide) continue; // 两端都不是已摆位的 artifact，跳过
     assocEdgesIn.push({
@@ -922,26 +1106,27 @@ export async function runPipeline(
   }
   const associationObstacles = [
     ...compose.nodes.values(),
-    ...decoration.boundaryEventBoxes.values(),
-    ...decoration.handlerNodeBoxes.values(),
-    ...expandedInnerNodes.values(),
+    ...ctx.decoration!.boundaryEventBoxes.values(),
+    ...ctx.decoration!.handlerNodeBoxes.values(),
+    ...ctx.expandedInnerNodes!.values(),
     // artifact 自身（annotation / dataObject）也是障碍：两个 artifact 之间的 association
     // 不能直穿第三个 artifact（06-artifacts-extended 的 E2）。router 会排除边的两端 box。
-    ...artifactOut.artifactBoxes.values(),
+    ...ctx.artifactOut!.artifactBoxes.values(),
   ];
   const assocRoutes = routeAssociations({ edges: assocEdgesIn, obstacles: associationObstacles });
 
   // 合并 routes
-  const allRoutes = new Map(routes.routes);
+  const allRoutes = new Map(ctx.routes!.routes);
   for (const [id, r] of assocRoutes.routes) allRoutes.set(id, r);
+  ctx.allRoutes = allRoutes;
   layoutConstraints.push(...collectRouteConstraints(allRoutes));
   layoutDecisions.push(...collectRouteDecisions(allRoutes));
   if (stageSnapshots) {
     const nodes = new Map<string, NodeBox>();
-    for (const [id, n] of routeNodes) nodes.set(id, n.box);
-    mergeNodeBoxes(nodes, artifactOut.artifactBoxes);
+    for (const [id, n] of ctx.routeNodesForAssoc!) nodes.set(id, n.box);
+    mergeNodeBoxes(nodes, ctx.artifactOut!.artifactBoxes);
     const routeEdgeMeta = new Map<string, { source: string; target: string; kind: SnapshotEdge['kind'] }>();
-    for (const edge of routeEdgesList) {
+    for (const edge of ctx.routeEdgesListForAssoc!) {
       routeEdgeMeta.set(edge.id, {
         source: edge.source,
         target: edge.target,
@@ -961,73 +1146,51 @@ export async function runPipeline(
       if (!meta) continue;
       edgeSnapshots.push(edgeRouteToSnapshotInput(id, route, meta.source, meta.target, meta.kind));
     }
-    pushSnapshot(createStageSnapshot({
-      fixture: fixtureLabel,
+    pushSnapshot(ctx, createStageSnapshot({
+      fixture: ctx.fixtureLabel,
       stage: 'edge-router',
       order: stageSnapshots.length,
       nodes,
-      nodeMeta: routeNodeMeta(routeNodes, debugNodeMeta!),
+      nodeMeta: routeNodeMeta(ctx.routeNodesForAssoc!, debugNodeMeta!),
       edges: edgeSnapshots,
       pools: compose.poolBoxes,
       lanes: laneBandRects(compose.laneBoxes, compose.poolBoxes),
       notes: ['All edge waypoints and ports are absolute coordinates after EdgeRouter plus AssociationRouter.'],
     }));
   }
+}
 
-  // ============= Merger =============
+// ============= Merger =============
+function phaseMerger(ctx: PipelineContext): void {
+  const { stageSnapshots } = ctx;
+  const compose = ctx.compose!;
   // 合并所有节点位置 → allNodes（含 handler / artifact / 展开 subprocess 内部）
   const allNodesForMerge = new Map<string, NodeBox>(compose.nodes);
-  for (const [id, b] of decoration.handlerNodeBoxes) allNodesForMerge.set(id, b);
-  for (const [id, b] of artifactOut.artifactBoxes) allNodesForMerge.set(id, b);
-  for (const [id, b] of expandedInnerNodes) allNodesForMerge.set(id, b);
+  for (const [id, b] of ctx.decoration!.handlerNodeBoxes) allNodesForMerge.set(id, b);
+  for (const [id, b] of ctx.artifactOut!.artifactBoxes) allNodesForMerge.set(id, b);
+  for (const [id, b] of ctx.expandedInnerNodes!) allNodesForMerge.set(id, b);
 
   const tM = performance.now();
   const graph = merge({
-    raw: rawJson,
+    raw: ctx.rawJson,
     nodes: allNodesForMerge,
-    boundaryEventBoxes: decoration.boundaryEventBoxes,
+    boundaryEventBoxes: ctx.decoration!.boundaryEventBoxes,
     poolBoxes: compose.poolBoxes,
     laneBoxes: compose.laneBoxes,
-    routes: allRoutes,
+    routes: ctx.allRoutes!,
     totalBounds: compose.totalBounds,
   });
-  const msMerge = performance.now() - tM;
+  ctx.ms.merge = performance.now() - tM;
+  ctx.graph = graph;
   if (stageSnapshots) {
-    pushSnapshot(snapshotFromLayoutedGraph(
-      fixtureLabel,
+    pushSnapshot(ctx, snapshotFromLayoutedGraph(
+      ctx.fixtureLabel,
       'merger',
       stageSnapshots.length,
       graph,
       ['Merger writes absolute stage data back into parent-relative LayoutedGraph containers.'],
     ));
   }
-
-  const msTotal = performance.now() - t0;
-  const byEdgeType: Record<string, number> = {};
-  for (const r of routes.routes.values()) {
-    byEdgeType[r.edgeType] = (byEdgeType[r.edgeType] ?? 0) + 1;
-  }
-  const decisionCount = layoutDecisions.length;
-
-  return {
-    graph,
-    trace: {
-      routeCount: routes.routes.size, byEdgeType,
-      constraints: layoutConstraints,
-      constraintSummary: summarizeConstraints(layoutConstraints),
-      decisions: layoutDecisions.slice(0, MAX_TRACE_DECISIONS),
-      decisionCount,
-      decisionsTruncated: decisionCount > MAX_TRACE_DECISIONS,
-      incremental: {
-        previousBoxCount: previousBoxes.size,
-        appliedCount: incremental.appliedCount,
-        skippedCount: incremental.skippedCount,
-      },
-      elkShape: elkShapes,
-      ...(stageSnapshots ? { stageSnapshots } : {}),
-      msPlacement, msConstrain, msCompose, msHandlers, msRoute, msMerge, msTotal,
-    },
-  };
 }
 
 function shouldCollectStageSnapshots(options: LayoutOptions): boolean {
@@ -1036,6 +1199,10 @@ function shouldCollectStageSnapshots(options: LayoutOptions): boolean {
     return options.debug.stageSnapshots !== false;
   }
   return false;
+}
+
+function pushSnapshot(ctx: PipelineContext, snapshot: StageSnapshot): void {
+  ctx.stageSnapshots?.push(snapshot);
 }
 
 function mergeNodeBoxes(target: Map<string, NodeBox>, source: Map<string, NodeBox>): void {
