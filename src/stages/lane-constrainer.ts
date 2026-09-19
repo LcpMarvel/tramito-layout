@@ -7,7 +7,7 @@
 
 import type { FlowNodeType, Lane } from '../loader/types.ts';
 import type { LaneBox, NodeBox } from './types.ts';
-import { LANE_PAD, LANE_MIN_H, ioSpecExtraBelow, isGatewayType } from '../layout/node-sizes.ts';
+import { LANE_PAD, LANE_MIN_H, ioSpecExtraBelow, isGatewayType, eventLabelSize } from '../layout/node-sizes.ts';
 import { allLaneOrder, leafLaneOrder, nodeToLeafLane } from '../layout/lane-resolver.ts';
 
 export interface LaneNodeMeta {
@@ -56,25 +56,8 @@ export interface LaneConstrainOutput {
   poolWidth: number;
 }
 
-// 估算 label 文字会被换行成几行（与 serializer/diagram-builder 中的算法一致）
-function estimateLabelLines(text: string, maxWidth: number): number {
-  if (!text || maxWidth <= 0) return 1;
-  let currentLineWidth = 0;
-  let lines = 1;
-  for (const ch of text) {
-    const charWidth = ch.charCodeAt(0) > 255 ? 14 : 7;
-    if (currentLineWidth + charWidth > maxWidth) {
-      lines++;
-      currentLineWidth = charWidth;
-    } else {
-      currentLineWidth += charWidth;
-    }
-  }
-  return lines;
-}
-
-// diagram-builder 默认 label 宽度 = 100，行高 = 14，距离节点 = 4
-const LABEL_W = 100;
+// 行高 / 距节点净空：与 serializer/diagram-builder 的 label 盒一致（行数 × 行高见
+// node-sizes 的 eventLabelSize——label 宽度封顶 200，别再按 100 宽估算行数）。
 const LABEL_LINE_H = 14;
 const LABEL_NODE_GAP = 4;
 // path-shaper 常量复刻：避障 margin + 边 label 的留空
@@ -333,8 +316,7 @@ function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeV
   let above = hHalf;
   let below = hHalf;
   if (meta?.name && meta.name.length > 0) {
-    const lines = estimateLabelLines(meta.name, LABEL_W);
-    const labelH = lines * LABEL_LINE_H;
+    const labelH = eventLabelSize(meta.name).height;
     if (isGatewayType(meta.type)) {
       above = hHalf + LABEL_NODE_GAP + labelH;
     } else if (isEventType(meta.type)) {

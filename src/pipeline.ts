@@ -22,7 +22,7 @@
 import { loadFixture } from './loader/loader.ts';
 import type { ValidationProfile } from './loader/validate-graph.ts';
 import type { BpmnModel, ProcessUnit, SequenceFlow } from './loader/types.ts';
-import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow, layoutHeightWithIoSpec } from './layout/node-sizes.ts';
+import { nodeSizeOf, ioSpecDataObjectBoxes, ioSpecExtraBelow, layoutHeightWithIoSpec, taskWidthForLabel, TASK_W, TASK_H } from './layout/node-sizes.ts';
 import { leafLaneOrder, nodeToLeafLane } from './layout/lane-resolver.ts';
 import { runStage } from './errors.ts';
 import {
@@ -449,7 +449,16 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
         // B1：BE 中心要骑在 host 底边上，host 太窄装不下所有 BE 时按 BE 数撑宽
         // （83：5 个 BE 在 100 宽 host 上，后两个中心掉出右边缘）。撑宽必须发生在
         // ELK 之前，lane/pool 尺寸才按真宽算。
-        const w = Math.max(size.w, hostWidthForBoundaries(n.boundaryEventIds.length));
+        // 长 label 同理撑宽（88 的文字汤：31 字塞 100 宽盒换行 6+ 行溢出盒外）。
+        const w = Math.max(
+          size.w,
+          hostWidthForBoundaries(n.boundaryEventIds.length),
+          // 只有盒内文字节点才按 label 撑宽（event/gateway 是外置 label，尺寸有 N4 硬性
+          // 36×36 / 50×50——98 的 event 被误撑成 56×36 的教训）。
+          size.w === TASK_W && size.h === TASK_H
+            ? taskWidthForLabel(n.name, size.w)
+            : size.w,
+        );
         return {
           id: n.id,
           type: n.type,

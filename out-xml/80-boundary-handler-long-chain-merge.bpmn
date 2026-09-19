@@ -79,7 +79,7 @@
       <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
         <dc:Bounds x="62" y="124" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="164" width="100" height="14" />
+          <dc:Bounds x="52" y="164" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_receive_di" bpmnElement="task_receive">
@@ -109,7 +109,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="1928" y="124" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1896" y="164" width="100" height="14" />
+          <dc:Bounds x="1918" y="164" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_h1_log_di" bpmnElement="task_h1_log">
@@ -150,7 +150,7 @@
         <di:waypoint x="1218" y="142" />
         <di:waypoint x="1618" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="993" y="53" width="50" height="14" />
+          <dc:Bounds x="991" y="53" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_merge_notify_di" bpmnElement="flow_merge_notify">
@@ -191,7 +191,7 @@
         <di:waypoint x="1578" y="142" />
         <di:waypoint x="1618" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1583" y="170" width="50" height="14" />
+          <dc:Bounds x="1583" y="170" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

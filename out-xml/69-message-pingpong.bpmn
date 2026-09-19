@@ -106,7 +106,7 @@
       <bpmndi:BPMNShape id="start_a_di" bpmnElement="start_a">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="52" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_a_inquiry_di" bpmnElement="task_a_inquiry">
@@ -115,7 +115,7 @@
       <bpmndi:BPMNShape id="catch_a_quote_di" bpmnElement="catch_a_quote">
         <dc:Bounds x="358" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="94" width="100" height="14" />
+          <dc:Bounds x="348" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_a_order_di" bpmnElement="task_a_order">
@@ -124,7 +124,7 @@
       <bpmndi:BPMNShape id="catch_a_confirm_di" bpmnElement="catch_a_confirm">
         <dc:Bounds x="62" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="374" width="100" height="14" />
+          <dc:Bounds x="52" y="374" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_a_pay_di" bpmnElement="task_a_pay">
@@ -133,13 +133,13 @@
       <bpmndi:BPMNShape id="catch_a_receipt_di" bpmnElement="catch_a_receipt">
         <dc:Bounds x="358" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="374" width="100" height="14" />
+          <dc:Bounds x="348" y="374" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_a_di" bpmnElement="end_a">
         <dc:Bounds x="474" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="442" y="374" width="100" height="14" />
+          <dc:Bounds x="464" y="374" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_supplier_di" bpmnElement="pool_supplier" isHorizontal="true">
@@ -148,7 +148,7 @@
       <bpmndi:BPMNShape id="start_b_di" bpmnElement="start_b">
         <dc:Bounds x="210" y="496" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="536" width="100" height="14" />
+          <dc:Bounds x="200" y="536" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_b_quote_di" bpmnElement="task_b_quote">
@@ -157,7 +157,7 @@
       <bpmndi:BPMNShape id="catch_b_order_di" bpmnElement="catch_b_order">
         <dc:Bounds x="506" y="496" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="474" y="536" width="100" height="14" />
+          <dc:Bounds x="496" y="536" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_b_confirm_di" bpmnElement="task_b_confirm">
@@ -166,7 +166,7 @@
       <bpmndi:BPMNShape id="catch_b_payment_di" bpmnElement="catch_b_payment">
         <dc:Bounds x="210" y="776" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="816" width="100" height="14" />
+          <dc:Bounds x="200" y="816" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_b_receipt_di" bpmnElement="task_b_receipt">
@@ -175,7 +175,7 @@
       <bpmndi:BPMNShape id="end_b_di" bpmnElement="end_b">
         <dc:Bounds x="506" y="776" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="474" y="816" width="100" height="14" />
+          <dc:Bounds x="496" y="816" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_a1_di" bpmnElement="flow_a1">
@@ -258,7 +258,7 @@
         <di:waypoint x="524" y="112" />
         <di:waypoint x="524" y="496" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="529" y="239.39999999999998" width="50" height="14" />
+          <dc:Bounds x="529" y="239.39999999999998" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_4_confirm_di" bpmnElement="msgflow_4_confirm">
@@ -267,7 +267,7 @@
         <di:waypoint x="80" y="445" />
         <di:waypoint x="80" y="370" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="351" y="426" width="50" height="14" />
+          <dc:Bounds x="349" y="426" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_5_payment_di" bpmnElement="msgflow_5_payment">
@@ -277,7 +277,7 @@
         <di:waypoint x="228" y="756" />
         <di:waypoint x="228" y="776" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="261" y="522.8" width="50" height="14" />
+          <dc:Bounds x="261" y="522.8" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_6_receipt_di" bpmnElement="msgflow_6_receipt">
@@ -287,7 +287,7 @@
         <di:waypoint x="376" y="390" />
         <di:waypoint x="376" y="370" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="441" y="609.2" width="50" height="14" />
+          <dc:Bounds x="441" y="609.2" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

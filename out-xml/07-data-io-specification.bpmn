@@ -92,7 +92,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="322" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="362" width="100" height="14" />
+          <dc:Bounds x="66" y="362" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_create_event_di" bpmnElement="task_create_event">
@@ -161,7 +161,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="848" y="322" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="816" y="362" width="100" height="14" />
+          <dc:Bounds x="852" y="362" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="input_feedback_assoc_di" bpmnElement="input_feedback_assoc">

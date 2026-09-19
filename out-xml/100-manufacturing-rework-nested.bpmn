@@ -70,7 +70,7 @@
       <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
         <dc:Bounds x="62" y="160.75" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="200.75" width="100" height="14" />
+          <dc:Bounds x="38" y="200.75" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_prepare_material_di" bpmnElement="task_prepare_material">
@@ -82,7 +82,7 @@
       <bpmndi:BPMNShape id="sub_start_assembly_di" bpmnElement="sub_start_assembly">
         <dc:Bounds x="390" y="131" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="171" width="100" height="14" />
+          <dc:Bounds x="380" y="171" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_task_parts_di" bpmnElement="sub_task_parts">
@@ -100,7 +100,7 @@
       <bpmndi:BPMNShape id="sub_end_assembly_di" bpmnElement="sub_end_assembly">
         <dc:Bounds x="1076" y="131" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1044" y="171" width="100" height="14" />
+          <dc:Bounds x="1066" y="171" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_quality_inspect_di" bpmnElement="task_quality_inspect">
@@ -118,7 +118,7 @@
       <bpmndi:BPMNShape id="end_produced_di" bpmnElement="end_produced">
         <dc:Bounds x="1714" y="160.75" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1682" y="200.75" width="100" height="14" />
+          <dc:Bounds x="1704" y="200.75" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="sub_f_start_parts_di" bpmnElement="sub_f_start_parts">
@@ -143,7 +143,7 @@
         <di:waypoint x="576" y="68" />
         <di:waypoint x="576" y="109" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="956" y="95" width="50" height="14" />
+          <dc:Bounds x="956" y="95" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="sub_f_check_done_di" bpmnElement="sub_f_check_done">
@@ -179,7 +179,7 @@
         <di:waypoint x="228" y="16" />
         <di:waypoint x="228" y="138.75" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1434" y="124.75" width="50" height="14" />
+          <dc:Bounds x="1434" y="124.75" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quality_pass_di" bpmnElement="f_quality_pass">

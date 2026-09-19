@@ -94,7 +94,7 @@
       <bpmndi:BPMNShape id="start_event_di" bpmnElement="start_event">
         <dc:Bounds x="62" y="61" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="101" width="100" height="14" />
+          <dc:Bounds x="52" y="101" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_create_form_di" bpmnElement="task_create_form">
@@ -136,13 +136,13 @@
       <bpmndi:BPMNShape id="end_fast_di" bpmnElement="end_fast">
         <dc:Bounds x="1568" y="363" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1536" y="403" width="100" height="14" />
+          <dc:Bounds x="1544" y="403" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_normal_di" bpmnElement="end_normal">
         <dc:Bounds x="1568" y="495" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1536" y="535" width="100" height="14" />
+          <dc:Bounds x="1544" y="535" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">

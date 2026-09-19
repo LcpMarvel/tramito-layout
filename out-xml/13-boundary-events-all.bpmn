@@ -165,7 +165,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="270" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="310" width="100" height="14" />
+          <dc:Bounds x="66" y="310" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_with_timer_int_di" bpmnElement="task_with_timer_int">
@@ -309,19 +309,19 @@
       <bpmndi:BPMNShape id="end_normal_di" bpmnElement="end_normal">
         <dc:Bounds x="2698" y="270" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2666" y="310" width="100" height="14" />
+          <dc:Bounds x="2688" y="310" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_timeout_di" bpmnElement="end_timeout">
         <dc:Bounds x="2698" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2666" y="94" width="100" height="14" />
+          <dc:Bounds x="2688" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_error_di" bpmnElement="end_error">
         <dc:Bounds x="2698" y="158.66666666666669" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2666" y="198.66666666666669" width="100" height="14" />
+          <dc:Bounds x="2688" y="198.66666666666669" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">

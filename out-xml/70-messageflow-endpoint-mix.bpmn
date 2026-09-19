@@ -66,7 +66,7 @@
       <bpmndi:BPMNShape id="start_app_di" bpmnElement="start_app">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="52" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_app_pay_req_di" bpmnElement="task_app_pay_req">
@@ -78,13 +78,13 @@
       <bpmndi:BPMNShape id="catch_app_result_di" bpmnElement="catch_app_result">
         <dc:Bounds x="538" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="506" y="94" width="100" height="14" />
+          <dc:Bounds x="514" y="94" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_app_di" bpmnElement="end_app">
         <dc:Bounds x="654" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="622" y="94" width="100" height="14" />
+          <dc:Bounds x="644" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_gateway_di" bpmnElement="pool_gateway" isHorizontal="true">
@@ -96,7 +96,7 @@
       <bpmndi:BPMNShape id="start_bank_di" bpmnElement="start_bank">
         <dc:Bounds x="390" y="358" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="398" width="100" height="14" />
+          <dc:Bounds x="366" y="398" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_bank_clear_di" bpmnElement="task_bank_clear">
@@ -108,7 +108,7 @@
       <bpmndi:BPMNShape id="end_bank_di" bpmnElement="end_bank">
         <dc:Bounds x="866" y="358" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="834" y="398" width="100" height="14" />
+          <dc:Bounds x="856" y="398" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_a1_di" bpmnElement="flow_a1">
@@ -143,7 +143,7 @@
         <di:waypoint x="408" y="112" />
         <di:waypoint x="408" y="358" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="413" y="191.1" width="50" height="14" />
+          <dc:Bounds x="413" y="191.1" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

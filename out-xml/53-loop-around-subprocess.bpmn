@@ -52,7 +52,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="142" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="182" width="100" height="14" />
+          <dc:Bounds x="66" y="182" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_prepare_docs_di" bpmnElement="task_prepare_docs">
@@ -64,7 +64,7 @@
       <bpmndi:BPMNShape id="sub_start_di" bpmnElement="sub_start">
         <dc:Bounds x="390" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="146" width="100" height="14" />
+          <dc:Bounds x="380" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_task_review_di" bpmnElement="sub_task_review">
@@ -73,7 +73,7 @@
       <bpmndi:BPMNShape id="sub_end_di" bpmnElement="sub_end">
         <dc:Bounds x="726" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="694" y="146" width="100" height="14" />
+          <dc:Bounds x="716" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_audit_result_di" bpmnElement="gw_audit_result">
@@ -88,7 +88,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1184" y="142" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1152" y="182" width="100" height="14" />
+          <dc:Bounds x="1188" y="182" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="sub_flow_1_di" bpmnElement="sub_flow_1">
@@ -121,7 +121,7 @@
         <di:waypoint x="228" y="16" />
         <di:waypoint x="228" y="119.99999999999999" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="904" y="106" width="50" height="14" />
+          <dc:Bounds x="904" y="106" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_gw_issue_di" bpmnElement="flow_gw_issue">

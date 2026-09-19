@@ -56,7 +56,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="270.66666666666663" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="310.66666666666663" width="100" height="14" />
+          <dc:Bounds x="66" y="310.66666666666663" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_prepare_di" bpmnElement="task_prepare">
@@ -83,13 +83,13 @@
       <bpmndi:BPMNShape id="end_signed_di" bpmnElement="end_signed">
         <dc:Bounds x="848" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="816" y="94" width="100" height="14" />
+          <dc:Bounds x="838" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_terminated_di" bpmnElement="end_terminated">
         <dc:Bounds x="848" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="816" y="234" width="100" height="14" />
+          <dc:Bounds x="810" y="234" width="112" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
@@ -111,14 +111,14 @@
         <di:waypoint x="563" y="72" />
         <di:waypoint x="668" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="568" y="158" width="50" height="14" />
+          <dc:Bounds x="568" y="158" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject">
         <di:waypoint x="588" y="212" />
         <di:waypoint x="668" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="597" y="217" width="50" height="14" />
+          <dc:Bounds x="571" y="253" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_rework_di" bpmnElement="flow_rework">
@@ -126,7 +126,7 @@
         <di:waypoint x="563" y="352" />
         <di:waypoint x="668" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="508" y="252" width="50" height="14" />
+          <dc:Bounds x="480" y="252" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_sign_end_di" bpmnElement="flow_sign_end">
@@ -143,7 +143,7 @@
         <di:waypoint x="408" y="416" />
         <di:waypoint x="408" y="328.6666666666667" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="538" y="397" width="50" height="14" />
+          <dc:Bounds x="512" y="397" width="102" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

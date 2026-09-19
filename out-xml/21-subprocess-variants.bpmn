@@ -138,7 +138,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="516" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="556" width="100" height="14" />
+          <dc:Bounds x="66" y="556" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="subprocess_collapsed_di" bpmnElement="subprocess_collapsed" isExpanded="false">
@@ -150,7 +150,7 @@
       <bpmndi:BPMNShape id="sub_boundary_start_di" bpmnElement="sub_boundary_start">
         <dc:Bounds x="390" y="526" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="566" width="100" height="14" />
+          <dc:Bounds x="394" y="566" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_boundary_task1_di" bpmnElement="sub_boundary_task1">
@@ -162,7 +162,7 @@
       <bpmndi:BPMNShape id="sub_boundary_end_di" bpmnElement="sub_boundary_end">
         <dc:Bounds x="926" y="526" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="894" y="566" width="100" height="14" />
+          <dc:Bounds x="930" y="566" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="boundary_timer_subprocess_di" bpmnElement="boundary_timer_subprocess">
@@ -198,7 +198,7 @@
       <bpmndi:BPMNShape id="level1_start_di" bpmnElement="level1_start">
         <dc:Bounds x="1106" y="190" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1074" y="230" width="100" height="14" />
+          <dc:Bounds x="1103" y="230" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="level1_task_di" bpmnElement="level1_task">
@@ -210,7 +210,7 @@
       <bpmndi:BPMNShape id="level2_start_di" bpmnElement="level2_start">
         <dc:Bounds x="1474" y="200" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1442" y="240" width="100" height="14" />
+          <dc:Bounds x="1471" y="240" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="level2_task_di" bpmnElement="level2_task">
@@ -222,7 +222,7 @@
       <bpmndi:BPMNShape id="level3_start_di" bpmnElement="level3_start">
         <dc:Bounds x="1842" y="210" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1810" y="250" width="100" height="14" />
+          <dc:Bounds x="1839" y="250" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="level3_task_di" bpmnElement="level3_task">
@@ -231,43 +231,43 @@
       <bpmndi:BPMNShape id="level3_end_di" bpmnElement="level3_end">
         <dc:Bounds x="2178" y="210" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2146" y="250" width="100" height="14" />
+          <dc:Bounds x="2175" y="250" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="level2_end_di" bpmnElement="level2_end">
         <dc:Bounds x="2346" y="200" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2314" y="240" width="100" height="14" />
+          <dc:Bounds x="2343" y="240" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="level1_end_di" bpmnElement="level1_end">
         <dc:Bounds x="2514" y="190" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2482" y="230" width="100" height="14" />
+          <dc:Bounds x="2511" y="230" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="2662" y="180" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2630" y="220" width="100" height="14" />
+          <dc:Bounds x="2666" y="220" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_timeout_di" bpmnElement="end_timeout">
         <dc:Bounds x="2662" y="446" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2630" y="486" width="100" height="14" />
+          <dc:Bounds x="2652" y="486" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_error_di" bpmnElement="end_error">
         <dc:Bounds x="2662" y="586" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2630" y="626" width="100" height="14" />
+          <dc:Bounds x="2652" y="626" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_cancel_di" bpmnElement="end_cancel">
         <dc:Bounds x="2662" y="726" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2630" y="766" width="100" height="14" />
+          <dc:Bounds x="2652" y="766" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="sub_boundary_flow_1_di" bpmnElement="sub_boundary_flow_1">

@@ -85,7 +85,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="124" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="164" width="100" height="14" />
+          <dc:Bounds x="52" y="164" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_payment_di" bpmnElement="sub_payment" isExpanded="true">
@@ -94,7 +94,7 @@
       <bpmndi:BPMNShape id="payment_start_di" bpmnElement="payment_start">
         <dc:Bounds x="210" y="134" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="174" width="100" height="14" />
+          <dc:Bounds x="200" y="174" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="payment_task_deduct_di" bpmnElement="payment_task_deduct">
@@ -106,7 +106,7 @@
       <bpmndi:BPMNShape id="payment_end_di" bpmnElement="payment_end">
         <dc:Bounds x="746" y="134" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="714" y="174" width="100" height="14" />
+          <dc:Bounds x="736" y="174" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="boundary_payment_error_di" bpmnElement="boundary_payment_error">
@@ -121,7 +121,7 @@
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="1970" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1938" y="94" width="100" height="14" />
+          <dc:Bounds x="1960" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_log_failure_di" bpmnElement="task_log_failure">
@@ -133,7 +133,7 @@
       <bpmndi:BPMNShape id="refund_start_di" bpmnElement="refund_start">
         <dc:Bounds x="1106" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1074" y="244" width="100" height="14" />
+          <dc:Bounds x="1096" y="244" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="refund_task_freeze_di" bpmnElement="refund_task_freeze">
@@ -145,7 +145,7 @@
       <bpmndi:BPMNShape id="refund_end_di" bpmnElement="refund_end">
         <dc:Bounds x="1642" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1610" y="244" width="100" height="14" />
+          <dc:Bounds x="1632" y="244" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_notify_customer_di" bpmnElement="task_notify_customer">
@@ -154,7 +154,7 @@
       <bpmndi:BPMNShape id="end_failure_di" bpmnElement="end_failure">
         <dc:Bounds x="1970" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1938" y="234" width="100" height="14" />
+          <dc:Bounds x="1960" y="234" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="payment_flow_1_di" bpmnElement="payment_flow_1">

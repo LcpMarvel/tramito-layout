@@ -17,13 +17,13 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="32" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="72" width="100" height="14" />
+          <dc:Bounds x="66" y="72" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="178" y="32" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="146" y="72" width="100" height="14" />
+          <dc:Bounds x="182" y="72" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">

@@ -155,7 +155,7 @@
       <bpmndi:BPMNShape id="start_employee_di" bpmnElement="start_employee">
         <dc:Bounds x="62" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="192" width="100" height="14" />
+          <dc:Bounds x="66" y="192" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_resignation_di" bpmnElement="task_submit_resignation">
@@ -164,19 +164,19 @@
       <bpmndi:BPMNShape id="catch_approval_result_di" bpmnElement="catch_approval_result">
         <dc:Bounds x="358" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="192" width="100" height="14" />
+          <dc:Bounds x="334" y="192" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_process_complete_di" bpmnElement="catch_process_complete">
         <dc:Bounds x="474" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="442" y="192" width="100" height="14" />
+          <dc:Bounds x="450" y="192" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_employee_di" bpmnElement="end_employee">
         <dc:Bounds x="590" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="558" y="192" width="100" height="14" />
+          <dc:Bounds x="594" y="192" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="data_manual_ref_di" bpmnElement="data_manual_ref">
@@ -188,7 +188,7 @@
       <bpmndi:BPMNShape id="start_it_manager_di" bpmnElement="start_it_manager">
         <dc:Bounds x="210" y="326" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="366" width="100" height="14" />
+          <dc:Bounds x="200" y="366" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_approve_di" bpmnElement="task_approve">
@@ -197,19 +197,19 @@
       <bpmndi:BPMNShape id="throw_approval_result_di" bpmnElement="throw_approval_result">
         <dc:Bounds x="506" y="326" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="474" y="366" width="100" height="14" />
+          <dc:Bounds x="482" y="366" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="throw_check_request_di" bpmnElement="throw_check_request">
         <dc:Bounds x="622" y="326" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="590" y="366" width="100" height="14" />
+          <dc:Bounds x="598" y="366" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_it_manager_di" bpmnElement="end_it_manager">
         <dc:Bounds x="738" y="326" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="706" y="366" width="100" height="14" />
+          <dc:Bounds x="742" y="366" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_it_engineer_di" bpmnElement="pool_it_engineer" isHorizontal="true">
@@ -218,7 +218,7 @@
       <bpmndi:BPMNShape id="start_it_engineer_di" bpmnElement="start_it_engineer">
         <dc:Bounds x="622" y="500" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="590" y="540" width="100" height="14" />
+          <dc:Bounds x="598" y="540" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_check_equipment_di" bpmnElement="task_check_equipment">
@@ -233,13 +233,13 @@
       <bpmndi:BPMNShape id="throw_damage_report_di" bpmnElement="throw_damage_report">
         <dc:Bounds x="1048" y="486" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1016" y="526" width="100" height="14" />
+          <dc:Bounds x="1038" y="526" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="throw_transfer_request_di" bpmnElement="throw_transfer_request">
         <dc:Bounds x="1164" y="500" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1132" y="540" width="100" height="14" />
+          <dc:Bounds x="1140" y="540" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_handle_accounts_di" bpmnElement="task_handle_accounts">
@@ -248,13 +248,13 @@
       <bpmndi:BPMNShape id="throw_process_complete_di" bpmnElement="throw_process_complete">
         <dc:Bounds x="1460" y="500" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1428" y="540" width="100" height="14" />
+          <dc:Bounds x="1450" y="540" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_it_engineer_di" bpmnElement="end_it_engineer">
         <dc:Bounds x="1576" y="500" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1544" y="540" width="100" height="14" />
+          <dc:Bounds x="1580" y="540" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_custodian_di" bpmnElement="pool_custodian" isHorizontal="true">
@@ -263,7 +263,7 @@
       <bpmndi:BPMNShape id="start_custodian_di" bpmnElement="start_custodian">
         <dc:Bounds x="1164" y="674" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1132" y="714" width="100" height="14" />
+          <dc:Bounds x="1140" y="714" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_fill_transfer_di" bpmnElement="task_fill_transfer">
@@ -272,7 +272,7 @@
       <bpmndi:BPMNShape id="end_custodian_di" bpmnElement="end_custodian">
         <dc:Bounds x="1460" y="674" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1428" y="714" width="100" height="14" />
+          <dc:Bounds x="1464" y="714" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="data_transfer_ref_di" bpmnElement="data_transfer_ref">
@@ -376,7 +376,7 @@
         <di:waypoint x="228" y="210" />
         <di:waypoint x="228" y="326" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="233" y="243.6" width="50" height="14" />
+          <dc:Bounds x="233" y="243.6" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_approval_result_di" bpmnElement="msgflow_approval_result">
@@ -385,21 +385,21 @@
         <di:waypoint x="376" y="248" />
         <di:waypoint x="376" y="188" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="425" y="229" width="50" height="14" />
+          <dc:Bounds x="423" y="229" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_check_request_di" bpmnElement="msgflow_check_request">
         <di:waypoint x="640" y="362" />
         <di:waypoint x="640" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="645" y="403.3" width="50" height="14" />
+          <dc:Bounds x="645" y="403.3" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_transfer_request_di" bpmnElement="msgflow_transfer_request">
         <di:waypoint x="1182" y="536" />
         <di:waypoint x="1182" y="674" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1187" y="577.3" width="50" height="14" />
+          <dc:Bounds x="1187" y="577.3" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_process_complete_di" bpmnElement="msgflow_process_complete">
@@ -408,7 +408,7 @@
         <di:waypoint x="492" y="372" />
         <di:waypoint x="492" y="188" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="960" y="353" width="50" height="14" />
+          <dc:Bounds x="958" y="353" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

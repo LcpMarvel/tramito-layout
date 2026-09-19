@@ -76,7 +76,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="192" width="100" height="14" />
+          <dc:Bounds x="66" y="192" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_receive_data_di" bpmnElement="task_receive_data">
@@ -97,7 +97,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="422" y="432" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="390" y="472" width="100" height="14" />
+          <dc:Bounds x="426" y="472" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="data_input_raw_di" bpmnElement="data_input_raw">

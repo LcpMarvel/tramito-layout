@@ -104,7 +104,7 @@
       <bpmndi:BPMNShape id="start_customer_di" bpmnElement="start_customer">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="52" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_place_order_di" bpmnElement="task_place_order">
@@ -116,7 +116,7 @@
       <bpmndi:BPMNShape id="end_customer_di" bpmnElement="end_customer">
         <dc:Bounds x="538" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="506" y="94" width="100" height="14" />
+          <dc:Bounds x="528" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_store_di" bpmnElement="pool_store" isHorizontal="true">
@@ -125,7 +125,7 @@
       <bpmndi:BPMNShape id="start_store_di" bpmnElement="start_store">
         <dc:Bounds x="210" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="268" width="100" height="14" />
+          <dc:Bounds x="200" y="268" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_store_forward_di" bpmnElement="task_store_forward">
@@ -134,7 +134,7 @@
       <bpmndi:BPMNShape id="end_store_di" bpmnElement="end_store">
         <dc:Bounds x="506" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="474" y="268" width="100" height="14" />
+          <dc:Bounds x="489" y="268" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_region_di" bpmnElement="pool_region" isHorizontal="true">
@@ -143,7 +143,7 @@
       <bpmndi:BPMNShape id="start_region_di" bpmnElement="start_region">
         <dc:Bounds x="358" y="402" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="442" width="100" height="14" />
+          <dc:Bounds x="341" y="442" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_region_alloc_di" bpmnElement="task_region_alloc">
@@ -158,7 +158,7 @@
       <bpmndi:BPMNShape id="start_hq_di" bpmnElement="start_hq">
         <dc:Bounds x="686" y="576" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="654" y="616" width="100" height="14" />
+          <dc:Bounds x="676" y="616" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_hq_dispatch_di" bpmnElement="task_hq_dispatch">
@@ -167,7 +167,7 @@
       <bpmndi:BPMNShape id="end_hq_di" bpmnElement="end_hq">
         <dc:Bounds x="982" y="576" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="950" y="616" width="100" height="14" />
+          <dc:Bounds x="965" y="616" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_logistics_di" bpmnElement="pool_logistics" isHorizontal="true">
@@ -176,7 +176,7 @@
       <bpmndi:BPMNShape id="start_logistics_di" bpmnElement="start_logistics">
         <dc:Bounds x="834" y="750" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="802" y="790" width="100" height="14" />
+          <dc:Bounds x="824" y="790" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_deliver_di" bpmnElement="task_deliver">
@@ -185,7 +185,7 @@
       <bpmndi:BPMNShape id="end_logistics_di" bpmnElement="end_logistics">
         <dc:Bounds x="1130" y="750" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1098" y="790" width="100" height="14" />
+          <dc:Bounds x="1120" y="790" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_c1_di" bpmnElement="flow_c1">
@@ -250,7 +250,7 @@
         <di:waypoint x="704" y="460" />
         <di:waypoint x="704" y="576" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="709" y="493.6" width="50" height="14" />
+          <dc:Bounds x="709" y="493.6" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_dispatch_di" bpmnElement="msgflow_dispatch">
@@ -266,7 +266,7 @@
         <di:waypoint x="436" y="470" />
         <di:waypoint x="436" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="679" y="475" width="50" height="14" />
+          <dc:Bounds x="677" y="475" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_hq_notify_customer_di" bpmnElement="msgflow_hq_notify_customer">
@@ -275,7 +275,7 @@
         <di:waypoint x="436" y="324" />
         <di:waypoint x="436" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="619" y="305" width="50" height="14" />
+          <dc:Bounds x="617" y="305" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="msgflow_store_notify_logistics_di" bpmnElement="msgflow_store_notify_logistics">
@@ -284,7 +284,7 @@
         <di:waypoint x="972" y="507" />
         <di:waypoint x="972" y="728" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="635" y="512" width="50" height="14" />
+          <dc:Bounds x="621" y="512" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

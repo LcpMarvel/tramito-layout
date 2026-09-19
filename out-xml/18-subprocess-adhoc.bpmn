@@ -26,7 +26,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="136" width="100" height="14" />
+          <dc:Bounds x="66" y="136" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="adhoc_subprocess_di" bpmnElement="adhoc_subprocess" isExpanded="true">
@@ -44,7 +44,7 @@
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="722" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="690" y="136" width="100" height="14" />
+          <dc:Bounds x="726" y="136" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">

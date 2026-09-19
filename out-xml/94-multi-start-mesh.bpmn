@@ -82,25 +82,25 @@
       <bpmndi:BPMNShape id="start_web_di" bpmnElement="start_web">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="38" y="94" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_app_di" bpmnElement="start_app">
         <dc:Bounds x="62" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="234" width="100" height="14" />
+          <dc:Bounds x="41.5" y="234" width="77" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_phone_di" bpmnElement="start_phone">
         <dc:Bounds x="62" y="300.33333333333337" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="340.33333333333337" width="100" height="14" />
+          <dc:Bounds x="38" y="340.33333333333337" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_counter_di" bpmnElement="start_counter">
         <dc:Bounds x="62" y="396.33333333333326" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="436.33333333333326" width="100" height="14" />
+          <dc:Bounds x="38" y="436.33333333333326" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_web_check_di" bpmnElement="task_web_check">
@@ -145,13 +145,13 @@
       <bpmndi:BPMNShape id="end_auto_di" bpmnElement="end_auto">
         <dc:Bounds x="1028" y="115.66666666666666" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="996" y="155.66666666666666" width="100" height="14" />
+          <dc:Bounds x="1018" y="155.66666666666666" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_manual_di" bpmnElement="end_manual">
         <dc:Bounds x="1028" y="340" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="996" y="380" width="100" height="14" />
+          <dc:Bounds x="1018" y="380" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_web_di" bpmnElement="flow_web">
@@ -172,7 +172,7 @@
         <di:waypoint x="326.3333333333333" y="366.33333333333326" />
         <di:waypoint x="554.6666666666666" y="366.33333333333326" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="187.16666666666666" y="395.33333333333326" width="50" height="14" />
+          <dc:Bounds x="173.16666666666666" y="395.33333333333326" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_web_merge_di" bpmnElement="flow_web_merge">
@@ -209,7 +209,7 @@
         <di:waypoint x="801.3333333333334" y="142" />
         <di:waypoint x="1028" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="810.3333333333334" y="147" width="50" height="14" />
+          <dc:Bounds x="812.3333333333334" y="147" width="102" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_route_manual_di" bpmnElement="flow_route_manual">
@@ -218,7 +218,7 @@
         <di:waypoint x="849.6666666666667" y="358" />
         <di:waypoint x="898" y="358" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="810.3333333333334" y="123" width="50" height="14" />
+          <dc:Bounds x="802.3333333333334" y="123" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_offline_manual_di" bpmnElement="flow_offline_manual">

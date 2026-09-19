@@ -78,7 +78,7 @@
       <bpmndi:BPMNShape id="start_contract_di" bpmnElement="start_contract">
         <dc:Bounds x="62" y="293" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="333" width="100" height="14" />
+          <dc:Bounds x="52" y="333" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_approve_contract_di" bpmnElement="task_approve_contract">
@@ -117,7 +117,7 @@
       <bpmndi:BPMNShape id="end_approved_di" bpmnElement="end_approved">
         <dc:Bounds x="618" y="32" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="586" y="72" width="100" height="14" />
+          <dc:Bounds x="608" y="72" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_h_remind_di" bpmnElement="task_h_remind">
@@ -129,7 +129,7 @@
       <bpmndi:BPMNShape id="end_fix_abort_di" bpmnElement="end_fix_abort">
         <dc:Bounds x="618" y="223" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="586" y="263" width="100" height="14" />
+          <dc:Bounds x="608" y="263" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_h_update_terms_di" bpmnElement="task_h_update_terms">
@@ -144,7 +144,7 @@
       <bpmndi:BPMNShape id="end_escalated_di" bpmnElement="end_escalated">
         <dc:Bounds x="618" y="643" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="586" y="683" width="100" height="14" />
+          <dc:Bounds x="608" y="683" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_approve_di" bpmnElement="flow_start_approve">

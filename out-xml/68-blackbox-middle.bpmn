@@ -59,7 +59,7 @@
       <bpmndi:BPMNShape id="start_buyer_di" bpmnElement="start_buyer">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="45" y="94" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_trade_di" bpmnElement="task_submit_trade">
@@ -71,7 +71,7 @@
       <bpmndi:BPMNShape id="end_buyer_di" bpmnElement="end_buyer">
         <dc:Bounds x="538" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="506" y="94" width="100" height="14" />
+          <dc:Bounds x="528" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_clearing_di" bpmnElement="pool_clearing" isHorizontal="true">
@@ -83,7 +83,7 @@
       <bpmndi:BPMNShape id="start_seller_di" bpmnElement="start_seller">
         <dc:Bounds x="390" y="358" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="398" width="100" height="14" />
+          <dc:Bounds x="366" y="398" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_confirm_settle_di" bpmnElement="task_confirm_settle">
@@ -95,7 +95,7 @@
       <bpmndi:BPMNShape id="end_seller_di" bpmnElement="end_seller">
         <dc:Bounds x="866" y="358" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="834" y="398" width="100" height="14" />
+          <dc:Bounds x="856" y="398" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_b1_di" bpmnElement="flow_b1">
@@ -126,7 +126,7 @@
         <di:waypoint x="408" y="112" />
         <di:waypoint x="408" y="358" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="413" y="191.1" width="50" height="14" />
+          <dc:Bounds x="413" y="191.1" width="92" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

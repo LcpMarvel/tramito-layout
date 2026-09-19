@@ -3,8 +3,8 @@
 
 import type { FlowNodeType } from '../loader/types.ts';
 
-const TASK_W = 100;
-const TASK_H = 80;
+export const TASK_W = 100;
+export const TASK_H = 80;
 export const EVENT_W = 36;
 export const EVENT_H = 36;
 const GATEWAY_W = 50;
@@ -19,6 +19,49 @@ export const POOL_PAD_Y = 20;
 export const POOL_GAP = 30;
 
 export interface NodeSize { w: number; h: number }
+
+// ============================================================
+// 长 label 尺寸（88 的"文字汤"修复）
+// ============================================================
+
+/** label 文本的估算像素宽：与 serializer/diagram-builder 的 estimateTextWidth 同款
+ * （CJK 14 / ASCII 7）——两处共用同一估算，reserve 与渲染不漂移。 */
+export function estimateTextWidthPx(text: string): number {
+  let width = 0;
+  for (const ch of text) width += ch.charCodeAt(0) > 255 ? 14 : 7;
+  return width;
+}
+
+/** task 正文区左右 padding（bpmn-js 在盒内换行，文字区 = w − 2×pad） */
+const TASK_TEXT_PAD = 10;
+/** 80px 高的 task 装得下的最大正文行数（(80 − 上下留边 16) / 行高 14 ≈ 4） */
+const TASK_MAX_LINES = 4;
+/** 长 label 撑宽的封顶（更宽就失衡了，超出继续多行换行） */
+const TASK_LABEL_MAX_W = 220;
+
+/** 长 label 撑宽 task（N4 允许）：按估算行数 > TASK_MAX_LINES 才加宽，步进 20px。
+ * 必须在 ELK 摆位之前确定宽度（lane/pool 尺寸按真宽算）。 */
+export function taskWidthForLabel(name: string | undefined, baseW: number): number {
+  if (!name) return baseW;
+  const textW = estimateTextWidthPx(name);
+  const linesAt = (w: number): number => Math.ceil(textW / Math.max(1, w - 2 * TASK_TEXT_PAD));
+  let w = baseW;
+  while (linesAt(w) > TASK_MAX_LINES && w < TASK_LABEL_MAX_W) w += 20;
+  return w;
+}
+
+/** event/gateway 外置 label 的盒宽：单行估宽封顶——36px 的圆/菱形配超长文本时，
+ * 盒太窄会换行 5+ 行吊成一串（88 的 start event）。 */
+export const EVENT_LABEL_MAX_W = 200;
+
+/** event/gateway 外置 label 的盒尺寸（宽封顶、行数 × 行高）。serializer 与
+ * lane-constrainer 的净空预留共用这一个定义。 */
+export function eventLabelSize(text: string): { width: number; height: number } {
+  if (!text) return { width: 0, height: 0 };
+  const width = Math.max(24, Math.min(estimateTextWidthPx(text), EVENT_LABEL_MAX_W));
+  const lines = Math.ceil(estimateTextWidthPx(text) / width);
+  return { width, height: lines * 14 };
+}
 
 export function nodeSizeOf(type: FlowNodeType): NodeSize {
   switch (type) {

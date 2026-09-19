@@ -44,7 +44,7 @@
       <bpmndi:BPMNShape id="start_a_di" bpmnElement="start_a">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="55.5" y="94" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_a1_di" bpmnElement="task_a1">
@@ -56,13 +56,13 @@
       <bpmndi:BPMNShape id="end_a_di" bpmnElement="end_a">
         <dc:Bounds x="538" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="506" y="94" width="100" height="14" />
+          <dc:Bounds x="531.5" y="94" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_b_di" bpmnElement="start_b">
         <dc:Bounds x="624" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="592" y="94" width="100" height="14" />
+          <dc:Bounds x="617.5" y="94" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_b1_di" bpmnElement="task_b1">
@@ -74,7 +74,7 @@
       <bpmndi:BPMNShape id="end_b_di" bpmnElement="end_b">
         <dc:Bounds x="1100" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1068" y="94" width="100" height="14" />
+          <dc:Bounds x="1093.5" y="94" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_a1_di" bpmnElement="flow_a1">

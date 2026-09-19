@@ -156,19 +156,19 @@
       <bpmndi:BPMNShape id="start_timer_date_di" bpmnElement="start_timer_date">
         <dc:Bounds x="62" y="98.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="138.5" width="100" height="14" />
+          <dc:Bounds x="38" y="138.5" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_timer_cycle_di" bpmnElement="start_timer_cycle">
         <dc:Bounds x="62" y="194.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="234.5" width="100" height="14" />
+          <dc:Bounds x="52" y="234.5" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_timer_duration_di" bpmnElement="start_timer_duration">
         <dc:Bounds x="62" y="290.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="330.5" width="100" height="14" />
+          <dc:Bounds x="52" y="330.5" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_merge_starts_di" bpmnElement="gateway_merge_starts">
@@ -183,7 +183,7 @@
       <bpmndi:BPMNShape id="catch_timer_date_di" bpmnElement="catch_timer_date">
         <dc:Bounds x="488" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="282" width="100" height="14" />
+          <dc:Bounds x="457" y="282" width="98" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_after_date_di" bpmnElement="task_after_date">
@@ -192,7 +192,7 @@
       <bpmndi:BPMNShape id="catch_timer_duration_di" bpmnElement="catch_timer_duration">
         <dc:Bounds x="784" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="752" y="282" width="100" height="14" />
+          <dc:Bounds x="760" y="282" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_after_duration_di" bpmnElement="task_after_duration">
@@ -201,7 +201,7 @@
       <bpmndi:BPMNShape id="catch_timer_cycle_di" bpmnElement="catch_timer_cycle">
         <dc:Bounds x="1080" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1048" y="282" width="100" height="14" />
+          <dc:Bounds x="1070" y="282" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_after_cycle_di" bpmnElement="task_after_cycle">
@@ -246,31 +246,31 @@
       <bpmndi:BPMNShape id="end_normal_di" bpmnElement="end_normal">
         <dc:Bounds x="2046" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2014" y="94" width="100" height="14" />
+          <dc:Bounds x="2036" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_deadline_di" bpmnElement="end_deadline">
         <dc:Bounds x="2046" y="172" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2014" y="212" width="100" height="14" />
+          <dc:Bounds x="2036" y="212" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_timeout_di" bpmnElement="end_timeout">
         <dc:Bounds x="2046" y="312" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2014" y="352" width="100" height="14" />
+          <dc:Bounds x="2036" y="352" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_timer_cron_di" bpmnElement="start_timer_cron">
         <dc:Bounds x="62" y="386.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="426.5" width="100" height="14" />
+          <dc:Bounds x="31" y="426.5" width="98" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_timer_iso_interval_di" bpmnElement="catch_timer_iso_interval">
         <dc:Bounds x="1588" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1556" y="94" width="100" height="14" />
+          <dc:Bounds x="1581.5" y="94" width="49" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_monthly_di" bpmnElement="task_monthly">

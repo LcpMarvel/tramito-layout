@@ -105,7 +105,7 @@
       <bpmndi:BPMNShape id="start_3_di" bpmnElement="start_3">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="66" y="98" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_4_di" bpmnElement="task_4">
@@ -126,7 +126,7 @@
       <bpmndi:BPMNShape id="end_10_di" bpmnElement="end_10">
         <dc:Bounds x="2108" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2076" y="234" width="100" height="14" />
+          <dc:Bounds x="2112" y="234" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_6_di" bpmnElement="lane_6" isHorizontal="true">

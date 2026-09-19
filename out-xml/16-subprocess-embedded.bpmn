@@ -44,7 +44,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="136" width="100" height="14" />
+          <dc:Bounds x="66" y="136" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="subprocess_embedded_di" bpmnElement="subprocess_embedded" isExpanded="true">
@@ -53,7 +53,7 @@
       <bpmndi:BPMNShape id="sub_start_di" bpmnElement="sub_start">
         <dc:Bounds x="210" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="146" width="100" height="14" />
+          <dc:Bounds x="207" y="146" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_task_1_di" bpmnElement="sub_task_1">
@@ -65,7 +65,7 @@
       <bpmndi:BPMNShape id="sub_end_di" bpmnElement="sub_end">
         <dc:Bounds x="746" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="714" y="146" width="100" height="14" />
+          <dc:Bounds x="743" y="146" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_after_di" bpmnElement="task_after">
@@ -74,7 +74,7 @@
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="1074" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1042" y="136" width="100" height="14" />
+          <dc:Bounds x="1078" y="136" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="sub_flow_1_di" bpmnElement="sub_flow_1">

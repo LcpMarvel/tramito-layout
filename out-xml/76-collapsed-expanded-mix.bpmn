@@ -71,7 +71,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="136" width="100" height="14" />
+          <dc:Bounds x="52" y="136" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_background_check_di" bpmnElement="sub_background_check" isExpanded="false">
@@ -83,7 +83,7 @@
       <bpmndi:BPMNShape id="profile_start_di" bpmnElement="profile_start">
         <dc:Bounds x="390" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="146" width="100" height="14" />
+          <dc:Bounds x="380" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="profile_task_collect_di" bpmnElement="profile_task_collect">
@@ -95,7 +95,7 @@
       <bpmndi:BPMNShape id="profile_end_di" bpmnElement="profile_end">
         <dc:Bounds x="926" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="894" y="146" width="100" height="14" />
+          <dc:Bounds x="916" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_access_grant_di" bpmnElement="sub_access_grant" isExpanded="false">
@@ -107,7 +107,7 @@
       <bpmndi:BPMNShape id="training_start_di" bpmnElement="training_start">
         <dc:Bounds x="1286" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1254" y="146" width="100" height="14" />
+          <dc:Bounds x="1276" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="training_task_course_di" bpmnElement="training_task_course">
@@ -119,13 +119,13 @@
       <bpmndi:BPMNShape id="training_end_di" bpmnElement="training_end">
         <dc:Bounds x="1822" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1790" y="146" width="100" height="14" />
+          <dc:Bounds x="1812" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="1970" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1938" y="136" width="100" height="14" />
+          <dc:Bounds x="1960" y="136" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="profile_flow_1_di" bpmnElement="profile_flow_1">

@@ -45,7 +45,7 @@
       <bpmndi:BPMNShape id="start_customer_di" bpmnElement="start_customer">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="66" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
@@ -54,7 +54,7 @@
       <bpmndi:BPMNShape id="end_customer_di" bpmnElement="end_customer">
         <dc:Bounds x="358" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="94" width="100" height="14" />
+          <dc:Bounds x="362" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_supplier_di" bpmnElement="pool_supplier" isHorizontal="true">
@@ -63,7 +63,7 @@
       <bpmndi:BPMNShape id="start_supplier_di" bpmnElement="start_supplier">
         <dc:Bounds x="210" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="268" width="100" height="14" />
+          <dc:Bounds x="200" y="268" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_process_di" bpmnElement="task_process">
@@ -72,7 +72,7 @@
       <bpmndi:BPMNShape id="end_supplier_di" bpmnElement="end_supplier">
         <dc:Bounds x="506" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="474" y="268" width="100" height="14" />
+          <dc:Bounds x="510" y="268" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_c1_di" bpmnElement="flow_c1">

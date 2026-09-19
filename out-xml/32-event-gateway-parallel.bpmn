@@ -113,7 +113,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="234" width="100" height="14" />
+          <dc:Bounds x="66" y="234" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_init_di" bpmnElement="task_init">
@@ -128,19 +128,19 @@
       <bpmndi:BPMNShape id="catch_message_order_di" bpmnElement="catch_message_order">
         <dc:Bounds x="488" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="94" width="100" height="14" />
+          <dc:Bounds x="464" y="94" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_message_payment_di" bpmnElement="catch_message_payment">
         <dc:Bounds x="488" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="234" width="100" height="14" />
+          <dc:Bounds x="464" y="234" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_timer_di" bpmnElement="catch_timer">
         <dc:Bounds x="488" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="374" width="100" height="14" />
+          <dc:Bounds x="478" y="374" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_process_order_di" bpmnElement="task_process_order">
@@ -164,13 +164,13 @@
       <bpmndi:BPMNShape id="end_success_di" bpmnElement="end_success">
         <dc:Bounds x="1340" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1308" y="234" width="100" height="14" />
+          <dc:Bounds x="1330" y="234" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_timeout_di" bpmnElement="end_timeout">
         <dc:Bounds x="1340" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1308" y="374" width="100" height="14" />
+          <dc:Bounds x="1330" y="374" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gateway_event_exclusive_di" bpmnElement="gateway_event_exclusive">
@@ -182,13 +182,13 @@
       <bpmndi:BPMNShape id="catch_signal_cancel_di" bpmnElement="catch_signal_cancel">
         <dc:Bounds x="1044" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1012" y="94" width="100" height="14" />
+          <dc:Bounds x="1034" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_timer_continue_di" bpmnElement="catch_timer_continue">
         <dc:Bounds x="1044" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1012" y="234" width="100" height="14" />
+          <dc:Bounds x="1034" y="234" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_cancel_di" bpmnElement="task_cancel">
@@ -197,7 +197,7 @@
       <bpmndi:BPMNShape id="end_cancelled_di" bpmnElement="end_cancelled">
         <dc:Bounds x="1340" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1308" y="94" width="100" height="14" />
+          <dc:Bounds x="1337" y="94" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">

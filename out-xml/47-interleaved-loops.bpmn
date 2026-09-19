@@ -53,7 +53,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="85.66666666666666" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="125.66666666666666" width="100" height="14" />
+          <dc:Bounds x="66" y="125.66666666666666" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_collect_di" bpmnElement="task_collect">
@@ -83,7 +83,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1158" y="74.83333333333333" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1126" y="114.83333333333333" width="100" height="14" />
+          <dc:Bounds x="1162" y="114.83333333333333" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
@@ -121,7 +121,7 @@
         <di:waypoint x="228" y="171.5" />
         <di:waypoint x="228" y="143.66666666666666" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="688" y="152.5" width="50" height="14" />
+          <dc:Bounds x="684" y="152.5" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_model_gw_di" bpmnElement="flow_model_gw">
@@ -143,7 +143,7 @@
         <di:waypoint x="408" y="183.5" />
         <di:waypoint x="408" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="998" y="132.83333333333331" width="50" height="14" />
+          <dc:Bounds x="994" y="132.83333333333331" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

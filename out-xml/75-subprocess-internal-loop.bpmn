@@ -56,7 +56,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="108.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="148.5" width="100" height="14" />
+          <dc:Bounds x="52" y="148.5" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_audit_di" bpmnElement="sub_audit" isExpanded="true">
@@ -65,7 +65,7 @@
       <bpmndi:BPMNShape id="audit_start_di" bpmnElement="audit_start">
         <dc:Bounds x="210" y="131" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="171" width="100" height="14" />
+          <dc:Bounds x="200" y="171" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="audit_task_fill_di" bpmnElement="audit_task_fill">
@@ -83,7 +83,7 @@
       <bpmndi:BPMNShape id="audit_end_di" bpmnElement="audit_end">
         <dc:Bounds x="896" y="131" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="864" y="171" width="100" height="14" />
+          <dc:Bounds x="886" y="171" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_pay_di" bpmnElement="task_pay">
@@ -92,7 +92,7 @@
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="1224" y="108.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1192" y="148.5" width="100" height="14" />
+          <dc:Bounds x="1214" y="148.5" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="audit_flow_1_di" bpmnElement="audit_flow_1">
@@ -124,7 +124,7 @@
         <di:waypoint x="396" y="68" />
         <di:waypoint x="396" y="109" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="776" y="95" width="50" height="14" />
+          <dc:Bounds x="776" y="95" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">

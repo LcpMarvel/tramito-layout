@@ -106,7 +106,7 @@
       <bpmndi:BPMNShape id="start_report_di" bpmnElement="start_report">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_register_di" bpmnElement="task_register">
@@ -121,7 +121,7 @@
       <bpmndi:BPMNShape id="inv_start_di" bpmnElement="inv_start">
         <dc:Bounds x="390" y="432" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="472" width="100" height="14" />
+          <dc:Bounds x="380" y="472" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="inv_gateway_fork_di" bpmnElement="inv_gateway_fork">
@@ -151,7 +151,7 @@
       <bpmndi:BPMNShape id="inv_end_di" bpmnElement="inv_end">
         <dc:Bounds x="1026" y="432" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="994" y="472" width="100" height="14" />
+          <dc:Bounds x="1016" y="472" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_assess_di" bpmnElement="task_assess">
@@ -166,7 +166,7 @@
       <bpmndi:BPMNShape id="end_claim_di" bpmnElement="end_claim">
         <dc:Bounds x="1534" y="786" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1502" y="826" width="100" height="14" />
+          <dc:Bounds x="1524" y="826" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="inv_flow_1_di" bpmnElement="inv_flow_1">

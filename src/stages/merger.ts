@@ -263,8 +263,12 @@ function placeEdgeLabel(
 
   const sourceId = edge.sources?.[0];
   const targetId = edge.targets?.[0];
-  const labelWidth = label.width ?? 50;
-  const labelHeight = label.height ?? 14;
+  // 边 label 盒尺寸必须诚实反映换行后的文本：88 的 30+ 字 label 用默认 50×14，
+  // 渲染溢出、L2/L3 按假盒测量全失效（文字汤）。宽封顶 160 换行、高 = 行数 × 14。
+  const labelText = label.text ?? '';
+  const estW = labelText ? estimateBpmnLabelWidth(labelText) : 50;
+  const labelWidth = label.width ?? Math.max(50, Math.min(estW, EDGE_LABEL_WRAP_W));
+  const labelHeight = label.height ?? Math.max(14, Math.ceil(estW / labelWidth) * 14);
   const sourceBox = sourceId ? toNodeRect(allNodes.get(sourceId)) : undefined;
   const targetBox = targetId ? toNodeRect(allNodes.get(targetId)) : undefined;
   // 网关分支边：label 贴网关（BPMN 惯例，分支条件标在决策点旁），不飘到线中段（fixture 41）
@@ -284,6 +288,9 @@ function placeEdgeLabel(
 }
 
 type BpmnInfo = { type?: string; isExpanded?: boolean };
+
+/** 边 label 盒宽封顶（超出换行）。160 ≈ 一行 11 个 CJK 字，再宽就压邻行。 */
+const EDGE_LABEL_WRAP_W = 160;
 
 function isGatewayTypeName(type: string): boolean {
   return type === 'exclusiveGateway'

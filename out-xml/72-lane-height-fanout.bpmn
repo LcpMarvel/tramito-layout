@@ -111,7 +111,7 @@
       <bpmndi:BPMNShape id="start_audit_di" bpmnElement="start_audit">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_plan_di" bpmnElement="task_plan">
@@ -159,7 +159,7 @@
       <bpmndi:BPMNShape id="end_audit_di" bpmnElement="end_audit">
         <dc:Bounds x="978" y="965" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="946" y="1005" width="100" height="14" />
+          <dc:Bounds x="968" y="1005" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">

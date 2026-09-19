@@ -61,7 +61,7 @@
       <bpmndi:BPMNShape id="start_claim_di" bpmnElement="start_claim">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="66" y="98" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_claim_di" bpmnElement="task_submit_claim">
@@ -85,7 +85,7 @@
       <bpmndi:BPMNShape id="end_claim_paid_di" bpmnElement="end_claim_paid">
         <dc:Bounds x="898" y="282" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="866" y="322" width="100" height="14" />
+          <dc:Bounds x="888" y="322" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_submit_di" bpmnElement="flow_start_submit">

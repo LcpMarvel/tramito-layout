@@ -14,6 +14,7 @@ import {
   IO_SPEC_LABEL_GAP,
   IO_SPEC_LABEL_LINE_HEIGHT,
   IO_SPEC_ROW_GAP,
+  eventLabelSize,
   ioSpecLabelMaxWidth,
 } from '../../layout/node-sizes.ts';
 import type {
@@ -758,8 +759,10 @@ export class DiagramBuilder {
 
     if (this.isEventType(node.bpmn?.type) && labelText) {
       // For events (circles), position the label below the shape (bpmn-js default behavior)
-      const labelWidth = label?.width ?? 100;
-      const labelHeight = label?.height ?? 14;
+      // 超长文本：盒宽封顶 EVENT_LABEL_MAX_W(200) 换行，不再 100 宽吊 5 行（88 的 start event）。
+      const autoSize = eventLabelSize(labelText);
+      const labelWidth = label?.width ?? autoSize.width;
+      const labelHeight = label?.height ?? autoSize.height;
 
       // Position label below the event circle, horizontally centered (using absolute coords)
       shape.label = {

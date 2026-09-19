@@ -159,7 +159,7 @@
       <bpmndi:BPMNShape id="start_apply_di" bpmnElement="start_apply">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
@@ -249,7 +249,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="2708" y="669" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2676" y="709" width="100" height="14" />
+          <dc:Bounds x="2712" y="709" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_start_submit_di" bpmnElement="f_start_submit">

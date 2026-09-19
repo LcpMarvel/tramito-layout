@@ -86,7 +86,7 @@
       <bpmndi:BPMNShape id="start_req_di" bpmnElement="start_req">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
@@ -128,7 +128,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="1338" y="536" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1306" y="576" width="100" height="14" />
+          <dc:Bounds x="1342" y="576" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_start_submit_di" bpmnElement="f_start_submit">
@@ -162,7 +162,7 @@
         <di:waypoint x="743" y="418" />
         <di:waypoint x="458" y="418" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="748" y="231" width="50" height="14" />
+          <dc:Bounds x="748" y="231" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_audit_gw_di" bpmnElement="f_audit_gw">
@@ -183,7 +183,7 @@
         <di:waypoint x="228" y="237" />
         <di:waypoint x="228" y="116" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1058" y="252" width="50" height="14" />
+          <dc:Bounds x="1058" y="252" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_archive_end_di" bpmnElement="f_archive_end">

@@ -92,7 +92,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="186" y="124.00000000000001" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="154" y="164" width="100" height="14" />
+          <dc:Bounds x="176" y="164" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
@@ -149,28 +149,28 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1022" y="425" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="990" y="465" width="100" height="14" />
+          <dc:Bounds x="1012" y="465" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
         <di:waypoint x="222" y="142" />
         <di:waypoint x="302" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="237" y="123" width="50" height="14" />
+          <dc:Bounds x="235" y="123" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_submit_dept_di" bpmnElement="flow_submit_dept">
         <di:waypoint x="402" y="142" />
         <di:waypoint x="482" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="417" y="123" width="50" height="14" />
+          <dc:Bounds x="415" y="123" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_dept_gw_di" bpmnElement="flow_dept_gw">
         <di:waypoint x="582" y="142" />
         <di:waypoint x="695.3333333333334" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="613.6666666666667" y="123" width="50" height="14" />
+          <dc:Bounds x="611.6666666666667" y="123" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_small_amount_di" bpmnElement="flow_small_amount">
@@ -193,7 +193,7 @@
         <di:waypoint x="942" y="212" />
         <di:waypoint x="1022" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="957" y="193" width="50" height="14" />
+          <dc:Bounds x="955" y="193" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_quick_conv_di" bpmnElement="flow_quick_conv">
@@ -202,7 +202,7 @@
         <di:waypoint x="1162" y="142" />
         <di:waypoint x="1202" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1167" y="100" width="50" height="14" />
+          <dc:Bounds x="1167" y="100" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_director_conv_di" bpmnElement="flow_director_conv">
@@ -211,7 +211,7 @@
         <di:waypoint x="1162" y="142" />
         <di:waypoint x="1202" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1167" y="170" width="50" height="14" />
+          <dc:Bounds x="1167" y="170" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_conv_invoice_di" bpmnElement="flow_conv_invoice">
@@ -220,7 +220,7 @@
         <di:waypoint x="197" y="292.5" />
         <di:waypoint x="197" y="418" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1232" y="182" width="50" height="14" />
+          <dc:Bounds x="1168" y="194" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_paper_archive_di" bpmnElement="flow_paper_archive">
@@ -229,7 +229,7 @@
         <di:waypoint x="262" y="373" />
         <di:waypoint x="302" y="373" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="229" y="448" width="50" height="14" />
+          <dc:Bounds x="227" y="448" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_e_archive_di" bpmnElement="flow_e_archive">
@@ -237,7 +237,7 @@
         <di:waypoint x="197" y="513" />
         <di:waypoint x="302" y="513" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="142" y="483" width="50" height="14" />
+          <dc:Bounds x="138" y="483" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_paper_conv_di" bpmnElement="flow_paper_conv">
@@ -246,7 +246,7 @@
         <di:waypoint x="450.33333333333337" y="443" />
         <di:waypoint x="498.66666666666674" y="443" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="455.33333333333337" y="401" width="50" height="14" />
+          <dc:Bounds x="455.33333333333337" y="401" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_e_conv_di" bpmnElement="flow_e_conv">
@@ -255,7 +255,7 @@
         <di:waypoint x="450.33333333333337" y="443" />
         <di:waypoint x="498.66666666666674" y="443" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="455.33333333333337" y="471" width="50" height="14" />
+          <dc:Bounds x="455.33333333333337" y="471" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_conv_payout_di" bpmnElement="flow_conv_payout">
@@ -269,14 +269,14 @@
         <di:waypoint x="762" y="443" />
         <di:waypoint x="842" y="443" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="777" y="424" width="50" height="14" />
+          <dc:Bounds x="775" y="424" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_notify_end_di" bpmnElement="flow_notify_end">
         <di:waypoint x="942" y="443" />
         <di:waypoint x="1022" y="443" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="957" y="424" width="50" height="14" />
+          <dc:Bounds x="955" y="424" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

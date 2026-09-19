@@ -77,7 +77,7 @@
       <bpmndi:BPMNShape id="start_apply_di" bpmnElement="start_apply">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_submit_di" bpmnElement="task_submit">
@@ -110,7 +110,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="1028" y="433" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="996" y="473" width="100" height="14" />
+          <dc:Bounds x="1018" y="473" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_start_submit_di" bpmnElement="f_start_submit">
@@ -126,7 +126,7 @@
         <di:waypoint x="408" y="227" />
         <di:waypoint x="488" y="227" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="417" y="232" width="50" height="14" />
+          <dc:Bounds x="409.5" y="232" width="65" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_lt5000_di" bpmnElement="f_lt5000">
@@ -134,7 +134,7 @@
         <di:waypoint x="383" y="339" />
         <di:waypoint x="668" y="339" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="328" y="267" width="50" height="14" />
+          <dc:Bounds x="313" y="267" width="65" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_mgr_pass_di" bpmnElement="f_mgr_pass">

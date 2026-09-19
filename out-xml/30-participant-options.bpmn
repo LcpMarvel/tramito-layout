@@ -86,7 +86,7 @@
       <bpmndi:BPMNShape id="client_start_di" bpmnElement="client_start">
         <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="94" width="100" height="14" />
+          <dc:Bounds x="66" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="client_send_request_di" bpmnElement="client_send_request">
@@ -95,7 +95,7 @@
       <bpmndi:BPMNShape id="client_wait_response_di" bpmnElement="client_wait_response">
         <dc:Bounds x="358" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="326" y="94" width="100" height="14" />
+          <dc:Bounds x="348" y="94" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="client_process_response_di" bpmnElement="client_process_response">
@@ -104,7 +104,7 @@
       <bpmndi:BPMNShape id="client_end_di" bpmnElement="client_end">
         <dc:Bounds x="654" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="622" y="94" width="100" height="14" />
+          <dc:Bounds x="658" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="participant_server_di" bpmnElement="participant_server" isHorizontal="true">
@@ -116,7 +116,7 @@
       <bpmndi:BPMNShape id="server_start_di" bpmnElement="server_start">
         <dc:Bounds x="210" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="268" width="100" height="14" />
+          <dc:Bounds x="200" y="268" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="server_process_di" bpmnElement="server_process">
@@ -128,7 +128,7 @@
       <bpmndi:BPMNShape id="server_end_di" bpmnElement="server_end">
         <dc:Bounds x="686" y="228" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="654" y="268" width="100" height="14" />
+          <dc:Bounds x="690" y="268" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="participant_external_closed_di" bpmnElement="participant_external_closed" isHorizontal="true">

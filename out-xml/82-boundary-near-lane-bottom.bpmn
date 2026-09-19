@@ -72,7 +72,7 @@
       <bpmndi:BPMNShape id="start_ticket_di" bpmnElement="start_ticket">
         <dc:Bounds x="62" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="98" width="100" height="14" />
+          <dc:Bounds x="52" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_register_di" bpmnElement="task_register">
@@ -96,7 +96,7 @@
       <bpmndi:BPMNShape id="end_closed_di" bpmnElement="end_closed">
         <dc:Bounds x="718" y="170" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="686" y="210" width="100" height="14" />
+          <dc:Bounds x="708" y="210" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_supervision_di" bpmnElement="lane_supervision" isHorizontal="true">
@@ -108,7 +108,7 @@
       <bpmndi:BPMNShape id="end_urged_di" bpmnElement="end_urged">
         <dc:Bounds x="718" y="318" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="686" y="358" width="100" height="14" />
+          <dc:Bounds x="708" y="358" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_register_di" bpmnElement="flow_start_register">

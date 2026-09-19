@@ -112,7 +112,7 @@
       <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
         <dc:Bounds x="62" y="172" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="212" width="100" height="14" />
+          <dc:Bounds x="52" y="212" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_confirm_di" bpmnElement="task_confirm">
@@ -121,7 +121,7 @@
       <bpmndi:BPMNShape id="end_complete_di" bpmnElement="end_complete">
         <dc:Bounds x="2058" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2026" y="98" width="100" height="14" />
+          <dc:Bounds x="2048" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_sales_di" bpmnElement="lane_sales" isHorizontal="true">
@@ -202,7 +202,7 @@
         <di:waypoint x="718" y="413" />
         <di:waypoint x="848" y="413" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="758" y="394" width="50" height="14" />
+          <dc:Bounds x="756" y="394" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_gw_pack_direct_di" bpmnElement="f_gw_pack_direct">
@@ -239,7 +239,7 @@
         <di:waypoint x="1438" y="812" />
         <di:waypoint x="1518" y="812" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1447" y="817" width="50" height="14" />
+          <dc:Bounds x="1445" y="817" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_redeliver_notify_di" bpmnElement="f_redeliver_notify">

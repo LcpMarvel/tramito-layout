@@ -117,7 +117,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="404" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="444" width="100" height="14" />
+          <dc:Bounds x="38" y="444" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_dispatch_di" bpmnElement="task_dispatch">
@@ -132,37 +132,37 @@
       <bpmndi:BPMNShape id="catch_confirm_di" bpmnElement="catch_confirm">
         <dc:Bounds x="488" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="94" width="100" height="14" />
+          <dc:Bounds x="406" y="94" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_modify_di" bpmnElement="catch_modify">
         <dc:Bounds x="488" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="234" width="100" height="14" />
+          <dc:Bounds x="406" y="234" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_complaint_di" bpmnElement="catch_complaint">
         <dc:Bounds x="488" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="374" width="100" height="14" />
+          <dc:Bounds x="406" y="374" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_timeout_24h_di" bpmnElement="catch_timeout_24h">
         <dc:Bounds x="488" y="474" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="514" width="100" height="14" />
+          <dc:Bounds x="406" y="514" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_force_close_di" bpmnElement="catch_force_close">
         <dc:Bounds x="488" y="614" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="654" width="100" height="14" />
+          <dc:Bounds x="406" y="654" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_system_pause_di" bpmnElement="catch_system_pause">
         <dc:Bounds x="488" y="754" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="456" y="794" width="100" height="14" />
+          <dc:Bounds x="406" y="794" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_serve_di" bpmnElement="task_serve">
@@ -186,13 +186,13 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="784" y="263.99999999999994" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="752" y="303.99999999999994" width="100" height="14" />
+          <dc:Bounds x="760" y="303.99999999999994" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_closed_di" bpmnElement="end_closed">
         <dc:Bounds x="784" y="684" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="752" y="724" width="100" height="14" />
+          <dc:Bounds x="767" y="724" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
@@ -203,7 +203,7 @@
         <di:waypoint x="278" y="422" />
         <di:waypoint x="358" y="422" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="293" y="403" width="50" height="14" />
+          <dc:Bounds x="238" y="325" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_confirm_di" bpmnElement="flow_g_confirm">
@@ -212,7 +212,7 @@
         <di:waypoint x="448" y="72" />
         <di:waypoint x="488" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="77" width="50" height="14" />
+          <dc:Bounds x="388" y="109" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_modify_di" bpmnElement="flow_g_modify">
@@ -221,7 +221,7 @@
         <di:waypoint x="448" y="212" />
         <di:waypoint x="488" y="212" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="217" width="50" height="14" />
+          <dc:Bounds x="388" y="249" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_complaint_di" bpmnElement="flow_g_complaint">
@@ -230,7 +230,7 @@
         <di:waypoint x="448" y="352" />
         <di:waypoint x="488" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="357" width="50" height="14" />
+          <dc:Bounds x="388" y="287" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_timeout_di" bpmnElement="flow_g_timeout">
@@ -239,7 +239,7 @@
         <di:waypoint x="448" y="492" />
         <di:waypoint x="488" y="492" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="497" width="50" height="14" />
+          <dc:Bounds x="388" y="529" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_force_di" bpmnElement="flow_g_force">
@@ -248,7 +248,7 @@
         <di:waypoint x="448" y="632" />
         <di:waypoint x="488" y="632" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="637" width="50" height="14" />
+          <dc:Bounds x="388" y="669" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_g_pause_di" bpmnElement="flow_g_pause">
@@ -257,7 +257,7 @@
         <di:waypoint x="448" y="772" />
         <di:waypoint x="488" y="772" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="777" width="50" height="14" />
+          <dc:Bounds x="388" y="809" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_confirm_serve_di" bpmnElement="flow_confirm_serve">

@@ -66,7 +66,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="106.66666666666666" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="146.66666666666666" width="100" height="14" />
+          <dc:Bounds x="66" y="146.66666666666666" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_requirement_di" bpmnElement="task_requirement">
@@ -105,7 +105,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1468" y="106.5" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1436" y="146.5" width="100" height="14" />
+          <dc:Bounds x="1472" y="146.5" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
@@ -134,7 +134,7 @@
         <di:waypoint x="588" y="3" />
         <di:waypoint x="588" y="32" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="748" y="18" width="50" height="14" />
+          <dc:Bounds x="748" y="18" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_selftest_pass_di" bpmnElement="flow_selftest_pass">
@@ -156,7 +156,7 @@
         <di:waypoint x="408" y="15" />
         <di:waypoint x="408" y="57" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1058" y="43" width="50" height="14" />
+          <dc:Bounds x="1058" y="43" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_pass_di" bpmnElement="flow_review_pass">
@@ -178,7 +178,7 @@
         <di:waypoint x="228" y="27" />
         <di:waypoint x="228" y="84.66666666666666" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1368" y="70.5" width="50" height="14" />
+          <dc:Bounds x="1368" y="70.5" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_acceptance_pass_di" bpmnElement="flow_acceptance_pass">

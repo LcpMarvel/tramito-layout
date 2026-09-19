@@ -50,7 +50,7 @@
       <bpmndi:BPMNShape id="start_draft_di" bpmnElement="start_draft">
         <dc:Bounds x="62" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="192" width="100" height="14" />
+          <dc:Bounds x="52" y="192" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_draft_di" bpmnElement="task_draft">
@@ -68,7 +68,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="898" y="152" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="866" y="192" width="100" height="14" />
+          <dc:Bounds x="888" y="192" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="data_contract_di" bpmnElement="data_contract">

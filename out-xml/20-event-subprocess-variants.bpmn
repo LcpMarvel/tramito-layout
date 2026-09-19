@@ -111,7 +111,7 @@
       <bpmndi:BPMNShape id="evtsub_msg_start_di" bpmnElement="evtsub_msg_start">
         <dc:Bounds x="94" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="62" y="146" width="100" height="14" />
+          <dc:Bounds x="84" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_msg_task_di" bpmnElement="evtsub_msg_task">
@@ -120,7 +120,7 @@
       <bpmndi:BPMNShape id="evtsub_msg_end_di" bpmnElement="evtsub_msg_end">
         <dc:Bounds x="430" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="398" y="146" width="100" height="14" />
+          <dc:Bounds x="406" y="146" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_subprocess_timer_di" bpmnElement="event_subprocess_timer" isExpanded="true">
@@ -129,7 +129,7 @@
       <bpmndi:BPMNShape id="evtsub_timer_start_di" bpmnElement="evtsub_timer_start">
         <dc:Bounds x="580" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="548" y="146" width="100" height="14" />
+          <dc:Bounds x="570" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_timer_task_di" bpmnElement="evtsub_timer_task">
@@ -138,7 +138,7 @@
       <bpmndi:BPMNShape id="evtsub_timer_end_di" bpmnElement="evtsub_timer_end">
         <dc:Bounds x="916" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="884" y="146" width="100" height="14" />
+          <dc:Bounds x="906" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_subprocess_signal_di" bpmnElement="event_subprocess_signal" isExpanded="true">
@@ -147,7 +147,7 @@
       <bpmndi:BPMNShape id="evtsub_signal_start_di" bpmnElement="evtsub_signal_start">
         <dc:Bounds x="1066" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1034" y="146" width="100" height="14" />
+          <dc:Bounds x="1056" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_signal_task_di" bpmnElement="evtsub_signal_task">
@@ -156,7 +156,7 @@
       <bpmndi:BPMNShape id="evtsub_signal_end_di" bpmnElement="evtsub_signal_end">
         <dc:Bounds x="1402" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1370" y="146" width="100" height="14" />
+          <dc:Bounds x="1378" y="146" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_subprocess_escalation_di" bpmnElement="event_subprocess_escalation" isExpanded="true">
@@ -165,7 +165,7 @@
       <bpmndi:BPMNShape id="evtsub_escalation_start_di" bpmnElement="evtsub_escalation_start">
         <dc:Bounds x="1552" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1520" y="146" width="100" height="14" />
+          <dc:Bounds x="1542" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_escalation_task_di" bpmnElement="evtsub_escalation_task">
@@ -174,7 +174,7 @@
       <bpmndi:BPMNShape id="evtsub_escalation_end_di" bpmnElement="evtsub_escalation_end">
         <dc:Bounds x="1888" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1856" y="146" width="100" height="14" />
+          <dc:Bounds x="1878" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_subprocess_conditional_di" bpmnElement="event_subprocess_conditional" isExpanded="true">
@@ -183,7 +183,7 @@
       <bpmndi:BPMNShape id="evtsub_conditional_start_di" bpmnElement="evtsub_conditional_start">
         <dc:Bounds x="2038" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2006" y="146" width="100" height="14" />
+          <dc:Bounds x="2028" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_conditional_task_di" bpmnElement="evtsub_conditional_task">
@@ -192,7 +192,7 @@
       <bpmndi:BPMNShape id="evtsub_conditional_end_di" bpmnElement="evtsub_conditional_end">
         <dc:Bounds x="2374" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2342" y="146" width="100" height="14" />
+          <dc:Bounds x="2364" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_subprocess_error_di" bpmnElement="event_subprocess_error" isExpanded="true">
@@ -201,7 +201,7 @@
       <bpmndi:BPMNShape id="evtsub_error_start_di" bpmnElement="evtsub_error_start">
         <dc:Bounds x="94" y="320" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="62" y="360" width="100" height="14" />
+          <dc:Bounds x="84" y="360" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="evtsub_error_task_di" bpmnElement="evtsub_error_task">
@@ -210,7 +210,7 @@
       <bpmndi:BPMNShape id="evtsub_error_end_di" bpmnElement="evtsub_error_end">
         <dc:Bounds x="430" y="320" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="398" y="360" width="100" height="14" />
+          <dc:Bounds x="406" y="360" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="evtsub_msg_flow_1_di" bpmnElement="evtsub_msg_flow_1">

@@ -113,7 +113,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="234" width="100" height="14" />
+          <dc:Bounds x="66" y="234" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_xor_div_di" bpmnElement="gw_xor_div">
@@ -182,7 +182,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1678" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1646" y="234" width="100" height="14" />
+          <dc:Bounds x="1682" y="234" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_start_xor_di" bpmnElement="f_start_xor">
@@ -271,7 +271,7 @@
         <di:waypoint x="1083" y="142" />
         <di:waypoint x="1188" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1088" y="158" width="50" height="14" />
+          <dc:Bounds x="1088" y="158" width="51" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_inc_standard_di" bpmnElement="flow_inc_standard">

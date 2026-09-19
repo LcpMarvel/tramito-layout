@@ -109,7 +109,7 @@
       <bpmndi:BPMNShape id="start_incident_di" bpmnElement="start_incident">
         <dc:Bounds x="62" y="61" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="101" width="100" height="14" />
+          <dc:Bounds x="52" y="101" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_report_di" bpmnElement="task_report">
@@ -169,7 +169,7 @@
       <bpmndi:BPMNShape id="end_done_di" bpmnElement="end_done">
         <dc:Bounds x="1748" y="845" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1716" y="885" width="100" height="14" />
+          <dc:Bounds x="1738" y="885" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
@@ -185,7 +185,7 @@
         <di:waypoint x="383" y="863" />
         <di:waypoint x="668" y="863" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="328" y="119" width="50" height="14" />
+          <dc:Bounds x="388" y="119" width="109" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_normal_di" bpmnElement="flow_normal">
@@ -193,7 +193,7 @@
         <di:waypoint x="383" y="191" />
         <di:waypoint x="488" y="191" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="388" y="119" width="50" height="14" />
+          <dc:Bounds x="293" y="119" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">

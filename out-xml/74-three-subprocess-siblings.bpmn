@@ -83,7 +83,7 @@
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="136" width="100" height="14" />
+          <dc:Bounds x="52" y="136" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_demand_di" bpmnElement="sub_demand" isExpanded="true">
@@ -92,7 +92,7 @@
       <bpmndi:BPMNShape id="demand_start_di" bpmnElement="demand_start">
         <dc:Bounds x="210" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="146" width="100" height="14" />
+          <dc:Bounds x="200" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="demand_task_collect_di" bpmnElement="demand_task_collect">
@@ -104,7 +104,7 @@
       <bpmndi:BPMNShape id="demand_end_di" bpmnElement="demand_end">
         <dc:Bounds x="746" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="714" y="146" width="100" height="14" />
+          <dc:Bounds x="722" y="146" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_bidding_di" bpmnElement="sub_bidding" isExpanded="true">
@@ -113,7 +113,7 @@
       <bpmndi:BPMNShape id="bidding_start_di" bpmnElement="bidding_start">
         <dc:Bounds x="926" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="894" y="146" width="100" height="14" />
+          <dc:Bounds x="916" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="bidding_task_invite_di" bpmnElement="bidding_task_invite">
@@ -125,7 +125,7 @@
       <bpmndi:BPMNShape id="bidding_end_di" bpmnElement="bidding_end">
         <dc:Bounds x="1462" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1430" y="146" width="100" height="14" />
+          <dc:Bounds x="1445" y="146" width="70" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_contract_di" bpmnElement="sub_contract" isExpanded="true">
@@ -134,7 +134,7 @@
       <bpmndi:BPMNShape id="contract_start_di" bpmnElement="contract_start">
         <dc:Bounds x="1642" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1610" y="146" width="100" height="14" />
+          <dc:Bounds x="1632" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="contract_task_legal_di" bpmnElement="contract_task_legal">
@@ -146,13 +146,13 @@
       <bpmndi:BPMNShape id="contract_end_di" bpmnElement="contract_end">
         <dc:Bounds x="2178" y="106" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2146" y="146" width="100" height="14" />
+          <dc:Bounds x="2168" y="146" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="2326" y="96" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2294" y="136" width="100" height="14" />
+          <dc:Bounds x="2316" y="136" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="demand_flow_1_di" bpmnElement="demand_flow_1">

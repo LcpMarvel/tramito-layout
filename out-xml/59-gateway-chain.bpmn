@@ -87,7 +87,7 @@
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
         <dc:Bounds x="62" y="166.66666666666669" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="206.66666666666669" width="100" height="14" />
+          <dc:Bounds x="52" y="206.66666666666669" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_1_div_di" bpmnElement="gw_1_div">
@@ -144,7 +144,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1418" y="166.66666666666669" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1386" y="206.66666666666669" width="100" height="14" />
+          <dc:Bounds x="1408" y="206.66666666666669" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
@@ -156,7 +156,7 @@
         <di:waypoint x="203" y="72" />
         <di:waypoint x="798" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="208" y="130.66666666666669" width="50" height="14" />
+          <dc:Bounds x="208" y="130.66666666666669" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_gw1_pass_di" bpmnElement="flow_gw1_pass">
@@ -172,7 +172,7 @@
         <di:waypoint x="333" y="123" />
         <di:waypoint x="438" y="123" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="338" y="160.33333333333331" width="50" height="14" />
+          <dc:Bounds x="338" y="160.33333333333331" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_gw2_pass_di" bpmnElement="flow_gw2_pass">
@@ -188,7 +188,7 @@
         <di:waypoint x="496.3333333333333" y="206.83333333333331" />
         <di:waypoint x="618" y="206.83333333333331" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="501.33333333333326" y="222.83333333333337" width="50" height="14" />
+          <dc:Bounds x="501.33333333333326" y="222.83333333333337" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_gw3_pass_di" bpmnElement="flow_gw3_pass">
@@ -196,7 +196,7 @@
         <di:waypoint x="496.3333333333333" y="346.8333333333333" />
         <di:waypoint x="618" y="346.8333333333333" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="441.3333333333333" y="316.83333333333337" width="50" height="14" />
+          <dc:Bounds x="437.3333333333333" y="316.83333333333337" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_remote_conv_di" bpmnElement="flow_remote_conv">

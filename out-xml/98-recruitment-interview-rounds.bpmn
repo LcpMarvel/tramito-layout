@@ -135,7 +135,7 @@
       <bpmndi:BPMNShape id="start_resume_di" bpmnElement="start_resume">
         <dc:Bounds x="62" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="234" width="100" height="14" />
+          <dc:Bounds x="38" y="234" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_screen_resume_di" bpmnElement="task_screen_resume">
@@ -147,7 +147,7 @@
       <bpmndi:BPMNShape id="event_recv_confirm_di" bpmnElement="event_recv_confirm">
         <dc:Bounds x="538" y="194" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="506" y="234" width="100" height="14" />
+          <dc:Bounds x="507" y="234" width="98" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_send_reject_di" bpmnElement="task_send_reject">
@@ -156,7 +156,7 @@
       <bpmndi:BPMNShape id="end_rejected_di" bpmnElement="end_rejected">
         <dc:Bounds x="1324" y="58" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1292" y="98" width="100" height="14" />
+          <dc:Bounds x="1314" y="98" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="lane_interviewer_di" bpmnElement="lane_interviewer" isHorizontal="true">
@@ -183,7 +183,7 @@
       <bpmndi:BPMNShape id="end_hired_di" bpmnElement="end_hired">
         <dc:Bounds x="1324" y="421" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1292" y="461" width="100" height="14" />
+          <dc:Bounds x="1314" y="461" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="pool_candidate_di" bpmnElement="pool_candidate" isHorizontal="true">
@@ -192,7 +192,7 @@
       <bpmndi:BPMNShape id="start_candidate_di" bpmnElement="start_candidate">
         <dc:Bounds x="390" y="599" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="358" y="639" width="100" height="14" />
+          <dc:Bounds x="366" y="639" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_confirm_time_di" bpmnElement="task_confirm_time">
@@ -204,19 +204,19 @@
       <bpmndi:BPMNShape id="event_recv_result_di" bpmnElement="event_recv_result">
         <dc:Bounds x="866" y="599" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="834" y="639" width="100" height="14" />
+          <dc:Bounds x="842" y="639" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="event_recv_offer_di" bpmnElement="event_recv_offer">
         <dc:Bounds x="982" y="599" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="950" y="639" width="100" height="14" />
+          <dc:Bounds x="968.5" y="639" width="63" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_candidate_di" bpmnElement="end_candidate">
         <dc:Bounds x="1098" y="599" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1066" y="639" width="100" height="14" />
+          <dc:Bounds x="1088" y="639" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_resume_screen_di" bpmnElement="f_resume_screen">
@@ -301,14 +301,14 @@
         <di:waypoint x="408" y="252" />
         <di:waypoint x="408" y="599" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="413" y="366.45" width="50" height="14" />
+          <dc:Bounds x="413" y="366.45" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="mf_confirm_di" bpmnElement="mf_confirm">
         <di:waypoint x="556" y="577" />
         <di:waypoint x="556" y="230" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="561" y="448.55" width="50" height="14" />
+          <dc:Bounds x="561" y="448.55" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="mf_result_di" bpmnElement="mf_result">
@@ -319,7 +319,7 @@
         <di:waypoint x="884" y="530" />
         <di:waypoint x="884" y="599" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="959" y="259.1" width="50" height="14" />
+          <dc:Bounds x="959" y="259.1" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="mf_offer_di" bpmnElement="mf_offer">
@@ -328,7 +328,7 @@
         <di:waypoint x="1000" y="548" />
         <di:waypoint x="1000" y="599" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1072" y="529" width="50" height="14" />
+          <dc:Bounds x="1064.5" y="529" width="65" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

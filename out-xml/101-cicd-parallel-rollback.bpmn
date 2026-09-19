@@ -106,7 +106,7 @@
       <bpmndi:BPMNShape id="start_commit_di" bpmnElement="start_commit">
         <dc:Bounds x="62" y="780.3888888888889" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="30" y="820.3888888888889" width="100" height="14" />
+          <dc:Bounds x="52" y="820.3888888888889" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_build_di" bpmnElement="task_build">
@@ -160,7 +160,7 @@
       <bpmndi:BPMNShape id="end_released_di" bpmnElement="end_released">
         <dc:Bounds x="1108" y="780.3888888888889" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1076" y="820.3888888888889" width="100" height="14" />
+          <dc:Bounds x="1098" y="820.3888888888889" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="f_commit_build_di" bpmnElement="f_commit_build">
@@ -281,14 +281,14 @@
         <di:waypoint x="228" y="716" />
         <di:waypoint x="228" y="758.3888888888889" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="828" y="744.3888888888889" width="50" height="14" />
+          <dc:Bounds x="716" y="744.3888888888889" width="102" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_check_pass_di" bpmnElement="f_check_pass">
         <di:waypoint x="848" y="798.3888888888889" />
         <di:waypoint x="928" y="798.3888888888889" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="857" y="803.3888888888889" width="50" height="14" />
+          <dc:Bounds x="855" y="803.3888888888889" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_deploy_release_di" bpmnElement="f_deploy_release">
