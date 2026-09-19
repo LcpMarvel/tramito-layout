@@ -222,27 +222,18 @@
         <di:waypoint x="693" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_join_4_di" bpmnElement="flow_join_4">
-        <di:waypoint x="538" y="559" />
-        <di:waypoint x="538" y="551" />
-        <di:waypoint x="478" y="551" />
-        <di:waypoint x="478" y="413" />
-        <di:waypoint x="693" y="413" />
+        <di:waypoint x="588" y="599" />
+        <di:waypoint x="693" y="599" />
         <di:waypoint x="693" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_join_5_di" bpmnElement="flow_join_5">
-        <di:waypoint x="538" y="695" />
-        <di:waypoint x="538" y="687" />
-        <di:waypoint x="478" y="687" />
-        <di:waypoint x="478" y="523.5" />
-        <di:waypoint x="693" y="523.5" />
+        <di:waypoint x="588" y="735" />
+        <di:waypoint x="693" y="735" />
         <di:waypoint x="693" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_join_6_di" bpmnElement="flow_join_6">
-        <di:waypoint x="538" y="831" />
-        <di:waypoint x="538" y="823" />
-        <di:waypoint x="478" y="823" />
-        <di:waypoint x="478" y="539" />
-        <di:waypoint x="693" y="539" />
+        <di:waypoint x="588" y="871" />
+        <di:waypoint x="693" y="871" />
         <di:waypoint x="693" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">

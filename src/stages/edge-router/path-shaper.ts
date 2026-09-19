@@ -57,8 +57,17 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
   // 用于 association / compensationAssociation：BPMN 规范画虚线时不强制正交，但 BPMN 工具
   // 通常也不会让 association 直接穿任务框（视觉冲突）。所以"direct"实际是"prefer direct"。
   if (input.routerStyle === 'direct') {
-    if (!segmentHitsObstacle(start, end, input.obstacles, input.source, input.target)) {
-      return [start, end];
+    let directStart = start;
+    let directEnd = end;
+    // 补偿 association（boundary-to-handler + direct）：锚点表给的是 bottom→top，handler 与
+    // host 同排时会画出「从 BE 底部向上钩回 handler 顶」的别扭斜线（33 用户目检）。direct
+    // 直线按主导方向选互对的边：横向为主 → BE 右/左出、handler 左/右进；纵向为主保持
+    // bottom→top。仅影响 direct 风格；正交的 BE→handler 仍走 dive-first。
+    if (input.edgeType === 'boundary-to-handler') {
+      ({ start: directStart, end: directEnd } = directCompensationPorts(source, target));
+    }
+    if (!segmentHitsObstacle(directStart, directEnd, input.obstacles, input.source, input.target)) {
+      return [directStart, directEnd];
     }
     // fall through 走 orthogonal，让下面的 case 1-6 选合适的折线形状
   }
@@ -172,7 +181,15 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
       const total = input.channelTotal!;
       midY = (start.y + end.y) / 2 + (channel - (total - 1) / 2) * BE_CHANNEL_GAP;
     }
-    return [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
+    const lPath: Waypoint[] = [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
+    // 分支 L 中段撞节点时，若 target 明显在右/左侧，改从 source 侧边出、沿 source 行横到
+    // target.cx、再竖直入顶——否则下游 detour 会把线绕成「出底边 → 折回 → 横穿自己节点」
+    // （62 的 flow_urgent_merge 用户目检：起点应从 紧急通道处理 右边出）。
+    if (pathHitsObstacle(lPath, input)) {
+      const escape = trySideExitZ(input, 'down');
+      if (escape) return escape;
+    }
+    return lPath;
   }
   if (sourceAnchor === 'top' && targetAnchor === 'bottom') {
     let midY = (start.y + end.y) / 2;
@@ -188,7 +205,12 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
         Math.min(midY, start.y - minStartStub),
       );
     }
-    return [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
+    const lPath: Waypoint[] = [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
+    if (pathHitsObstacle(lPath, input)) {
+      const escape = trySideExitZ(input, 'up');
+      if (escape) return escape;
+    }
+    return lPath;
   }
 
   if ((sourceAnchor === 'bottom' || sourceAnchor === 'top') && (targetAnchor === 'left' || targetAnchor === 'right')) {
@@ -244,6 +266,42 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
 
 function approxEq(a: number, b: number): boolean {
   return Math.abs(a - b) < 0.5;
+}
+
+function pathHitsObstacle(wps: Waypoint[], input: PathShapeInput): boolean {
+  for (let i = 0; i < wps.length - 1; i++) {
+    if (segmentHitsObstacle(wps[i]!, wps[i + 1]!, input.obstacles, input.source, input.target)) return true;
+  }
+  return false;
+}
+
+// 分支 L 撞节点时的侧边出逃 Z：从 source 朝 target 那一侧的边出（右/左），沿 source 自己
+// 那一行横到 target.cx，再竖直入 target 顶（down）/ 底（up）。等价于把 branch 边当
+// forward-step 走。只接管 branch-down/up（forward-step 本来就走 Z；cross-lane 有走廊；
+// boundary-to-handler 有 dive-first）。
+function trySideExitZ(input: PathShapeInput, dir: 'down' | 'up'): Waypoint[] | null {
+  if (input.edgeType !== 'branch-down' && input.edgeType !== 'branch-up') return null;
+  const s = input.source;
+  const t = input.target;
+  const srcCy = s.y + s.h / 2;
+  const riserX = t.x + t.w / 2;
+  const goRight = riserX > s.x + s.w + SHAPER_MARGIN;
+  const goLeft = riserX < s.x - SHAPER_MARGIN;
+  if (!goRight && !goLeft) return null;
+  const enterY = dir === 'down' ? t.y : t.y + t.h;
+  // 方向一致性：down 要求 source 行在 target 顶之上，up 反之；否则几何反了，放弃。
+  if (dir === 'down' && srcCy >= enterY) return null;
+  if (dir === 'up' && srcCy <= enterY) return null;
+  const exit = { x: goRight ? s.x + s.w : s.x, y: srcCy };
+  const corner = { x: riserX, y: srcCy };
+  const enter = { x: riserX, y: enterY };
+  if (
+    segmentHitsObstacle(exit, corner, input.obstacles, s, t)
+    || segmentHitsObstacle(corner, enter, input.obstacles, s, t)
+  ) {
+    return null;
+  }
+  return [exit, corner, enter];
 }
 
 // 小台阶吸收的触发上限：相邻层 Y 差超过这个值就是真分层，该走 Z 形；以内是布局误差级别的抖动。
@@ -577,6 +635,25 @@ function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypo
     { x: tgtCx, y: target.y + target.h },
   ];
   return hits(wps) ? null : wps;
+}
+
+// 补偿 association 的 direct 端点：按源→目标的主导方向选互对的边（横为主走左右边，
+// 纵为主走上下边）。仅用于 boundary-to-handler + direct（补偿 BE→补偿活动）。
+function directCompensationPorts(source: NodeBox, target: NodeBox): { start: Waypoint; end: Waypoint } {
+  const sCx = source.x + source.w / 2;
+  const sCy = source.y + source.h / 2;
+  const tCx = target.x + target.w / 2;
+  const tCy = target.y + target.h / 2;
+  const dx = tCx - sCx;
+  const dy = tCy - sCy;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0
+      ? { start: anchorPoint(source, 'right'), end: anchorPoint(target, 'left') }
+      : { start: anchorPoint(source, 'left'), end: anchorPoint(target, 'right') };
+  }
+  return dy >= 0
+    ? { start: anchorPoint(source, 'bottom'), end: anchorPoint(target, 'top') }
+    : { start: anchorPoint(source, 'top'), end: anchorPoint(target, 'bottom') };
 }
 
 export function segmentHitsObstacle(

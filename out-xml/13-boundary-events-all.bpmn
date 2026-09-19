@@ -417,8 +417,9 @@
         <di:waypoint x="2698" y="176.66666666666669" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="assoc_compensation_di" bpmnElement="assoc_compensation">
-        <di:waypoint x="2178" y="416" />
-        <di:waypoint x="2388" y="388" />
+        <di:waypoint x="2196" y="398" />
+        <di:waypoint x="2196" y="428" />
+        <di:waypoint x="2338" y="428" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

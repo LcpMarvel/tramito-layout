@@ -178,10 +178,8 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_urgent_merge_di" bpmnElement="flow_urgent_merge">
-        <di:waypoint x="358" y="112" />
-        <di:waypoint x="298" y="112" />
-        <di:waypoint x="298" y="105.83333333333334" />
-        <di:waypoint x="873" y="105.83333333333334" />
+        <di:waypoint x="408" y="72" />
+        <di:waypoint x="873" y="72" />
         <di:waypoint x="873" y="156.33333333333334" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_vip_merge_di" bpmnElement="flow_vip_merge">
@@ -197,9 +195,8 @@
         <di:waypoint x="848" y="181.33333333333334" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_general_merge_di" bpmnElement="flow_general_merge">
-        <di:waypoint x="718" y="339.6666666666667" />
-        <di:waypoint x="718" y="289.6666666666667" />
-        <di:waypoint x="873" y="289.6666666666667" />
+        <di:waypoint x="768" y="379.6666666666667" />
+        <di:waypoint x="873" y="379.6666666666667" />
         <di:waypoint x="873" y="206.33333333333334" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_to_feedback_di" bpmnElement="flow_to_feedback">

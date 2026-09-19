@@ -173,16 +173,19 @@
         <di:waypoint x="1014" y="146.00000000000003" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="assoc_comp_flight_di" bpmnElement="assoc_comp_flight">
-        <di:waypoint x="198" y="358.5" />
-        <di:waypoint x="408" y="330.5" />
+        <di:waypoint x="216" y="340.5" />
+        <di:waypoint x="216" y="370.5" />
+        <di:waypoint x="358" y="370.5" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="assoc_comp_hotel_di" bpmnElement="assoc_comp_hotel">
-        <di:waypoint x="378" y="288.5" />
-        <di:waypoint x="588" y="260.50000000000006" />
+        <di:waypoint x="396" y="270.5" />
+        <di:waypoint x="396" y="300.50000000000006" />
+        <di:waypoint x="538" y="300.50000000000006" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="assoc_comp_charge_di" bpmnElement="assoc_comp_charge">
-        <di:waypoint x="558" y="218.50000000000006" />
-        <di:waypoint x="768" y="183.00000000000006" />
+        <di:waypoint x="576" y="200.50000000000006" />
+        <di:waypoint x="576" y="223.00000000000006" />
+        <di:waypoint x="718" y="223.00000000000006" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

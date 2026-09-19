@@ -198,9 +198,8 @@
         <di:waypoint x="676" y="660" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="inv_flow_join_1_di" bpmnElement="inv_flow_join_1">
-        <di:waypoint x="726" y="280" />
-        <di:waypoint x="726" y="330" />
-        <di:waypoint x="901" y="330" />
+        <di:waypoint x="776" y="240" />
+        <di:waypoint x="901" y="240" />
         <di:waypoint x="901" y="425" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="inv_flow_join_2_di" bpmnElement="inv_flow_join_2">
@@ -216,9 +215,8 @@
         <di:waypoint x="876" y="450" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="inv_flow_join_4_di" bpmnElement="inv_flow_join_4">
-        <di:waypoint x="726" y="620" />
-        <di:waypoint x="726" y="570" />
-        <di:waypoint x="901" y="570" />
+        <di:waypoint x="776" y="660" />
+        <di:waypoint x="901" y="660" />
         <di:waypoint x="901" y="475" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="inv_flow_end_di" bpmnElement="inv_flow_end">
