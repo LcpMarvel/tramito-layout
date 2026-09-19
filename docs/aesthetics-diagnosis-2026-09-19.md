@@ -101,7 +101,17 @@ F1–F9 里没有边交叉数、拐点数、空白率；F1/F3 把语义上必须
 > 启动前置：`docs/layout-baseline.json` 已按 P0–P3 后的 PNG 状态由人手动更新
 > （`--save-baseline` + 单独 commit）。之后每张卡以 `--compare` 自证不退步。
 
-**P4 卡 4.3 spine-aligner（首个，修 F14 的 14 个 fail + 101 的「构建掉出主干」）**
+**P4 卡 4.3 —— 已尝试并关闭（2026-09-20，负结果）**。三个变体全部实测：
+① median 拉直：49 项软指标变差 + 3 硬违例，101 因密集列 fits 全回退反而完全不生效；
+② mode 行拉直：30 项变差（F2/F11/F14 全面抖动）；③ 最短路径 spine + ≥40px 离群 +
+start/end 不可动 + 众数占比 ≥70% + 最多拉 2 个 + 弯数自验收：安全但归零（唯一两个
+触发点 07 改善/89 变差都被自验收正确裁决，最终 no-op）。根因数理：单词离群
+（101 的「构建」）已被 P3+目检修复清零；剩余 F14 债全是**整段离行**（环体/handler
+段整体在第二行）——拉单点两头造台阶，拉整段就是 median 版的全库损伤。
+**F14 的 14 个 fail 归 P5 路由层**（多行流程的边走法），不是摆位问题。
+spike 代码在 git 历史（本次会话未提交）。以下原规格留档：
+
+**P4 卡 4.3 spine-aligner（原规格，已按上述结论关闭）**
 - 位置：ELK 之后、Compactor 之前，新 `src/stages/spine-aligner.ts`（经 stages/index.ts re-export）。
 - 主干判定：图级 start→end 最重路径（卡 4.1 的定义；回边不算——evaluator 已有同款
   BFS 可参照）。lane-constrainer 的 lane-local 主干判定语义不同（lane 成员内 X 序最长链），
