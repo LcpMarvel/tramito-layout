@@ -82,6 +82,7 @@ F1–F9 里没有边交叉数、拐点数、空白率；F1/F3 把语义上必须
 - [x] P2 拆 runPipeline（12 phase + runStage 权威 ICE 归属；XML 指纹逐字节不变；a9c448a）
 - [x] P3 去分片（spike+合并一次完成：handler 并入主 ELK + yHint 压下方 + BE 骑边侧/label 侧跟随；**硬标准 98 fixture 归 0**；8aa6676）
 - [x] 用户目检修复：boundary→handler「先潜后横」（80 的 flow_bd_h1 沿 host 底边跑 100px → 潜行道 3 点 L；F12 80 归 0；91f0e2d）
+- [x] 用户目检修复②：BE 出边三形态细化（浅窗直行/深窗近侧/深窗底边）——77 的 handler 与 BE 同排改零 stub 两点直行进左边；80/13 同化为两点直行；全量 98 PNG 重渲染（697de56）
 - [ ] P4 主干对齐——卡 4.2（ELK straightness 一行配置）**实测后放弃**：101 全好但 04/13/14/17/21/65 明显变差，不符「04 不能变差」验收，已完整回滚。待做：卡 4.3 spine-aligner 独立 stage、4.4 扇出对称
 - [ ] P5 路由升级（卡 5.0 盘点 → 5.1 竖直轨道 → 5.2 水平走廊 → 5.3 删 pass）
 - [ ] P6 宽高比（lane 内长链 snake；71/49/74/76/88/93 + P3 后新增 77/80/81 的 handler 链拉宽）
