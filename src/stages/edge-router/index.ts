@@ -179,18 +179,24 @@ export function routeEdges(input: RouteInput): RouteOutput {
   // Fan-in 归一：共 sink 的 gateway 出边聚成一根共享干线、单点进入（镜像 busifyForwardStep）。
   // 返回真正被重写的 edge——只有它们跳过 detour（撞节点而保留原路由的成员仍需 detour）。
   const fannedInIds = busifyFanInToSink(routes, input, bundles);
-  detourRoutesAroundLocalObstacles(routes, input, fannedInIds);
+  // 并行 join 归一总线：≥5 条 task 出发的入边汇到同一 gateway 时，各边 riser 全叠在
+  // sink 中线上（72 的 6 路并行：3 条 riser 叠成一根粗管贴在 join 中线上，用户目检"太乱"）。
+  // 与 busifyForwardStep 镜像：成员各自朝 sink 侧出，空隙中点的竖直总线收到 sink 中线，
+  // 一次横进顶点。04 的 3 路归一（上/左/下顶点分配）成员数不足、不受影响。
+  const parallelJoinIds = busifyParallelJoinToGateway(routes, input, fannedInIds);
+  const busedIds = new Set([...fannedInIds, ...parallelJoinIds]);
+  detourRoutesAroundLocalObstacles(routes, input, busedIds);
   finalizeRoutePortsForRoutes(routes, input);
   // F7：把贴着 lane 分隔线跑的水平边中段推开（跨多 lane 的边走廊有时落在离分隔线几 px 处，
   // 流程线与泳道线粘连难辨）。只动失败段、撞节点就回滚；fan-in 干线已自洽,跳过。
   // **必须放在 finalize 之后**——finalize 的 target arrow tail-stub 对 bottom/top 进入的边会把
   // 倒数第二段强拉到 end.y±20，正好可能落进分隔线净空区（fixture 36 bottom-bottom 拱：节点底
   // 353 + 20 = 373，离分隔线 369 仅 4px），在 finalize 之前 nudge 会被它推回来。
-  nudgeHorizontalSegmentsOffDividers(routes, input, fannedInIds);
+  nudgeHorizontalSegmentsOffDividers(routes, input, busedIds);
   // F8：两条不同 edge 的内部水平段挨太近(dy<10px 且 x 重叠)会叠成一条糊线。把其中一段推开到
   // ≥12px(撞节点回滚)。**必须放在 finalize 之后**——finalize 的 target arrow tail-stub 会把贴近
   // sink 的水平段(如 fan-in 走廊)再挪几 px 凑足 20px 直入,在那之前测的 dy 不作数(fixture 40)。
-  nudgeParallelSegmentsApart(routes, input, fannedInIds);
+  nudgeParallelSegmentsApart(routes, input, busedIds);
   // 同 lane back-edge 的拱默认抬到 source 顶上方 ARCH_BASE_OFFSET，lane 顶留白不够时会冲进上邻
   // lane（fixture 40：部门主管 lane 顶=132、task 顶仅 151，拱落 127 再被 divider-nudge 推到 122，
   // 整条线跑进申请人 lane）。把拱夹回 source lane 内。**必须放最后**——divider-nudge 只懂"离分隔
@@ -1010,6 +1016,26 @@ function applyFanInBundle(
     }
   }
 
+  // ── 次选：竖直总线（bus）。hSide 的 riser 落在各 source.cx——一列同 X 的 task 汇到侧方
+  //    sink 时 riser 必穿同列兄弟（72 的 6 路并行归一），hSide 因此整组被拒；而退路的
+  //    「上/下走廊」会让每条边各拖一根长 riser 全叠在 sink 中线上（72 用户目检"太乱"）。
+  //    改走总线：成员各自朝 sink 侧出、在「源列与 sink 之间的空隙中点」竖直总线上收到
+  //    sink 中线、一次横进 sink 顶点——与 fork 侧的 busifyForwardStep 镜像对称。
+  const maxSrcRight = Math.max(...members.map((m) => m.src.box.x + m.src.box.w));
+  const minSrcLeft = Math.min(...members.map((m) => m.src.box.x));
+  const busGapW = sourcesRight ? minSrcLeft - (sinkBox.x + sinkBox.w) : sinkBox.x - maxSrcRight;
+  if (busGapW >= 2 * SHAPER_MARGIN) {
+    const trunkX = sourcesRight
+      ? (sinkBox.x + sinkBox.w + minSrcLeft) / 2
+      : (maxSrcRight + sinkBox.x) / 2;
+    const entryX = sourcesRight ? sinkBox.x + sinkBox.w : sinkBox.x;
+    const built = members.map((m) => ({ m, wps: buildFanInPathBus(m.src.box, trunkX, sinkCy, entryX, sourcesRight) }));
+    if (built.every(({ m, wps }) => !routeCrossesObstacles(wps, obstaclesFor(m)))) {
+      for (const { m, wps } of built) applyMember(m, wps, hSide, { x: entryX, y: sinkCy });
+      return;
+    }
+  }
+
   // ── 退路：sink 中线那行被挡 → 走廊放到 sink 与最近障碍行之间的偏移净空，从上/下单点进入。
   const below = srcMeanCy >= sinkCy;
   const spanLo = Math.min(sinkCx, ...srcCxs);
@@ -1107,6 +1133,89 @@ function buildFanInPathSide(src: NodeBox, corridorY: number, entryX: number): Wa
     { x: srcCx, y: corridorY },
     { x: entryX, y: corridorY },
   ]);
+}
+
+// 竖直总线：source 朝 sink 侧出 → 总线 X → 收到 sink 中线 → 一次横进 sink 顶点。
+// riser 在总线 X（空隙里），不在 source.cx——同列兄弟不会被 riser 穿过（72 的场景）。
+function buildFanInPathBus(src: NodeBox, trunkX: number, sinkCy: number, entryX: number, sourcesRight: boolean): Waypoint[] {
+  const srcCy = src.y + src.h / 2;
+  const exitX = sourcesRight ? src.x : src.x + src.w;
+  return dedupeFanInWaypoints([
+    { x: exitX, y: srcCy },
+    { x: trunkX, y: srcCy },
+    { x: trunkX, y: sinkCy },
+    { x: entryX, y: sinkCy },
+  ]);
+}
+
+// 并行 join 归一总线的最少成员数：≤4 时上/左/下三个顶点分配即干净（04 的 3 路归一是
+// 参照形态），≥5 才退化成「riser 全叠 sink 中线」的粗管。
+const PARALLEL_JOIN_MIN_MEMBERS = 5;
+
+// 共 target 的并行 join 总线（busifyForwardStep 的 join 侧镜像）：≥5 条非 gateway 出发的
+// 同 pool 入边汇到同一 gateway sink 时，成员各自朝 sink 侧出、走「源列与 sink 之间空隙
+// 中点」的竖直总线、收到 sink 中线一次横进顶点。全组干净才启用（半个总线比没有更乱）。
+function busifyParallelJoinToGateway(
+  routes: Map<string, EdgeRoute>,
+  input: RouteInput,
+  alreadyBused: ReadonlySet<string>,
+): Set<string> {
+  const done = new Set<string>();
+  const incoming = new Map<string, RouteInputEdge[]>();
+  for (const e of input.edges) {
+    if (e.bpmnType !== 'sequenceFlow') continue;
+    if (alreadyBused.has(e.id)) continue;
+    if (!incoming.has(e.target)) incoming.set(e.target, []);
+    incoming.get(e.target)!.push(e);
+  }
+  for (const [sinkId, members] of incoming) {
+    if (members.length < PARALLEL_JOIN_MIN_MEMBERS) continue;
+    const sink = input.nodes.get(sinkId);
+    if (!sink || !isGatewayNode(sink)) continue;
+    const srcs = members.map((m) => input.nodes.get(m.source));
+    if (srcs.some((s) => !s || s.poolId !== sink.poolId || isGatewayNode(s) || s.type === 'boundaryEvent')) continue;
+    // sink 朝成员那侧的顶点被非成员边占着就不抢（主流入/出口优先）
+    const srcMeanCx = avg(srcs.map((s) => s!.box.x + s!.box.w / 2));
+    const sinkCx = sink.box.x + sink.box.w / 2;
+    const sourcesRight = srcMeanCx > sinkCx;
+    const hSide: Anchor = sourcesRight ? 'right' : 'left';
+    const occupied = new Set<Anchor>();
+    for (const e of input.edges) {
+      if (members.some((m) => m.id === e.id)) continue;
+      const r = routes.get(e.id);
+      if (!r) continue;
+      if (e.target === sinkId) occupied.add(r.targetPort.side);
+      if (e.source === sinkId) occupied.add(r.sourcePort.side);
+    }
+    if (occupied.has(hSide)) continue;
+    const sinkCy = sink.box.y + sink.box.h / 2;
+    const maxSrcRight = Math.max(...srcs.map((s) => s!.box.x + s!.box.w));
+    const minSrcLeft = Math.min(...srcs.map((s) => s!.box.x));
+    const gapW = sourcesRight ? minSrcLeft - (sink.box.x + sink.box.w) : sink.box.x - maxSrcRight;
+    if (gapW < 2 * SHAPER_MARGIN) continue;
+    const trunkX = sourcesRight
+      ? (sink.box.x + sink.box.w + minSrcLeft) / 2
+      : (maxSrcRight + sink.box.x) / 2;
+    const entryX = sourcesRight ? sink.box.x + sink.box.w : sink.box.x;
+    const built = members.map((m) => {
+      const s = input.nodes.get(m.source)!;
+      return { m, wps: buildFanInPathBus(s.box, trunkX, sinkCy, entryX, sourcesRight) };
+    });
+    const clean = built.every(({ m, wps }) => {
+      const s = input.nodes.get(m.source)!;
+      const obstacles = collectObstacles(input, m, s, sink, false, true);
+      return !routeCrossesObstacles(wps, obstacles);
+    });
+    if (!clean) continue;
+    for (const { m, wps } of built) {
+      const r = routes.get(m.id)!;
+      r.waypoints = wps;
+      r.sourcePort = makeBoxPort(m.source, sourcesRight ? 'left' : 'right', wps[0]!);
+      r.targetPort = makeBoxPort(m.target, hSide, wps[wps.length - 1]!);
+      done.add(m.id);
+    }
+  }
+  return done;
 }
 
 // 竖直进入：source → riser 到偏移走廊 → 水平到 sink.cx → 竖直单点进 sink 上/下边。

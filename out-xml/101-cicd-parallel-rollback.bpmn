@@ -145,7 +145,7 @@
       <bpmndi:BPMNShape id="gw_join_tests_di" bpmnElement="gw_join_tests">
         <dc:Bounds x="668" y="537" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="699" y="519" width="56" height="14" />
+          <dc:Bounds x="665" y="519" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_check_result_di" bpmnElement="gw_check_result">
@@ -223,18 +223,21 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_unit_join_di" bpmnElement="f_unit_join">
         <di:waypoint x="588" y="72" />
-        <di:waypoint x="693" y="72" />
-        <di:waypoint x="693" y="537" />
+        <di:waypoint x="628" y="72" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_integration_join_di" bpmnElement="f_integration_join">
         <di:waypoint x="588" y="212" />
-        <di:waypoint x="693" y="212" />
-        <di:waypoint x="693" y="537" />
+        <di:waypoint x="628" y="212" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_api_join_di" bpmnElement="f_api_join">
         <di:waypoint x="588" y="352" />
-        <di:waypoint x="693" y="352" />
-        <di:waypoint x="693" y="537" />
+        <di:waypoint x="628" y="352" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_ui_join_di" bpmnElement="f_ui_join">
         <di:waypoint x="588" y="492" />
@@ -250,18 +253,21 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_security_join_di" bpmnElement="f_security_join">
         <di:waypoint x="588" y="772" />
-        <di:waypoint x="693" y="772" />
-        <di:waypoint x="693" y="587" />
+        <di:waypoint x="628" y="772" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_compat_join_di" bpmnElement="f_compat_join">
         <di:waypoint x="588" y="912" />
-        <di:waypoint x="693" y="912" />
-        <di:waypoint x="693" y="587" />
+        <di:waypoint x="628" y="912" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_regression_join_di" bpmnElement="f_regression_join">
         <di:waypoint x="588" y="1052" />
-        <di:waypoint x="693" y="1052" />
-        <di:waypoint x="693" y="587" />
+        <di:waypoint x="628" y="1052" />
+        <di:waypoint x="628" y="562" />
+        <di:waypoint x="668" y="562" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_join_check_di" bpmnElement="f_join_check">
         <di:waypoint x="718" y="562" />
