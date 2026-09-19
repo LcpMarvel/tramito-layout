@@ -71,16 +71,28 @@ F1–F9 里没有边交叉数、拐点数、空白率；F1/F3 把语义上必须
 
 > 每张卡完成后在此追加一行：日期 / 卡号 / 结果（规则从几到几）/ commit。
 
-- [ ] P0 卡 0.1 F1/F3 剔语义回边
-- [ ] P0 卡 0.2 F10–F14 新指标
-- [ ] P0 卡 0.3 baseline + `--compare`
-- [ ] P1 卡 1.1 lane boundary 净空（82/96/99 N2/N3）
-- [ ] P1 卡 1.2 多 boundary 撑宽 host（83 B1/L3）
-- [ ] P1 卡 1.3 handler 负坐标（77/80/83 E4）——P3 排近则跳过
-- [ ] P1 卡 1.4 同源扇出 label 错开（56/90 L3）
-- [ ] P1 卡 1.5 handler re-snap lane（96 N2）——P3 排近则跳过
-- [ ] P2 拆 runPipeline
-- [ ] P3 去分片（spike → 合并）
-- [ ] P4 主干对齐
-- [ ] P5 路由升级
-- [ ] P6 宽高比
+- [x] P0 卡 0.1 F1/F3 剔语义回边（F1 8→1、F3 17→5；e833ab0）
+- [x] P0 卡 0.2 F10–F14 新指标（F14 换行边免 2 弯；e833ab0）
+- [x] P0 卡 0.3 baseline + `--compare`（bootstrap baseline 已存 docs/layout-baseline.json；e833ab0）
+- [x] P1 卡 1.1 lane boundary 净空（82/99 N2/N3→0；96 BE 修好；7cdf22b）
+- [x] P1 卡 1.2 多 boundary 撑宽 host（83 B1 2→0、E4 3→2；b758886）
+- [x] P1 卡 1.4 同源扇出 label 错开（56/90 L3→0；8ae19aa）
+- [x] ~~P1 卡 1.3 handler 负坐标~~ **跳过**（P3 同 session 完成，临时修不需要）
+- [x] ~~P1 卡 1.5 handler re-snap lane~~ **跳过**（P3 后自然归位）
+- [x] P2 拆 runPipeline（12 phase + runStage 权威 ICE 归属；XML 指纹逐字节不变；a9c448a）
+- [x] P3 去分片（spike+合并一次完成：handler 并入主 ELK + yHint 压下方 + BE 骑边侧/label 侧跟随；**硬标准 98 fixture 归 0**；8aa6676）
+- [ ] P4 主干对齐——卡 4.2（ELK straightness 一行配置）**实测后放弃**：101 全好但 04/13/14/17/21/65 明显变差，不符「04 不能变差」验收，已完整回滚。待做：卡 4.3 spine-aligner 独立 stage、4.4 扇出对称
+- [ ] P5 路由升级（卡 5.0 盘点 → 5.1 竖直轨道 → 5.2 水平走廊 → 5.3 删 pass）
+- [ ] P6 宽高比（lane 内长链 snake；71/49/74/76/88/93 + P3 后新增 77/80/81 的 handler 链拉宽）
+
+### 当前状态（P3 完成时）
+
+- **硬标准：98 fixture 全 0**（起点：24 处违例 / 8 fixture 脏）。
+- 软指标：F3 剩 3 fail（06/09 线性链回退、69 pingpong——真问题）；F4 12 fail
+  （含 P3 新增 77/80/81，卡 3.2 已预告归 P6）；F14 14、F13 40（新尺子照出的全库
+  稀疏/主干抖动，归 P4/P6）；F12 3、F8 2（归 P5）。
+- **待人审 PNG 后更新 baseline**：`bun run check:layout --save-baseline docs/layout-baseline.json`
+  + 单独 commit（roadmap §0 规则 8）。重点看：80/96/23/13/83/99/56。
+- compare 门显示的 32 项软指标「变差」逐项归属：F4 77/80/81（P6）、F14 81（P4）、
+  F10 83（P5）、F8 13/23（P5）、F12 80（P5）、F2 99（P1 BE 净空的固有代价，0.109
+  远低于 0.30 阈值）、F11/F13/F4 小幅波动（P3 架构变化的正常重排）。
