@@ -735,6 +735,28 @@ function nudgeParallelSegmentsApart(
     return false;
   };
 
+  // tryShift 推不开（带里挤满，找不到 ≥12px 落点）时的退路：把可动段精确并到另一段的 y 上
+  // 共享一根干线。归一的语义本来就把一束画成一根，两束共享一根远好于留 7px 糊线（F8）。
+  // 只能在**本 pass** 做：finalize 的 tail-stub 会再挪水平段（99 的 f_l3_timeout 在走廊 pick
+  // 时还在 477.5、dy=21.5 无需处理，finalize 后落 463 才和 456 的走廊贴上）——更早的
+  // corridor pick / lane reserve 看到的都是会被改写的旧坐标。覆盖 fixture：99（F8 门禁）。
+  const tryMergeOnto = (seg: HSeg, otherY: number): boolean => {
+    if (seg.fixed) return false;                 // 走廊干线不动，只能别人并它
+    if (nearDivider(otherY)) return false;
+    for (const other of segs) {
+      if (other === seg) continue;
+      if (xOverlap(seg, other) <= 20) continue;
+      const odY = Math.abs(otherY - other.wps[other.i]!.y);
+      if (odY > 0.5 && odY < PARALLEL_MIN_GAP) return false; // 并过去又和第三者挤成新叠线
+    }
+    const a = seg.wps[seg.i]!, b = seg.wps[seg.i + 1]!;
+    const origY2 = a.y;
+    a.y = otherY; b.y = otherY;
+    if (!routeCrossesObstacles(seg.wps, seg.obstacles)) return true;
+    a.y = origY2; b.y = origY2;
+    return false;
+  };
+
   for (let p = 0; p < segs.length; p++) {
     for (let q = p + 1; q < segs.length; q++) {
       const s = segs[p]!, t = segs[q]!;
@@ -743,9 +765,12 @@ function nudgeParallelSegmentsApart(
       if (dy <= 0.5 || dy >= PARALLEL_MIN_GAP) continue;
       if (xOverlap(s, t) <= 20) continue;
       // 优先推可动的一根;两根都可动则先试 t、再试 s。都不行就保留(F8 软指标,不制造硬违例/新叠线)。
-      if (t.fixed) { tryShift(s, t.wps[t.i]!.y); continue; }
-      if (s.fixed) { tryShift(t, s.wps[s.i]!.y); continue; }
-      if (!tryShift(t, s.wps[s.i]!.y)) tryShift(s, t.wps[t.i]!.y);
+      // 保留之前先试共享干线：精确重合（dy=0）不是 F8 的叠线，视觉是一根而不是两条。
+      if (t.fixed) { if (!tryShift(s, t.wps[t.i]!.y)) tryMergeOnto(s, t.wps[t.i]!.y); continue; }
+      if (s.fixed) { if (!tryShift(t, s.wps[s.i]!.y)) tryMergeOnto(t, s.wps[s.i]!.y); continue; }
+      if (!tryShift(t, s.wps[s.i]!.y) && !tryShift(s, t.wps[t.i]!.y)) {
+        if (!tryMergeOnto(t, s.wps[s.i]!.y)) tryMergeOnto(s, t.wps[t.i]!.y);
+      }
     }
   }
 }

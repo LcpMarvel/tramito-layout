@@ -329,6 +329,7 @@ export async function runPipeline(
       nodes: placement.nodes, width: placement.bounds.width, height: placement.bounds.height, lanes: proc.lanes,
       nodeMeta: nodeMetaForLane,
       edges: edgesForLane,
+      boundaryHosts: new Set(proc.flowNodes.filter(fn => fn.boundaryEventIds.length > 0).map(fn => fn.id)),
     });
     msConstrain += performance.now() - tc;
 

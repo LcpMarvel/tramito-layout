@@ -37,6 +37,8 @@ export interface LaneConstrainInput {
   nodeMeta?: Map<string, LaneNodeMeta>;
   /** 同 pool 内的 sequenceFlows：用于预测 forward-skip arch 的上凸高度 */
   edges?: LaneEdgeInfo[];
+  /** 挂了 boundary event 的 host 节点 id：B1 要 BE 半内半外骑 host 底边，lane 底部要预留净空 */
+  boundaryHosts?: ReadonlySet<string>;
 }
 
 export interface LaneConstrainOutput {
@@ -150,7 +152,7 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
   const laneMetrics = new Map<string, LaneMetric>();
   for (const laneId of leafOrder) {
     const memberIds = laneMembers.get(laneId) ?? [];
-    laneMetrics.set(laneId, buildLaneMetric(memberIds, nodes, nodeMeta, edges, laneIndexOf));
+    laneMetrics.set(laneId, buildLaneMetric(memberIds, nodes, nodeMeta, edges, laneIndexOf, input.boundaryHosts));
   }
 
   // Lane Y band：从 y=0 顺序累加（仅叶子）
@@ -257,6 +259,7 @@ function buildLaneMetric(
   nodeMeta: Map<string, LaneNodeMeta> | undefined,
   edges: LaneEdgeInfo[] | undefined,
   laneIndexOf: Map<string, number>,
+  boundaryHosts: ReadonlySet<string> | undefined,
 ): LaneMetric {
   if (memberIds.length === 0) {
     return { height: LANE_MIN_H, centerOffset: LANE_MIN_H / 2, nodeCenterOffset: new Map() };
@@ -266,6 +269,11 @@ function buildLaneMetric(
   for (const id of memberIds) {
     extents.set(id, nodeVerticalExtent(nodes.get(id)!, nodeMeta?.get(id)));
   }
+
+  // BE 骑 host 底边的净空预留：BE 中心 = host.bottom，下半身 18 + label(4+14) 垂在 host 外。
+  // host 贴 lane 底时这些必出 lane（82/96/99 的 N2/N3）。只在「最下行里有 boundary host」时
+  // 补 below——host 在中间行时，BE+label(36) 落在 LANE_ROW_GAP(56) 里，无需预留。
+  const boundaryBelow = estimateBoundaryReserve(memberIds, boundaryHosts);
 
   // 驳回归一走廊预留：本 lane 若含 fan-in sink，edge-router 会在 sink 上/下边贴一根水平走廊
   // （busifyFanInToSink）。lane 默认只按节点尺寸算高、不给走廊留地，走廊+label 会被挤到泳道
@@ -294,6 +302,7 @@ function buildLaneMetric(
     }
     if (topAbove > 0) spineRows[0]!.above += topAbove;
     if (fanIn.below > 0) spineRows[spineRows.length - 1]!.below += fanIn.below;
+    applyBoundaryReserveToLastRow(spineRows, boundaryHosts, boundaryBelow);
     return buildMultiRowMetric(spineRows);
   }
 
@@ -311,11 +320,12 @@ function buildLaneMetric(
     // 走廊在最上行之上 / 最下行之下，按侧补到对应边缘行。
     if (topAbove > 0) rows[0]!.above += topAbove;
     if (fanIn.below > 0) rows[rows.length - 1]!.below += fanIn.below;
+    applyBoundaryReserveToLastRow(rows, boundaryHosts, boundaryBelow);
     return buildMultiRowMetric(rows);
   }
 
   const archReserve = estimateForwardArchReserve(memberIds, nodes, edges, nodeMeta);
-  return buildFlatMetric(memberIds, extents, archReserve, topAbove, fanIn.below);
+  return buildFlatMetric(memberIds, extents, archReserve, topAbove, fanIn.below + boundaryBelow);
 }
 
 function nodeVerticalExtent(box: NodeBox, meta: LaneNodeMeta | undefined): NodeVerticalExtent {
@@ -638,6 +648,30 @@ function estimateBackEdgeTransitReserve(
     if (blocked) return BACKEDGE_TRANSIT_RESERVE;
   }
   return 0;
+}
+
+// BE 底边净空 = BE 下半身(36/2) + label 距节点(4) + label 行高(14)。与 FANIN_CORRIDOR_RESERVE
+// 同量级纯属巧合：一个是"节点外垂下来的装饰"，一个是"贴边的水平走廊"。
+const BOUNDARY_BELOW_RESERVE = 36;
+
+function estimateBoundaryReserve(
+  memberIds: string[],
+  boundaryHosts: ReadonlySet<string> | undefined,
+): number {
+  if (!boundaryHosts || boundaryHosts.size === 0) return 0;
+  return memberIds.some(id => boundaryHosts.has(id)) ? BOUNDARY_BELOW_RESERVE : 0;
+}
+
+// 多行时 BE 净空只加在「含 boundary host 的最下行」——host 在中间行时 BE+label 落进行间距，
+// 不需要 lane 底部再扩。host 都在上方行时返回 0 的调用方自然不加。
+function applyBoundaryReserveToLastRow(
+  rows: LaneRow[],
+  boundaryHosts: ReadonlySet<string> | undefined,
+  reserve: number,
+): void {
+  if (reserve <= 0 || !boundaryHosts) return;
+  const last = rows[rows.length - 1]!;
+  if (last.ids.some(id => boundaryHosts.has(id))) last.below += reserve;
 }
 
 function resolveLaneOverlaps(outNodes: Map<string, NodeBox>, laneMembers: Map<string, string[]>): void {
