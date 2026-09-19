@@ -102,14 +102,9 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_cancel_di" bpmnElement="main_flow_cancel">
         <di:waypoint x="198" y="214" />
-        <di:waypoint x="198" y="222" />
-        <di:waypoint x="170" y="222" />
-        <di:waypoint x="170" y="174" />
-        <di:waypoint x="684" y="174" />
-        <di:waypoint x="684" y="109.33333333333333" />
-        <di:waypoint x="684" y="81.33333333333333" />
-        <di:waypoint x="744" y="81.33333333333333" />
-        <di:waypoint x="744" y="101.33333333333333" />
+        <di:waypoint x="198" y="236" />
+        <di:waypoint x="744" y="236" />
+        <di:waypoint x="744" y="181.33333333333331" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_cancel_end_di" bpmnElement="main_flow_cancel_end">
         <di:waypoint x="794" y="141.33333333333331" />

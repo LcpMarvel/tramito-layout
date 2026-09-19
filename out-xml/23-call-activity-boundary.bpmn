@@ -312,17 +312,15 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_payment_escalation_di" bpmnElement="flow_payment_escalation">
         <di:waypoint x="598" y="646.5" />
-        <di:waypoint x="598" y="656.5" />
-        <di:waypoint x="708" y="656.5" />
-        <di:waypoint x="708" y="626.5" />
-        <di:waypoint x="708" y="598.5" />
-        <di:waypoint x="768" y="598.5" />
-        <di:waypoint x="768" y="618.5" />
+        <di:waypoint x="598" y="704.5" />
+        <di:waypoint x="598" y="718.5" />
+        <di:waypoint x="768" y="718.5" />
+        <di:waypoint x="768" y="698.5" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_payment_cancel_di" bpmnElement="flow_payment_cancel">
         <di:waypoint x="638" y="646.5" />
-        <di:waypoint x="638" y="714.5" />
-        <di:waypoint x="768" y="714.5" />
+        <di:waypoint x="638" y="706.5" />
+        <di:waypoint x="768" y="706.5" />
         <di:waypoint x="768" y="758.5" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_cancel_to_end_di" bpmnElement="flow_cancel_to_end">

@@ -153,6 +153,16 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
 
   // 4. L 形：跨 lane / 跨 pool / branch / boundary→handler 等 bottom↔top
   if (sourceAnchor === 'bottom' && targetAnchor === 'top') {
+    // boundary→handler 的「先潜后横」：handler 行与 host 行垂直重叠时（handler top 高于
+    // 泛用 L 的潜行道），泛用 L 的中段必穿 host（midY 落在 host 行内），局部绕障会贴出
+    // 「沿 host 边线慢跑 + 末端乱拐」的丑线——80 的 flow_bd_h1 沿 host 底边跑满 100px
+    // （用户目检指出）、13 的 flow_timer_non_int 左侧绕 jog。先竖直潜到 BE label 之下，
+    // 再水平进 handler 近侧/底边。这条判断只能在这里做——潜行道要避开的是 host 行带，
+    // 更早的 stage 不知道 handler 与 host 的垂直关系。
+    if (input.edgeType === 'boundary-to-handler') {
+      const dive = tryBoundaryDiveFirst(input, start, end);
+      if (dive) return dive;
+    }
     // 中段 Y：若给了 gap，走 gap 中线；否则 (start+end)/2
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
@@ -514,6 +524,41 @@ function detourVerticalAroundObstacle(
  * src/tgt 自身的 bbox 跳过（直线起点 / 终点本来就贴它们）。
  */
 const SEGMENT_HIT_TOL = 1;
+// BE 出边的潜行深度 = BE label 行高(14) + 净空(8)。潜行道必须低于 BE 自己的 label 带
+// （label 在 BE 下方 4px 起、高 14），否则水平段会从 label 正中穿过。
+const BE_DIVE_CLEAR = 22;
+
+// 「先潜后横」三形态（corridor = BE 底 + 潜行深度 + channel 错开）：
+//   corridor 高于 handler 顶 → null（handler 之上留有 gap，泛用 L 走得通，不要抢）
+//   corridor 落在 handler 行带内 → 从近侧（左/右）进入
+//   corridor 低于 handler 底 → 从底边向上进入
+// 任一形态若撞第三方节点 → null，回退泛用 L + 局部绕障。
+function tryBoundaryDiveFirst(input: PathShapeInput, start: Waypoint, end: Waypoint): Waypoint[] | null {
+  const { target, channel } = input;
+  const corridorY = start.y + BE_DIVE_CLEAR + channel * BE_CHANNEL_GAP;
+  if (corridorY <= target.y) return null;
+  const tgtCx = target.x + target.w / 2;
+  if (approxEq(start.x, tgtCx)) return null; // 同 cx：泛用竖直直线（case 2）已处理
+  const hits = (wps: Waypoint[]): boolean => {
+    for (let i = 0; i < wps.length - 1; i++) {
+      if (segmentHitsObstacle(wps[i]!, wps[i + 1]!, input.obstacles, input.source, input.target)) return true;
+    }
+    return false;
+  };
+  if (corridorY <= target.y + target.h) {
+    const entryX = tgtCx > start.x ? target.x : target.x + target.w;
+    const wps: Waypoint[] = [start, { x: start.x, y: corridorY }, { x: entryX, y: corridorY }];
+    return hits(wps) ? null : wps;
+  }
+  const wps: Waypoint[] = [
+    start,
+    { x: start.x, y: corridorY },
+    { x: tgtCx, y: corridorY },
+    { x: tgtCx, y: target.y + target.h },
+  ];
+  return hits(wps) ? null : wps;
+}
+
 export function segmentHitsObstacle(
   start: { x: number; y: number },
   end: { x: number; y: number },

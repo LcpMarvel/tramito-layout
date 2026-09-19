@@ -362,12 +362,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_timeout_boundary_di" bpmnElement="flow_timeout_boundary">
         <di:waypoint x="1436" y="318" />
-        <di:waypoint x="1436" y="328" />
-        <di:waypoint x="1546" y="328" />
-        <di:waypoint x="1546" y="298" />
-        <di:waypoint x="1546" y="270" />
-        <di:waypoint x="1606" y="270" />
-        <di:waypoint x="1606" y="290" />
+        <di:waypoint x="1436" y="352" />
+        <di:waypoint x="1556" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_timeout_to_end_di" bpmnElement="flow_timeout_to_end">
         <di:waypoint x="1656" y="330" />
