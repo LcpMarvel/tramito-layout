@@ -126,8 +126,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_5_di" bpmnElement="flow_5">
         <di:waypoint x="948" y="112" />
-        <di:waypoint x="948" y="212" />
-        <di:waypoint x="112" y="212" />
+        <di:waypoint x="948" y="221" />
+        <di:waypoint x="112" y="221" />
         <di:waypoint x="112" y="312" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_6_di" bpmnElement="flow_6">
@@ -151,8 +151,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject">
         <di:waypoint x="627" y="327" />
-        <di:waypoint x="627" y="224" />
-        <di:waypoint x="228" y="224" />
+        <di:waypoint x="627" y="210.5" />
+        <di:waypoint x="228" y="210.5" />
         <di:waypoint x="228" y="112" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="632" y="298" width="54" height="14" />

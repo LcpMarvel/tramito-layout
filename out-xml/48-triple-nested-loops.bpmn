@@ -90,7 +90,7 @@
       <bpmndi:BPMNShape id="gw_review_di" bpmnElement="gw_review">
         <dc:Bounds x="242" y="327" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="239" y="309" width="56" height="14" />
+          <dc:Bounds x="239" y="381" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_acceptance_di" bpmnElement="task_acceptance">
@@ -135,8 +135,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_selftest_pass_di" bpmnElement="flow_selftest_pass">
         <di:waypoint x="743" y="97" />
-        <di:waypoint x="743" y="204.5" />
-        <di:waypoint x="112" y="204.5" />
+        <di:waypoint x="743" y="231.5" />
+        <di:waypoint x="112" y="231.5" />
         <di:waypoint x="112" y="312" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="688" y="112" width="50" height="14" />
@@ -147,19 +147,19 @@
         <di:waypoint x="242" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_back_di" bpmnElement="flow_review_back">
-        <di:waypoint x="292" y="352" />
-        <di:waypoint x="325" y="352" />
-        <di:waypoint x="325" y="72" />
-        <di:waypoint x="358" y="72" />
+        <di:waypoint x="267" y="327" />
+        <di:waypoint x="267" y="201.5" />
+        <di:waypoint x="408" y="201.5" />
+        <di:waypoint x="408" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="293.5" y="357" width="54" height="14" />
+          <dc:Bounds x="272" y="298" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_pass_di" bpmnElement="flow_review_pass">
         <di:waypoint x="292" y="352" />
         <di:waypoint x="372" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="301" y="333" width="50" height="14" />
+          <dc:Bounds x="301" y="357" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_acceptance_gw_di" bpmnElement="flow_acceptance_gw">

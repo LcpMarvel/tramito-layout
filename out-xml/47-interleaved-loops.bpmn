@@ -77,7 +77,7 @@
       <bpmndi:BPMNShape id="gw_model_di" bpmnElement="gw_model">
         <dc:Bounds x="372" y="327" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="369" y="309" width="56" height="14" />
+          <dc:Bounds x="369" y="381" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
@@ -100,8 +100,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_check_gw_di" bpmnElement="flow_check_gw">
         <di:waypoint x="588" y="112" />
-        <di:waypoint x="588" y="219.5" />
-        <di:waypoint x="87" y="219.5" />
+        <di:waypoint x="588" y="237.5" />
+        <di:waypoint x="87" y="237.5" />
         <di:waypoint x="87" y="327" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_sample_pass_di" bpmnElement="flow_sample_pass">
@@ -112,12 +112,12 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_sample_back_di" bpmnElement="flow_sample_back">
-        <di:waypoint x="112" y="352" />
-        <di:waypoint x="145" y="352" />
-        <di:waypoint x="145" y="72" />
-        <di:waypoint x="178" y="72" />
+        <di:waypoint x="87" y="327" />
+        <di:waypoint x="87" y="201.5" />
+        <di:waypoint x="228" y="201.5" />
+        <di:waypoint x="228" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="113.5" y="333" width="54" height="14" />
+          <dc:Bounds x="92" y="298" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_model_gw_di" bpmnElement="flow_model_gw">
@@ -132,17 +132,12 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_model_back_di" bpmnElement="flow_model_back">
-        <di:waypoint x="422" y="352" />
-        <di:waypoint x="430" y="352" />
-        <di:waypoint x="430" y="317" />
-        <di:waypoint x="390" y="317" />
-        <di:waypoint x="390" y="22" />
-        <di:waypoint x="366" y="22" />
-        <di:waypoint x="338" y="22" />
-        <di:waypoint x="338" y="72" />
-        <di:waypoint x="358" y="72" />
+        <di:waypoint x="397" y="327" />
+        <di:waypoint x="397" y="219.5" />
+        <di:waypoint x="408" y="219.5" />
+        <di:waypoint x="408" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="435" y="327.5" width="54" height="14" />
+          <dc:Bounds x="402" y="298" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

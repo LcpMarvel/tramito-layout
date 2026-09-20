@@ -327,8 +327,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="customer_flow_4_di" bpmnElement="customer_flow_4">
         <di:waypoint x="524" y="112" />
-        <di:waypoint x="524" y="212" />
-        <di:waypoint x="80" y="212" />
+        <di:waypoint x="524" y="203" />
+        <di:waypoint x="80" y="203" />
         <di:waypoint x="80" y="312" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="customer_flow_5_di" bpmnElement="customer_flow_5">
@@ -361,8 +361,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="order_flow_6_di" bpmnElement="order_flow_6">
         <di:waypoint x="1000" y="488" />
-        <di:waypoint x="1000" y="599" />
-        <di:waypoint x="260" y="599" />
+        <di:waypoint x="1000" y="608" />
+        <di:waypoint x="260" y="608" />
         <di:waypoint x="260" y="710" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="order_flow_7_di" bpmnElement="order_flow_7">

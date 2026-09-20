@@ -29,6 +29,11 @@ function bucketKey(t: EdgeType): string | null {
   switch (t) {
     case 'back-edge-up-left':    return 'back-up';
     case 'back-edge-down-left':  return 'back-down';
+    // 跨行回连（含折行的 carriage-return，几何上是 back-row-down）共用「行间走廊」这一个
+    // 通道空间——方向相反但中段横线落在同一条 gap 中线上会叠线（47 的 wrap 横线
+    // 与两条 back-row-up 的 jog 全叠在 y=220），所以 up/down 进同一个 bucket 摊开。
+    case 'back-row-down':        return 'back-row';
+    case 'back-row-up':          return 'back-row';
     case 'cross-lane-down':      return 'lane-down';
     case 'cross-lane-up':        return 'lane-up';
     case 'cross-pool-down':      return 'pool-down';

@@ -191,6 +191,8 @@ interface PipelineContext {
   compose?: ComposeOutput;
   /** snake 折行 lane 的成员行方向（lane-constrainer 输出，edge-router 分类要用） */
   nodeRowDir: Map<string, 1 | -1>;
+  /** 语义回边并集（BackEdgeResolver，跨 proc 合并；compactor 判链与 edge-router 分类共用） */
+  backEdgeIds: Set<string>;
 
   // —— SubprocessTranslator ——
   expandedInnerNodes?: SubprocessTranslateOutput['innerNodeBoxes'];
@@ -259,6 +261,7 @@ export async function runPipeline(
     mainReachablePerProc: new Map(),
     elkShapes: [],
     nodeRowDir: new Map(),
+    backEdgeIds: new Set(),
     handlerNodeIdsPerProc: new Map(),
     handlerNodeMeta: new Map(),
     beToHandlerEntry: new Map(),
@@ -373,6 +376,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
 
     // 自主断环：识别回头边并预反转，保证喂 ELK 的图无环（ELK GREEDY 对双环结构会断错）。
     const { edges: elkEdges, reversedIds: reversedEdgeIds } = resolveBackEdgesForElk(flowNodesForElk, elkFlows);
+    for (const id of reversedEdgeIds) ctx.backEdgeIds.add(id);
     for (const sf of elkFlows) {
       if (!reversedEdgeIds.has(sf.id)) continue;
       layoutDecisions.push({
@@ -1053,6 +1057,7 @@ function phaseEdgeRouter(ctx: PipelineContext): void {
     laneBoxes: compose.laneBoxes,
     poolBoxes: compose.poolBoxes,
     routeObstacles,
+    backEdgeIds: ctx.backEdgeIds,
   };
   ctx.routeNodesForAssoc = routeNodes;
   ctx.routeEdgesListForAssoc = routeEdgesList;

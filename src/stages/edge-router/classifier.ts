@@ -31,7 +31,11 @@ export interface ClassifierEdge {
   target: string;
 }
 
-export function classify(edge: ClassifierEdge, nodes: Map<string, ClassifierNode>): EdgeType {
+export function classify(
+  edge: ClassifierEdge,
+  nodes: Map<string, ClassifierNode>,
+  backEdgeIds?: ReadonlySet<string>,
+): EdgeType {
   const src = nodes.get(edge.source);
   const tgt = nodes.get(edge.target);
   if (!src || !tgt) {
@@ -78,8 +82,11 @@ export function classify(edge: ClassifierEdge, nodes: Map<string, ClassifierNode
     return dy >= 0 ? 'branch-down' : 'branch-up';
   }
 
-  // back-edge：target.x ≤ source.x（含等号；loop 自指也走这条）
-  if (dx <= 0) {
+  // back-edge：target.x ≤ source.x（含等号；loop 自指也走这条）。
+  // 语义回边（BackEdgeResolver 判出、随 backEdgeIds 传入）无条件算回边——几何代理 dx≤0
+  // 会漏掉「折行后 target 正上方同列」的情形（47 的 重新清洗：dx=+11 落到 forward-step，
+  // Z 形退化后被后处理搓成绕行的 9 点怪物）。
+  if (dx <= 0 || backEdgeIds?.has(edge.id)) {
     // 当 target 完全位于另一"行"上（dy 大于两节点半高之和 + 一段真空），不是真正的
     // 同行 loop，而是分支回主线之类的跨行回连。此时按 L 形从行间间隙绕回，避免拱形
     // 飞到 lane 外（fixture 28 throw_damage_report→throw_transfer_request 即此例）。

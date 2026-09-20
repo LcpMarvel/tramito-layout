@@ -109,7 +109,7 @@
       <bpmndi:BPMNShape id="gw_quality_result_di" bpmnElement="gw_quality_result">
         <dc:Bounds x="62" y="327" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="-26" y="345" width="84" height="14" />
+          <dc:Bounds x="45" y="381" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_package_store_di" bpmnElement="task_package_store">
@@ -167,17 +167,17 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_inspect_gw_di" bpmnElement="f_inspect_gw">
         <di:waypoint x="1274" y="166.5" />
-        <di:waypoint x="1274" y="246.75" />
-        <di:waypoint x="87" y="246.75" />
+        <di:waypoint x="1274" y="255.75" />
+        <di:waypoint x="87" y="255.75" />
         <di:waypoint x="87" y="327" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quality_rework_di" bpmnElement="f_quality_rework">
-        <di:waypoint x="112" y="352" />
-        <di:waypoint x="145" y="352" />
-        <di:waypoint x="145" y="126.5" />
-        <di:waypoint x="178" y="126.5" />
+        <di:waypoint x="87" y="327" />
+        <di:waypoint x="87" y="237.75" />
+        <di:waypoint x="228" y="237.75" />
+        <di:waypoint x="228" y="166.5" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="83.5" y="393" width="90" height="14" />
+          <dc:Bounds x="92" y="298" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quality_pass_di" bpmnElement="f_quality_pass">

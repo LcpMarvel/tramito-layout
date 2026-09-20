@@ -84,6 +84,17 @@ describe('Stage 4a — Classifier', () => {
     expect(classify({ id: 'e', source: 'a', target: 'b' }, nodes)).toBe('back-row-up');
   });
 
+  it('semantic back edge classifies as back-row even when target sits slightly right (dx>0)', () => {
+    // 47 的 重新清洗：折行后 gw 在正下方、target 在上一行同列偏右 11px——几何 dx≤0 代理
+    // 会漏判成 forward-step；backEdgeIds（BackEdgeResolver）才是权威。
+    const nodes = nodeMap({
+      gw: { box: box(372, 327, 50, 50), type: 'exclusiveGateway' },
+      t: { box: box(358, 32) },
+    });
+    expect(classify({ id: 'e', source: 'gw', target: 't' }, nodes)).toBe('forward-step');
+    expect(classify({ id: 'e', source: 'gw', target: 't' }, nodes, new Set(['e']))).toBe('back-row-up');
+  });
+
   it('cross-lane-down when target.laneIdx > source.laneIdx', () => {
     const nodes = nodeMap({
       a: { box: box(0, 100), lane: 'L0', laneIdx: 0 },

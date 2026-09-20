@@ -181,6 +181,10 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
       const total = input.channelTotal!;
       midY = (start.y + end.y) / 2 + (channel - (total - 1) / 2) * BE_CHANNEL_GAP;
     }
+    // 行间走廊共用者（wrap 回绕 + 反向回边）按 channel 错开，避免中段横线叠成一根（47 实测叠线）
+    if ((input.edgeType === 'back-row-down' || input.edgeType === 'back-row-up') && (input.channelTotal ?? 1) > 1) {
+      midY += (channel - (input.channelTotal! - 1) / 2) * CHANNEL_GAP;
+    }
     const lPath: Waypoint[] = [start, { x: start.x, y: midY }, { x: end.x, y: midY }, end];
     // 分支 L 中段撞节点时，若 target 明显在右/左侧，改从 source 侧边出、沿 source 行横到
     // target.cx、再竖直入顶——否则下游 detour 会把线绕成「出底边 → 折回 → 横穿自己节点」
@@ -195,6 +199,9 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     let midY = (start.y + end.y) / 2;
     if (input.gap) {
       midY = gapCorridorY(input, start, sourceAnchor);
+    }
+    if ((input.edgeType === 'back-row-down' || input.edgeType === 'back-row-up') && (input.channelTotal ?? 1) > 1) {
+      midY += (channel - (input.channelTotal! - 1) / 2) * CHANNEL_GAP;
     }
     if (input.edgeType === 'cross-lane-up') {
       const minStartStub = shouldRelaxCrossLaneUpStub(input, start)

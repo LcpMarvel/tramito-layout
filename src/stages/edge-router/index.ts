@@ -45,6 +45,8 @@ export interface RouteInput {
   poolBoxes: Map<string, PoolBox & { name?: string; isBlackBox?: boolean }>;
   /** Non-endpoint visual obstacles, such as ioSpecification data shapes emitted by the serializer. */
   routeObstacles?: RouteInputObstacle[];
+  /** 语义回边集（BackEdgeResolver）：分类的权威依据，几何 dx≤0 只是兜底的代理（见 classifier 注释）。 */
+  backEdgeIds?: ReadonlySet<string>;
 }
 
 export interface RouteOutput {
@@ -66,7 +68,7 @@ export function routeEdges(input: RouteInput): RouteOutput {
   }
   const edgeTypes = new Map<string, ReturnType<typeof classify>>();
   for (const e of input.edges) {
-    edgeTypes.set(e.id, classify(e as ClassifierEdge, classifierNodes));
+    edgeTypes.set(e.id, classify(e as ClassifierEdge, classifierNodes, input.backEdgeIds));
   }
 
   // 1b) Fan-in 归一识别（拓扑）：哪些 edge 属于「共 sink 的归一束」。成员从 lane 摊开桶里
