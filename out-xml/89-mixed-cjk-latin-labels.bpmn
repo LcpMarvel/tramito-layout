@@ -115,7 +115,7 @@
         <di:waypoint x="458" y="142" />
         <di:waypoint x="538" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="430.5" y="87" width="135" height="14" />
+          <dc:Bounds x="430.5" y="124" width="135" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_in_stock_di" bpmnElement="flow_in_stock">
@@ -147,7 +147,7 @@
         <di:waypoint x="944" y="142" />
         <di:waypoint x="984" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="949" y="73" width="160" height="28" />
+          <dc:Bounds x="780" y="110.5" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_fallback_merge_di" bpmnElement="flow_fallback_merge">
@@ -156,7 +156,7 @@
         <di:waypoint x="939" y="142" />
         <di:waypoint x="984" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="944" y="183" width="160" height="28" />
+          <dc:Bounds x="775" y="145.5" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_end_di" bpmnElement="flow_end">

@@ -7,6 +7,7 @@
 
 import type { LayoutedGraph } from '../types/elk-output';
 import type { IoSpecification } from '../types/elk-bpmn';
+import { resolveLabelCollisions } from './label-collision-resolver.ts';
 import {
   IO_SPEC_DATA_HEIGHT,
   IO_SPEC_DATA_WIDTH,
@@ -127,6 +128,10 @@ export class DiagramBuilder {
     // 进入——标签就压在箭头上、和入边 label 糊在一起（layout-loop 在 42 揪出此 bug）。这里
     // 用已建好的绝对坐标 edges 判断 gateway 上方是否被竖直边占用，占用则把标签挪到空闲侧。
     this.placeGatewayLabelsOffEdges(shapes, edges);
+
+    // 全局 label 解算：拥挤区的 label 两两叠放（89 的 3 对 L3）是逐条贪心摆放的 whack-a-mole。
+    // 全部就位后 hill-climbing 收敛总叠放面积（边 label 沿线滑 + gateway/event name 四侧翻）。
+    resolveLabelCollisions(shapes, edges, (id) => this.nodeBpmn.get(id)?.type);
 
     return {
       id: `BPMNDiagram_${graph.id}`,
