@@ -81,7 +81,9 @@ function isEventType(t: FlowNodeType): boolean {
     || t === 'intermediateCatchEvent' || t === 'intermediateThrowEvent';
 }
 
-/** 无 lane pool 的纯链 Y snap：剔语义回边后是全覆盖纯链 → 全员 cy snap 到中位数（X 不动）。 */
+/** 无 lane pool 的纯链 Y snap：按连通分量各自判定——剔语义回边后是全覆盖纯链的分量，
+ *  其成员 cy snap 到分量中位数（X 不动）。78 的主流链 + 游离事件子流程各自成链，
+ *  不能要求整池纯链。 */
 function snapNoLanePureChain(
   nodes: Map<string, NodeBox>,
   edges: LaneEdgeInfo[] | undefined,
@@ -90,14 +92,38 @@ function snapNoLanePureChain(
 ): Map<string, NodeBox> {
   if (!edges || edges.length === 0) return new Map(nodes);
   if (boundaryHosts && boundaryHosts.size > 0) return new Map(nodes);
-  const order = linearOrder(nodes, edges, backEdgeIds);
-  if (!order) return new Map(nodes);
-  const cys = order.map(id => nodes.get(id)!.y + nodes.get(id)!.h / 2).sort((a, b) => a - b);
-  const medianCy = cys[Math.floor(cys.length / 2)]!;
-  const out = new Map<string, NodeBox>();
-  for (const [id, b] of nodes) {
-    const cy = b.y + b.h / 2;
-    out.set(id, Math.abs(cy - medianCy) > 0.5 ? { ...b, y: medianCy - b.h / 2 } : b);
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    let r = x;
+    while (parent.get(r) !== r) r = parent.get(r)!;
+    parent.set(x, r);
+    return r;
+  };
+  for (const id of nodes.keys()) parent.set(id, id);
+  for (const e of edges) {
+    if (!nodes.has(e.source) || !nodes.has(e.target)) continue;
+    parent.set(find(e.source), find(e.target));
+  }
+  const comps = new Map<string, string[]>();
+  for (const id of nodes.keys()) {
+    const r = find(id);
+    if (!comps.has(r)) comps.set(r, []);
+    comps.get(r)!.push(id);
+  }
+  const out = new Map(nodes);
+  for (const members of comps.values()) {
+    const memberSet = new Set(members);
+    const subNodes = new Map(members.map(id => [id, nodes.get(id)!] as const));
+    const subEdges = edges.filter(e => memberSet.has(e.source) && memberSet.has(e.target));
+    const order = linearOrder(subNodes, subEdges, backEdgeIds);
+    if (!order) continue;
+    const cys = order.map(id => nodes.get(id)!.y + nodes.get(id)!.h / 2).sort((a, b) => a - b);
+    const medianCy = cys[Math.floor(cys.length / 2)]!;
+    for (const id of members) {
+      const b = out.get(id)!;
+      const cy = b.y + b.h / 2;
+      if (Math.abs(cy - medianCy) > 0.5) out.set(id, { ...b, y: medianCy - b.h / 2 });
+    }
   }
   return out;
 }
