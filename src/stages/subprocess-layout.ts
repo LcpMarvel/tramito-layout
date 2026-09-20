@@ -11,6 +11,7 @@
 import type { ProcessUnit } from '../loader/types.ts';
 import { layoutHeightWithIoSpec, nodeSizeOf } from '../layout/node-sizes.ts';
 import { resolveBackEdgesForElk } from './back-edge-resolver.ts';
+import { linearOrder } from './compactor.ts';
 import { elkPlacement } from './elk-placement.ts';
 import type { NodeBox } from './types.ts';
 
@@ -95,11 +96,48 @@ export async function collectSubprocessLayouts(
       edges: elkEdges,
     });
 
+    // 纯链内部图的 Y 抖动归零：ELK 在带回边的链上会把节点摆成 ±25px 错层（回边拉拽），
+    // 相邻链边各吃一个 2 弯 Z（75/100 的 F14）。纯链 snap 到中位 cy，X 保持 ELK 序——
+    // 回边反正走顶部拱线，与链节点 Y 无关。非纯链（分叉/多入口）不动。
+    const snapped = snapPureChainRows(placement.nodes, innerFlows, sub.flowNodes);
+    const finalNodes = snapped?.nodes ?? placement.nodes;
+
     out.set(sub.id, {
       id: sub.id,
-      innerNodes: placement.nodes,
+      innerNodes: finalNodes,
       innerEdgeIds: sub.sequenceFlows.map(sf => sf.id),
-      bounds: placement.bounds,
+      bounds: snapped ? recomputeBounds(finalNodes) : placement.bounds,
     });
   }
+}
+
+/** 内部图为纯链（剔语义回边后 in/out ≤1 且全覆盖）时，全员 cy snap 到中位数。返回 null = 不动。 */
+function snapPureChainRows(
+  nodes: Map<string, NodeBox>,
+  flows: { id: string; source: string; target: string }[],
+  flowNodes: ProcessUnit['flowNodes'],
+): { nodes: Map<string, NodeBox> } | null {
+  if (flowNodes.some(fn => fn.boundaryEventIds.length > 0)) return null; // BE host 的净空关系不折腾
+  const backIds = resolveBackEdgesForElk(flowNodes, flows).reversedIds;
+  const order = linearOrder(nodes, flows.map(f => ({ id: f.id, source: f.source, target: f.target })), backIds);
+  if (!order) return null;
+  const cys = order.map(id => nodes.get(id)!.y + nodes.get(id)!.h / 2).sort((a, b) => a - b);
+  const medianCy = cys[Math.floor(cys.length / 2)]!;
+  const out = new Map<string, NodeBox>();
+  let moved = false;
+  for (const [id, b] of nodes) {
+    const cy = b.y + b.h / 2;
+    if (Math.abs(cy - medianCy) > 0.5) moved = true;
+    out.set(id, { ...b, y: medianCy - b.h / 2 });
+  }
+  return moved ? { nodes: out } : null;
+}
+
+function recomputeBounds(nodes: Map<string, NodeBox>): { width: number; height: number } {
+  let maxX = 0, maxY = 0;
+  for (const b of nodes.values()) {
+    maxX = Math.max(maxX, b.x + b.w);
+    maxY = Math.max(maxY, b.y + b.h);
+  }
+  return { width: maxX, height: maxY };
 }

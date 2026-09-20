@@ -282,7 +282,7 @@ function wrapLongLinearChain(
   return out;
 }
 
-function linearOrder(
+export function linearOrder(
   nodes: Map<string, NodeBox>,
   edges: Array<{ source: string; target: string; id?: string }>,
   backEdgeIds?: ReadonlySet<string>,
