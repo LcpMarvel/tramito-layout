@@ -50,6 +50,14 @@ const LONG_CHAIN_ROW_GAP = HANDLER_VERTICAL_GAP + 180;
 const LONG_CHAIN_WRAP_ASPECT = 6;
 const LONG_CHAIN_TARGET_ASPECT = 4;
 const LONG_CHAIN_MIN_ROW_NODES = 3;
+// 互不连通的子图堆叠的行距：分量之间没有边，不需要走廊，比折行的 ROW_GAP 小；
+// 但要盖过 event 底部 label（~18px）+ 呼吸位。
+const COMPONENT_STACK_GAP = 100;
+// 触发判定用的画布 padding 估计：compactor 只有节点 bbox，F4 量的是含 pool 框的画布。
+// 124/64 在 20/93 上实测与 evaluator 的 F4 完全吻合（name stripe + pad + label 预留），
+// 用它近似「evaluator 视角的宽高比」，避免把本来就及格的 fixture 拖进来重排。
+const STACK_PAD_W = 124;
+const STACK_PAD_H = 64;
 // 纯像素宽高比对短链失真：单行链高度只有一个节点行（~80px），4 节点链 600/80=7.5 也会
 // 触发折行，把 01-simple-process 这种最基础直链折出 back edge（F1/F3 回归 + 05/06 E2）。
 // 折行只为治「长链」（feedback Problem 2 的 ~20 节点链）；7 取自 09-multiinstance（需要折）
@@ -136,6 +144,17 @@ export function compact(input: CompactInput): CompactOutput {
     const beforeRight = maxRight(input.nodes);
     const afterRight = maxRight(wrapped);
     return { nodes: wrapped, trimmedPx: Math.max(cumulativeShift, beforeRight - afterRight, 1) };
+  }
+
+  // 互不连通的子图（93 的两条独立链并排）：linearOrder 判链失败，但按分量纵向堆叠
+  // 就能把单行 8:1 压回正常比例。分量之间无边，堆叠是纯平移，无路由副作用。
+  const stacked = input.wrapLinearChain
+    ? stackDisconnectedComponents(compactedOut, input.edges ?? [])
+    : null;
+  if (stacked) {
+    const beforeRight = maxRight(input.nodes);
+    const afterRight = maxRight(stacked);
+    return { nodes: stacked, trimmedPx: Math.max(cumulativeShift, beforeRight - afterRight, 1) };
   }
 
   if (shifts.size === 0 && !reordered.changed) return { nodes: new Map(input.nodes), trimmedPx: 0 };
@@ -309,4 +328,125 @@ function linearOrder(
 
 function maxRight(nodes: Map<string, NodeBox>): number {
   return Math.max(...Array.from(nodes.values()).map(b => b.x + b.w), 0);
+}
+
+/**
+ * 互不相连的子图网格化重排：93 的两条独立链被 ELK 并排成一行（8:1）；20 的 6 个
+ * 事件子流程本身无边（edges=0，全是单点分量）。按「当前 minX 顺序 = 阅读顺序」
+ * row-major 填网格，列数取使宽高比最接近 2:1 的值。返回 null = 不动。
+ * 触发：分量 ≥ 2、含 pool 框估计的 aspect > 6（与 F4 同一把尺）、结果明显收窄。
+ */
+function stackDisconnectedComponents(
+  nodes: Map<string, NodeBox>,
+  edges: Array<{ source: string; target: string }>,
+): Map<string, NodeBox> | null {
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    let r = x;
+    while (parent.get(r) !== r) r = parent.get(r)!;
+    parent.set(x, r);
+    return r;
+  };
+  for (const id of nodes.keys()) parent.set(id, id);
+  for (const e of edges) {
+    if (!nodes.has(e.source) || !nodes.has(e.target)) continue;
+    parent.set(find(e.source), find(e.target));
+  }
+  const comps = new Map<string, string[]>();
+  for (const id of nodes.keys()) {
+    const r = find(id);
+    if (!comps.has(r)) comps.set(r, []);
+    comps.get(r)!.push(id);
+  }
+  if (comps.size < 2) return null;
+
+  const boxes = Array.from(nodes.values());
+  const singleW = Math.max(...boxes.map(b => b.x + b.w)) - Math.min(...boxes.map(b => b.x));
+  const singleH = Math.max(...boxes.map(b => b.y + b.h)) - Math.min(...boxes.map(b => b.y));
+  if (singleH <= 0) return null;
+  // 与 evaluator F4 同一把尺（含 pool 框估计）——20 的 5+1 网格本来就及格，不动
+  if ((singleW + STACK_PAD_W) / (singleH + STACK_PAD_H) <= LONG_CHAIN_WRAP_ASPECT) return null;
+
+  // 阅读顺序 = 当前的 X 顺序（ELK 并排分量按输入序排开）
+  const groups = Array.from(comps.values()).map(ids => {
+    const bs = ids.map(id => nodes.get(id)!);
+    return {
+      ids,
+      minX: Math.min(...bs.map(b => b.x)),
+      minY: Math.min(...bs.map(b => b.y)),
+      maxX: Math.max(...bs.map(b => b.x + b.w)),
+      maxY: Math.max(...bs.map(b => b.y + b.h)),
+    };
+  }).sort((a, b) => a.minX - b.minX);
+
+  const baseX = Math.min(...boxes.map(b => b.x));
+  const baseY = Math.min(...boxes.map(b => b.y));
+
+  // 网格列数：row-major 填充，取宽高比最接近 2:1 的列数（1 列 = 纯纵向堆叠）
+  let best: { cols: number; w: number; h: number } | null = null;
+  for (let cols = 1; cols <= groups.length; cols++) {
+    const rows = Math.ceil(groups.length / cols);
+    let gridW = 0;
+    for (let c = 0; c < cols; c++) {
+      let colW = 0;
+      for (let i = c; i < groups.length; i += cols) {
+        colW = Math.max(colW, groups[i]!.maxX - groups[i]!.minX);
+      }
+      gridW += colW;
+    }
+    gridW += (cols - 1) * NORMAL_LAYER_GAP;
+    let gridH = 0;
+    for (let r = 0; r < rows; r++) {
+      let rowH = 0;
+      for (let i = r * cols; i < Math.min((r + 1) * cols, groups.length); i++) {
+        rowH = Math.max(rowH, groups[i]!.maxY - groups[i]!.minY);
+      }
+      gridH += rowH;
+    }
+    gridH += (rows - 1) * COMPONENT_STACK_GAP;
+    if (gridW >= singleW * 0.8) continue; // 收不窄的列数没意义
+    const aspect = gridW / gridH;
+    const score = Math.abs(Math.log(aspect / 2));
+    if (!best || score < Math.abs(Math.log(best.w / best.h / 2))) best = { cols, w: gridW, h: gridH };
+  }
+  if (!best) return null;
+
+  const out = new Map(nodes);
+  const colX: number[] = [];
+  {
+    let x = baseX;
+    for (let c = 0; c < best.cols; c++) {
+      colX.push(x);
+      let colW = 0;
+      for (let i = c; i < groups.length; i += best.cols) {
+        colW = Math.max(colW, groups[i]!.maxX - groups[i]!.minX);
+      }
+      x += colW + NORMAL_LAYER_GAP;
+    }
+  }
+  const rows = Math.ceil(groups.length / best.cols);
+  const rowY: number[] = [];
+  {
+    let y = baseY;
+    for (let r = 0; r < rows; r++) {
+      rowY.push(y);
+      let rowH = 0;
+      for (let i = r * best.cols; i < Math.min((r + 1) * best.cols, groups.length); i++) {
+        rowH = Math.max(rowH, groups[i]!.maxY - groups[i]!.minY);
+      }
+      y += rowH + COMPONENT_STACK_GAP;
+    }
+  }
+  for (let i = 0; i < groups.length; i++) {
+    const g = groups[i]!;
+    const r = Math.floor(i / best.cols);
+    const c = i % best.cols;
+    const dx = colX[c]! - g.minX;
+    const dy = rowY[r]! - g.minY;
+    for (const id of g.ids) {
+      const b = nodes.get(id)!;
+      out.set(id, { x: b.x + dx, y: b.y + dy, w: b.w, h: b.h });
+    }
+  }
+  return out;
 }
