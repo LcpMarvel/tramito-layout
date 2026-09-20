@@ -23,8 +23,7 @@ interface Mover {
   tries: number;
 }
 
-const L3_MAX_OVERLAP_RATIO = 0.5;
-const MAX_ROUNDS = 48;
+const MAX_ROUNDS = 96;
 const MAX_TRIES_PER_MOVER = 4;
 const SIDE_GAP = 4;
 
@@ -81,10 +80,6 @@ export function resolveLabelCollisions(
     const iy = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
     return ix * iy;
   };
-  const ratio = (a: Rect, b: Rect, area: number): number => {
-    const minA = Math.min(a.width * a.height, b.width * b.height);
-    return minA > 0 ? area / minA : 0;
-  };
   // L2 的判据是「label 几何中心落进节点」，角部擦边合法（BPMN 工具惯例）——
   // 严格零重叠会把拥挤区所有候选都毙掉（89 两对就是这么卡死的）。
   const hitsNode = (r: Rect): boolean => nodeObstacles.some(n => {
@@ -93,9 +88,10 @@ export function resolveLabelCollisions(
     return cx > n.x && cx < n.x + n.width && cy > n.y && cy < n.y + n.height;
   });
 
-  // 某 mover 在某候选位的代价：叠 label 罚 1/px²；压节点按 L2 判据分级——中心落进节点
-  // 罚 10⁵（硬违例），角部擦边只轻罚 0.5/px²（拥挤区擦边常常不可避免，重罚会把所有
-  // 候选都毙掉——89 实测）。离开原位加 0.02/px 的稳定偏好（并列时保持原位）。
+  // 某 mover 在某候选位的代价：叠 label 罚 1/px²（目标是 0——L3 的 50% 只是验收地板，
+  // 文字压文字在 30% 时人眼已经不能忍：89 的 end_1↔flow_end 1352px 就是）；压节点按
+  // L2 判据分级——中心落进节点罚 10⁵（硬违例），角部擦边罚 2/px²（能零擦就零擦）。
+  // 离开原位加 0.02/px 的稳定偏好（并列时保持原位）。
   const centerInside = (r: Rect, n: Rect): boolean => {
     const cx = r.x + r.width / 2;
     const cy = r.y + r.height / 2;
@@ -109,7 +105,7 @@ export function resolveLabelCollisions(
     }
     for (const n of nodeObstacles) {
       const a = overlapArea(c, n);
-      if (a > 0) s += centerInside(c, n) ? 100000 : a * 0.5;
+      if (a > 0) s += centerInside(c, n) ? 100000 : a * 2;
     }
     s += (Math.abs(c.x - m.bounds.x) + Math.abs(c.y - m.bounds.y)) * 0.02;
     return s;
@@ -118,13 +114,14 @@ export function resolveLabelCollisions(
   const frozen = new Set<string>();
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const labels = allLabels();
-    // 找超过 L3 阈值的最重未冻结 pair
+    // 找最重未冻结 pair：任何非零叠放都处理（不只看超 L3 阈值的）——阈值是验收地板，
+    // 不是视觉目标。解不动的（两侧都无可改善候选）冻结接受。
     let worst: { a: string; b: string; area: number } | null = null;
     for (let i = 0; i < labels.length; i++) {
       for (let j = i + 1; j < labels.length; j++) {
         const A = labels[i]!, B = labels[j]!;
         const area = overlapArea(A.rect, B.rect);
-        if (area <= 0 || ratio(A.rect, B.rect, area) <= L3_MAX_OVERLAP_RATIO) continue;
+        if (area <= 0) continue;
         const key = `${A.id}|${B.id}`;
         if (frozen.has(key)) continue;
         if (!worst || area > worst.area) worst = { a: A.id, b: B.id, area };

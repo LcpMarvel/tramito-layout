@@ -94,7 +94,7 @@
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
         <dc:Bounds x="1114" y="124" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1032" y="164" width="200" height="28" />
+          <dc:Bounds x="1154" y="128" width="200" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
@@ -115,7 +115,7 @@
         <di:waypoint x="458" y="142" />
         <di:waypoint x="538" y="142" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="430.5" y="124" width="135" height="14" />
+          <dc:Bounds x="430.5" y="87" width="135" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_in_stock_di" bpmnElement="flow_in_stock">
@@ -123,7 +123,7 @@
         <di:waypoint x="563" y="72" />
         <di:waypoint x="668" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="398" y="69" width="160" height="28" />
+          <dc:Bounds x="509.25" y="40" width="160" height="28" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_oos_di" bpmnElement="flow_oos">

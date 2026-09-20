@@ -111,7 +111,7 @@
         <di:waypoint x="563" y="72" />
         <di:waypoint x="668" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="568" y="158" width="54" height="14" />
+          <dc:Bounds x="567" y="151.25" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_reject_di" bpmnElement="flow_reject">

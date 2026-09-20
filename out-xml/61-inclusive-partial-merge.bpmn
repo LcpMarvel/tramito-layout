@@ -118,7 +118,7 @@
         <di:waypoint x="203" y="72" />
         <di:waypoint x="308" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="208" y="158" width="54" height="14" />
+          <dc:Bounds x="207" y="151.25" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_email_di" bpmnElement="flow_email">
