@@ -353,6 +353,11 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
     const flowNodesForElk = [
       ...proc.flowNodes.filter(n => mainReachable.has(n.id)),
       ...proc.flowNodes.filter(n => !mainReachable.has(n.id) && handlerIds.has(n.id)),
+      // 合法游离内容（事件子流程 / 孤立节点）：不在主流也不是 handler，但必须参与摆位——
+      // 78 的 客户撤单处理（triggeredByEvent 事件子流程）和 92 的孤立 task 曾被这道过滤
+      // 静默丢掉（model 里有、DI 里没有，E/N/B/L 量不到缺失的 shape）。游离块由 ELK 并排、
+      // compactor 的分量网格在超宽时重新网格化（03 的 10×N 事件网格就是这么来的）。
+      ...proc.flowNodes.filter(n => !mainReachable.has(n.id) && !handlerIds.has(n.id) && n.type !== 'boundaryEvent'),
     ];
     const elkNodeIds = new Set(flowNodesForElk.map(n => n.id));
     // BE 不是 ELK 节点（它骑在 host 上）：BE→handlerEntry 边以 host 名义喂 ELK，

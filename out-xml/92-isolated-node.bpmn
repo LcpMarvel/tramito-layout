@@ -18,30 +18,33 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_isolated_node" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_isolated_node" bpmnElement="process_isolated_node">
       <bpmndi:BPMNShape id="process_isolated_node_di" bpmnElement="process_isolated_node">
-        <dc:Bounds x="0" y="0" width="414" height="144" />
+        <dc:Bounds x="0" y="0" width="564" height="144" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
-        <dc:Bounds x="62" y="54" width="36" height="36" />
+        <dc:Bounds x="212" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="66" y="94" width="28" height="14" />
+          <dc:Bounds x="216" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_main_di" bpmnElement="task_main">
-        <dc:Bounds x="178" y="32" width="100" height="80" />
+        <dc:Bounds x="328" y="32" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
-        <dc:Bounds x="358" y="54" width="36" height="36" />
+        <dc:Bounds x="508" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="362" y="94" width="28" height="14" />
+          <dc:Bounds x="512" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_isolated_di" bpmnElement="task_isolated">
+        <dc:Bounds x="62" y="32" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
-        <di:waypoint x="98" y="72" />
-        <di:waypoint x="178" y="72" />
+        <di:waypoint x="248" y="72" />
+        <di:waypoint x="328" y="72" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
-        <di:waypoint x="278" y="72" />
-        <di:waypoint x="358" y="72" />
+        <di:waypoint x="428" y="72" />
+        <di:waypoint x="508" y="72" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

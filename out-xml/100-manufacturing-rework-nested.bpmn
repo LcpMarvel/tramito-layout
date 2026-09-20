@@ -65,127 +65,127 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_manufacturing_rework" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_manufacturing_rework" bpmnElement="process_manufacturing">
       <bpmndi:BPMNShape id="process_manufacturing_di" bpmnElement="process_manufacturing">
-        <dc:Bounds x="0" y="0" width="1332" height="412" />
+        <dc:Bounds x="0" y="0" width="1332" height="461.25" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_order_di" bpmnElement="start_order">
-        <dc:Bounds x="62" y="102.5" width="36" height="36" />
+        <dc:Bounds x="62" y="151.75" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="38" y="142.5" width="84" height="14" />
+          <dc:Bounds x="38" y="191.75" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_prepare_material_di" bpmnElement="task_prepare_material">
-        <dc:Bounds x="178" y="80.5" width="100" height="80" />
+        <dc:Bounds x="178" y="129.75" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="subprocess_assembly_di" bpmnElement="subprocess_assembly" isExpanded="true">
-        <dc:Bounds x="358" y="32" width="774" height="177" />
+        <dc:Bounds x="358" y="81.25" width="774" height="177" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_start_assembly_di" bpmnElement="sub_start_assembly">
-        <dc:Bounds x="390" y="131" width="36" height="36" />
+        <dc:Bounds x="390" y="180.25" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="380" y="171" width="56" height="14" />
+          <dc:Bounds x="380" y="220.25" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_task_parts_di" bpmnElement="sub_task_parts">
-        <dc:Bounds x="526" y="109" width="100" height="80" />
+        <dc:Bounds x="526" y="158.25" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_task_whole_di" bpmnElement="sub_task_whole">
-        <dc:Bounds x="726" y="109" width="100" height="80" />
+        <dc:Bounds x="726" y="158.25" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_gw_selfcheck_di" bpmnElement="sub_gw_selfcheck">
-        <dc:Bounds x="926" y="124" width="50" height="50" />
+        <dc:Bounds x="926" y="173.25" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="909" y="178" width="84" height="14" />
+          <dc:Bounds x="909" y="227.25" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_end_assembly_di" bpmnElement="sub_end_assembly">
-        <dc:Bounds x="1076" y="131" width="36" height="36" />
+        <dc:Bounds x="1076" y="180.25" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1066" y="171" width="56" height="14" />
+          <dc:Bounds x="1066" y="220.25" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_quality_inspect_di" bpmnElement="task_quality_inspect">
-        <dc:Bounds x="1212" y="80.5" width="100" height="80" />
+        <dc:Bounds x="1212" y="129.75" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_quality_result_di" bpmnElement="gw_quality_result">
-        <dc:Bounds x="62" y="327" width="50" height="50" />
+        <dc:Bounds x="62" y="376.25" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="45" y="381" width="84" height="14" />
+          <dc:Bounds x="45" y="430.25" width="84" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_package_store_di" bpmnElement="task_package_store">
-        <dc:Bounds x="192" y="312" width="100" height="80" />
+        <dc:Bounds x="192" y="361.25" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_produced_di" bpmnElement="end_produced">
-        <dc:Bounds x="372" y="334" width="36" height="36" />
+        <dc:Bounds x="372" y="383.25" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="362" y="374" width="56" height="14" />
+          <dc:Bounds x="362" y="423.25" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="sub_f_start_parts_di" bpmnElement="sub_f_start_parts">
-        <di:waypoint x="426" y="149" />
-        <di:waypoint x="526" y="149" />
+        <di:waypoint x="426" y="198.25" />
+        <di:waypoint x="526" y="198.25" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="sub_f_parts_whole_di" bpmnElement="sub_f_parts_whole">
-        <di:waypoint x="626" y="149" />
-        <di:waypoint x="726" y="149" />
+        <di:waypoint x="626" y="198.25" />
+        <di:waypoint x="726" y="198.25" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="sub_f_whole_check_di" bpmnElement="sub_f_whole_check">
-        <di:waypoint x="826" y="149" />
-        <di:waypoint x="926" y="149" />
+        <di:waypoint x="826" y="198.25" />
+        <di:waypoint x="926" y="198.25" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="sub_f_check_rework_di" bpmnElement="sub_f_check_rework">
-        <di:waypoint x="951" y="124" />
-        <di:waypoint x="951" y="85" />
-        <di:waypoint x="576" y="85" />
-        <di:waypoint x="576" y="109" />
+        <di:waypoint x="951" y="173.25" />
+        <di:waypoint x="951" y="134.25" />
+        <di:waypoint x="576" y="134.25" />
+        <di:waypoint x="576" y="158.25" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="956" y="97.5" width="66" height="14" />
+          <dc:Bounds x="956" y="146.75" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="sub_f_check_done_di" bpmnElement="sub_f_check_done">
-        <di:waypoint x="976" y="149" />
-        <di:waypoint x="1076" y="149" />
+        <di:waypoint x="976" y="198.25" />
+        <di:waypoint x="1076" y="198.25" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="985" y="154" width="50" height="14" />
+          <dc:Bounds x="985" y="203.25" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_start_prepare_di" bpmnElement="f_start_prepare">
-        <di:waypoint x="98" y="120.5" />
-        <di:waypoint x="178" y="120.5" />
+        <di:waypoint x="98" y="169.75" />
+        <di:waypoint x="178" y="169.75" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_prepare_assembly_di" bpmnElement="f_prepare_assembly">
-        <di:waypoint x="278" y="120.5" />
-        <di:waypoint x="358" y="120.5" />
+        <di:waypoint x="278" y="169.75" />
+        <di:waypoint x="358" y="169.75" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_assembly_inspect_di" bpmnElement="f_assembly_inspect">
-        <di:waypoint x="1132" y="120.5" />
-        <di:waypoint x="1212" y="120.5" />
+        <di:waypoint x="1132" y="169.75" />
+        <di:waypoint x="1212" y="169.75" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_inspect_gw_di" bpmnElement="f_inspect_gw">
-        <di:waypoint x="1262" y="160.5" />
-        <di:waypoint x="1262" y="252.75" />
-        <di:waypoint x="87" y="252.75" />
-        <di:waypoint x="87" y="327" />
+        <di:waypoint x="1262" y="209.75" />
+        <di:waypoint x="1262" y="302" />
+        <di:waypoint x="87" y="302" />
+        <di:waypoint x="87" y="376.25" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quality_rework_di" bpmnElement="f_quality_rework">
-        <di:waypoint x="87" y="327" />
-        <di:waypoint x="87" y="234.75" />
-        <di:waypoint x="228" y="234.75" />
-        <di:waypoint x="228" y="160.5" />
+        <di:waypoint x="87" y="376.25" />
+        <di:waypoint x="87" y="284" />
+        <di:waypoint x="228" y="284" />
+        <di:waypoint x="228" y="209.75" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="92" y="298" width="90" height="14" />
+          <dc:Bounds x="92" y="347.25" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_quality_pass_di" bpmnElement="f_quality_pass">
-        <di:waypoint x="112" y="352" />
-        <di:waypoint x="192" y="352" />
+        <di:waypoint x="112" y="401.25" />
+        <di:waypoint x="192" y="401.25" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="121" y="357" width="50" height="14" />
+          <dc:Bounds x="121" y="406.25" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_package_end_di" bpmnElement="f_package_end">
-        <di:waypoint x="292" y="352" />
-        <di:waypoint x="372" y="352" />
+        <di:waypoint x="292" y="401.25" />
+        <di:waypoint x="372" y="401.25" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

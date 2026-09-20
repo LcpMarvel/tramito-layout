@@ -97,12 +97,12 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_all_events" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_all_events" bpmnElement="process_all_events">
       <bpmndi:BPMNShape id="process_all_events_di" bpmnElement="process_all_events">
-        <dc:Bounds x="0" y="0" width="560" height="186" />
+        <dc:Bounds x="0" y="0" width="904" height="272" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_none_di" bpmnElement="start_none">
-        <dc:Bounds x="62" y="118" width="36" height="36" />
+        <dc:Bounds x="320" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="59" y="158" width="42" height="14" />
+          <dc:Bounds x="317" y="244" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_message_di" bpmnElement="start_message">
@@ -142,34 +142,136 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="catch_message_di" bpmnElement="catch_message">
-        <dc:Bounds x="198" y="118" width="36" height="36" />
+        <dc:Bounds x="456" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="188" y="158" width="56" height="14" />
+          <dc:Bounds x="446" y="244" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_timer_di" bpmnElement="catch_timer">
+        <dc:Bounds x="578" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="72" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_signal_di" bpmnElement="catch_signal">
+        <dc:Bounds x="664" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="654" y="72" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_conditional_di" bpmnElement="catch_conditional">
+        <dc:Bounds x="750" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="740" y="72" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="catch_link_di" bpmnElement="catch_link">
+        <dc:Bounds x="836" y="32" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="826" y="72" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_none_di" bpmnElement="throw_none">
+        <dc:Bounds x="62" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="59" y="158" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="throw_message_di" bpmnElement="throw_message">
-        <dc:Bounds x="334" y="118" width="36" height="36" />
+        <dc:Bounds x="592" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="324" y="158" width="56" height="14" />
+          <dc:Bounds x="582" y="244" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_signal_di" bpmnElement="throw_signal">
+        <dc:Bounds x="148" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="138" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_escalation_di" bpmnElement="throw_escalation">
+        <dc:Bounds x="234" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="238" y="158" width="28" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_compensation_di" bpmnElement="throw_compensation">
+        <dc:Bounds x="320" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="310" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="throw_link_di" bpmnElement="throw_link">
+        <dc:Bounds x="406" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="396" y="158" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_none_di" bpmnElement="end_none">
-        <dc:Bounds x="470" y="118" width="36" height="36" />
+        <dc:Bounds x="728" y="204" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="460" y="158" width="56" height="14" />
+          <dc:Bounds x="718" y="244" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_message_di" bpmnElement="end_message">
+        <dc:Bounds x="492" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="482" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_error_di" bpmnElement="end_error">
+        <dc:Bounds x="578" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_escalation_di" bpmnElement="end_escalation">
+        <dc:Bounds x="664" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="654" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_cancel_di" bpmnElement="end_cancel">
+        <dc:Bounds x="750" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="740" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_compensation_di" bpmnElement="end_compensation">
+        <dc:Bounds x="836" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="826" y="158" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_signal_di" bpmnElement="end_signal">
+        <dc:Bounds x="62" y="204" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="52" y="244" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_terminate_di" bpmnElement="end_terminate">
+        <dc:Bounds x="148" y="204" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="138" y="244" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_multiple_di" bpmnElement="end_multiple">
+        <dc:Bounds x="234" y="204" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="224" y="244" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_1_di" bpmnElement="flow_1">
-        <di:waypoint x="98" y="136" />
-        <di:waypoint x="198" y="136" />
+        <di:waypoint x="356" y="222" />
+        <di:waypoint x="456" y="222" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_2_di" bpmnElement="flow_2">
-        <di:waypoint x="234" y="136" />
-        <di:waypoint x="334" y="136" />
+        <di:waypoint x="492" y="222" />
+        <di:waypoint x="592" y="222" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_3_di" bpmnElement="flow_3">
-        <di:waypoint x="370" y="136" />
-        <di:waypoint x="470" y="136" />
+        <di:waypoint x="628" y="222" />
+        <di:waypoint x="728" y="222" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
