@@ -23,10 +23,14 @@ export interface CompactInput {
   /** 主流节点（不含 boundary event / handler subgraph 节点） */
   nodes: Map<string, NodeBox>;
   /** 同 pool 内主流 sequenceFlow；用于识别可安全折行的纯单链 */
-  edges?: Array<{ source: string; target: string }>;
+  edges?: Array<{ source: string; target: string; id?: string }>;
   nodeMeta?: Map<string, { type: FlowNodeType }>;
   /** boundary handler 场景禁用了 ELK wrap，这里只对纯单链补一个保守折行 */
   wrapLinearChain?: boolean;
+  /** 语义回边（BackEdgeResolver 判定）：折行判链时视为不存在——
+   *  「单链 + 回边」的结构（49 的终检驳回）回边交给 router 正常走拱/走廊，
+   *  链本体照样能折；不剔除时 outDeg>1 会让 linearOrder 直接弃权。 */
+  backEdgeIds?: ReadonlySet<string>;
   /** subprocess 容器 → 内部 children id 集合。子流程作为整体平移（保持内部相对位置） */
   containerChildren?: Map<string, Set<string>>;
 }
@@ -117,7 +121,7 @@ export function compact(input: CompactInput): CompactOutput {
   const compactedOut = reordered.nodes;
 
   const wrapped = input.wrapLinearChain
-    ? wrapLongLinearChain(compactedOut, input.edges ?? [])
+    ? wrapLongLinearChain(compactedOut, input.edges ?? [], input.backEdgeIds)
     : null;
   if (wrapped) {
     const beforeRight = maxRight(input.nodes);
@@ -196,8 +200,9 @@ function groupRows(nodes: Map<string, NodeBox>): string[][] {
 function wrapLongLinearChain(
   nodes: Map<string, NodeBox>,
   edges: Array<{ source: string; target: string }>,
+  backEdgeIds?: ReadonlySet<string>,
 ): Map<string, NodeBox> | null {
-  const order = linearOrder(nodes, edges);
+  const order = linearOrder(nodes, edges, backEdgeIds);
   if (!order || order.length < LONG_CHAIN_MIN_WRAP_NODES) return null;
 
   // 宽高比驱动：单行摆得下（≤ 6:1）就不折；要折则选能把宽高比压到 ≤ 4 的最小行数。
@@ -244,7 +249,8 @@ function wrapLongLinearChain(
 
 function linearOrder(
   nodes: Map<string, NodeBox>,
-  edges: Array<{ source: string; target: string }>,
+  edges: Array<{ source: string; target: string; id?: string }>,
+  backEdgeIds?: ReadonlySet<string>,
 ): string[] | null {
   const nodeIds = new Set(nodes.keys());
   const inDeg = new Map<string, number>();
@@ -252,6 +258,7 @@ function linearOrder(
   const next = new Map<string, string>();
 
   for (const edge of edges) {
+    if (edge.id !== undefined && backEdgeIds?.has(edge.id)) continue; // 语义回边不参与判链
     if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) continue;
     inDeg.set(edge.target, (inDeg.get(edge.target) ?? 0) + 1);
     outDeg.set(edge.source, (outDeg.get(edge.source) ?? 0) + 1);

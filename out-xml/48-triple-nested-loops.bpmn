@@ -61,19 +61,19 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_triple_nested_loops" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_triple_nested_loops" bpmnElement="process_triple_nested">
       <bpmndi:BPMNShape id="process_triple_nested_di" bpmnElement="process_triple_nested">
-        <dc:Bounds x="0" y="0" width="1524" height="196.66666666666666" />
+        <dc:Bounds x="0" y="0" width="788" height="412" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_1_di" bpmnElement="start_1">
-        <dc:Bounds x="62" y="106.66666666666666" width="36" height="36" />
+        <dc:Bounds x="62" y="54" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="66" y="146.66666666666666" width="28" height="14" />
+          <dc:Bounds x="66" y="94" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_requirement_di" bpmnElement="task_requirement">
-        <dc:Bounds x="178" y="84.66666666666666" width="100" height="80" />
+        <dc:Bounds x="178" y="32" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_design_di" bpmnElement="task_design">
-        <dc:Bounds x="358" y="57" width="100" height="80" />
+        <dc:Bounds x="358" y="32" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_coding_di" bpmnElement="task_coding">
         <dc:Bounds x="538" y="32" width="100" height="80" />
@@ -81,47 +81,43 @@
       <bpmndi:BPMNShape id="gw_selftest_di" bpmnElement="gw_selftest">
         <dc:Bounds x="718" y="47" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="715" y="101" width="56" height="14" />
+          <dc:Bounds x="772" y="65" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_codereview_di" bpmnElement="task_codereview">
-        <dc:Bounds x="848" y="32" width="100" height="80" />
+        <dc:Bounds x="62" y="312" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_review_di" bpmnElement="gw_review">
-        <dc:Bounds x="1028" y="72" width="50" height="50" />
+        <dc:Bounds x="242" y="327" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1025" y="126" width="56" height="14" />
+          <dc:Bounds x="239" y="309" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_acceptance_di" bpmnElement="task_acceptance">
-        <dc:Bounds x="1158" y="57" width="100" height="80" />
+        <dc:Bounds x="372" y="312" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="gw_acceptance_di" bpmnElement="gw_acceptance">
-        <dc:Bounds x="1338" y="99.5" width="50" height="50" />
+        <dc:Bounds x="552" y="327" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1335" y="153.5" width="56" height="14" />
+          <dc:Bounds x="549" y="381" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_1_di" bpmnElement="end_1">
-        <dc:Bounds x="1468" y="106.5" width="36" height="36" />
+        <dc:Bounds x="682" y="334" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1472" y="146.5" width="28" height="14" />
+          <dc:Bounds x="686" y="374" width="28" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="flow_start_di" bpmnElement="flow_start">
-        <di:waypoint x="98" y="124.66666666666666" />
-        <di:waypoint x="178" y="124.66666666666666" />
+        <di:waypoint x="98" y="72" />
+        <di:waypoint x="178" y="72" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_req_design_di" bpmnElement="flow_req_design">
-        <di:waypoint x="278" y="124.66666666666666" />
-        <di:waypoint x="318" y="124.66666666666666" />
-        <di:waypoint x="318" y="97" />
-        <di:waypoint x="358" y="97" />
+        <di:waypoint x="278" y="72" />
+        <di:waypoint x="358" y="72" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_design_coding_di" bpmnElement="flow_design_coding">
-        <di:waypoint x="458" y="97" />
-        <di:waypoint x="498" y="97" />
-        <di:waypoint x="498" y="72" />
+        <di:waypoint x="458" y="72" />
         <di:waypoint x="538" y="72" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_coding_gw_di" bpmnElement="flow_coding_gw">
@@ -130,62 +126,60 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_selftest_back_di" bpmnElement="flow_selftest_back">
         <di:waypoint x="743" y="47" />
-        <di:waypoint x="743" y="3" />
-        <di:waypoint x="588" y="3" />
+        <di:waypoint x="743" y="8" />
+        <di:waypoint x="588" y="8" />
         <di:waypoint x="588" y="32" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="748" y="18" width="54" height="14" />
+          <dc:Bounds x="748" y="20.5" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_selftest_pass_di" bpmnElement="flow_selftest_pass">
-        <di:waypoint x="768" y="72" />
-        <di:waypoint x="848" y="72" />
+        <di:waypoint x="743" y="97" />
+        <di:waypoint x="743" y="204.5" />
+        <di:waypoint x="112" y="204.5" />
+        <di:waypoint x="112" y="312" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="777" y="77" width="50" height="14" />
+          <dc:Bounds x="688" y="112" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_gw_di" bpmnElement="flow_review_gw">
-        <di:waypoint x="948" y="72" />
-        <di:waypoint x="988" y="72" />
-        <di:waypoint x="988" y="97" />
-        <di:waypoint x="1028" y="97" />
+        <di:waypoint x="162" y="352" />
+        <di:waypoint x="242" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_back_di" bpmnElement="flow_review_back">
-        <di:waypoint x="1053" y="72" />
-        <di:waypoint x="1053" y="15" />
-        <di:waypoint x="408" y="15" />
-        <di:waypoint x="408" y="57" />
+        <di:waypoint x="292" y="352" />
+        <di:waypoint x="325" y="352" />
+        <di:waypoint x="325" y="72" />
+        <di:waypoint x="358" y="72" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1058" y="43" width="54" height="14" />
+          <dc:Bounds x="293.5" y="357" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_review_pass_di" bpmnElement="flow_review_pass">
-        <di:waypoint x="1078" y="97" />
-        <di:waypoint x="1158" y="97" />
+        <di:waypoint x="292" y="352" />
+        <di:waypoint x="372" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1087" y="102" width="50" height="14" />
+          <dc:Bounds x="301" y="333" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_acceptance_gw_di" bpmnElement="flow_acceptance_gw">
-        <di:waypoint x="1258" y="97" />
-        <di:waypoint x="1298" y="97" />
-        <di:waypoint x="1298" y="124.5" />
-        <di:waypoint x="1338" y="124.5" />
+        <di:waypoint x="472" y="352" />
+        <di:waypoint x="552" y="352" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_acceptance_back_di" bpmnElement="flow_acceptance_back">
-        <di:waypoint x="1363" y="99.5" />
-        <di:waypoint x="1363" y="27" />
-        <di:waypoint x="228" y="27" />
-        <di:waypoint x="228" y="84.66666666666666" />
+        <di:waypoint x="577" y="327" />
+        <di:waypoint x="577" y="219.5" />
+        <di:waypoint x="228" y="219.5" />
+        <di:waypoint x="228" y="112" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1368" y="70.5" width="54" height="14" />
+          <dc:Bounds x="582" y="298" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_acceptance_pass_di" bpmnElement="flow_acceptance_pass">
-        <di:waypoint x="1388" y="124.5" />
-        <di:waypoint x="1468" y="124.5" />
+        <di:waypoint x="602" y="352" />
+        <di:waypoint x="682" y="352" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1397" y="129.5" width="50" height="14" />
+          <dc:Bounds x="611" y="357" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

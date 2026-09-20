@@ -509,7 +509,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
     }
     const edgesForLane = proc.sequenceFlows
       .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target))
-      .map(sf => ({ source: sf.source, target: sf.target }));
+      .map(sf => ({ id: sf.id, source: sf.source, target: sf.target }));
     const constrain = laneConstrain({
       nodes: placement.nodes, width: placement.bounds.width, height: placement.bounds.height, lanes: proc.lanes,
       nodeMeta: nodeMetaForLane,
@@ -526,6 +526,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
     // no-lane pool 的 ELK wrap 已全局 OFF（见 elk-placement.ts），超长纯单链统一由
     // compactor 的 wrapLinearChain 保守折行控宽。
     const compacted = compact({
+      backEdgeIds: reversedEdgeIds,
       nodes: constrain.nodes,
       edges: edgesForLane,
       nodeMeta: nodeMetaForLane,
