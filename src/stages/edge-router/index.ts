@@ -10,7 +10,7 @@ import { anchorPoint, selectAnchors } from './anchor.ts';
 import { shapePath, segmentHitsObstacle } from './path-shaper.ts';
 import { allocateChannels, type ChannelEdge } from './channel.ts';
 import { detectFanInBundles, type FanInBundle } from './bundle.ts';
-import { SHAPER_MARGIN, edgeStyleRules, type BpmnEdgeKind } from '../bpmn-rules.ts';
+import { SHAPER_MARGIN, ARCH_CLEAR_MARGIN, edgeStyleRules, type BpmnEdgeKind } from '../bpmn-rules.ts';
 import { detourAroundLocalObstacles, pointInsideBoxInterior } from './local-obstacle-detour.ts';
 import { finalizeRoutePorts, makeBoxPort } from './port.ts';
 
@@ -196,6 +196,11 @@ export function routeEdges(input: RouteInput): RouteOutput {
   const busedIds = new Set([...fannedInIds, ...parallelJoinIds]);
   detourRoutesAroundLocalObstacles(routes, input, busedIds);
   finalizeRoutePortsForRoutes(routes, input);
+  // 回边拱走廊重定位：拱的水平段「穿过节点行间隙」时，间隙里每条扇出/扇入竖直段都是
+  // F10 交叉（101 的 rollback 拱在 y=716 穿过 7 条 fan riser）——clearObstaclesAbove 只查
+  // 节点不查边，shaping 期天生看不见。此处全部路由已定，按「零节点命中 + 零竖直交叉」
+  // 在候选走廊里重选。必须放在 finalize 之后（tail-stub 会再挪水平段，早测不作数）。
+  relocateArchCorridorsOffRisers(routes, input);
   // F7：把贴着 lane 分隔线跑的水平边中段推开（跨多 lane 的边走廊有时落在离分隔线几 px 处，
   // 流程线与泳道线粘连难辨）。只动失败段、撞节点就回滚；fan-in 干线已自洽,跳过。
   // **必须放在 finalize 之后**——finalize 的 target arrow tail-stub 对 bottom/top 进入的边会把
@@ -217,6 +222,90 @@ export function routeEdges(input: RouteInput): RouteOutput {
 
 // 拱内部水平段离 lane 顶/底至少留这么多：≥ DIVIDER_NUDGE_TRIGGER(8)，否则会再次触发 divider-nudge。
 const INTRA_LANE_BACK_EDGE_CLEAR = 10;
+
+/** 拱走廊与竖直段之间的净空：走廊 Y 距 riser 端点至少 4px（贴上就读成 T 形汇入）。 */
+const ARCH_CORRIDOR_CLEAR = 4;
+
+/**
+ * 回边拱走廊重定位（5.2 的回边走廊轨道）：标准 4 点拱（top↔top / bottom↔bottom）的
+ * 水平走廊若穿过其它边的竖直段，在「over-the-top / under-the-bottom / 行间空隙」候选里
+ * 重选一个零节点命中、零边交叉、不贴 lane 分隔线的走廊；找不到就保持原样（不制造硬违例）。
+ */
+function relocateArchCorridorsOffRisers(routes: Map<string, EdgeRoute>, input: RouteInput): void {
+  interface VSeg { edgeId: string; x: number; yLo: number; yHi: number }
+  interface HSeg { edgeId: string; y: number; xLo: number; xHi: number }
+  const vsegs: VSeg[] = [];
+  const hsegs: HSeg[] = [];
+  for (const edge of input.edges) {
+    const route = routes.get(edge.id);
+    if (!route) continue;
+    for (let i = 0; i + 1 < route.waypoints.length; i++) {
+      const a = route.waypoints[i]!, b = route.waypoints[i + 1]!;
+      if (Math.abs(a.x - b.x) <= 0.5 && Math.abs(a.y - b.y) >= 8) {
+        vsegs.push({ edgeId: edge.id, x: a.x, yLo: Math.min(a.y, b.y), yHi: Math.max(a.y, b.y) });
+      } else if (Math.abs(a.y - b.y) <= 0.5 && Math.abs(a.x - b.x) >= 8) {
+        hsegs.push({ edgeId: edge.id, y: a.y, xLo: Math.min(a.x, b.x), xHi: Math.max(a.x, b.x) });
+      }
+    }
+  }
+  const dividers = new Set<number>();
+  for (const [, lb] of input.laneBoxes) { dividers.add(lb.top); dividers.add(lb.bottom); }
+
+  for (const edge of input.edges) {
+    const route = routes.get(edge.id);
+    if (!route) continue;
+    if (route.edgeType !== 'back-edge-down-left' && route.edgeType !== 'back-edge-up-left') continue;
+    const wps = route.waypoints;
+    if (wps.length !== 4) continue; // 已被其它 pass 改写的非标准形态不接管
+    const a = wps[1]!, b = wps[2]!;
+    if (Math.abs(a.y - b.y) > 0.5) continue;
+    const archY = a.y;
+    const lo = Math.min(a.x, b.x);
+    const hi = Math.max(a.x, b.x);
+    const crosses = (y: number): number =>
+      vsegs.filter(v => v.edgeId !== edge.id
+        && v.x > lo && v.x < hi
+        && y > v.yLo + ARCH_CORRIDOR_CLEAR && y < v.yHi - ARCH_CORRIDOR_CLEAR).length;
+    if (crosses(archY) === 0) continue;
+
+    const src = input.nodes.get(edge.source)!;
+    const tgt = input.nodes.get(edge.target)!;
+    const obstacles = collectObstacles(input, edge, src, tgt, src.poolId !== tgt.poolId);
+    const inSpan = obstacles.filter(o => o.x + o.w > lo && o.x < hi);
+    const candidates = new Set<number>();
+    if (inSpan.length > 0) {
+      candidates.add(Math.min(...inSpan.map(o => o.y)) - ARCH_CLEAR_MARGIN);
+      candidates.add(Math.max(...inSpan.map(o => o.y + o.h)) + ARCH_CLEAR_MARGIN);
+      const sorted = [...inSpan].sort((p, q) => p.y - q.y);
+      for (let i = 0; i + 1 < sorted.length; i++) {
+        const gapTop = sorted[i]!.y + sorted[i]!.h;
+        const gapBottom = sorted[i + 1]!.y;
+        if (gapBottom - gapTop >= 12) candidates.add((gapTop + gapBottom) / 2);
+      }
+    }
+    const verticalClear = (portX: number, portY: number, corridorY: number): boolean => {
+      const yLo = Math.min(portY, corridorY), yHi = Math.max(portY, corridorY);
+      if (inSpan.some(o => portX > o.x && portX < o.x + o.w && yLo < o.y + o.h && yHi > o.y)) return false;
+      return !hsegs.some(h => h.edgeId !== edge.id && portX > h.xLo && portX < h.xHi && h.y > yLo && h.y < yHi);
+    };
+    let best: number | null = null;
+    for (const y of candidates) {
+      // 方向一致性：top→top 拱走廊必须在两端口之上（否则末段从下方扎进 top 端口=E3、
+      // 起端 stub 还会穿过 source 自己）；bottom→bottom 对称在下。101 初版选了 under-the-bottom
+      // 拱穿 gw 自己 + E3 就是这么来的。
+      if (route.edgeType === 'back-edge-down-left' && y >= Math.min(wps[0]!.y, wps[3]!.y) - ARCH_CORRIDOR_CLEAR) continue;
+      if (route.edgeType === 'back-edge-up-left' && y <= Math.max(wps[0]!.y, wps[3]!.y) + ARCH_CORRIDOR_CLEAR) continue;
+      if (inSpan.some(o => y > o.y - ARCH_CORRIDOR_CLEAR && y < o.y + o.h + ARCH_CORRIDOR_CLEAR)) continue;
+      if ([...dividers].some(d => Math.abs(y - d) < DIVIDER_NUDGE_TRIGGER)) continue;
+      if (crosses(y) > 0) continue;
+      if (!verticalClear(wps[0]!.x, wps[0]!.y, y) || !verticalClear(wps[3]!.x, wps[3]!.y, y)) continue;
+      if (best === null || Math.abs(y - archY) < Math.abs(best - archY)) best = y;
+    }
+    if (best === null) continue;
+    a.y = best;
+    b.y = best;
+  }
+}
 
 function keepIntraLaneBackEdgeInsideLane(routes: Map<string, EdgeRoute>, input: RouteInput): void {
   for (const edge of input.edges) {

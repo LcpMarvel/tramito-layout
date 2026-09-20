@@ -137,9 +137,9 @@ ${tail}`;
   });
 
   // F10/F12 sanity（卡 0.2）：101 的八路并行缠线必须在交叉数/骑行段上明显差于 04 的整齐分支。
-  // 注：P3+浅窗修复后 101 的 F12 已归 0（尺子逼着布局变好的实例）——F12 的锐利度改为用
-  // 「干净 fixture 恒 0」锁定；F10 仍保持 101 ≫ 04 的区分度。
-  it('F10/F12 clearly distinguish messy routing (101) from clean branching (04)', async () => {
+  // 注：P3+浅窗修复后 101 的 F12 已归 0；5.2 回边拱走廊重定位后 F10 也归 0（rollback 拱
+  // 不再穿过 7 条 fan riser）——两个指标的「缠线锚点」先后被布局修复吃掉，改为归零锁定。
+  it('F10/F12 stay zero on 101 after arch corridor relocation (regression lock)', async () => {
     const [r101, r04] = await Promise.all([
       layoutBpmnXml(FIX('101-cicd-parallel-rollback'), '101-cicd-parallel-rollback'),
       layoutBpmnXml(FIX('04-all-gateways'), '04-all-gateways'),
@@ -149,9 +149,10 @@ ${tail}`;
       { fixture: '04', xml: r04.xml },
     ], { softOnly: true, ruleFilter: new Set(['F10', 'F12']) });
     const m = (fx: string, rule: string) => result.soft?.cells.get(fx)?.get(rule)?.value ?? 0;
-    expect(m('101', 'F10')).toBeGreaterThan(m('04', 'F10') + 4);
+    expect(m('101', 'F10')).toBe(0);
+    expect(m('04', 'F10')).toBe(0);
     expect(m('04', 'F12')).toBe(0);
-    expect(m('101', 'F12')).toBeGreaterThanOrEqual(0);
+    expect(m('101', 'F12')).toBe(0);
   });
 
   // baseline 对比（卡 0.3）：同一评估结果自比必须全 0；人为把节点挪出原位置（重叠 + 端点

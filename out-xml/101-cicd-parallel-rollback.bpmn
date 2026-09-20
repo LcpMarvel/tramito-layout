@@ -277,8 +277,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="f_check_fail_di" bpmnElement="f_check_fail">
         <di:waypoint x="823" y="773.3888888888889" />
-        <di:waypoint x="823" y="716" />
-        <di:waypoint x="228" y="716" />
+        <di:waypoint x="823" y="16" />
+        <di:waypoint x="228" y="16" />
         <di:waypoint x="228" y="758.3888888888889" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="716" y="744.3888888888889" width="102" height="14" />
