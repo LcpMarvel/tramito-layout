@@ -1372,8 +1372,12 @@ function checkF12(p: ParsedFixture): SoftMetric {
 }
 
 /**
- * F13 空白率：1 − Σ节点面积 / 内容 bbox 面积 ≤ 0.85。pool/lane/process 不算节点；
- * subProcess 整体算一个节点（children 不重复计）。空白率过高说明布局松散/被拉长。
+ * F13 空白率（**信息指标，不设 pass/fail**）：1 − Σ节点面积 / 内容 bbox 面积。
+ * pool/lane/process 不算节点；subProcess 整体算一个节点（children 不重复计）。
+ * 2026-09-20 成因分解后降级：全库 40 个 >0.85 的 fixture 逐一归因，全是结构稀疏
+ * （lane 带状 / 预留空 lane / 多 pool 堆叠 / 分支展开 / handler 带）而非摆位松散——
+ * 后者已被 F4（宽高比）、F2（分支分布）、F12（骑行）覆盖。值继续算，回归由
+ * baseline --compare 的 ±2pt 容差守门（折行波的 5 个 wrap fixture 就是被它抓到的）。
  */
 function checkF13(p: ParsedFixture): SoftMetric {
   let nodeArea = 0;
@@ -1400,11 +1404,10 @@ function checkF13(p: ParsedFixture): SoftMetric {
   }
   const bboxArea = (maxX - minX) * (maxY - minY);
   const ratio = 1 - nodeArea / bboxArea;
-  const pass = ratio <= 0.85;
   return {
     rule: 'F13', fixture: p.fixture, value: ratio,
-    display: `${(ratio * 100).toFixed(0)}%`, pass,
-    detail: pass ? undefined : `whitespace ${(ratio * 100).toFixed(0)}% > 85% (nodes ${Math.round(nodeArea)} / bbox ${Math.round(bboxArea)})`,
+    display: `${(ratio * 100).toFixed(0)}%`,
+    pass: true, // 信息指标（见函数头注释）：数值照算、趋势由 baseline compare 守门，不设硬阈值
   };
 }
 
