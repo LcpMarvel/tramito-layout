@@ -719,15 +719,25 @@ function nudgeParallelSegmentsApart(
     const tgt = input.nodes.get(edge.target);
     if (!route || !src || !tgt) continue;
     const wps = route.waypoints;
-    if (wps.length < 4) continue;
     const fixed = skipIds.has(edge.id);
     const obstacles = collectObstacles(input, edge, src, tgt, src.poolId !== tgt.poolId, true);
-    for (let i = 1; i + 1 <= wps.length - 2; i++) {
+    const pushIfHorizontal = (i: number, isFixed: boolean) => {
       const a = wps[i]!, b = wps[i + 1]!;
-      if (Math.abs(a.y - b.y) > 1) continue;       // 非水平
-      if (Math.abs(a.x - b.x) < 20) continue;      // 太短,F8 也不计
-      segs.push({ wps, i, obstacles, fixed });
+      if (Math.abs(a.y - b.y) > 1) return;       // 非水平
+      if (Math.abs(a.x - b.x) < 20) return;      // 太短,F8 也不计
+      segs.push({ wps, i, obstacles, fixed: isFixed });
+    };
+    // 首段（source stub）/ 末段（target stub）/ 整条直行边：不可动（动了破 E1/E3），
+    // 但它们是 F8 叠线的另一半——13 就是 handler 拱廊 y=77 贴上 超时处理→超时结束
+    // 的两点直行边 y=72，此前 pass 只收内部段，根本看不见这对。收作固定锚让别人让开。
+    if (wps.length < 4) {
+      pushIfHorizontal(0, true);
+      if (wps.length === 3) pushIfHorizontal(1, true);
+      continue;
     }
+    pushIfHorizontal(0, true);
+    pushIfHorizontal(wps.length - 2, true);
+    for (let i = 1; i <= wps.length - 3; i++) pushIfHorizontal(i, fixed);
   }
 
   const xLo = (g: HSeg): number => Math.min(g.wps[g.i]!.x, g.wps[g.i + 1]!.x);

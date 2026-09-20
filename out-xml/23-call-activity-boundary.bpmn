@@ -344,8 +344,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_inventory_to_merge_di" bpmnElement="flow_inventory_to_merge">
         <di:waypoint x="948" y="408.75" />
-        <di:waypoint x="948" y="367" />
-        <di:waypoint x="1103" y="367" />
+        <di:waypoint x="948" y="370.75" />
+        <di:waypoint x="1103" y="370.75" />
         <di:waypoint x="1103" y="325.25" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

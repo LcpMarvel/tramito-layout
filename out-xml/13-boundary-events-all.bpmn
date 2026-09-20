@@ -404,8 +404,8 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_error_handler_di" bpmnElement="flow_error_handler">
         <di:waypoint x="918" y="230" />
-        <di:waypoint x="918" y="76.66666666666669" />
-        <di:waypoint x="1128" y="76.66666666666669" />
+        <di:waypoint x="918" y="84" />
+        <di:waypoint x="1128" y="84" />
         <di:waypoint x="1128" y="136.66666666666669" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="flow_to_timeout_end_di" bpmnElement="flow_to_timeout_end">
