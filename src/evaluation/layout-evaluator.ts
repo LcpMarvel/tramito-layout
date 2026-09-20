@@ -1316,10 +1316,39 @@ function checkF10(p: ParsedFixture): SoftMetric {
  * F11 平均拐点数：Σ(waypoints−2)/edges ≤ 2.0。每条边平均多于 2 个弯说明路由在绕远——
  * 要么摆位没给边留路（P4 主干），要么路由在互相打架（P5 轨道）。
  */
+/**
+ * 几何拐点数（F11/F14 共用）：不数原始 waypoint 数——nudge/channel pass 会插入
+ * 共线点（28/43 的 4px 垂直中段）和「微步」（81 的 6px 台阶，两侧同向、视觉是
+ * 一条线的轻错位）。先合并共线连续段，再成对抵消微步两端的弯。
+ */
+const GEO_MICRO_STEP = 10;
+function geometricBends(wps: ReadonlyArray<{ x: number; y: number }>): number {
+  const pts: { x: number; y: number }[] = [];
+  for (const p of wps) {
+    if (pts.length >= 2) {
+      const a = pts[pts.length - 2]!, b = pts[pts.length - 1]!;
+      const collinearV = Math.abs(a.x - b.x) <= 0.5 && Math.abs(b.x - p.x) <= 0.5;
+      const collinearH = Math.abs(a.y - b.y) <= 0.5 && Math.abs(b.y - p.y) <= 0.5;
+      if (collinearV || collinearH) { pts[pts.length - 1] = p; continue; }
+    }
+    pts.push({ x: p.x, y: p.y });
+  }
+  const horiz = (i: number) => Math.abs(pts[i + 1]!.y - pts[i]!.y) <= 0.5;
+  const len = (i: number) => Math.abs(pts[i + 1]!.x - pts[i]!.x) + Math.abs(pts[i + 1]!.y - pts[i]!.y);
+  let bends = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    // 微步：中段 <10px 且两侧段同向（H-短V-H 或 V-短H-V）→ 两端的弯成对抵消。
+    // i+2 < pts.length 保证「下一侧段」存在（末个弯点没有微步对可配）。
+    if (i + 2 < pts.length && len(i) < GEO_MICRO_STEP && horiz(i - 1) === horiz(i + 1)) { i++; continue; }
+    bends++;
+  }
+  return bends;
+}
+
 function checkF11(p: ParsedFixture): SoftMetric {
   const flowEdges = p.edges.filter(e => e.bpmnType === 'sequenceFlow');
   if (flowEdges.length === 0) return { rule: 'F11', fixture: p.fixture, value: 0, display: 'n/a', pass: true };
-  const bends = flowEdges.reduce((s, e) => s + Math.max(0, e.waypoints.length - 2), 0);
+  const bends = flowEdges.reduce((s, e) => s + geometricBends(e.waypoints), 0);
   const avg = bends / flowEdges.length;
   const pass = avg <= 2.0;
   return {
@@ -1429,12 +1458,11 @@ function checkF14(p: ParsedFixture): SoftMetric {
     if (!sb || !tb) continue;
     if (!adj.has(e.source)) adj.set(e.source, []);
     adj.get(e.source)!.push({ edgeId: e.id, target: e.target });
-    const raw = Math.max(0, e.waypoints.length - 2);
     // 换排边（折行 carriage-return / 分支落行）整段豁免：它是折行模型本身认可的「关节」，
     // 多出来的弯往往是绕 annotation 之类的合法避障（06 的 flow_4 绕 SLA 注解吃 6 点）。
     // F14 要量的脊柱直线度只对「行内 zigzag」有意义（101 那种），跨排关节不该扣分。
     const rowChange = Math.abs((sb.y + sb.h / 2) - (tb.y + tb.h / 2)) > F14_ROW_CHANGE_TOL;
-    edgeBends.set(e.id, rowChange ? 0 : raw);
+    edgeBends.set(e.id, rowChange ? 0 : geometricBends(e.waypoints));
   }
   const starts = p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'startEvent');
   const ends = new Set(p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'endEvent'));
