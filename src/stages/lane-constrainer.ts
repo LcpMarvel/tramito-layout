@@ -7,7 +7,7 @@
 
 import type { FlowNodeType, Lane } from '../loader/types.ts';
 import type { LaneBox, NodeBox } from './types.ts';
-import { LANE_PAD, LANE_MIN_H, ioSpecExtraBelow, isGatewayType, eventLabelSize } from '../layout/node-sizes.ts';
+import { LANE_PAD, LANE_MIN_H, POOL_PAD_X, ioSpecExtraBelow, isGatewayType, eventLabelSize } from '../layout/node-sizes.ts';
 import { allLaneOrder, leafLaneOrder, nodeToLeafLane } from '../layout/lane-resolver.ts';
 
 export interface LaneNodeMeta {
@@ -54,6 +54,8 @@ export interface LaneConstrainOutput {
   poolHeight: number;
   /** pool 宽度，跟输入一致 */
   poolWidth: number;
+  /** snake 折行 lane 的成员行方向表（仅 snake 触发时存在）：edge-router 分类要用 */
+  nodeRowDir?: Map<string, 1 | -1>;
 }
 
 // 行高 / 距节点净空：与 serializer/diagram-builder 的 label 盒一致（行数 × 行高见
@@ -199,7 +201,7 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
     const metric = laneMetrics.get(laneId);
     const rowCenter = metric?.nodeCenterOffset.get(nodeId) ?? metric?.centerOffset ?? (band.height / 2);
     outNodes.set(nodeId, {
-      x: box.x,
+      x: metric?.nodeX?.get(nodeId) ?? box.x,
       y: band.top + rowCenter - box.h / 2,
       w: box.w,
       h: box.h,
@@ -208,13 +210,29 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
 
   resolveLaneOverlaps(outNodes, laneMembers);
 
+  // snake 折行重排过 X 的 lane：pool 宽度按节点实际右缘收紧（不然池子还是单行时的宽度，
+  // 宽高比改善全落空）。无 snake 时保持 Stage 1 的宽度输入不动。
+  const snaked = [...laneMetrics.values()].some(m => m.nodeX && m.nodeX.size > 0);
+  const poolWidth = snaked
+    ? Math.max(...Array.from(outNodes.values()).map(b => b.x + b.w), 0) + POOL_PAD_X
+    : width;
+  // snake lane 的行方向表（奇数行 RTL）：收集自各 snake metric 的成员
+  let nodeRowDir: Map<string, 1 | -1> | undefined;
+  if (snaked) {
+    nodeRowDir = new Map();
+    for (const m of laneMetrics.values()) {
+      if (!m.nodeX || !m.nodeRowDir) continue;
+      for (const [id, dir] of m.nodeRowDir) nodeRowDir.set(id, dir);
+    }
+  }
   return {
     nodes: outNodes,
     laneBoxes,
     leafOrder,
     allLanes,
     poolHeight,
-    poolWidth: width,
+    poolWidth,
+    ...(nodeRowDir ? { nodeRowDir } : {}),
   };
 }
 
@@ -234,6 +252,11 @@ interface LaneMetric {
   height: number;
   centerOffset: number;
   nodeCenterOffset: Map<string, number>;
+  /** snake 折行时重写成员 X（boustrophedon 重排）；其余路径不出现 */
+  nodeX?: Map<string, number>;
+  /** snake 折行时成员的行方向（奇数行 RTL = -1）：edge 分类器需要——RTL 行内相邻链边
+   *  X 反向是刻意折行而非回边（snake 只对无环纯链触发，行内不可能有真回边） */
+  nodeRowDir?: Map<string, 1 | -1>;
 }
 
 function buildLaneMetric(
@@ -270,6 +293,14 @@ function buildLaneMetric(
   // 把泳道弄高、回边在节点上方平移）。与 fanIn.above 同属「顶行上方水平走廊」，取 max 不叠加。
   const transitAbove = estimateBackEdgeTransitReserve(memberIds, nodes, edges, laneIndexOf);
   const topAbove = Math.max(fanIn.above, transitAbove);
+
+  // 纯串行长链 snake 折行（P6）：lane 成员恰为一条前向单链、且单行宽高比 > 6 时，
+  // 蛇形拆成多行（偶数行 X 反向 = boustrophedon，换行边垂直短接）、lane 增高。
+  // 71 的 26 节点单 lane 30:1 是触发锚点；分支 lane 一律走原逻辑。
+  const snake = detectSnakeRows(memberIds, nodes, edges, extents, boundaryHosts);
+  if (snake) {
+    return buildSnakeMetric(memberIds, nodes, extents, snake);
+  }
 
   // F2：先按「主干（spine）居中 + 分支上下分布」拆行。主干 = 同 lane 内最长的前向路径（按 X 拓扑
   // 序的最长链）；不在主干上的节点按 ELK 给的 cy 落到主干上方 / 下方，填满泳道而不是全挤一行。
@@ -654,6 +685,135 @@ function applyBoundaryReserveToLastRow(
   if (reserve <= 0 || !boundaryHosts) return;
   const last = rows[rows.length - 1]!;
   if (last.ids.some(id => boundaryHosts.has(id))) last.below += reserve;
+}
+
+// ── 纯串行长链 snake 折行（P6）────────────────────────────────────────────
+// lane 成员恰为一条前向单链且单行宽高比超阈值时触发：蛇形拆行（奇数行链序从右往左排，
+// 换行边垂直短接），lane 增高换宽度收敛。挂 boundary 的成员lane不走 snake（BE 净空与
+// 行带逻辑暂不混排，等真实用例）。
+const SNAKE_MIN_CHAIN = 7;       // 与 compactor 的 LONG_CHAIN_MIN_WRAP_NODES 同义
+const SNAKE_MIN_ROW_NODES = 3;
+const SNAKE_WRAP_ASPECT = 6;     // 触发阈值（≈ F4 的 6:1）
+const SNAKE_TARGET_ASPECT = 4;   // 折后目标（CLAUDE.md F4 字面期望）
+const SNAKE_X_GAP = 60;          // 行内节点 X 间距（≈ ELK nodeNode 同层距）
+
+function detectSnakeRows(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+  extents: Map<string, NodeVerticalExtent>,
+  boundaryHosts: ReadonlySet<string> | undefined,
+): string[][] | null {
+  if (!edges || memberIds.length < SNAKE_MIN_CHAIN) return null;
+  if (boundaryHosts && memberIds.some(id => boundaryHosts.has(id))) return null;
+  const memberSet = new Set(memberIds);
+  // 成员有指向 lane 外的边就不折：snake 会把跨 lane 连接点搬到任意行位（35 实测 F1/F2/F3
+  // 全抖）。单 lane pool（71）无边外联不受影响。等真有「lane 内长链 + 少量外联」的
+  // 好案例再放宽到「仅链首入/链尾出」。
+  for (const e of edges) {
+    if (memberSet.has(e.source) !== memberSet.has(e.target)) return null;
+  }
+  const inDeg = new Map<string, number>();
+  const outDeg = new Map<string, number>();
+  const next = new Map<string, string>();
+  for (const e of edges) {
+    if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
+    inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
+    outDeg.set(e.source, (outDeg.get(e.source) ?? 0) + 1);
+    if (next.has(e.source)) return null; // 分叉 → 非纯链
+    next.set(e.source, e.target);
+  }
+  let start: string | undefined;
+  for (const id of memberIds) {
+    if ((inDeg.get(id) ?? 0) > 1 || (outDeg.get(id) ?? 0) > 1) return null;
+    if ((inDeg.get(id) ?? 0) === 0) {
+      if (start !== undefined) return null;
+      start = id;
+    }
+  }
+  if (!start) return null;
+  const order: string[] = [];
+  const seen = new Set<string>();
+  let cur: string | undefined = start;
+  while (cur) {
+    if (seen.has(cur)) return null; // 环
+    seen.add(cur);
+    order.push(cur);
+    cur = next.get(cur);
+  }
+  if (order.length !== memberIds.length) return null; // 链没盖住全部成员 → 折行会孤立游离节点
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let rowH = 0;
+  for (const id of memberIds) {
+    const b = nodes.get(id)!;
+    minX = Math.min(minX, b.x);
+    maxX = Math.max(maxX, b.x + b.w);
+    const ex = extents.get(id)!;
+    rowH = Math.max(rowH, ex.above + ex.below);
+  }
+  const contentW = maxX - minX;
+  if (contentW / Math.max(rowH + LANE_PAD * 2, LANE_MIN_H) <= SNAKE_WRAP_ASPECT) return null;
+
+  // 最小行数 k：折后宽高比 ≤ 目标即收（行高按多行度量的实际构成算）
+  const maxRows = Math.max(2, Math.floor(order.length / SNAKE_MIN_ROW_NODES));
+  let k = 2;
+  while (k <= maxRows) {
+    const rowSize = Math.ceil(order.length / k);
+    let maxRowW = 0;
+    for (let r = 0; r < k; r++) {
+      const ids = order.slice(r * rowSize, (r + 1) * rowSize);
+      if (ids.length === 0) continue;
+      const w = ids.reduce((s, id) => s + nodes.get(id)!.w, 0) + (ids.length - 1) * SNAKE_X_GAP;
+      if (w > maxRowW) maxRowW = w;
+    }
+    const hAfter = rowH + LANE_PAD * 2 + (k - 1) * LANE_ROW_GAP;
+    if (maxRowW / hAfter <= SNAKE_TARGET_ASPECT) break;
+    k++;
+  }
+  k = Math.min(k, maxRows);
+  const rowSize = Math.ceil(order.length / k);
+  const rows: string[][] = [];
+  for (let r = 0; r < k; r++) {
+    const ids = order.slice(r * rowSize, (r + 1) * rowSize);
+    if (ids.length > 0) rows.push(ids);
+  }
+  return rows.length >= 2 ? rows : null;
+}
+
+function buildSnakeMetric(
+  memberIds: string[],
+  nodes: Map<string, NodeBox>,
+  extents: Map<string, NodeVerticalExtent>,
+  rows: string[][],
+): LaneMetric {
+  const metric = buildMultiRowMetric(rows.map(ids => makeRowFrom(ids, extents)));
+  // X 重排（boustrophedon：奇数行链序从右往左排，使相邻行的换行边垂直短接）
+  const contentLeft = Math.min(...memberIds.map(id => nodes.get(id)!.x));
+  const nodeX = new Map<string, number>();
+  rows.forEach((ids, r) => {
+    const rowW = ids.reduce((s, id) => s + nodes.get(id)!.w, 0) + (ids.length - 1) * SNAKE_X_GAP;
+    if (r % 2 === 0) {
+      let cursor = contentLeft;
+      for (const id of ids) {
+        nodeX.set(id, cursor);
+        cursor += nodes.get(id)!.w + SNAKE_X_GAP;
+      }
+    } else {
+      let cursor = contentLeft + rowW;
+      for (const id of ids) {
+        cursor -= nodes.get(id)!.w;
+        nodeX.set(id, cursor);
+        cursor -= SNAKE_X_GAP;
+      }
+    }
+  });
+  const nodeRowDir = new Map<string, 1 | -1>();
+  rows.forEach((ids, r) => {
+    for (const id of ids) nodeRowDir.set(id, r % 2 === 0 ? 1 : -1);
+  });
+  return { ...metric, nodeX, nodeRowDir };
 }
 
 function resolveLaneOverlaps(outNodes: Map<string, NodeBox>, laneMembers: Map<string, string[]>): void {

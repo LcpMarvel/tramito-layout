@@ -189,6 +189,8 @@ interface PipelineContext {
 
   // —— PoolComposer ——
   compose?: ComposeOutput;
+  /** snake 折行 lane 的成员行方向（lane-constrainer 输出，edge-router 分类要用） */
+  nodeRowDir: Map<string, 1 | -1>;
 
   // —— SubprocessTranslator ——
   expandedInnerNodes?: SubprocessTranslateOutput['innerNodeBoxes'];
@@ -256,6 +258,7 @@ export async function runPipeline(
     poolInputs: [],
     mainReachablePerProc: new Map(),
     elkShapes: [],
+    nodeRowDir: new Map(),
     handlerNodeIdsPerProc: new Map(),
     handlerNodeMeta: new Map(),
     beToHandlerEntry: new Map(),
@@ -514,6 +517,9 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
       boundaryHosts: new Set(proc.flowNodes.filter(fn => fn.boundaryEventIds.length > 0).map(fn => fn.id)),
     });
     ctx.ms.constrain += performance.now() - tc;
+    if (constrain.nodeRowDir) {
+      for (const [id, dir] of constrain.nodeRowDir) ctx.nodeRowDir.set(id, dir);
+    }
 
     // B2: 压缩明显的层间空白。Y 不动、节点大小不动，仅减少 X 间距。
     // 跑在 lane-constrainer 后是关键：lane 高度已确定，X 收紧不会让节点出 lane。
@@ -909,6 +915,7 @@ function phaseEdgeRouter(ctx: PipelineContext): void {
         isExpanded: fn.isExpanded,
         poolId: compose.nodeToPool.get(fn.id) ?? proc.id,
         laneId, laneIdx,
+        ...(ctx.nodeRowDir.has(fn.id) ? { rowDir: ctx.nodeRowDir.get(fn.id) } : {}),
       });
     }
   }

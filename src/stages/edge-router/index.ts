@@ -21,6 +21,8 @@ export interface RouteInputNode {
   poolId: string;
   laneId: string | null;
   laneIdx: number | null;
+  /** snake 折行 lane 的行方向（见 ClassifierNode.rowDir） */
+  rowDir?: 1 | -1;
 }
 
 export interface RouteInputEdge {
@@ -58,6 +60,7 @@ export function routeEdges(input: RouteInput): RouteOutput {
       type: n.type,
       poolId: n.poolId,
       laneId: n.laneId,
+      rowDir: n.rowDir,
       laneIdx: n.laneIdx,
     });
   }
@@ -137,7 +140,7 @@ export function routeEdges(input: RouteInput): RouteOutput {
     const obstacles = collectObstacles(input, e, src, tgt, isCrossPool);
 
     const styleRule = edgeStyleRules[e.bpmnType];
-    const geomAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box);
+    const geomAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box, src.rowDir, tgt.rowDir);
     const reverseTargetOverride = reversePairTargetOverrides.get(e.id);
     const preBlockAnchors = reverseTargetOverride
       ? { source: geomAnchors.source, target: reverseTargetOverride }
@@ -275,7 +278,14 @@ function resolveAnchorsForGeometry(
   anchors: { source: Anchor; target: Anchor },
   source: NodeBox,
   target: NodeBox,
+  srcRowDir?: 1 | -1,
+  tgtRowDir?: 1 | -1,
 ): { source: Anchor; target: Anchor } {
+  // snake RTL 行的行内 forward-straight：source 在 target 右侧——锚点翻成 left→right，
+  // 否则默认 right→left 会让直线从 target 左边缘「穿盒而过」（E3 穿盒违例，71 实测 ×10）。
+  if (edgeType === 'forward-straight' && srcRowDir === -1 && tgtRowDir === -1) {
+    return { source: 'left', target: 'right' };
+  }
   if (edgeType === 'cross-lane-down' || edgeType === 'cross-lane-up') {
     const srcCx = source.x + source.w / 2;
     // target 在 source 右侧足够远 → 从 target 左侧进（横段向右、riser 落 source 那一列）。
@@ -504,6 +514,9 @@ function ensureTargetArrowTailStub(route: EdgeRoute, obstacles: NodeBox[] = []):
   let tailStart: Waypoint;
   let spliceStart = Math.max(1, endIdx - 1);
 
+  // stub 必须落在进入侧的外侧（min/max 顺手保「approach 本来就够长就不挪」）。
+  // 别按接近方向换侧——RTL 行的鱼钩根因是端口侧别标错（已由 resolveAnchorsForGeometry
+  // 的 RTL 锚点翻转修复），在这里换侧会把 stub 点放进目标盒内部（96/98 的 E3 实测）。
   switch (route.targetPort.side) {
     case 'top':
       tailStart = { x: end.x, y: Math.min(prev.y, end.y - TARGET_ARROW_TAIL_STUB) };

@@ -21,6 +21,8 @@ export interface ClassifierNode {
   poolId: string;
   laneId: string | null;
   laneIdx: number | null;
+  /** snake 折行 lane 的行方向（奇数行 RTL = -1）；普通节点无此字段 */
+  rowDir?: 1 | -1;
 }
 
 export interface ClassifierEdge {
@@ -64,6 +66,17 @@ export function classify(edge: ClassifierEdge, nodes: Map<string, ClassifierNode
   const tgtCy = tgt.box.y + tgt.box.h / 2;
   const dx = tgtCx - srcCx;
   const dy = tgtCy - srcCy;
+
+  // snake 折行的两种边（P6 boustrophedon；rowDir 由 lane-constrainer 只对无环纯链 lane 发出）：
+  //  ① 同行 RTL 相邻链边：X 反向是刻意折行，不是回边——forward-straight 直线。
+  if (dx <= 0 && src.rowDir === -1 && tgt.rowDir === -1 && Math.abs(dy) < EPS) {
+    return 'forward-straight';
+  }
+  //  ② 换行边：rowDir 翻转（行尾 → 下行行首），按 branch 的 bottom→top L 走成
+  //    垂直短接（carriage return），不是回边拱形。
+  if (src.rowDir !== undefined && tgt.rowDir !== undefined && src.rowDir !== tgt.rowDir) {
+    return dy >= 0 ? 'branch-down' : 'branch-up';
+  }
 
   // back-edge：target.x ≤ source.x（含等号；loop 自指也走这条）
   if (dx <= 0) {

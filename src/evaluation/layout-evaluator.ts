@@ -40,6 +40,8 @@ export interface ParsedFixture {
   participantOrder: string[];         // collaboration's participants in declared order
   nodeOrder: string[];                // flow node ids in XML declaration order（断环的声明序加权用）
   backEdges: Set<string>;             // 语义回边集（BackEdgeResolver 同一套算法）：F1/F3 从分母剔除
+  rowOf: Map<string, number>;         // 叶子节点 → 行簇编号（cy 聚类，P6 蛇形折行的行感知）
+  rowDirOf: Map<number, 1 | -1>;      // 行簇 → 主导方向（行内非回边的多数 X 方向）
 }
 
 const TAG_KIND: Record<string, NodeKind> = {
@@ -219,7 +221,55 @@ export function parseBpmnLayout(name: string, xml: string): ParsedFixture {
     })),
   });
 
-  return { fixture: name, totalW, totalH, boxes, labels, edges, kindOf, bpmnTagOf, beHost, laneOrder, flowNodeRefs, childLanesOf, participantOrder, nodeOrder, backEdges };
+  // 行簇与行主导方向（P6 snake 折行的行感知）：叶子节点按 cy 聚簇成行；
+  // 行内非回边（非 BE 出边、非 artifact 关联）的多数 X 方向定为该行方向。
+  // RTL 行（snake 偶数行）的前进边在 X 上向左——F1/F3/F9 若不看行方向会把刻意折行
+  // 误判成回头/画反（71 实测 F1 52%、F3 44%、F9 10 全是误报）。
+  const ROW_CLUSTER_TOL = 40;
+  const rowOf = new Map<string, number>();
+  const rowDirOf = new Map<number, 1 | -1>();
+  {
+    const leafRows: { id: string; cy: number }[] = [];
+    for (const [id, b] of boxes) {
+      const k = kindOf.get(id);
+      if (!k || CONTAINER_KINDS.has(k) || k === 'boundaryEvent' || k === 'dataObject' || k === 'textAnnotation') continue;
+      leafRows.push({ id, cy: b.y + b.h / 2 });
+    }
+    leafRows.sort((a, b) => a.cy - b.cy);
+    const clusters: number[][] = []; // 每簇存成员序号
+    const clusterCy: number[] = [];
+    for (const n of leafRows) {
+      const last = clusters.length - 1;
+      if (last >= 0 && Math.abs(n.cy - clusterCy[last]!) <= ROW_CLUSTER_TOL) {
+        clusters[last]!.push(leafRows.indexOf(n));
+        const members = clusters[last]!;
+        clusterCy[last] = members.reduce((s, i) => s + leafRows[i]!.cy, 0) / members.length;
+      } else {
+        clusters.push([leafRows.indexOf(n)]);
+        clusterCy.push(n.cy);
+      }
+    }
+    clusters.forEach((members, rowIdx) => {
+      for (const i of members) rowOf.set(leafRows[i]!.id, rowIdx);
+    });
+    const beIds = new Set(beHost.keys());
+    for (const [rowIdx, members] of clusters.entries()) {
+      let forward = 0;
+      let backward = 0;
+      const memberSet = new Set(members.map(i => leafRows[i]!.id));
+      for (const e of edges) {
+        if (e.bpmnType !== 'sequenceFlow') continue;
+        if (backEdges.has(e.id) || beIds.has(e.source)) continue;
+        if (!memberSet.has(e.source) || !memberSet.has(e.target)) continue;
+        const sb = boxes.get(e.source)!;
+        const tb = boxes.get(e.target)!;
+        if ((tb.x + tb.w / 2) > (sb.x + sb.w / 2)) forward++; else backward++;
+      }
+      rowDirOf.set(rowIdx, forward >= backward ? 1 : -1);
+    }
+  }
+
+  return { fixture: name, totalW, totalH, boxes, labels, edges, kindOf, bpmnTagOf, beHost, laneOrder, flowNodeRefs, childLanesOf, participantOrder, nodeOrder, backEdges, rowOf, rowDirOf };
 }
 
 // ============================================================
@@ -703,6 +753,13 @@ export interface SoftMetric {
   detail?: string;     // pass=false 时的额外说明
 }
 
+/** 边的行主导方向：同排行内边跟随其行方向（snake RTL 行向左为前进）；跨行边恒 LTR。 */
+function edgeRowDir(p: ParsedFixture, e: { source: string; target: string }): 1 | -1 {
+  const r = p.rowOf.get(e.source);
+  if (r === undefined || p.rowOf.get(e.target) !== r) return 1;
+  return p.rowDirOf.get(r) ?? 1;
+}
+
 /**
  * F1 主流方向一致：sequence flow（同 pool 内）target.x > source.x 的比例 ≥ 85%。
  * 排除：boundary BE→handler 边、cross-pool（messageFlow / 跨 participant 节点）、artifact 关联。
@@ -728,7 +785,8 @@ function checkF1(p: ParsedFixture): SoftMetric {
     total++;
     const sCx = sb.x + sb.w / 2;
     const tCx = tb.x + tb.w / 2;
-    if (tCx > sCx) forward++;
+    const dir = edgeRowDir(p, e);
+    if (dir === 1 ? tCx > sCx : sCx > tCx) forward++;
   }
   const ratio = total > 0 ? forward / total : 1;
   const pass = ratio >= 0.8;  // CLAUDE.md 允许 convergence gateway 把分支收回（产生少量 back-edge）
@@ -863,7 +921,8 @@ function checkF3(p: ParsedFixture): SoftMetric {
     total++;
     const sCx = sb.x + sb.w / 2;
     const tCx = tb.x + tb.w / 2;
-    if (sCx - tCx > 100) {
+    // 行主导方向感知：RTL 行（snake）里向左是前进，不算回头
+    if ((sCx - tCx) * edgeRowDir(p, e) > 100) {
       back++;
       if (examples.length < 3) examples.push(e.id);
     }
@@ -1174,7 +1233,8 @@ function checkF9(p: ParsedFixture): SoftMetric {
     const tCx = tb.x + tb.w / 2;
     const sCy = sb.y + sb.h / 2;
     const tCy = tb.y + tb.h / 2;
-    if (sCx - tCx <= F9_BACKWARD_TOL) continue;          // X 向前或几乎平
+    // X 向前或几乎平（snake RTL 行内向左为前进，不算画反）
+    if ((sCx - tCx) * edgeRowDir(p, c) <= F9_BACKWARD_TOL) continue;
     if (Math.abs(sCy - tCy) > F9_SAME_ROW_TOL) continue; // 换排（折行/分支落行）不算画反
     // 收敛豁免（同 CLAUDE.md F3 注）：target 另有非回头入边从左侧正常进入 → 本边是两侧
     // 分支汇入居中 sink 的 fan-in（fixture 23 双 handler 汇入 end_error），不是主干画反。
