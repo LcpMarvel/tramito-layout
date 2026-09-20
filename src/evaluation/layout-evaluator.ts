@@ -765,6 +765,7 @@ function edgeRowDir(p: ParsedFixture, e: { source: string; target: string }): 1 
  * 排除：boundary BE→handler 边、cross-pool（messageFlow / 跨 participant 节点）、artifact 关联。
  * 排除：语义回边（p.backEdges——循环结构里**必须**向后的边，如驳回循环）。回边留在分母里
  * 会让 45/47/48/54 这类 fixture 天然 fail，噪声淹没真正的 N 形回头（80 的"正常履约"）。
+ * 只看同排边（同 F3/F9）：跨排 carriage-return / 分支落行是折行的固有形态，不算方向不一致。
  */
 function checkF1(p: ParsedFixture): SoftMetric {
   let total = 0;
@@ -782,9 +783,10 @@ function checkF1(p: ParsedFixture): SoftMetric {
     if (sk === 'dataObject' || tk === 'dataObject' || sk === 'textAnnotation' || tk === 'textAnnotation') continue;
     // 跨 pool（messageFlow）排除：source 与 target 不在同一 pool
     if (!sameOwnerPool(p, e.source, e.target)) continue;
-    total++;
     const sCx = sb.x + sb.w / 2;
     const tCx = tb.x + tb.w / 2;
+    if (Math.abs(sb.y + sb.h / 2 - (tb.y + tb.h / 2)) > F9_SAME_ROW_TOL) continue; // 换排不算回头（同 F3/F9）
+    total++;
     const dir = edgeRowDir(p, e);
     if (dir === 1 ? tCx > sCx : sCx > tCx) forward++;
   }
@@ -901,7 +903,11 @@ function checkF2(p: ParsedFixture): SoftMetric {
  * F3 不 backtrack：同 pool sequence flow 中"明显往回"（source.cx > target.cx + 一个 task 宽）
  * 的比例 ≤ 5%。CLAUDE.md 注："可以接受 convergence gateway 把分支收回主线"——所以阈值
  * 必须容许少量 back edge（多分支收敛常见）。
+ * 只数同排边（|Δcy| ≤ SAME_ROW_TOL，同 F9）：跨排边是折行 carriage-return / 分支落行，
+ * X 跨度由行宽决定，不是 N 形回头（全库实测：F3 的回头分子里同排边为 0 条）。
  */
+const F9_BACKWARD_TOL = 10;
+const F9_SAME_ROW_TOL = 60;
 function checkF3(p: ParsedFixture): SoftMetric {
   let total = 0;
   let back = 0;
@@ -918,9 +924,10 @@ function checkF3(p: ParsedFixture): SoftMetric {
     const tk = p.kindOf.get(e.target);
     if (sk === 'dataObject' || tk === 'dataObject' || sk === 'textAnnotation' || tk === 'textAnnotation') continue;
     if (!sameOwnerPool(p, e.source, e.target)) continue;
-    total++;
     const sCx = sb.x + sb.w / 2;
     const tCx = tb.x + tb.w / 2;
+    if (Math.abs(sb.y + sb.h / 2 - (tb.y + tb.h / 2)) > F9_SAME_ROW_TOL) continue; // 换排不算回头
+    total++;
     // 行主导方向感知：RTL 行（snake）里向左是前进，不算回头
     if ((sCx - tCx) * edgeRowDir(p, e) > 100) {
       back++;
@@ -1176,8 +1183,6 @@ function checkF8(p: ParsedFixture): SoftMetric {
  * （成环边），剩下的 DAG 边都是主干/分支，要求 X 单调向前；同排（cy 接近）却明显向左的
  * DAG 边即「拓扑顺序被画反」。折行链的换行边（target 掉到下一排）不算——那是有意换行。
  */
-const F9_BACKWARD_TOL = 10;
-const F9_SAME_ROW_TOL = 60;
 function checkF9(p: ParsedFixture): SoftMetric {
   const beIds = new Set(p.beHost.keys());
   interface Cand { id: string; source: string; target: string }
