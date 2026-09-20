@@ -177,13 +177,18 @@ F13 降为信息指标（值照算、compare 守门）；F1/F3/F8/F10/F11/F12/F1
 后续若要再开新块，候选：F13 的 5 个折行 fixture 行均衡（末行不齐）、55/77/80/88
 的 F4 族（需各自的前置技术：容器折行断点选择、主+handler 双链配对、分叉感知折行）。
 
-- [x] 89 的 L3 清零（2026-09-20，5485a86 / ec3c720）：P5 残留的全局 label 排布落地——
-     `serializer/transform/label-collision-resolver.ts`：全部 label 就位后 hill-climbing
+- [x] 89 的 L3 清零（2026-09-20，5485a86 / ec3c720）：P5 残留的全局 label 排布落地——     `serializer/transform/label-collision-resolver.ts`：全部 label 就位后 hill-climbing
      收敛总叠放面积（edge label 沿边滑 + gateway/event name 四侧翻）。关键校准：
      压节点按 L2 判据分级（中心落进罚 10⁵、角部擦边轻罚），否则拥挤区候选全被毙；
      **目标改为零叠放**（用户目检：end_1↔flow_end 30% 叠放虽不报警但人眼不能忍，
      50% 阈值只是验收地板）。L3 全库 3 → 0。**至此硬标准 15 条 + 软指标全部规则在
      98 fixture 上零违例**（剩 6 个建档决策项：23-F14、37-F2、55/77/80/88-F4）。
+- [x] P5 卡 5.2 第一刀（2026-09-20，6598f6a）：回边拱走廊重定位——shaping 期
+     clearObstaclesAbove 只查节点不查边，101 的 rollback 拱穿 7 条 fan riser（F10=7）。
+     全部路由成形后按全局视图在 over-the-top / under-the-bottom / 行间空隙里重选走廊
+     （零节点命中 + 零竖直交叉 + 不贴分隔线 + 方向一致防 E3/stub 穿 source）。
+     曾试「无条件下压/上抬 over-everything」，在 38/97/23 换来新交叉已回滚——
+     教训记此：**拱 corridor 必须用全局视图选，不能无脑 over-top**。101 F10 归 0。
 
 ### 下一轮工作块的任务规格（人审通过当前状态后启动）
 
