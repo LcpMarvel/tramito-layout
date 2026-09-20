@@ -94,6 +94,7 @@ export function routeEdges(input: RouteInput): RouteOutput {
   const forkAnchorOverrides = planGatewayForkAnchors(input, edgeTypes);
   // 2c) 双向节点对（2-cycle）：回边改从侧面进 target，避开正向边的竖直走廊（见函数注释）。
   const reversePairTargetOverrides = planReversePairAnchors(input, edgeTypes);
+  const endBottomOverrides = planEndBottomAnchors(input, edgeTypes);
 
   // 3) 对每条 edge 选锚点 + 算路径
   const routes = new Map<string, EdgeRoute>();
@@ -144,9 +145,12 @@ export function routeEdges(input: RouteInput): RouteOutput {
     const styleRule = edgeStyleRules[e.bpmnType];
     const geomAnchors = resolveAnchorsForGeometry(edgeType, anchors, src.box, tgt.box, src.rowDir, tgt.rowDir);
     const reverseTargetOverride = reversePairTargetOverrides.get(e.id);
+    const endBottomOverride = endBottomOverrides.get(e.id);
     const preBlockAnchors = reverseTargetOverride
       ? { source: geomAnchors.source, target: reverseTargetOverride }
-      : geomAnchors;
+      : endBottomOverride
+        ? { source: geomAnchors.source, target: endBottomOverride }
+        : geomAnchors;
     const resolvedAnchors = avoidBlockedSourceAnchor(preBlockAnchors, src.box, obstacles);
     const waypoints = shapePath({
       edgeType,
@@ -438,6 +442,55 @@ function tryMoveUniqueSide(
  * 窄触发：①回边须 cross-lane-up 且存在反向兄弟边；②两节点 cx 有足够横向错位（对齐时侧进无意义、
  * 且竖直仍会叠），阈值借 SHAPER_MARGIN；③侧面竖直优先 L 两段不撞节点，否则保留原走廊路由。
  */
+/**
+ * end event 底进规划：end 同时有「左侧同排进边」（如脊柱边，占住 end 左侧进近走廊）
+ * 和「下方进边」时，把下方边的 target 锚点改成 bottom——否则 forward-step 的 right→left
+ * Z 末段会和脊柱边共线叠走（17 的 取消补偿→结束 与脊柱在 end 左侧叠了 70px，用户目检打回）。
+ * 只在 Z 形（source.right → target.cx → target.bottom）两段都无障碍时才改，否则保持默认。
+ */
+function planEndBottomAnchors(
+  input: RouteInput,
+  edgeTypes: Map<string, ReturnType<typeof classify>>,
+): Map<string, Anchor> {
+  const overrides = new Map<string, Anchor>();
+  const incoming = new Map<string, RouteInputEdge[]>();
+  for (const e of input.edges) {
+    if (e.bpmnType !== 'sequenceFlow') continue;
+    if (!incoming.has(e.target)) incoming.set(e.target, []);
+    incoming.get(e.target)!.push(e);
+  }
+  for (const [tgtId, edges] of incoming) {
+    if (edges.length < 2) continue;
+    const tgt = input.nodes.get(tgtId);
+    if (!tgt || tgt.type !== 'endEvent') continue;
+    const tb = tgt.box;
+    const tCy = tb.y + tb.h / 2;
+    const hasLeftRowEntry = edges.some(e => {
+      const sb = input.nodes.get(e.source)?.box;
+      return sb !== undefined
+        && sb.x + sb.w <= tb.x + 1
+        && Math.abs(sb.y + sb.h / 2 - tCy) <= 60;
+    });
+    if (!hasLeftRowEntry) continue;
+    for (const e of edges) {
+      if (edgeTypes.get(e.id) !== 'forward-step') continue;
+      const src = input.nodes.get(e.source)!;
+      const sb = src.box;
+      const srcCy = sb.y + sb.h / 2;
+      if (srcCy <= tb.y + tb.h + 4) continue;        // source 严格在 target 下方
+      if (tb.x + tb.w / 2 <= sb.x + sb.w) continue;  // target 必须在右侧
+      const start = { x: sb.x + sb.w, y: srcCy };
+      const corner = { x: tb.x + tb.w / 2, y: srcCy };
+      const end = { x: tb.x + tb.w / 2, y: tb.y + tb.h };
+      const obstacles = collectObstacles(input, e, src, tgt, false);
+      if (segmentHitsObstacle(start, corner, obstacles, sb, tb)) continue;
+      if (segmentHitsObstacle(corner, end, obstacles, sb, tb)) continue;
+      overrides.set(e.id, 'bottom');
+    }
+  }
+  return overrides;
+}
+
 function planReversePairAnchors(
   input: RouteInput,
   edgeTypes: Map<string, ReturnType<typeof classify>>,

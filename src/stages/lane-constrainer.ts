@@ -94,6 +94,7 @@ function clearSpineCorridorOfHandlers(
   nodes: Map<string, NodeBox>,
   edges: LaneEdgeInfo[] | undefined,
   handlerGroups: ReadonlyMap<string, ReadonlySet<string>> | undefined,
+  boundaryHosts: ReadonlySet<string> | undefined,
 ): { nodes: Map<string, NodeBox>; maxBottom: number } {
   if (!edges || edges.length === 0 || !handlerGroups || handlerGroups.size === 0) {
     return { nodes, maxBottom: 0 };
@@ -169,23 +170,26 @@ function clearSpineCorridorOfHandlers(
       const members = [...handlerGroups.get(host)!].filter(id => out.has(id));
       if (members.length === 0) continue;
       const groupMinTop = Math.min(...members.map(id => out.get(id)!.y));
-      const dy = bandBottom + SPINE_CORRIDOR_SHIFT_GAP - groupMinTop;
+      const groupMinX = Math.min(...members.map(id => out.get(id)!.x));
+      // host 挂 BE 时多留 BE 净空：handler 下移后 BE 骑 host 底边，其 label 在 BE 下方
+      // 还要 18+4+14——17 初版只留 20px，handler 顶正好压进 取消边界 的 label 区（L2）。
+      const beReserve = boundaryHosts?.has(host) ? 36 : 0;
+      const dy = bandBottom + SPINE_CORRIDOR_SHIFT_GAP + beReserve - groupMinTop;
       if (dy <= 0) continue;
-      // 试移整组，N1 检查：任何 member 不得撞非本组节点
-      const trial = members.map(id => {
+      const hostBox = out.get(host);
+      // 下移同时锚回 host 左下（BE→handler 短潜行，不横跨整个容器底——17 的 取消补偿
+      // 光下移不挪 X 时 handler 漂在右下、BE 线拉满底边，用户目检打回）。X 撞了就只下移。
+      const dx = hostBox ? hostBox.x - groupMinX : 0;
+      const trialAt = (ddx: number) => members.map(id => {
         const b = out.get(id)!;
-        return { id, box: { ...b, y: b.y + dy } };
+        return { id, box: { ...b, x: b.x + ddx, y: b.y + dy } };
       });
       const memberSet = new Set(members);
-      let ok = true;
-      for (const t of trial) {
-        for (const [oid, ob] of out) {
-          if (memberSet.has(oid)) continue;
-          if (overlaps(t.box, ob)) { ok = false; break; }
-        }
-        if (!ok) break;
-      }
-      if (!ok) continue; // 让不开就保持原样（handler 排布是 P3 定的，不硬来）
+      const fits = (trial: { id: string; box: NodeBox }[]) =>
+        trial.every(t => [...out].every(([oid, ob]) => memberSet.has(oid) || !overlaps(t.box, ob)));
+      const trialAnchored = dx !== 0 ? trialAt(dx) : null;
+      const trial = trialAnchored && fits(trialAnchored) ? trialAnchored : trialAt(0);
+      if (!fits(trial)) continue; // 让不开就保持原样（handler 排布是 P3 定的，不硬来）
       for (const t of trial) {
         out.set(t.id, t.box);
         maxBottom = Math.max(maxBottom, t.box.y + t.box.h);
@@ -265,7 +269,7 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
       }
     }
     const snapped = snapNoLanePureChain(nodes, edges, input.backEdgeIds, input.boundaryHosts);
-    const guarded = clearSpineCorridorOfHandlers(snapped, edges, input.handlerGroups);
+    const guarded = clearSpineCorridorOfHandlers(snapped, edges, input.handlerGroups, input.boundaryHosts);
     if (guarded.maxBottom > 0) poolHeight = Math.max(poolHeight, guarded.maxBottom);
     return {
       nodes: guarded.nodes,

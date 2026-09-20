@@ -251,10 +251,16 @@ export function shapePath(input: PathShapeInput): Waypoint[] {
     return [start, { x: start.x, y: midY }, { x: approachX, y: midY }, { x: approachX, y: end.y }, end];
   }
 
+  // 5-pre. right→bottom：end event 底进（planEndBottomAnchors 预验过无障碍才改锚）。
+  //    出 source 右边沿 source 行横到 target.cx，再竖直入 target 底——避开与脊柱边
+  //    共享 target 左侧进近走廊的叠线（17 的 取消补偿→结束）。
+  if (sourceAnchor === 'right' && targetAnchor === 'bottom') {
+    return [start, { x: end.x, y: start.y }, end];
+  }
+
   // 5. 拱形上方：bottom↔bottom（back-edge-up-left）
   //    source 在右下，target 在左上：先出 source 底，绕到 source 下方，平移到 target 下方，进 target 底
-  if (sourceAnchor === 'bottom' && targetAnchor === 'bottom') {
-    let archY = Math.max(start.y, end.y) + ARCH_BASE_OFFSET + channel * CHANNEL_GAP;
+  if (sourceAnchor === 'bottom' && targetAnchor === 'bottom') {    let archY = Math.max(start.y, end.y) + ARCH_BASE_OFFSET + channel * CHANNEL_GAP;
     // 1 档避障：让拱形 Y 低于所有中间节点的 bottom
     archY = clearObstaclesBelow(archY, start.x, end.x, input.obstacles, input.source, input.target);
     return [start, { x: start.x, y: archY }, { x: end.x, y: archY }, end];
