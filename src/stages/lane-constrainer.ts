@@ -43,6 +43,8 @@ export interface LaneConstrainInput {
   boundaryHosts?: ReadonlySet<string>;
   /** 语义回边（BackEdgeResolver）：无 lane pool 的纯链 Y snap 判链时剔除 */
   backEdgeIds?: ReadonlySet<string>;
+  /** BE host → 其 handler 节点组：脊柱走廊守卫用——handler 组挡住同排脊柱对的直线走廊时整组下移 */
+  handlerGroups?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export interface LaneConstrainOutput {
@@ -79,6 +81,118 @@ const MIN_X_GAP = 30;
 function isEventType(t: FlowNodeType): boolean {
   return t === 'startEvent' || t === 'endEvent'
     || t === 'intermediateCatchEvent' || t === 'intermediateThrowEvent';
+}
+
+/**
+ * 脊柱走廊守卫：同排相邻脊柱对（BFS 最短路径上的连续节点，|Δcy| ≤ 60）的直线走廊里
+ * 若卡着某个 BE 的 handler 组（17 的 取消补偿、23 的 shipping_status handler），脊柱边
+ * 只能绕顶（F14 的 C 族）。把整组 handler 下移到走廊带之下（保持组内相对位置），
+ * N1 撞节点就整组回退——让不出干净走廊就保持原样，不制造硬违例。
+ */
+const SPINE_CORRIDOR_SHIFT_GAP = 20;
+function clearSpineCorridorOfHandlers(
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+  handlerGroups: ReadonlyMap<string, ReadonlySet<string>> | undefined,
+): { nodes: Map<string, NodeBox>; maxBottom: number } {
+  if (!edges || edges.length === 0 || !handlerGroups || handlerGroups.size === 0) {
+    return { nodes, maxBottom: 0 };
+  }
+  const handlerOf = new Map<string, string>(); // nodeId → hostId
+  for (const [host, members] of handlerGroups) for (const id of members) handlerOf.set(id, host);
+
+  // BFS 最短脊柱（同 F14）：从所有 start 到所有 end 取第一条找到的；无 start/end 就无脊柱可守
+  const inDeg = new Map<string, number>();
+  const outAdj = new Map<string, string[]>();
+  for (const e of edges) {
+    if (!nodes.has(e.source) || !nodes.has(e.target)) continue;
+    inDeg.set(e.target, (inDeg.get(e.target) ?? 0) + 1);
+    if (!outAdj.has(e.source)) outAdj.set(e.source, []);
+    outAdj.get(e.source)!.push(e.target);
+  }
+  const isEnd = (id: string) => (outAdj.get(id) ?? []).length === 0;
+  let spine: string[] = [];
+  for (const id of nodes.keys()) {
+    if ((inDeg.get(id) ?? 0) > 0) continue;
+    const parent = new Map<string, string>();
+    const queue = [id];
+    const seen = new Set([id]);
+    let hit: string | null = null;
+    while (queue.length > 0 && hit === null) {
+      const u = queue.shift()!;
+      if (u !== id && isEnd(u)) { hit = u; break; }
+      for (const v of outAdj.get(u) ?? []) {
+        if (seen.has(v)) continue;
+        seen.add(v);
+        parent.set(v, u);
+        queue.push(v);
+      }
+    }
+    if (hit !== null) {
+      const path = [hit];
+      let cur = hit;
+      while (cur !== id) { cur = parent.get(cur)!; path.unshift(cur); }
+      if (path.length > spine.length) spine = path;
+    }
+  }
+  if (spine.length < 2) return { nodes, maxBottom: 0 };
+  const spineSet = new Set(spine);
+
+  const out = new Map(nodes);
+  const overlaps = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
+    a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  let maxBottom = 0;
+  for (let i = 0; i + 1 < spine.length; i++) {
+    const ub = out.get(spine[i]!)!;
+    const vb = out.get(spine[i + 1]!)!;
+    const uCy = ub.y + ub.h / 2;
+    const vCy = vb.y + vb.h / 2;
+    // 严格同排才移：cy 不同（如 23 的 36px 差）时脊柱边本来就画不直（模板 Z），
+    // 移 handler 救不了它，只会白吃 F10/F13 代价。
+    if (Math.abs(uCy - vCy) > 4) continue;
+    if (ub.x >= vb.x) continue;               // 脊柱应 LTR，回绕段不是直线走廊
+    const bandTop = Math.min(ub.y, vb.y);
+    const bandBottom = Math.max(ub.y + ub.h, vb.y + vb.h);
+    const xLo = ub.x + ub.w;
+    const xHi = vb.x;
+    if (xHi <= xLo) continue;
+
+    // 找出所有与走廊相交的 handler 组（按 host 去重）
+    const blockingHosts = new Set<string>();
+    for (const [id, b] of out) {
+      const host = handlerOf.get(id);
+      if (!host || spineSet.has(id)) continue;
+      if (overlaps(b, { x: xLo, y: bandTop, w: xHi - xLo, h: bandBottom - bandTop })) blockingHosts.add(host);
+    }
+    for (const host of blockingHosts) {
+      const members = [...handlerGroups.get(host)!].filter(id => out.has(id));
+      if (members.length === 0) continue;
+      const groupMinTop = Math.min(...members.map(id => out.get(id)!.y));
+      const dy = bandBottom + SPINE_CORRIDOR_SHIFT_GAP - groupMinTop;
+      if (dy <= 0) continue;
+      // 试移整组，N1 检查：任何 member 不得撞非本组节点
+      const trial = members.map(id => {
+        const b = out.get(id)!;
+        return { id, box: { ...b, y: b.y + dy } };
+      });
+      const memberSet = new Set(members);
+      let ok = true;
+      for (const t of trial) {
+        for (const [oid, ob] of out) {
+          if (memberSet.has(oid)) continue;
+          if (overlaps(t.box, ob)) { ok = false; break; }
+        }
+        if (!ok) break;
+      }
+      if (!ok) continue; // 让不开就保持原样（handler 排布是 P3 定的，不硬来）
+      for (const t of trial) {
+        out.set(t.id, t.box);
+        maxBottom = Math.max(maxBottom, t.box.y + t.box.h);
+      }
+    }
+  }
+  return { nodes: out, maxBottom };
 }
 
 /** 无 lane pool 的纯链 Y snap：按连通分量各自判定——剔语义回边后是全覆盖纯链的分量，
@@ -150,8 +264,11 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
         ));
       }
     }
+    const snapped = snapNoLanePureChain(nodes, edges, input.backEdgeIds, input.boundaryHosts);
+    const guarded = clearSpineCorridorOfHandlers(snapped, edges, input.handlerGroups);
+    if (guarded.maxBottom > 0) poolHeight = Math.max(poolHeight, guarded.maxBottom);
     return {
-      nodes: snapNoLanePureChain(nodes, edges, input.backEdgeIds, input.boundaryHosts),
+      nodes: guarded.nodes,
       laneBoxes: new Map(),
       leafOrder: [],
       allLanes: [],

@@ -41,7 +41,7 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_transaction" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_transaction" bpmnElement="process_transaction">
       <bpmndi:BPMNShape id="process_transaction_di" bpmnElement="process_transaction">
-        <dc:Bounds x="0" y="0" width="930" height="254" />
+        <dc:Bounds x="0" y="0" width="930" height="316" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
@@ -74,7 +74,7 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="task_cancel_handler_di" bpmnElement="task_cancel_handler">
-        <dc:Bounds x="694" y="101.33333333333333" width="100" height="80" />
+        <dc:Bounds x="694" y="216" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
         <dc:Bounds x="874" y="96" width="36" height="36" />
@@ -95,20 +95,18 @@
         <di:waypoint x="178" y="114" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_2_di" bpmnElement="main_flow_2">
-        <di:waypoint x="396" y="32" />
-        <di:waypoint x="396" y="22" />
-        <di:waypoint x="892" y="22" />
-        <di:waypoint x="892" y="96" />
+        <di:waypoint x="614" y="114" />
+        <di:waypoint x="874" y="114" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_cancel_di" bpmnElement="main_flow_cancel">
         <di:waypoint x="198" y="214" />
-        <di:waypoint x="198" y="236" />
-        <di:waypoint x="744" y="236" />
-        <di:waypoint x="744" y="181.33333333333331" />
+        <di:waypoint x="198" y="196" />
+        <di:waypoint x="694" y="196" />
+        <di:waypoint x="694" y="216" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_cancel_end_di" bpmnElement="main_flow_cancel_end">
-        <di:waypoint x="794" y="141.33333333333331" />
-        <di:waypoint x="834" y="141.33333333333331" />
+        <di:waypoint x="794" y="256" />
+        <di:waypoint x="834" y="256" />
         <di:waypoint x="834" y="114" />
         <di:waypoint x="874" y="114" />
       </bpmndi:BPMNEdge>

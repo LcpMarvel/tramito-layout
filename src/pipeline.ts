@@ -519,12 +519,19 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
     const edgesForLane = proc.sequenceFlows
       .filter(sf => mainReachable.has(sf.source) && mainReachable.has(sf.target))
       .map(sf => ({ id: sf.id, source: sf.source, target: sf.target }));
+    const handlerGroups = new Map<string, Set<string>>();
+    for (const [nodeId, meta] of ctx.handlerNodeMeta) {
+      if (meta.procId !== proc.id) continue;
+      if (!handlerGroups.has(meta.hostId)) handlerGroups.set(meta.hostId, new Set());
+      handlerGroups.get(meta.hostId)!.add(nodeId);
+    }
     const constrain = laneConstrain({
       nodes: placement.nodes, width: placement.bounds.width, height: placement.bounds.height, lanes: proc.lanes,
       nodeMeta: nodeMetaForLane,
       edges: edgesForLane,
       boundaryHosts: new Set(proc.flowNodes.filter(fn => fn.boundaryEventIds.length > 0).map(fn => fn.id)),
       backEdgeIds: reversedEdgeIds,
+      handlerGroups,
     });
     ctx.ms.constrain += performance.now() - tc;
     if (constrain.nodeRowDir) {
