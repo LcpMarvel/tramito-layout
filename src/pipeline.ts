@@ -519,6 +519,7 @@ async function phaseElkPlacementAndLanes(ctx: PipelineContext): Promise<void> {
       nodeMeta: nodeMetaForLane,
       edges: edgesForLane,
       boundaryHosts: new Set(proc.flowNodes.filter(fn => fn.boundaryEventIds.length > 0).map(fn => fn.id)),
+      backEdgeIds: reversedEdgeIds,
     });
     ctx.ms.constrain += performance.now() - tc;
     if (constrain.nodeRowDir) {

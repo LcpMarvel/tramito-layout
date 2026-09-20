@@ -9,6 +9,7 @@ import type { FlowNodeType, Lane } from '../loader/types.ts';
 import type { LaneBox, NodeBox } from './types.ts';
 import { LANE_PAD, LANE_MIN_H, POOL_PAD_X, ioSpecExtraBelow, isGatewayType, eventLabelSize } from '../layout/node-sizes.ts';
 import { allLaneOrder, leafLaneOrder, nodeToLeafLane } from '../layout/lane-resolver.ts';
+import { linearOrder } from './compactor.ts';
 
 export interface LaneNodeMeta {
   type: FlowNodeType;
@@ -22,6 +23,7 @@ export interface LaneNodeMeta {
 export interface LaneEdgeInfo {
   source: string;
   target: string;
+  id?: string;
 }
 
 export interface LaneConstrainInput {
@@ -39,6 +41,8 @@ export interface LaneConstrainInput {
   edges?: LaneEdgeInfo[];
   /** 挂了 boundary event 的 host 节点 id：B1 要 BE 半内半外骑 host 底边，lane 底部要预留净空 */
   boundaryHosts?: ReadonlySet<string>;
+  /** 语义回边（BackEdgeResolver）：无 lane pool 的纯链 Y snap 判链时剔除 */
+  backEdgeIds?: ReadonlySet<string>;
 }
 
 export interface LaneConstrainOutput {
@@ -77,10 +81,34 @@ function isEventType(t: FlowNodeType): boolean {
     || t === 'intermediateCatchEvent' || t === 'intermediateThrowEvent';
 }
 
+/** 无 lane pool 的纯链 Y snap：剔语义回边后是全覆盖纯链 → 全员 cy snap 到中位数（X 不动）。 */
+function snapNoLanePureChain(
+  nodes: Map<string, NodeBox>,
+  edges: LaneEdgeInfo[] | undefined,
+  backEdgeIds: ReadonlySet<string> | undefined,
+  boundaryHosts: ReadonlySet<string> | undefined,
+): Map<string, NodeBox> {
+  if (!edges || edges.length === 0) return new Map(nodes);
+  if (boundaryHosts && boundaryHosts.size > 0) return new Map(nodes);
+  const order = linearOrder(nodes, edges, backEdgeIds);
+  if (!order) return new Map(nodes);
+  const cys = order.map(id => nodes.get(id)!.y + nodes.get(id)!.h / 2).sort((a, b) => a - b);
+  const medianCy = cys[Math.floor(cys.length / 2)]!;
+  const out = new Map<string, NodeBox>();
+  for (const [id, b] of nodes) {
+    const cy = b.y + b.h / 2;
+    out.set(id, Math.abs(cy - medianCy) > 0.5 ? { ...b, y: medianCy - b.h / 2 } : b);
+  }
+  return out;
+}
+
 export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
   const { nodes, lanes, width, nodeMeta, edges } = input;
 
   // 没有 lane 的 pool：原样返回，poolHeight 由节点决定。
+  // 例外：纯链（剔语义回边后 in/out ≤1 全覆盖）做中位 cy snap——ELK 在带回边的链上会
+  // 把节点摆成 ±25px 错层（回边拉拽分层），主流相邻边各吃一个 2 弯 Z（78 的 F14）。
+  // 与 subprocess-layout 的内链 snap 同一规则。有 BE host 不折腾（净空关系）。
   if (lanes.length === 0) {
     let poolHeight = input.height;
     if (poolHeight === undefined) {
@@ -97,7 +125,7 @@ export function laneConstrain(input: LaneConstrainInput): LaneConstrainOutput {
       }
     }
     return {
-      nodes: new Map(nodes),
+      nodes: snapNoLanePureChain(nodes, edges, input.backEdgeIds, input.boundaryHosts),
       laneBoxes: new Map(),
       leafOrder: [],
       allLanes: [],
