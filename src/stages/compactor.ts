@@ -55,6 +55,15 @@ const LONG_CHAIN_MIN_ROW_NODES = 3;
 // 折行只为治「长链」（feedback Problem 2 的 ~20 节点链）；7 取自 09-multiinstance（需要折）
 // 与 05-artifacts（不能折，5 节点）之间。
 const LONG_CHAIN_MIN_WRAP_NODES = 7;
+// 「胖成员链」豁免节点数门槛：74 的 start + 3 个 subprocess + end 只有 5 个节点，
+// 但单行 2100px 已经很笨重——问题不是链长而是行宽。绝对宽度门槛让短链照常单排
+// （55 的 1440px 不折），只有明确过宽的链才折（≥ 4 节点保证 2+2 起步的行结构）。
+const LONG_CHAIN_WRAP_MIN_WIDTH = 1600;
+const FAT_CHAIN_MIN_WRAP_NODES = 4;
+// 胖成员链的折行触发比长链更严：compactor 量的是节点 bbox（不含 pool 边框 padding），
+// evaluator 的 F4 量的是含 pool 框的画布——73 这种 6.5 的刚好「compactor 超线、
+// evaluator 本来及格」，折了反而出拱线绕顶。7 = 6 + pool padding 的保守余量。
+const FAT_CHAIN_WRAP_ASPECT = 7;
 
 export function compact(input: CompactInput): CompactOutput {
   if (input.nodes.size <= 1) {
@@ -203,13 +212,20 @@ function wrapLongLinearChain(
   backEdgeIds?: ReadonlySet<string>,
 ): Map<string, NodeBox> | null {
   const order = linearOrder(nodes, edges, backEdgeIds);
-  if (!order || order.length < LONG_CHAIN_MIN_WRAP_NODES) return null;
+  if (!order) return null;
 
   // 宽高比驱动：单行摆得下（≤ 6:1）就不折；要折则选能把宽高比压到 ≤ 4 的最小行数。
   const boxes = Array.from(nodes.values());
   const singleW = Math.max(...boxes.map(b => b.x + b.w)) - Math.min(...boxes.map(b => b.x));
   const singleH = Math.max(...boxes.map(b => b.y + b.h)) - Math.min(...boxes.map(b => b.y));
-  if (singleH <= 0 || singleW / singleH <= LONG_CHAIN_WRAP_ASPECT) return null;
+  if (singleH <= 0) return null;
+  const singleAspect = singleW / singleH;
+  // 门槛二选一：节点数够（长链，aspect > 6）或单行绝对宽度够宽（胖成员链，aspect > 7）
+  const isLongChain = order.length >= LONG_CHAIN_MIN_WRAP_NODES && singleAspect > LONG_CHAIN_WRAP_ASPECT;
+  const isFatChain = order.length >= FAT_CHAIN_MIN_WRAP_NODES
+    && singleW > LONG_CHAIN_WRAP_MIN_WIDTH
+    && singleAspect > FAT_CHAIN_WRAP_ASPECT;
+  if (!isLongChain && !isFatChain) return null;
 
   let rowCount = 2;
   const maxRows = Math.max(2, Math.floor(order.length / LONG_CHAIN_MIN_ROW_NODES));

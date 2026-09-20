@@ -78,7 +78,7 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_definitions_three_subprocess_siblings" name="BPMNDiagram">
     <bpmndi:BPMNPlane id="BPMNPlane_definitions_three_subprocess_siblings" bpmnElement="process_procurement">
       <bpmndi:BPMNShape id="process_procurement_di" bpmnElement="process_procurement">
-        <dc:Bounds x="0" y="0" width="2382" height="228" />
+        <dc:Bounds x="0" y="0" width="1550" height="496" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="start_main_di" bpmnElement="start_main">
         <dc:Bounds x="62" y="96" width="36" height="36" />
@@ -129,30 +129,30 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="sub_contract_di" bpmnElement="sub_contract" isExpanded="true">
-        <dc:Bounds x="1610" y="32" width="636" height="164" />
+        <dc:Bounds x="62" y="312" width="636" height="164" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="contract_start_di" bpmnElement="contract_start">
-        <dc:Bounds x="1642" y="106" width="36" height="36" />
+        <dc:Bounds x="94" y="386" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1632" y="146" width="56" height="14" />
+          <dc:Bounds x="84" y="426" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="contract_task_legal_di" bpmnElement="contract_task_legal">
-        <dc:Bounds x="1778" y="84" width="100" height="80" />
+        <dc:Bounds x="230" y="364" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="contract_task_sign_di" bpmnElement="contract_task_sign">
-        <dc:Bounds x="1978" y="84" width="100" height="80" />
+        <dc:Bounds x="430" y="364" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="contract_end_di" bpmnElement="contract_end">
-        <dc:Bounds x="2178" y="106" width="36" height="36" />
+        <dc:Bounds x="630" y="386" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2168" y="146" width="56" height="14" />
+          <dc:Bounds x="620" y="426" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="end_main_di" bpmnElement="end_main">
-        <dc:Bounds x="2326" y="96" width="36" height="36" />
+        <dc:Bounds x="778" y="376" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="2316" y="136" width="56" height="14" />
+          <dc:Bounds x="768" y="416" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="demand_flow_1_di" bpmnElement="demand_flow_1">
@@ -180,16 +180,16 @@
         <di:waypoint x="1462" y="124" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="contract_flow_1_di" bpmnElement="contract_flow_1">
-        <di:waypoint x="1678" y="124" />
-        <di:waypoint x="1778" y="124" />
+        <di:waypoint x="130" y="404" />
+        <di:waypoint x="230" y="404" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="contract_flow_2_di" bpmnElement="contract_flow_2">
-        <di:waypoint x="1878" y="124" />
-        <di:waypoint x="1978" y="124" />
+        <di:waypoint x="330" y="404" />
+        <di:waypoint x="430" y="404" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="contract_flow_3_di" bpmnElement="contract_flow_3">
-        <di:waypoint x="2078" y="124" />
-        <di:waypoint x="2178" y="124" />
+        <di:waypoint x="530" y="404" />
+        <di:waypoint x="630" y="404" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_1_di" bpmnElement="main_flow_1">
         <di:waypoint x="98" y="114" />
@@ -200,12 +200,14 @@
         <di:waypoint x="894" y="114" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_3_di" bpmnElement="main_flow_3">
-        <di:waypoint x="1530" y="114" />
-        <di:waypoint x="1610" y="114" />
+        <di:waypoint x="1212" y="196" />
+        <di:waypoint x="1212" y="254" />
+        <di:waypoint x="380" y="254" />
+        <di:waypoint x="380" y="312" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="main_flow_4_di" bpmnElement="main_flow_4">
-        <di:waypoint x="2246" y="114" />
-        <di:waypoint x="2326" y="114" />
+        <di:waypoint x="698" y="394" />
+        <di:waypoint x="778" y="394" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
