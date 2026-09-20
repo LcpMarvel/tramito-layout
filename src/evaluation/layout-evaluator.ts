@@ -1291,17 +1291,49 @@ function checkF10(p: ParsedFixture): SoftMetric {
   }
   let crossings = 0;
   let ex = '';
-  for (let i = 0; i < segs.length; i++) {
-    for (let j = i + 1; j < segs.length; j++) {
-      const s = segs[i]!, t = segs[j]!;
-      if (s.edgeId === t.edgeId) continue;
-      if (s.horizontal === t.horizontal) continue; // 平行/共线不算交叉
-      const h = s.horizontal ? s : t;
-      const v = s.horizontal ? t : s;
+  // 共线重叠段先合并成「一条视觉线」再数交叉：fan-in 归一把 N 条边的走廊/riser 收在
+  // 同一根线上（40 的 4 条 reject 共 y=142 横干线 + 共 x=228 落柱），每条各计一次 =
+  // 把一根总线数成 N 倍。横竖两向都合并；合并后成员集合有交的线对不再互数。
+  interface VLine { vertical: boolean; at: number; lo: number; hi: number; members: Set<string> }
+  const lineMap = new Map<string, { lo: number; hi: number; members: Set<string> }[]>();
+  for (const s of segs) {
+    const key = `${s.horizontal ? 'h' : 'v'}:${Math.round(s.horizontal ? s.y1 : s.x1)}`;
+    if (!lineMap.has(key)) lineMap.set(key, []);
+    lineMap.get(key)!.push({
+      lo: s.horizontal ? s.x1 : s.y1,
+      hi: s.horizontal ? s.x2 : s.y2,
+      members: new Set([s.edgeId]),
+    });
+  }
+  const lines: VLine[] = [];
+  for (const [key, list] of lineMap) {
+    const vertical = key.startsWith('v:');
+    const at = Number(key.slice(2));
+    list.sort((a, b) => a.lo - b.lo);
+    let cur = { lo: list[0]!.lo, hi: list[0]!.hi, members: new Set(list[0]!.members) };
+    for (let i = 1; i < list.length; i++) {
+      const n = list[i]!;
+      if (n.lo <= cur.hi + 2) {
+        cur.hi = Math.max(cur.hi, n.hi);
+        for (const m of n.members) cur.members.add(m);
+      } else {
+        lines.push({ vertical, at, ...cur });
+        cur = { lo: n.lo, hi: n.hi, members: new Set(n.members) };
+      }
+    }
+    lines.push({ vertical, at, ...cur });
+  }
+  const hlines = lines.filter(l => !l.vertical);
+  const vlines = lines.filter(l => l.vertical);
+  for (const h of hlines) {
+    for (const v of vlines) {
+      let shared = false;
+      for (const m of h.members) if (v.members.has(m)) { shared = true; break; }
+      if (shared) continue;
       // 严格不等式：交点必须落在两段的**内部**，端点接触（fan-in 合流、共享节点出口）不算
-      if (v.x1 > h.x1 && v.x1 < h.x2 && h.y1 > v.y1 && h.y1 < v.y2) {
+      if (v.at > h.lo && v.at < h.hi && h.at > v.lo && h.at < v.hi) {
         crossings++;
-        if (!ex) ex = `${s.edgeId} × ${t.edgeId} @(${Math.round(v.x1)},${Math.round(h.y1)})`;
+        if (!ex) ex = `${[...h.members][0]} × ${[...v.members][0]} @(${v.at},${h.at})`;
       }
     }
   }
