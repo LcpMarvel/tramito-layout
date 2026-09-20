@@ -1415,8 +1415,8 @@ function checkF13(p: ParsedFixture): SoftMetric {
  * F14 主干拐点：start→end 最短路径（BFS，sequenceFlow 有向图）上所有边的拐点总数
  * ≤ 2 × 路径上 gateway 数。主干是观众眼睛走的那条线——它每多一个弯，图就难读一分；
  * gateway 是合法拐点的唯一来源（进出分支换行各 1）。多 start/end 取各对里最差。
- * 换行边（source/target cy 差 > 60px，如 13 的整行 wrap）免 2 个弯——折行本身就要 2 弯，
- * 那是有意换行不是 spine 抖动（同 F9 的换排豁免）。
+ * 换行边（source/target cy 差 > 60px，折行 carriage-return / 分支落行）整段豁免——
+ * 它是折行模型认可的关节，且绕障加弯合法（06 绕 SLA 注解）；同 F9 的换排豁免。
  */
 const F14_ROW_CHANGE_TOL = 60;
 function checkF14(p: ParsedFixture): SoftMetric {
@@ -1430,8 +1430,11 @@ function checkF14(p: ParsedFixture): SoftMetric {
     if (!adj.has(e.source)) adj.set(e.source, []);
     adj.get(e.source)!.push({ edgeId: e.id, target: e.target });
     const raw = Math.max(0, e.waypoints.length - 2);
+    // 换排边（折行 carriage-return / 分支落行）整段豁免：它是折行模型本身认可的「关节」，
+    // 多出来的弯往往是绕 annotation 之类的合法避障（06 的 flow_4 绕 SLA 注解吃 6 点）。
+    // F14 要量的脊柱直线度只对「行内 zigzag」有意义（101 那种），跨排关节不该扣分。
     const rowChange = Math.abs((sb.y + sb.h / 2) - (tb.y + tb.h / 2)) > F14_ROW_CHANGE_TOL;
-    edgeBends.set(e.id, rowChange ? Math.max(0, raw - 2) : raw);
+    edgeBends.set(e.id, rowChange ? 0 : raw);
   }
   const starts = p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'startEvent');
   const ends = new Set(p.nodeOrder.filter(id => p.bpmnTagOf.get(id) === 'endEvent'));
