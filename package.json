@@ -1,6 +1,6 @@
 {
   "name": "tramito-layout",
-  "version": "2.7.2",
+  "version": "2.8.0",
   "description": "A BPMN layout compiler: ELK-BPMN JSON in, laid-out BPMN 2.0 XML out. elkjs placement + hand-rolled edge routing.",
   "type": "module",
   "license": "Apache-2.0",
