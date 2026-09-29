@@ -203,6 +203,10 @@ export class ModelBuilder {
     // Collect sequence flows
     this.collectSequenceFlows(participant.edges ?? [], process.flowElements);
 
+    // Collect associations from edges（与 buildProcess 对称：漏了会把 association 的语义元素丢掉，
+    // 只剩 DI 引用——非良构 BPMN，bpmn.io 导入时 unresolved reference。见 fixture 102）
+    this.collectAssociations(participant.edges ?? [], process.artifacts);
+
     // Collect data associations and attach to flow elements (BPMN spec compliance)
     this.collectDataAssociations(participant.edges ?? [], process.flowElements);
 

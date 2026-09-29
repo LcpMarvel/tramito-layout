@@ -227,6 +227,29 @@ describe('layoutBpmnFlat — 端到端出 XML', () => {
       expect(xml).toContain('BPMNDiagram');
     }
   });
+
+  // 回归（2.8.0 bug，fixture 102 同源）：带 pools 时 association 边只产 DI、不产语义元素——
+  // buildProcessFromParticipant 漏调 collectAssociations，输出非良构 BPMN（DI 引用不存在的元素，
+  // bpmn.io 导入时 unresolved reference）。无 pools 的单 process 路径不受影响。
+  it('pools + association：语义层必须产出 <bpmn:association>，与 DI 成对', async () => {
+    const { xml } = await layoutBpmnFlat({
+      pools: [{ id: 'pool_1', name: 'Kitchen' }],
+      nodes: [
+        { id: 'start_1', type: 'startEvent', name: 'Start' },
+        { id: 'task_2', type: 'userTask', name: 'Cook' },
+        { id: 'end_3', type: 'endEvent', name: 'Done' },
+        { id: 'note_4', type: 'textAnnotation', name: 'high heat' },
+      ],
+      edges: [
+        { id: 'f_5', source: 'start_1', target: 'task_2' },
+        { id: 'f_6', source: 'task_2', target: 'end_3' },
+        { id: 'a_7', source: 'task_2', target: 'note_4', type: 'association' },
+      ],
+    });
+    expect((xml.match(/<bpmn:association/g) ?? []).length).toBe(1);
+    expect(xml).toContain('<bpmn:association id="a_7"');
+    expect(xml).toContain('bpmnElement="a_7"');
+  });
 });
 
 // 回归：扁平专属引用错必须在「扁平词汇」层报清楚，而不是静默吞节点 / 崩进程 / 冒误导性 EDGE_ENDPOINT_MISSING。

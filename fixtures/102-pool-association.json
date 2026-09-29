@@ -1,0 +1,72 @@
+{
+  "id": "definitions_pool_association",
+  "bpmn": {
+    "targetNamespace": "http://example.com/test-pool-association",
+    "exporter": "ELK-BPMN Test Generator",
+    "exporterVersion": "1.0"
+  },
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.spacing.nodeNode": 50,
+    "elk.layered.spacing.nodeNodeBetweenLayers": 80,
+    "elk.partitioning.activate": true
+  },
+  "children": [
+    {
+      "id": "collaboration_1",
+      "bpmn": {
+        "type": "collaboration",
+        "name": "厨房协作"
+      },
+      "children": [
+        {
+          "id": "pool_kitchen",
+          "bpmn": {
+            "type": "participant",
+            "name": "厨房",
+            "processRef": "process_kitchen"
+          },
+          "children": [
+            {
+              "id": "lane_cook",
+              "layoutOptions": { "elk.partitioning.partition": 0 },
+              "bpmn": { "type": "lane", "name": "厨师" },
+              "children": [
+                {
+                  "id": "start_1",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "startEvent", "name": "开始" },
+                  "labels": [{ "text": "开始" }]
+                },
+                {
+                  "id": "task_2",
+                  "width": 100, "height": 80,
+                  "bpmn": { "type": "userTask", "name": "烹饪" },
+                  "labels": [{ "text": "烹饪" }]
+                },
+                {
+                  "id": "end_3",
+                  "width": 36, "height": 36,
+                  "bpmn": { "type": "endEvent", "name": "完成" },
+                  "labels": [{ "text": "完成" }]
+                }
+              ]
+            },
+            {
+              "id": "note_4",
+              "width": 100, "height": 60,
+              "bpmn": { "type": "textAnnotation", "name": "大火快炒" },
+              "labels": [{ "text": "大火快炒" }]
+            }
+          ],
+          "edges": [
+            { "id": "flow_5", "sources": ["start_1"], "targets": ["task_2"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "flow_6", "sources": ["task_2"], "targets": ["end_3"], "bpmn": { "type": "sequenceFlow" } },
+            { "id": "assoc_7", "sources": ["task_2"], "targets": ["note_4"], "bpmn": { "type": "association" } }
+          ]
+        }
+      ]
+    }
+  ]
+}
