@@ -152,7 +152,7 @@ scripts/
   render-bpmn.ts           # BPMN XML → out-bpmn-png/*.png
   check-layout.ts          # E/N/B/L 硬标准 + F 软指标
   export-ai-debug-bundle.ts
-fixtures/                  # 34 个覆盖用例
+fixtures/                  # 98 个覆盖用例
 docs/layout-lessons.md     # 布局历史经验与长期工程原则
 docs/layout-fix-workflow.md # 用户 JSON 问题 → fixture → 复现 → 修复流程
 ```

@@ -152,7 +152,7 @@ scripts/
   render-bpmn.ts           # BPMN XML → out-bpmn-png/*.png
   check-layout.ts          # E/N/B/L hard criteria + F soft metrics
   export-ai-debug-bundle.ts
-fixtures/                  # 34 coverage cases
+fixtures/                  # 98 coverage cases
 docs/layout-lessons.md     # layout history & long-term engineering principles
 docs/layout-fix-workflow.md # user JSON issue → fixture → reproduce → fix loop
 ```

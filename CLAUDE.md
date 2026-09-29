@@ -169,7 +169,7 @@ tramito-layout/
   README.md                       # 当前包使用方式与架构说明
   CLAUDE.md                       # 本文件
   package.json                    # bun + elkjs + bpmn-moddle，无其他重依赖
-  fixtures/                       # 34 个测试输入 JSON（01-37，编号不连续）
+  fixtures/                       # 98 个测试输入 JSON（01-101，编号不连续）
   out-xml/                        # `bun run fixtures:xml` 产物
   out-bpmn-png/                   # `bun run fixtures:png` 产物
   out-ai-debug/                   # `bun run debug:ai ...` 诊断包（gitignore）

@@ -46,3 +46,7 @@ bun.lockb
 /.kotlin/
 *.class
 *.jar
+
+# GitHub Pages demo build artifacts
+/demo/generated/
+/demo/dist/
