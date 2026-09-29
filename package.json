@@ -3,6 +3,13 @@
   "version": "2.7.1",
   "description": "ELK-BPMN JSON → laid-out BPMN 2.0 XML. ELK 摆位 + 自研 EdgeRouter.",
   "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LcpMarvel/tramito-layout.git"
+  },
+  "homepage": "https://github.com/LcpMarvel/tramito-layout#readme",
+  "bugs": "https://github.com/LcpMarvel/tramito-layout/issues",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,9 +41,7 @@
     "ai:optimize": "bun run scripts/ai-optimize-layout.ts",
     "diagnose:aspect": "bun run scripts/diagnose-aspect.ts",
     "prepack": "bun run build",
-    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout",
-    "publish:cnb:dry-run": "bash scripts/publish-cnb.sh --dry-run",
-    "publish:cnb": "bash scripts/publish-cnb.sh --publish"
+    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout"
   },
   "dependencies": {
     "elkjs": "^0.11.1",

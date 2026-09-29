@@ -169,19 +169,21 @@ bun run fixtures:png
 bun run check:layout
 ```
 
-## 发布到 CNB npm 制品库
+## 发布到 npm
 
-`.npmrc` 已配置 CNB npm 制品库地址，并通过 `CNB_TOKEN` 读取令牌。先做 dry-run 检查包内容：
-
-```bash
-bun run publish:cnb:dry-run
-```
-
-确认无误后发布：
+公开发布（`prepack` 会自动 build）：
 
 ```bash
-bun run publish:cnb
+npm publish --registry=https://registry.npmjs.org
 ```
+
+发布前先 dry-run 检查包内容：
+
+```bash
+npm publish --dry-run --registry=https://registry.npmjs.org
+```
+
+License: Apache-2.0。
 
 布局相关改动必须至少跑：
 
