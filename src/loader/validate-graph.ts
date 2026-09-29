@@ -104,11 +104,11 @@ function missingEndpointHint(id: string, refCount: number): string {
   const looksLikeGateway = /gateway/i.test(id);
   if (refCount >= 2 || looksLikeGateway) {
     const typeHint = looksLikeGateway
-      ? '它看起来是个网关：用 exclusiveGateway / parallelGateway / inclusiveGateway 之一声明'
-      : '把它作为节点声明';
-    return `"${id}" 被 ${refCount} 条连线引用，却没有在 children / lane.children 里声明为节点——你很可能漏写了这个节点。${typeHint}，加进对应 lane.children；不要删掉这些连线。`;
+      ? 'It looks like a gateway: declare it as an exclusiveGateway / parallelGateway / inclusiveGateway'
+      : 'Declare it as a node';
+    return `"${id}" is referenced by ${refCount} edge(s) but is never declared as a node in children / lane.children — you most likely forgot to declare this node. ${typeHint} and add it to the corresponding lane.children; do not delete these edges.`;
   }
-  return '端点必须是树内存在的节点 id（flow node / boundaryEvent / artifact / 黑盒池）；若该 id 是打错的，改成真实节点 id。';
+  return 'Endpoints must be ids of nodes that exist in the tree (flow node / boundaryEvent / artifact / black-box pool); if this id is a typo, change it to a real node id.';
 }
 
 class Validator {
@@ -145,8 +145,8 @@ class Validator {
         code: 'NON_ASCII_ID',
         severity: 'error',
         id,
-        message: `id "${id}" 含非 ASCII 字符（如中文）`,
-        hint: 'id 只能用 ASCII（字母/数字/下划线）；中文名称放到 bpmn.name，不要放 id。',
+        message: `id "${id}" contains non-ASCII characters (e.g. Chinese)`,
+        hint: 'Use ASCII only in ids (letters/digits/underscore); put Chinese names in bpmn.name, not in the id.',
       });
     }
     return true;
@@ -163,8 +163,8 @@ class Validator {
       this.add({
         code: 'EMPTY_GRAPH',
         severity: 'error',
-        message: 'graph 里没有任何 process 或 collaboration，无法编译出图',
-        hint: 'children 至少要有一个 type 为 "process"（单池）或 "collaboration"（多池）的顶层元素。',
+        message: 'graph contains no process or collaboration, so there is nothing to compile into a diagram',
+        hint: 'children must contain at least one top-level element with type "process" (single pool) or "collaboration" (multiple pools).',
       });
     }
     this.finalize();
@@ -182,8 +182,8 @@ class Validator {
             code: 'UNKNOWN_NODE_TYPE',
             severity: 'error',
             id: child?.id,
-            message: `collaboration 下只能直接放 participant，但 id=${child?.id} 的类型是 ${child?.bpmn?.type}`,
-            hint: 'collaboration.children 只放 participant；其它节点放进 participant 的 process body。',
+            message: `collaboration can only directly contain participant elements, but id=${child?.id} has type ${child?.bpmn?.type}`,
+            hint: "Put only participants in collaboration.children; every other node goes inside a participant's process body.",
           });
         }
       }
@@ -195,8 +195,8 @@ class Validator {
         code: 'UNKNOWN_NODE_TYPE',
         severity: 'error',
         id: top?.id,
-        message: `顶层节点只能是 collaboration 或 process，但 id=${top?.id} 的类型是 ${type}`,
-        hint: '把流程放进 process（单池）或 collaboration（多池）。',
+        message: `top-level nodes must be collaboration or process, but id=${top?.id} has type ${type}`,
+        hint: 'Wrap the flow in a process (single pool) or a collaboration (multiple pools).',
       });
     }
   }
@@ -216,8 +216,8 @@ class Validator {
           code: 'BLACKBOX_POOL_HAS_BODY',
           severity: 'error',
           id: p?.id,
-          message: `participant ${p?.id} 标记 isBlackBox 但仍带 ${p?.bpmn?.processRef ? 'processRef' : 'children'}`,
-          hint: '黑盒池不应有内部结构：要么去掉 isBlackBox 并补全 process body，要么删掉 processRef/children。',
+          message: `participant ${p?.id} is marked isBlackBox but still carries ${p?.bpmn?.processRef ? 'processRef' : 'children'}`,
+          hint: 'A black-box pool must have no internal structure: either remove isBlackBox and provide a full process body, or drop processRef/children.',
         });
       }
       return; // 黑盒池无内部，不再下钻
@@ -242,8 +242,8 @@ class Validator {
         code: 'LANE_PARTITION_INCOMPLETE',
         severity: 'warning',
         id: node?.id,
-        message: `用了泳道但 ${node?.id} 缺 elk.partitioning.activate`,
-        hint: '在该 participant/process 的 layoutOptions 上设 "elk.partitioning.activate": true。',
+        message: `lanes are used but ${node?.id} is missing elk.partitioning.activate`,
+        hint: 'Set "elk.partitioning.activate": true in the layoutOptions of that participant/process.',
       });
     }
     for (const c of children) {
@@ -264,8 +264,8 @@ class Validator {
         code: 'LANE_PARTITION_INCOMPLETE',
         severity: 'warning',
         id: lane?.id,
-        message: `lane ${lane?.id} 缺 elk.partitioning.partition`,
-        hint: '在该 lane 的 layoutOptions 上设 "elk.partitioning.partition": <序号>，自上而下从 0 递增。',
+        message: `lane ${lane?.id} is missing elk.partitioning.partition`,
+        hint: 'Set "elk.partitioning.partition": <index> in the layoutOptions of that lane, counting from 0 top to bottom.',
       });
     }
     for (const c of asArray(lane.children)) {
@@ -287,8 +287,8 @@ class Validator {
         code: 'CHILD_WITHOUT_TYPE',
         severity: 'error',
         id: c?.id,
-        message: `child id=${c?.id} 缺 bpmn.type`,
-        hint: '每个节点都要有 bpmn.type，例如 "task" / "startEvent" / "exclusiveGateway"。',
+        message: `child id=${c?.id} is missing bpmn.type`,
+        hint: 'Every node needs a bpmn.type, e.g. "task" / "startEvent" / "exclusiveGateway".',
       });
       return;
     }
@@ -304,10 +304,10 @@ class Validator {
         code: 'BOUNDARY_EVENT_IN_CHILDREN',
         severity: 'error',
         id: c?.id,
-        message: `boundaryEvent ${c?.id} 出现在 children 里`,
+        message: `boundaryEvent ${c?.id} appears in children`,
         hint: host
-          ? `把 ${c?.id} 从 children 移除，放进宿主节点 ${host} 的 boundaryEvents 数组（${host}.boundaryEvents[]）。`
-          : '边界事件不进 children；给它补 attachedToRef 指向宿主，并放进该宿主的 boundaryEvents 数组（host.boundaryEvents[]）。',
+          ? `Remove ${c?.id} from children and put it into the boundaryEvents array of its host node ${host} (${host}.boundaryEvents[]).`
+          : 'Boundary events do not go into children; give it an attachedToRef pointing at its host and put it into the boundaryEvents array of that host (host.boundaryEvents[]).',
       });
       return;
     }
@@ -317,8 +317,8 @@ class Validator {
         code: 'UNKNOWN_NODE_TYPE',
         severity: 'error',
         id: c?.id,
-        message: `节点 ${c?.id} 的类型 "${type}" 不在允许集合内`,
-        hint: '只能用受支持的 event/task/gateway/subProcess/dataObject/textAnnotation/group 类型。',
+        message: `node ${c?.id} has type "${type}", which is not in the allowed set`,
+        hint: 'Only the supported event/task/gateway/subProcess/dataObject/textAnnotation/group types may be used.',
       });
       return;
     }
@@ -329,8 +329,8 @@ class Validator {
         code: 'LANE_NODE_MISPLACED',
         severity: 'error',
         id: c?.id,
-        message: `用了泳道，但 ${c?.id} 直接挂在 process body 下而非 lane.children`,
-        hint: '存在 lane 时，所有 flow node 必须放进某个 lane 的 children。',
+        message: `lanes are used, but ${c?.id} sits directly under the process body instead of inside lane.children`,
+        hint: 'When lanes exist, every flow node must be placed inside the children of some lane.',
       });
     }
 
@@ -374,8 +374,8 @@ class Validator {
           code: 'IO_SPEC_EMPTY_ENTRY',
           severity: 'error',
           id: c?.id,
-          message: `${c?.id} 的 ioSpecification.${key} 不是数组`,
-          hint: `ioSpecification.${key} 必须是对象数组，每项形如 { id, name }。`,
+          message: `${c?.id}: ioSpecification.${key} is not an array`,
+          hint: `ioSpecification.${key} must be an array of objects, each shaped like { id, name }.`,
         });
         continue;
       }
@@ -385,8 +385,8 @@ class Validator {
             code: 'IO_SPEC_EMPTY_ENTRY',
             severity: 'error',
             id: c?.id,
-            message: `${c?.id} 的 ioSpecification.${key}[${i}] 是空/非对象条目`,
-            hint: `删掉该空条目，或补成 { id, name } 形式的对象。`,
+            message: `${c?.id}: ioSpecification.${key}[${i}] is an empty / non-object entry`,
+            hint: `Remove the empty entry, or turn it into an object of the form { id, name }.`,
           });
         }
       });
@@ -400,8 +400,8 @@ class Validator {
         code: 'EVENT_MISSING_EVENT_DEF',
         severity: 'error',
         id: node?.id,
-        message: `${type} ${node?.id} 缺 eventDefinitionType`,
-        hint: 'catch/boundary 事件必须声明 eventDefinitionType（如 message/timer/error/signal/conditional）。',
+        message: `${type} ${node?.id} is missing eventDefinitionType`,
+        hint: 'Catch/boundary events must declare an eventDefinitionType (e.g. message/timer/error/signal/conditional).',
       });
     }
   }
@@ -423,8 +423,8 @@ class Validator {
             code: 'MSGFLOW_NOT_IN_COLLABORATION',
             severity: 'error',
             id,
-            message: `messageFlow ${id} 出现在 ${container} 的 edges 里`,
-            hint: '跨池 messageFlow 只放在 collaboration.edges；池内连线用 sequenceFlow。',
+            message: `messageFlow ${id} appears in the edges of a ${container}`,
+            hint: 'Cross-pool messageFlows belong only in collaboration.edges; use sequenceFlow for connections inside a pool.',
           });
         }
       } else {
@@ -436,11 +436,11 @@ class Validator {
             code: 'UNKNOWN_EDGE_TYPE',
             severity: 'error',
             id,
-            message: `edge ${id} 在 ${container} 里的类型 ${type === undefined ? '缺失' : `"${type}"`} 不被允许`,
+            message: `edge ${id} in a ${container} has type ${type === undefined ? 'missing' : `"${type}"`}, which is not allowed`,
             hint:
               container === 'collaboration'
-                ? 'collaboration.edges 只放 messageFlow 或 association 类；sequenceFlow 放进对应 participant。'
-                : '池内 edges 只放 sequenceFlow 或 association 类；跨池连线用 collaboration 的 messageFlow。',
+                ? 'collaboration.edges accepts only messageFlow or association types; put sequenceFlows inside the corresponding participant.'
+                : 'Edges inside a pool accept only sequenceFlow or association types; use a messageFlow in the collaboration for cross-pool connections.',
           });
         }
       }
@@ -461,8 +461,8 @@ class Validator {
           code: 'DUPLICATE_ID',
           severity: 'error',
           id,
-          message: `id "${id}" 在全树出现 ${count} 次`,
-          hint: '每个元素 id 必须全局唯一，给重复者改名。',
+          message: `id "${id}" appears ${count} times in the tree`,
+          hint: 'Element ids must be globally unique; rename the duplicates.',
         });
       }
     }
@@ -489,15 +489,15 @@ class Validator {
             code: 'EDGE_ENDPOINT_MISSING',
             severity: 'error',
             id: e.id,
-            message: `edge ${e.id} 缺 ${side} 端点`,
-            hint: `edge.${side === 'source' ? 'sources' : 'targets'} 必须是非空数组，首项指向真实节点 id。`,
+            message: `edge ${e.id} is missing its ${side} endpoint`,
+            hint: `edge.${side === 'source' ? 'sources' : 'targets'} must be a non-empty array whose first item is a real node id.`,
           });
         } else if (!this.reachable.has(endpoint)) {
           this.add({
             code: 'EDGE_ENDPOINT_MISSING',
             severity: 'error',
             id: e.id,
-            message: `edge ${e.id} 的 ${side} "${endpoint}" 不指向任何已知节点`,
+            message: `edge ${e.id}: its ${side} "${endpoint}" does not point to any known node`,
             hint: missingEndpointHint(endpoint, missingRefCount.get(endpoint) ?? 1),
           });
         }
@@ -510,8 +510,8 @@ class Validator {
             code: 'SEQFLOW_CROSS_POOL',
             severity: 'error',
             id: e.id,
-            message: `sequenceFlow ${e.id} 两端跨池（${sp} → ${tp}）`,
-            hint: 'sequenceFlow 不能跨 participant；跨池请改用 collaboration 里的 messageFlow。',
+            message: `sequenceFlow ${e.id} spans two pools (${sp} → ${tp})`,
+            hint: 'sequenceFlow cannot cross participants; use a messageFlow in the collaboration for cross-pool connections.',
           });
         }
       }
@@ -528,13 +528,13 @@ class Validator {
         const outgoing = this.edges
           .filter((e) => e.type === 'sequenceFlow' && e.source === gwId)
           .map((e) => e.id);
-        const candidates = outgoing.length > 0 ? outgoing.join(' / ') : '（该网关当前没有任何出向 sequenceFlow）';
+        const candidates = outgoing.length > 0 ? outgoing.join(' / ') : '(this gateway currently has no outgoing sequenceFlows)';
         this.add({
           code: 'EXCLUSIVE_DEFAULT_INVALID',
           severity: 'error',
           id: gwId,
-          message: `exclusiveGateway ${gwId} 的 default "${def}" 不指向任何 sequenceFlow`,
-          hint: `把 default 改成该网关的一条出向 sequenceFlow id；可选：${candidates}。`,
+          message: `exclusiveGateway ${gwId}: its default "${def}" does not point to any sequenceFlow`,
+          hint: `Change default to the id of one of this gateway's outgoing sequenceFlows; candidates: ${candidates}.`,
         });
       }
     }
@@ -565,8 +565,8 @@ class Validator {
           code: 'PARALLEL_JOIN_MISSING',
           severity: 'warning',
           id,
-          message: `parallelGateway ${id} 有多条 fork 出向，但全图没有任何 parallelGateway 做 join`,
-          hint: '并行分支通常应由一个 parallelGateway 收束（join）；确认是否漏了汇合网关。',
+          message: `parallelGateway ${id} forks into multiple branches, but no parallelGateway in the graph acts as a join`,
+          hint: 'Parallel branches are usually converged by a parallelGateway (join); check whether the merging gateway is missing.',
         });
       }
     }
@@ -601,8 +601,8 @@ export function validateGraph(
     return [{
       code: 'INVALID_GRAPH_ROOT',
       severity: 'error',
-      message: 'graph 必须是 BPMN definitions 对象',
-      hint: '顶层应是 { id, children: [...] } 的对象。',
+      message: 'graph must be a BPMN definitions object',
+      hint: 'The top level should be an object of the form { id, children: [...] }.',
     }];
   }
   if (!Array.isArray(rawJson.children)) {
@@ -610,8 +610,8 @@ export function validateGraph(
       code: 'MISSING_CHILDREN',
       severity: 'error',
       id: typeof rawJson.id === 'string' ? rawJson.id : undefined,
-      message: 'graph 缺 children 数组',
-      hint: '顶层 definitions 必须含 children（collaboration / process 列表）。',
+      message: 'graph is missing its children array',
+      hint: 'The top-level definitions must contain children (the list of collaboration / process elements).',
     }];
   }
   const v = new Validator(options.profile ?? 'generation');
@@ -621,12 +621,12 @@ export function validateGraph(
 
 function formatIssueLine(issue: ValidationIssue): string {
   const where = issue.id ? ` (id=${issue.id})` : '';
-  const fix = issue.hint ? ` 修复: ${issue.hint}` : '';
+  const fix = issue.hint ? ` Fix: ${issue.hint}` : '';
   return `- [${issue.code}]${where} ${issue.message}.${fix}`;
 }
 
 /**
- * 把 validateGraph 的结果格式化成一段可直接回喂给 LLM 的中文 feedback。
+ * 把 validateGraph 的结果格式化成一段可直接回喂给 LLM 的英文 feedback。
  * WHY 收进包内：保证消费侧每次喂给模型的结构一致、不漂移；error 与 warning 分组，
  * 顶部给明确指令（逐条修正后重输完整 graph），让模型能照着 code+id+hint 确定性自纠。
  *
@@ -640,14 +640,14 @@ export function formatIssuesForFeedback(issues: ValidationIssue[]): string {
   const blocks: string[] = [];
   if (errors.length > 0) {
     blocks.push(
-      `你上一版 graph 有 ${errors.length} 处结构错误（必须全部修正，否则无法进入布局）。` +
-        `请逐条修正后重新输出**完整** graph（不要只输出片段或 diff）：`,
+      `Your previous graph has ${errors.length} structural error(s) — all of them must be fixed before layout can run. ` +
+        `Fix every item, then output the **complete** graph again (do not output only a fragment or a diff):`,
       errors.map(formatIssueLine).join('\n'),
     );
   }
   if (warnings.length > 0) {
     blocks.push(
-      `另有 ${warnings.length} 处警告（不阻断，但建议确认是否符合本意）：`,
+      `There are also ${warnings.length} warning(s) (non-blocking, but check that they match your intent):`,
       warnings.map(formatIssueLine).join('\n'),
     );
   }

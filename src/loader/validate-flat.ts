@@ -39,8 +39,8 @@ function checkBoundaryRefs(r: FlatResolver, push: (i: ValidationIssue) => void) 
         code: 'BOUNDARY_NOT_ATTACHED',
         severity: 'error',
         id: n.id,
-        message: `boundaryEvent ${n.id} 没有 attachedTo，无法确定挂在哪个宿主节点上`,
-        hint: '给它加 attachedTo: "<宿主节点 id>"；若它其实是普通流程事件，请把 type 改成 intermediateCatchEvent。',
+        message: `boundaryEvent ${n.id} has no attachedTo, so its host node cannot be determined`,
+        hint: 'Add attachedTo: "<host node id>"; if it is actually a plain flow event, change its type to intermediateCatchEvent.',
       });
     }
     if (hasAttached && !r.nodeById.has(n.attachedTo!)) {
@@ -48,16 +48,16 @@ function checkBoundaryRefs(r: FlatResolver, push: (i: ValidationIssue) => void) 
         code: 'BOUNDARY_HOST_MISSING',
         severity: 'error',
         id: n.id,
-        message: `boundaryEvent ${n.id} 的 attachedTo 指向 "${n.attachedTo}"，但没有这个节点`,
-        hint: `把 attachedTo 改成一个真实存在的节点 id（task / subProcess 等），或补上 id 为 "${n.attachedTo}" 的宿主节点。`,
+        message: `boundaryEvent ${n.id}: attachedTo points to "${n.attachedTo}", but no such node exists`,
+        hint: `Change attachedTo to an existing node id (task / subProcess, ...), or add a host node with id "${n.attachedTo}".`,
       });
     } else if (hasAttached && n.attachedTo === n.id) {
       push({
         code: 'BOUNDARY_SELF_ATTACHED',
         severity: 'error',
         id: n.id,
-        message: `boundaryEvent ${n.id} 的 attachedTo 指向了自己`,
-        hint: 'attachedTo 必须指向另一个节点（它的宿主），不能是自身。',
+        message: `boundaryEvent ${n.id}: attachedTo points to itself`,
+        hint: 'attachedTo must point to another node (its host), not to itself.',
       });
     }
   }
@@ -72,8 +72,8 @@ function checkParentRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'SUBPROCESS_PARENT_SELF',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 parent 指向了自己`,
-        hint: 'parent 必须指向包裹它的那个 subProcess 节点，不能是自身。',
+        message: `node ${n.id}: parent points to itself`,
+        hint: 'parent must point to the subProcess node that contains it, not to itself.',
       });
       continue;
     }
@@ -83,16 +83,16 @@ function checkParentRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'SUBPROCESS_PARENT_MISSING',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 parent 指向 "${n.parent}"，但没有这个节点`,
-        hint: `把 parent 改成一个真实存在的 subProcess 节点 id，或补上 id 为 "${n.parent}" 的子流程节点。`,
+        message: `node ${n.id}: parent points to "${n.parent}", but no such node exists`,
+        hint: `Change parent to an existing subProcess node id, or add a subprocess node with id "${n.parent}".`,
       });
     } else if (!SUBPROCESS_TYPES.has(p.type)) {
       push({
         code: 'SUBPROCESS_PARENT_NOT_SUBPROCESS',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 parent "${n.parent}" 类型是 ${p.type}，不是子流程`,
-        hint: 'parent 只能指向 subProcess / adHocSubProcess / transaction；普通任务不能内嵌别的节点。',
+        message: `node ${n.id}: its parent "${n.parent}" has type ${p.type}, which is not a subprocess`,
+        hint: 'parent may only point to subProcess / adHocSubProcess / transaction; regular tasks cannot contain other nodes.',
       });
     }
   }
@@ -118,8 +118,8 @@ function checkReferenceCycles(r: FlatResolver, push: (i: ValidationIssue) => voi
           code: 'REFERENCE_CYCLE',
           severity: 'error',
           id: start.id,
-          message: `节点 ${start.id} 的 attachedTo / parent 引用链形成了环`,
-          hint: '检查 attachedTo / parent 链，确保它最终指向一个不再向上引用的顶层宿主 / 子流程。',
+          message: `the attachedTo / parent reference chain of node ${start.id} forms a cycle`,
+          hint: 'Inspect the attachedTo / parent chain and make sure it eventually reaches a top-level host / subprocess that no longer references upward.',
         });
         break;
       }
@@ -149,8 +149,8 @@ function checkLaneRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'LANE_REF_MISSING',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 lane 指向 "${n.lane}"，但没有这个泳道`,
-        hint: `把 lane 改成一个真实存在的泳道 id，或在 lanes 里补上 id 为 "${n.lane}" 的泳道。`,
+        message: `node ${n.id}: lane points to "${n.lane}", but no such lane exists`,
+        hint: `Change lane to an existing lane id, or add a lane with id "${n.lane}" to lanes.`,
       });
       continue;
     }
@@ -159,8 +159,8 @@ function checkLaneRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'LANE_NOT_LEAF',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 放在泳道 "${lane.id}" 上，但该泳道还有子泳道`,
-        hint: '有子泳道的父泳道不能直接放流程节点；把节点改挂到某个叶子（最内层）子泳道上。',
+        message: `node ${n.id} is placed in lane "${lane.id}", but that lane has child lanes`,
+        hint: 'A parent lane with child lanes cannot directly hold flow nodes; move the node into one of the leaf (innermost) child lanes.',
       });
     }
     if (n.pool && lane.pool && n.pool !== lane.pool) {
@@ -168,8 +168,8 @@ function checkLaneRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'LANE_POOL_MISMATCH',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 pool="${n.pool}" 与其泳道 "${lane.id}" 所属 pool="${lane.pool}" 不一致`,
-        hint: '去掉 node.pool（让它跟随泳道），或把泳道改成同一个 pool 下的泳道。',
+        message: `node ${n.id} has pool="${n.pool}", which conflicts with pool="${lane.pool}" of its lane "${lane.id}"`,
+        hint: 'Remove node.pool (let it follow the lane), or switch the lane to one under the same pool.',
       });
     }
   }
@@ -184,8 +184,8 @@ function checkParentLaneRefs(r: FlatResolver, push: (i: ValidationIssue) => void
         code: 'LANE_PARENT_SELF',
         severity: 'error',
         id: l.id,
-        message: `泳道 ${l.id} 的 parentLane 指向了自己`,
-        hint: 'parentLane 必须指向另一个（更外层的）泳道，不能是自身。',
+        message: `lane ${l.id}: parentLane points to itself`,
+        hint: 'parentLane must point to another (outer) lane, not to itself.',
       });
       continue;
     }
@@ -195,16 +195,16 @@ function checkParentLaneRefs(r: FlatResolver, push: (i: ValidationIssue) => void
         code: 'LANE_PARENT_MISSING',
         severity: 'error',
         id: l.id,
-        message: `泳道 ${l.id} 的 parentLane 指向 "${l.parentLane}"，但没有这个泳道`,
-        hint: `把 parentLane 改成一个真实存在的泳道 id，或补上 id 为 "${l.parentLane}" 的父泳道；顶层泳道请省略 parentLane。`,
+        message: `lane ${l.id}: parentLane points to "${l.parentLane}", but no such lane exists`,
+        hint: `Change parentLane to an existing lane id, or add a parent lane with id "${l.parentLane}"; omit parentLane for top-level lanes.`,
       });
     } else if (r.hasPools && l.pool && parent.pool && l.pool !== parent.pool) {
       push({
         code: 'LANE_PARENT_POOL_MISMATCH',
         severity: 'error',
         id: l.id,
-        message: `泳道 ${l.id}（pool=${l.pool}）的 parentLane "${parent.id}" 属于另一个 pool=${parent.pool}`,
-        hint: '嵌套泳道必须和父泳道在同一个 pool 内。',
+        message: `lane ${l.id} (pool=${l.pool}): its parentLane "${parent.id}" belongs to a different pool=${parent.pool}`,
+        hint: 'A nested lane must stay in the same pool as its parent lane.',
       });
     }
   }
@@ -220,8 +220,8 @@ function checkPoolRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'NODE_POOL_MISSING',
         severity: 'error',
         id: n.id,
-        message: `节点 ${n.id} 的 pool 指向 "${n.pool}"，但没有这个泳池`,
-        hint: `把 pool 改成一个真实存在的 pool id，或在 pools 里补上 id 为 "${n.pool}" 的泳池。`,
+        message: `node ${n.id}: pool points to "${n.pool}", but no such pool exists`,
+        hint: `Change pool to an existing pool id, or add a pool with id "${n.pool}" to pools.`,
       });
     }
   }
@@ -231,16 +231,16 @@ function checkPoolRefs(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'LANE_POOL_MISSING',
         severity: 'error',
         id: l.id,
-        message: `泳道 ${l.id} 的 pool 指向 "${l.pool}"，但没有这个泳池`,
-        hint: `把 pool 改成一个真实存在的 pool id，或补上 id 为 "${l.pool}" 的泳池。`,
+        message: `lane ${l.id}: pool points to "${l.pool}", but no such pool exists`,
+        hint: `Change pool to an existing pool id, or add a pool with id "${l.pool}" to pools.`,
       });
     } else if (r.pools.length > 1 && (typeof l.pool !== 'string' || l.pool.length === 0)) {
       push({
         code: 'LANE_POOL_REQUIRED',
         severity: 'error',
         id: l.id,
-        message: `有多个 pool 时，泳道 ${l.id} 必须用 pool 指明归属`,
-        hint: '给该泳道加 pool: "<它所属的 pool id>"。',
+        message: `with multiple pools, lane ${l.id} must declare its owning pool via pool`,
+        hint: 'Add pool: "<the id of the pool it belongs to>" to this lane.',
       });
     }
   }
@@ -256,8 +256,8 @@ function checkNodePoolResolvable(r: FlatResolver, push: (i: ValidationIssue) => 
         code: 'NODE_POOL_UNRESOLVED',
         severity: 'error',
         id: n.id,
-        message: `有多个 pool 时，节点 ${n.id} 没有 pool 也没有可解析的 lane，无法确定它属于哪个泳池`,
-        hint: '给它加 pool: "<所属 pool id>"，或加 lane 指到某个已声明 pool 的泳道上。',
+        message: `with multiple pools, node ${n.id} has no pool and no resolvable lane, so its owning pool cannot be determined`,
+        hint: 'Add pool: "<owning pool id>" to it, or add a lane pointing to a lane that declares its pool.',
       });
     }
   }
@@ -279,8 +279,8 @@ function checkEdges(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'SEQFLOW_CROSS_SUBPROCESS',
         severity: 'error',
         id: e.id,
-        message: `边 ${e.id} 的两端 (${e.source} → ${e.target}) 跨越了子流程边界，sequenceFlow 不能穿过子流程的框`,
-        hint: '让两端在同一层（都在该子流程内、或都在外层）；要表达子流程的进入/退出，应连到子流程节点本身，而不是它内部的节点。',
+        message: `edge ${e.id} (${e.source} → ${e.target}) crosses a subprocess boundary; sequenceFlow cannot cross the frame of a subprocess`,
+        hint: 'Keep both endpoints on the same level (both inside the subprocess, or both outside); to express entering/leaving a subprocess, connect to the subprocess node itself, not to nodes inside it.',
       });
     }
     if (!crossPool && e.type === 'messageFlow') {
@@ -288,8 +288,8 @@ function checkEdges(r: FlatResolver, push: (i: ValidationIssue) => void) {
         code: 'MSGFLOW_INTRA',
         severity: 'warning',
         id: e.id,
-        message: `边 ${e.id} 标记为 messageFlow，但两端在同一个进程内；已按 sequenceFlow 处理`,
-        hint: 'messageFlow 只用于跨 pool 通信；同进程内的连线请用 sequenceFlow（type 省略即可）。',
+        message: `edge ${e.id} is marked messageFlow, but both endpoints are in the same process; it has been treated as a sequenceFlow`,
+        hint: 'messageFlow is only for cross-pool communication; use sequenceFlow for in-process connections (just omit type).',
       });
     }
   }

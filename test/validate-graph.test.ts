@@ -120,9 +120,9 @@ describe('validateGraph — 结构错误', () => {
     const missing = validateGraph(g).filter((i) => i.code === 'EDGE_ENDPOINT_MISSING');
     expect(missing.length).toBe(3); // f2.target + f3.source + f4.source
     for (const i of missing) {
-      expect(i.hint).toContain('漏写了这个节点');
-      expect(i.hint).toContain('网关');
-      expect(i.hint).toContain('不要删掉这些连线');
+      expect(i.hint).toContain('forgot to declare this node');
+      expect(i.hint).toContain('gateway');
+      expect(i.hint).toContain('do not delete these edges');
     }
   });
 
@@ -133,7 +133,7 @@ describe('validateGraph — 结构错误', () => {
     );
     const missing = validateGraph(g).filter((i) => i.code === 'EDGE_ENDPOINT_MISSING');
     expect(missing.length).toBe(1);
-    expect(missing[0]!.hint).toContain('若该 id 是打错的');
+    expect(missing[0]!.hint).toContain('if this id is a typo');
   });
 
   it('EVENT_MISSING_EVENT_DEF — only catch/boundary', () => {
@@ -328,11 +328,11 @@ describe('formatIssuesForFeedback', () => {
       ],
     );
     const text = formatIssuesForFeedback(validateGraph(g));
-    expect(text).toContain('结构错误');
+    expect(text).toContain('structural error(s)');
     expect(text).toContain('[BOUNDARY_EVENT_IN_CHILDREN]');
     expect(text).toContain('id=be');
-    expect(text).toContain('修复:');
-    expect(text).toContain('警告');
+    expect(text).toContain('Fix:');
+    expect(text).toContain('warning(s)');
     expect(text).toContain('[PARALLEL_JOIN_MISSING]');
   });
 });

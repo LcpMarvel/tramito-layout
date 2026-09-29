@@ -30,7 +30,7 @@ const { xml, trace } = await layoutBpmnXml(elkBpmnJson, 'request', {
 | API | 作用 |
 | --- | --- |
 | `validateGraph(rawJson)` | **前端诊断**：纯函数、不跑布局，返回 `ValidationIssue[]`（空数组=可编译）。同步、无副作用、不依赖 ELK |
-| `formatIssuesForFeedback(issues)` | 把诊断格式化成可直接回喂 LLM 的中文反馈（无 issue 返回 `''`） |
+| `formatIssuesForFeedback(issues)` | 把诊断格式化成可直接回喂 LLM 的英文反馈（无 issue 返回 `''`） |
 | `layoutBpmnXml(rawJson, fixtureLabel?, options?)` | **编译**：返回 `{ xml, trace }`。内部先校验，有 `error` 则抛 `AggregateError` |
 | `relayoutBpmnXml(xml, options?)` / `layoutBpmnXmlFromXml(xml, options?)` | 从已有 BPMN XML 全量重算 BPMNDI，保留原语义 XML |
 | `layoutBpmnGraph(rawJson, fixtureLabel?, options?)` | 返回 `{ graph, trace }`，用于调试布局中间结果 |
