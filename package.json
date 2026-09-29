@@ -1,6 +1,6 @@
 {
   "name": "tramito-layout",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "A BPMN layout compiler: ELK-BPMN JSON in, laid-out BPMN 2.0 XML out. elkjs placement + hand-rolled edge routing.",
   "type": "module",
   "license": "Apache-2.0",
@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/LcpMarvel/tramito-layout.git"
   },
-  "homepage": "https://github.com/LcpMarvel/tramito-layout#readme",
+  "homepage": "https://lcpmarvel.github.io/tramito-layout/",
   "bugs": "https://github.com/LcpMarvel/tramito-layout/issues",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -42,7 +42,9 @@
     "ai:optimize": "bun run scripts/ai-optimize-layout.ts",
     "diagnose:aspect": "bun run scripts/diagnose-aspect.ts",
     "prepack": "bun run build",
-    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout"
+    "verify:layout": "bun test && bunx tsc --noEmit && bun run build && bun run fixtures:xml && bun run check:layout",
+    "demo:build": "bun run scripts/build-demo.ts",
+    "demo:serve": "bun run scripts/serve-demo.ts"
   },
   "dependencies": {
     "elkjs": "^0.11.1",
